@@ -19,7 +19,7 @@ ALWAYS read and follow:
 4. **Native-head automation binds to the app's own window.** Drive a MAUI head only through a session attached to the app under test (Windows: launched PID → its top-level window handle; Android/iOS/Catalyst: the app's package/bundle id), interact element-by-element via `AutomationId`, and NEVER inject global keyboard/mouse input — it lands in whatever window happens to have focus, not the app (`verify-phase.md §3b`).
 
 ## Project basics
-- Stack: .NET 9, Blazor [Server], TrBlazeUI, [TechieRag if AI features].
+- Stack: .NET 10, MAUI Blazor Hybrid (Mac Catalyst + Windows), screens in a Razor class library using TrBlazeUI, behaviour in Chatur.Core, SQLite with Dapper + DbUp (no EF Core), TechieRag for model calls.
 - Field-prefix convention: `obj` prefix on instance fields (e.g. `private readonly ILogger<X> objLogger;`) — PER-PROJECT day-1 decision; this project's choice is recorded in Coding Standards §"Fields, Parameters, Locals", which is authoritative.
 - Test naming: short PascalCase, NO underscores. Full scenario in XML `<summary>` doc.
 
