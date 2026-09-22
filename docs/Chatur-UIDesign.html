@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — UI Design</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout no-toc">
+  <main>
+    <h1>Chatur — UI Design</h1>
+    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-UIDesign.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#design-system">Design system</a></li>
+        <li><a href="#screens">Screens</a></li>
+        <li class="h3"><a href="#screen-sign-in-sign-in">Screen: Sign in (/sign-in)</a></li>
+        <li class="h3"><a href="#screen-register-register">Screen: Register (/register)</a></li>
+        <li class="h3"><a href="#screen-start-start">Screen: Start (/start)</a></li>
+        <li class="h3"><a href="#screen-workbench">Screen: Workbench (/)</a></li>
+        <li class="h3"><a href="#screen-prerequisites-prerequisites">Screen: Prerequisites (/prerequisites)</a></li>
+        <li class="h3"><a href="#screen-settings-settings-tab">Screen: Settings (/settings/{tab})</a></li>
+        <li class="h3"><a href="#screen-repository-repository">Screen: Repository (/repository)</a></li>
+        <li><a href="#click-through-flow">Click-through flow</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Large</td></tr>
+<tr><td>Phase</td><td>1 of 4</td></tr>
+<tr><td>UI library</td><td>TrBlazeUI 2.0.9 (<code>TrBlazeUI.Components</code>, <code>TrBlazeUI.Icons.Lucide</code>)</td></tr>
+<tr><td>Theme</td><td>both, dark by default; Amber ships as the theme, with Indigo, Teal and Slate</td></tr>
+</tbody>
+</table>
+<h2 id="design-system">Design system<a class="anchor-link" href="#design-system">#</a></h2>
+<ul>
+<li><strong>Three windows.</strong> The <strong>start window</strong> opens first: recent projects on the left, the ways in on the right — clone, open a solution, open a folder, new project, new empty folder. No menu bar, no files, no conversation, because nothing is open. The <strong>main window</strong> is where work happens: a menu bar (File, Edit, View, Project, Tools, Help), a toolbar (Run, Stop, Build, the run target, the branch, Find), the files down the left with the branch beneath them, one content area of tabs, the conversation pinned right at half the width, and an output strip. The <strong>secondary window</strong> holds everything that is not the work — Prerequisites, Repository, Settings, Licence, Feedback, Integrations, All projects, Working copies — as a title bar, a left navigation list and one page. No file tree, no conversation: there is nothing to say to an agent while changing a setting.
+</li>
+<li><strong>Menus and pickers really open</strong>, each dropping its list with a tick on the chosen one. Nothing looks like a drop-down and behaves like a label.
+</li>
+<li><strong>Theme.</strong> A theme is a named set of OKLCH values in the shape TrBlazeUI reads, carrying a light set and a dark set. Amber ships as the default, with Indigo, Teal and Slate; more are added from a file. Nothing is coloured by which agent is working.
+</li>
+<li><strong>Controls</strong>, all real in 2.0.9: <code>Menubar</code>, <code>DropdownMenu</code>, <code>TreeView</code>, <code>EditorTabs</code>, <code>CodeEditor</code>, <code>DiffView</code>, <code>LogView</code>, <code>Typing</code>, <code>NavList</code>, <code>SortableList</code>, <code>DataTable</code> with row selection, small <code>Switch</code>, <code>Card</code>, <code>Badge</code>, <code>Alert</code>, <code>Button</code>, <code>Select</code>, <code>Dialog</code>, <code>Progress</code>, <code>Empty</code>, <code>LucideIcon</code>.
+</li>
+<li><strong>Rules:</strong> 8 pixels between panels, 16 inside one. A panel scrolls inside itself; no window scrolls sideways. Below 1100 the file view and the conversation stack; below 980 the toolbar drops what only reports; below 820 the files panel goes.
+</li>
+</ul>
+<h2 id="screens">Screens<a class="anchor-link" href="#screens">#</a></h2>
+<h3 id="screen-sign-in-sign-in">Screen: Sign in (<code>/sign-in</code>)<a class="anchor-link" href="#screen-sign-in-sign-in">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/sign-in.html">mockups/sign-in.html</a> · <strong>Roles:</strong> Visitor · <strong>BRD:</strong> BRD-1 to BRD-5</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>signin-card</code></td><td>Card</td><td>the whole of this screen; there is no window yet</td></tr>
+<tr><td><code>signin-error</code></td><td>Alert</td><td>the server's own line, verbatim, with a pill saying it came from App Manager</td></tr>
+<tr><td><code>signin-form</code></td><td>Input ×2</td><td><code>input-email</code>, <code>input-password</code>; submits to the Start view</td></tr>
+<tr><td><code>remember-row</code></td><td>Tabs (two)</td><td>keep the token past a restart, or drop it when Chatur closes</td></tr>
+<tr><td><code>device-note</code></td><td>Panel</td><td>the name this machine registers under, and that tokens live in the Keychain or Credential Manager</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Email</td><td>email</td><td>yes</td><td>must parse as an address</td></tr>
+<tr><td>Password</td><td>password</td><td>yes</td><td>not empty; Chatur never pre-judges it, the server decides</td></tr>
+<tr><td>Remember this device</td><td>two-way choice</td><td>no</td><td>on by default</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> none</p>
+<p><strong>States:</strong> empty: no error block, both fields blank, the button still live because the server decides · loading: the button reads "signing in…" and the fields go read-only · error: <code>signin-error</code> at the top of the card with the server's own words, focus back on the email, nothing typed lost — an unreachable App Manager uses the same slot with different text</p>
+<h3 id="screen-register-register">Screen: Register (<code>/register</code>)<a class="anchor-link" href="#screen-register-register">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/register.html">mockups/register.html</a> · <strong>Roles:</strong> Visitor · <strong>BRD:</strong> BRD-6 to BRD-9</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>register-form</code></td><td>Input ×5</td><td>first name, last name, email, password, confirm</td></tr>
+<tr><td><code>strength-bars</code></td><td>Progress ×4</td><td>how many of the four password rules are met</td></tr>
+<tr><td><code>password-rules</code></td><td>Item list</td><td>each rule with a tick or a cross; the unmet one names the characters that count</td></tr>
+<tr><td><code>email-error</code></td><td>field error</td><td>the address already has an account, linking to Sign in</td></tr>
+<tr><td><code>device-note</code></td><td>Panel</td><td>this is the first machine on the account, and what it registers as</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>First name, Last name</td><td>text</td><td>yes</td><td>1 to 60 characters</td></tr>
+<tr><td>Email</td><td>email</td><td>yes</td><td>must parse; the server refuses one already in use</td></tr>
+<tr><td>Password</td><td>password</td><td>yes</td><td>at least 8 characters with a capital, a number and a special character</td></tr>
+<tr><td>Confirm password</td><td>password</td><td>yes</td><td>the same as password</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> none</p>
+<p><strong>States:</strong> empty: no error, no bars filled, the strength reads none of four met · loading: the button is busy and the fields are read-only · error: under the field that caused it, never one lump at the top</p>
+<h3 id="screen-start-start">Screen: Start (<code>/start</code>)<a class="anchor-link" href="#screen-start-start">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/start.html">mockups/start.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-10 to BRD-15</p>
+<p>A window of its own, the one that opens first. It carries no menu bar, no file tree and no conversation, because nothing is open yet.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>startbar</code></td><td>title bar</td><td>the wordmark, the signed-in user, light or dark</td></tr>
+<tr><td><code>recent-list</code></td><td>NavList</td><td>the projects worked in, newest first: name, path, what is to push, when. A solution and a bare folder are marked differently</td></tr>
+<tr><td><code>recent-search</code></td><td>Button</td><td>filters the list by name or path</td></tr>
+<tr><td><code>forget</code></td><td>Button</td><td>drops a project from the list; the folder on disk is untouched</td></tr>
+<tr><td><code>clone-repo</code></td><td>Button</td><td>clones from GitHub, or any address pasted, and opens it</td></tr>
+<tr><td><code>open-solution</code> / <code>open-folder</code></td><td>Button ×2</td><td>a <code>.sln</code> with its projects read, or any folder as it is</td></tr>
+<tr><td><code>new-project</code></td><td>Button</td><td>a solution from a template</td></tr>
+<tr><td><code>new-blank</code></td><td>Button</td><td>an empty folder and an agent, for thinking something through before there is code</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Search</td><td>search</td><td>no</td><td>matches a name or any part of a path</td></tr>
+<tr><td>Repository address</td><td>text</td><td>yes, when cloning</td><td>a git address this machine can reach; the folder it clones into must be empty</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> Clone a repository · Open a solution · Open a folder · New project — each the machine's own picker or a small form</p>
+<p><strong>States:</strong> empty: nothing opened yet — the recent list gives way to a line saying so, and the ways in stay where they are · loading: a clone shows its progress in place of the list, and the buttons wait · error: a folder that has moved keeps its row, marked, and offers to forget it</p>
+<h3 id="screen-workbench">Screen: Workbench (<code>/</code>)<a class="anchor-link" href="#screen-workbench">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/main.html">mockups/main.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-16 to BRD-26, BRD-44 to BRD-51, BRD-61 to BRD-69, BRD-80 to BRD-85</p>
+<p>The window itself, and where the work happens.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>menubar</code></td><td>Menubar</td><td>File, Edit, View, Project, Tools, Help; the signed-in user at the right</td></tr>
+<tr><td><code>toolbar</code></td><td>Button row</td><td><code>run</code>, <code>stop</code>, <code>build</code>, <code>target</code>, <code>repo</code>, <code>find</code></td></tr>
+<tr><td><code>files-panel</code></td><td>Card + tree</td><td>the project's files; <code>branch</code> beneath them opens the Repository</td></tr>
+<tr><td><code>tabs</code></td><td>Tabs</td><td>the open files and views; <code>close-file-view</code> gives the conversation the window</td></tr>
+<tr><td><code>editor</code></td><td>code pane</td><td>the open file with syntax colour; a change waiting on it is shown in place and the file is read-only until it is settled</td></tr>
+<tr><td><code>conversation</code></td><td>ScrollArea</td><td>the turns, each naming its model, tokens and seconds; the agent's steps as chips</td></tr>
+<tr><td><code>proposed-change</code></td><td>Card + diff</td><td>on disk against proposed, with Open, Approve and Reject</td></tr>
+<tr><td><code>composer</code></td><td>Textarea + Button</td><td>the message, the model, the agent, the mode and Send</td></tr>
+<tr><td><code>agent-why</code></td><td>text</td><td>why Chatur chose this agent, in one line</td></tr>
+<tr><td><code>output</code></td><td>CodeBlock</td><td>the build and run output, live, with the result as a pill</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Message</td><td>textarea</td><td>yes</td><td>not empty; trimmed before sending</td></tr>
+<tr><td>Model</td><td>select</td><td>yes</td><td>one of the connected providers' models</td></tr>
+<tr><td>Agent</td><td>select</td><td>no</td><td>none means the model itself; Chatur pre-selects from the project's state</td></tr>
+<tr><td>Mode</td><td>two-way choice</td><td>yes</td><td>ask first, or go ahead</td></tr>
+<tr><td>Run target</td><td>select</td><td>yes</td><td>only a target this machine can build</td></tr>
+<tr><td>File text</td><td>textarea</td><td>no</td><td>read-only while a change waits on that file</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> Unsaved changes — save, close without saving, cancel</p>
+<p><strong>States:</strong> empty: a folder with no project — the conversation takes the whole window and no target can be chosen (<a href="mockups/folder-only.html">drawn here</a>) · loading: the reply shows as moving dots with its model named · error: a failed provider is shown in the conversation with the model that answered instead</p>
+<h3 id="screen-prerequisites-prerequisites">Screen: Prerequisites (<code>/prerequisites</code>)<a class="anchor-link" href="#screen-prerequisites-prerequisites">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/prerequisites.html">mockups/prerequisites.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-27 to BRD-31</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>req-tiles</code></td><td>Card ×4</td><td>tools needed, ready, needing attention, when it was last checked</td></tr>
+<tr><td><code>tools-table</code></td><td>DataTable</td><td>tool, needed, found, a state pill, and the fix as a command with a copy button</td></tr>
+<tr><td><code>this-chatur</code></td><td>Card</td><td>version, the commit it was built from, and the machine</td></tr>
+<tr><td><code>download-build</code></td><td>Alert + Button</td><td>a newer nightly, and that settings, agents and measurements survive the update</td></tr>
+<tr><td><code>path-note</code></td><td>Panel</td><td>why a Homebrew tool is found when Chatur was started from Finder</td></tr>
+<tr><td><code>check-again</code></td><td>Button</td><td>runs every probe again</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>—</td><td>—</td><td>—</td><td>this view reads; every action is a button</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> none</p>
+<p><strong>States:</strong> empty: no project open, so only This Chatur fills · loading: each row shows a checking mark while its version command runs, and the tiles hold their last numbers · error: a probe that fails leaves its row unknown with the command's own message, and the attention tile counts it</p>
+<h3 id="screen-settings-settings-tab">Screen: Settings (<code>/settings/{tab}</code>)<a class="anchor-link" href="#screen-settings-settings-tab">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/settings-providers.html">mockups/settings-providers.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-32 to BRD-43, BRD-52 to BRD-60, BRD-70 to BRD-79, BRD-156, BRD-157</p>
+<p>Seven tabs, seven components. The strip is navigation, not a control.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>settings-tabs</code></td><td>Tabs as links</td><td><a href="mockups/settings-providers.html">providers</a> · <a href="mockups/settings-routing.html">routing</a> · <a href="mockups/settings-agents.html">agents</a> · <a href="mockups/settings-corrections.html">corrections</a> · <a href="mockups/settings-measurements.html">measurements</a> · <a href="mockups/settings-appearance.html">appearance</a> · <a href="mockups/settings-account.html">account</a></td></tr>
+<tr><td><code>providers-table</code></td><td>DataTable</td><td>per provider: connector, sign-in, address, models, state, Test, Remove</td></tr>
+<tr><td><code>secrets-panel</code></td><td>Card</td><td>the Keychain, Credential Manager, and that the database keeps only the name</td></tr>
+<tr><td><code>tier-1</code> … <code>tier-3</code></td><td>Card ×3</td><td>each chain in order, with up, down, remove and add</td></tr>
+<tr><td><code>agent-tiers-table</code> / <code>work-tiers-table</code></td><td>DataTable + Select</td><td>the tier per agent and per kind of work; the work wins</td></tr>
+<tr><td><code>agents-layout</code></td><td>list + detail</td><td>the four agents; the chosen one's wording, rights, rules, history</td></tr>
+<tr><td><code>corrections-table</code></td><td>DataTable + diff</td><td>what Chatur changed about itself; Keep or Undo</td></tr>
+<tr><td><code>stream-tiles</code> / <code>streams-table</code></td><td>Card ×5 + DataTable</td><td>the five streams and the writes refused</td></tr>
+<tr><td><code>theme-cards</code></td><td>selectable cards</td><td>Amber, Indigo, Teal, Slate, each with its own swatches</td></tr>
+<tr><td><code>theme-source-panel</code></td><td>Card + Button</td><td>a theme is a file of values; add one, or export this one</td></tr>
+<tr><td><code>account-panel</code> / <code>machine-panel</code></td><td>Card</td><td>who is signed in, what this machine is, where the tokens live</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Provider name</td><td>text</td><td>yes</td><td>unique among providers, at most 40 characters</td></tr>
+<tr><td>Key</td><td>password</td><td>only for a pasted-key provider</td><td>never echoed back after saving</td></tr>
+<tr><td>Move up a tier after</td><td>number</td><td>yes</td><td>1 to 10; out of range snaps back to the last good value</td></tr>
+<tr><td>Agent wording</td><td>textarea</td><td>yes</td><td>at least 40 characters; each save writes a new version</td></tr>
+<tr><td>Theme</td><td>choice</td><td>yes</td><td>an added theme must carry every token the stock theme defines</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> Add a provider · Export and import agents · Add a theme from a file</p>
+<p><strong>States:</strong> empty: no providers, a blank state offering Add · loading: skeleton rows per tab · error: a failed Test marks that row alone, with the provider's own message</p>
+<h3 id="screen-repository-repository">Screen: Repository (<code>/repository</code>)<a class="anchor-link" href="#screen-repository-repository">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/repository.html">mockups/repository.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-86 to BRD-90</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>branch-row</code></td><td>Badge + Select + Button</td><td>the branch, what is to push and to pull, switch branch, Pull, Push</td></tr>
+<tr><td><code>changes-panel</code></td><td>DataTable</td><td>each changed file: a tick, the path, a state pill, the lines added and removed</td></tr>
+<tr><td><code>file-change</code></td><td>diff</td><td>the ticked file, on the branch against the working tree</td></tr>
+<tr><td><code>checkin</code></td><td>Textarea + Button</td><td>the message and the check-in, which the owner submits</td></tr>
+<tr><td><code>agent-checkins</code></td><td>DataTable</td><td>the branches a process checked in to by itself, with the requirement ids</td></tr>
+<tr><td><code>owner-note</code></td><td>Panel</td><td>pushing and merging stay with the owner; a model asking for a source-control command is refused</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Switch branch</td><td>select</td><td>yes</td><td>a branch this repository has</td></tr>
+<tr><td>Include file</td><td>checkbox</td><td>no</td><td>at least one before the check-in is live</td></tr>
+<tr><td>Message</td><td>textarea</td><td>yes</td><td>not empty; a missing <code>[REQ-*]</code> tag warns, it does not block</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> none</p>
+<p><strong>States:</strong> empty: nothing changed, so a blank state saying the working folder is clean and the check-in is hidden · loading: the list and the counts are re-read after every pull, push or switch · error: a conflict or a rejected push keeps the page and says what the repository said, with nothing written</p>
+<h2 id="click-through-flow">Click-through flow<a class="anchor-link" href="#click-through-flow">#</a></h2>
+<p>Start at <a href="mockups/index.html">the list of screens</a>, which names every view in the order it is met.</p>
+<div class="diagram">
+  <div class="dt">
+    <button data-zout title="Zoom out">&minus;</button>
+    <span class="zlabel">100%</span>
+    <button data-zin title="Zoom in">+</button>
+    <button data-fit title="Fit to width">Fit</button>
+    <button data-one title="Actual size">1:1</button>
+    <button data-fs title="Fullscreen">&#9166;</button>
+    <button data-pop title="Open in new tab">&#8599;</button>
+  </div>
+  <pre class="mermaid">flowchart LR
+  SignIn["Sign in"] --&gt; Start["Start"]
+  Register["Register"] --&gt; Start
+  SignIn --&gt; Register
+  Start --&gt; Work["Workbench"]
+  Work --&gt; Start
+  Work --&gt; Req["Requirements"]
+  Work --&gt; Repo["Repository"]
+  Work --&gt; Settings["Settings: seven tabs"]
+  Settings --&gt; Work
+  Work --&gt; Blank["A folder with no project"]
+  Work --&gt; Processes["Processes (phase 2)"]
+  Processes --&gt; ProcessRun["Process run (phase 2)"]
+  Work --&gt; Board["Requirements board (phase 2)"]
+  Board --&gt; Workspace["Agent workspace (phase 2)"]
+  Work --&gt; Auto["End-to-end run (phase 3)"]
+  Auto --&gt; Queue["Run queue (phase 3)"]
+  Auto --&gt; Report["Run report (phase 3)"]
+  Work --&gt; AllProjects["All projects (phase 4)"]
+  AllProjects --&gt; Worktrees["Worktrees (phase 4)"]
+  AllProjects --&gt; Feedback["Feedback (phase 4)"]
+  AllProjects --&gt; Licence["Licence (phase 4)"]
+  AllProjects --&gt; Integrations["Integrations (phase 4)"]
+  Work --&gt; SignIn</pre>
+</div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

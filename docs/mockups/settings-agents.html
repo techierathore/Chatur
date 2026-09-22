@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Agents</title>
+<link rel="stylesheet" href="chatur.css">
+<script>(function(){var t=localStorage.getItem('chatur-theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');})();</script>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="8" y="8" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></symbol>
+<symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+<symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15.5 7.5 3 3L22 7l-3-3"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></symbol>
+<symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-5-4.5-8.6-10-8.6Z"/></symbol>
+<symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 9 5-5 5 5M12 4v12"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.2-9.5L3 6"/></symbol>
+</defs></svg>
+<script>
+function say(m){alert(m);}
+function closeAll(keep){document.querySelectorAll('.menu.open,.popwrap.open').forEach(function(e){if(e!==keep)e.classList.remove('open');});}
+function pop(btn,ev){ev.stopPropagation();var w=btn.parentNode;var was=w.classList.contains('open');closeAll();if(!was)w.classList.add('open');}
+document.addEventListener('click',function(){closeAll();});
+function toggleTheme(){var d=document.documentElement.classList.toggle('dark');localStorage.setItem('chatur-theme',d?'dark':'light');}
+function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.setAttribute('data-theme',p);localStorage.setItem('chatur-palette',p);
+ var n=document.getElementById('palette-name');if(n)n.textContent=p.charAt(0).toUpperCase()+p.slice(1);
+ document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
+ var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
+document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+</script>
+<script>
+function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
+ w.querySelectorAll('.tick').forEach(function(s){s.innerHTML='';});
+ var t=b.querySelector('.tick');if(t)t.innerHTML='✓';
+ var v=w.querySelector('[data-value]');if(v)v.textContent=b.getAttribute('data-label');closeAll();}
+function toggleSwitch(b,ev){if(ev)ev.stopPropagation();var on=b.classList.toggle('on');
+ var s=document.getElementById(b.getAttribute('data-state'));if(s)s.textContent=on?'on':'off';}
+</script>
+
+<div class="subwin" data-testid="window">
+
+ <div class="subbar" data-testid="subbar">
+  <a class="logo" href="index.html" data-testid="logo" title="Logo goes here — click for the list of screens">C</a>
+  <span class="t" data-testid="window-title">Agents</span>
+  <span class="pill" data-testid="scope">TfLens</span>
+  <span class="grow"></span>
+  <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
+  <div class="popwrap" data-testid="palette">
+   <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one is the Appearance page"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
+   <div class="pop right" id="palette-pop" data-testid="palette-pop">
+    <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber</button>
+    <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo</button>
+    <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal</button>
+    <button onclick="setPalette('slate',event)"><span class="tick" id="palette-tick-slate"></span>Slate</button>
+   </div>
+  </div>
+  <a class="pick" href="main.html" data-testid="close-window"><svg><use href="#i-x"/></svg>Close</a>
+ </div>
+
+ <div class="subbody">
+
+  <nav class="subnav" data-testid="subnav">
+   <div class="g">This project</div>
+   <a href="prerequisites.html" data-testid="nav-prerequisites"><svg><use href="#i-wrench"/></svg>Prerequisites</a>
+   <a href="repository.html" data-testid="nav-repository"><svg><use href="#i-branch"/></svg>Repository</a>
+   <a href="worktrees.html" data-testid="nav-worktrees"><svg><use href="#i-copy"/></svg>Working copies<span class="pill" style="margin-left:auto">later</span></a>
+   <div class="g">Chatur</div>
+   <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
+   <a href="settings-routing.html" data-testid="nav-routing"><svg><use href="#i-route"/></svg>Routing</a>
+   <a href="settings-agents.html" data-testid="nav-agents" class="on"><svg><use href="#i-users"/></svg>Agents</a>
+   <a href="settings-corrections.html" data-testid="nav-corrections"><svg><use href="#i-refresh"/></svg>Corrections</a>
+   <a href="settings-measurements.html" data-testid="nav-measurements"><svg><use href="#i-chart"/></svg>Measurements</a>
+   <a href="settings-appearance.html" data-testid="nav-appearance"><svg><use href="#i-palette"/></svg>Appearance</a>
+   <a href="settings-account.html" data-testid="nav-account"><svg><use href="#i-person"/></svg>Account</a>
+   <div class="g">Your account</div>
+   <a href="licence.html" data-testid="nav-licence"><svg><use href="#i-key"/></svg>Licence<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="feedback.html" data-testid="nav-feedback"><svg><use href="#i-alert"/></svg>Feedback<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="integrations.html" data-testid="nav-integrations"><svg><use href="#i-route"/></svg>Integrations<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="all-projects.html" data-testid="nav-all-projects"><svg><use href="#i-chart"/></svg>All projects<span class="pill" style="margin-left:auto">later</span></a>
+  </nav>
+
+  <div class="subpage" data-testid="page">
+
+   <div class="row" style="flex-wrap:wrap" data-testid="agents-heading">
+    <div><div class="h1">Agents</div>
+     <div class="lead">The agents Chatur plays, and what each one is allowed to do.</div></div>
+    <span class="grow"></span>
+    <button class="pick" onclick="say('Writes the four agents, their rights and their wording to a file you can keep.')" data-testid="export-agents"><svg><use href="#i-down"/></svg>Export</button>
+    <button class="pick" onclick="say('Reads agents from a file and adds them as new rows.')" data-testid="import-agents"><svg><use href="#i-upload"/></svg>Import</button>
+    <button class="pick" onclick="say('Adds an agent — a name, some wording and its rights.')" data-testid="add-agent"><svg><use href="#i-plus"/></svg>Add an agent</button>
+   </div>
+
+   <div class="row" style="align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r2);color:var(--dim)" data-testid="agents-are-rows">
+    <svg style="margin-top:2px"><use href="#i-alert"/></svg>
+    <span class="sm">Agents are rows in Chatur's own database, seeded fresh with each build — not files on disk. A library specialist, such as a TrBlazeUI or a TechieRag agent, is added here rather than built into Chatur.</span>
+   </div>
+
+   <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start" data-testid="agents-layout">
+
+    <div class="panel" style="flex:1 1 260px;max-width:100%" data-testid="agent-list">
+     <div class="ph">Agents<span class="grow"></span><span class="pill" data-testid="agent-count">4</span></div>
+     <div style="padding:7px;display:flex;flex-direction:column;gap:5px">
+      <button onclick="say('The Analyst is already chosen.')" data-testid="agent-analyst" style="text-align:left;padding:8px 10px;border-radius:var(--r);background:var(--accent-soft);display:flex;flex-direction:column;gap:5px;width:100%">
+       <span class="row"><b style="font-weight:600">Analyst</b><span class="grow"></span><span class="xs dim" data-testid="analyst-version">v4</span></span>
+       <span class="row" style="flex-wrap:wrap;gap:5px"><span class="pill xs" data-testid="analyst-right-read">reads code</span></span></button>
+      <button onclick="say('Shows the Architect below.')" data-testid="agent-architect" style="text-align:left;padding:8px 10px;border-radius:var(--r);display:flex;flex-direction:column;gap:5px;width:100%">
+       <span class="row"><b style="font-weight:600">Architect</b><span class="grow"></span><span class="xs dim" data-testid="architect-version">v3</span></span>
+       <span class="row" style="flex-wrap:wrap;gap:5px"><span class="pill xs">reads code</span></span></button>
+      <button onclick="say('Shows the Flow master below.')" data-testid="agent-flowmaster" style="text-align:left;padding:8px 10px;border-radius:var(--r);display:flex;flex-direction:column;gap:5px;width:100%">
+       <span class="row"><b style="font-weight:600">Flow master</b><span class="grow"></span><span class="xs dim" data-testid="flowmaster-version">v7</span></span>
+       <span class="row" style="flex-wrap:wrap;gap:5px"><span class="pill xs">reads code</span><span class="pill xs">changes code</span><span class="pill xs">runs commands</span></span></button>
+      <button onclick="say('Shows the Verifier below.')" data-testid="agent-verifier" style="text-align:left;padding:8px 10px;border-radius:var(--r);display:flex;flex-direction:column;gap:5px;width:100%">
+       <span class="row"><b style="font-weight:600">Verifier</b><span class="grow"></span><span class="xs dim" data-testid="verifier-version">v5</span></span>
+       <span class="row" style="flex-wrap:wrap;gap:5px"><span class="pill xs">reads code</span><span class="pill xs">runs commands</span><span class="pill xs">marks verified</span></span></button>
+     </div>
+    </div>
+
+    <div style="flex:999 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px" data-testid="agent-detail">
+
+     <div class="panel" style="overflow:visible" data-testid="agent-detail-head">
+      <div class="ph">Analyst<span class="grow"></span><span class="pill" data-testid="detail-version">v4</span></div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:12px">
+       <div class="row" style="flex-wrap:wrap">
+        <div class="sm dim grow" style="min-width:180px">Turns what you ask for into requirements a build can be measured against. Saved 22 September 2026.</div>
+        <button class="pick" onclick="say('Throws away the changes and shows v4 again.')" data-testid="discard-agent">Discard</button>
+        <button class="send" onclick="say('Saves the Analyst as v5. v4 stays in the history below.')" data-testid="save-agent"><svg><use href="#i-check"/></svg>Save</button></div>
+       <div class="row" style="flex-wrap:wrap" data-testid="agent-subtabs">
+        <span class="sm dim" style="width:64px">Showing</span>
+        <div class="popwrap" data-testid="subtab-pick">
+         <button class="pick" onclick="pop(this,event)" data-testid="subtab-button"><span data-value>Wording</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="subtab-pop">
+          <button data-label="Wording" onclick="choose(this,event)" data-testid="subtab-wording"><span class="tick">✓</span>Wording</button>
+          <button data-label="Rights" onclick="choose(this,event)" data-testid="subtab-rights"><span class="tick"></span>Rights</button>
+          <button data-label="Commands" onclick="choose(this,event)" data-testid="subtab-commands"><span class="tick"></span>Commands</button>
+          <button data-label="Rules" onclick="choose(this,event)" data-testid="subtab-rules"><span class="tick"></span>Rules</button>
+          <button data-label="History" onclick="choose(this,event)" data-testid="subtab-history"><span class="tick"></span>History</button>
+         </div></div>
+        <span class="xs faint">Wording and Rights are both shown below.</span></div>
+      </div>
+     </div>
+
+     <div class="panel" style="overflow:visible" data-testid="wording-panel">
+      <div class="ph">Wording</div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:11px">
+       <textarea class="fld" data-testid="wording-text" style="min-height:150px">You are the Analyst. You turn what the owner asks for into requirements that a build can be measured against.
+
+Write one requirement at a time. Give each an ID, a single sentence of plain English, and the test that says it is met. If you cannot write the test, the requirement is not ready — say so and ask one question.
+
+You read the code to understand it. You never change it. When something in the repository contradicts what the owner said, quote both and ask which wins.</textarea>
+       <div class="row" style="flex-wrap:wrap" data-testid="wording-tier-row">
+        <span class="sm dim" style="width:64px">Tier</span>
+        <div class="popwrap" data-testid="wording-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="wording-tier-button"><span data-value>Tier 2 — everyday</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="wording-tier-pop">
+          <button data-label="Tier 1 — the strongest" onclick="choose(this,event)" data-testid="wording-tier-1"><span class="tick"></span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2 — everyday" onclick="choose(this,event)" data-testid="wording-tier-2"><span class="tick">✓</span>Tier 2 — everyday</button>
+          <button data-label="Tier 3 — on this machine" onclick="choose(this,event)" data-testid="wording-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div>
+        <span class="xs faint">First in that chain: Claude Sonnet 5</span></div>
+      </div>
+     </div>
+
+     <div class="panel" data-testid="rights-panel">
+      <div class="ph">Rights</div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:12px">
+       <div class="row" data-testid="right-reads-code">
+        <button class="sw on" data-state="state-reads-code" onclick="toggleSwitch(this,event)" title="The Analyst may read every file in the project." data-testid="switch-reads-code"></button>
+        <span class="sm">Reads code</span><span class="grow"></span><span class="xs faint" id="state-reads-code">on</span></div>
+       <div data-testid="right-changes-code" style="display:flex;flex-direction:column;gap:5px">
+        <div class="row">
+         <button class="sw" data-state="state-changes-code" onclick="toggleSwitch(this,event)" title="Turning this on would let the Analyst edit files." data-testid="switch-changes-code"></button>
+         <span class="sm">Changes code</span><span class="grow"></span><span class="xs faint" id="state-changes-code">off</span></div>
+        <div class="xs dim" style="padding-left:42px" data-testid="changes-code-note">The Analyst reads code to understand it, but cannot change it. A requirement it writes is carried out by the Flow master.</div></div>
+       <div class="row" data-testid="right-runs-commands">
+        <button class="sw" data-state="state-runs-commands" onclick="toggleSwitch(this,event)" title="Turning this on would let the Analyst run builds and tests." data-testid="switch-runs-commands"></button>
+        <span class="sm">Runs commands</span><span class="grow"></span><span class="xs faint" id="state-runs-commands">off</span></div>
+       <div class="row" data-testid="right-marks-verified">
+        <button class="sw" data-state="state-marks-verified" onclick="toggleSwitch(this,event)" title="Only the Verifier may write a verdict." data-testid="switch-marks-verified"></button>
+        <span class="sm">Marks work verified</span><span class="grow"></span><span class="xs faint" id="state-marks-verified">off</span></div>
+      </div>
+     </div>
+
+     <div class="panel" data-testid="history-panel">
+      <div class="ph">History<span class="grow"></span><span class="pill" data-testid="history-count">4 versions</span></div>
+      <div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px">
+       <div class="row" style="padding:7px 10px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="history-v4">
+        <span class="pill" data-testid="history-v4-pill">v4</span><span class="sm">Asks for the acceptance test before writing the requirement</span>
+        <span class="grow"></span><span class="xs faint">22 Sep 2026</span>
+        <button class="pick" onclick="say('v4 is the version in use.')" data-testid="restore-v4"><svg><use href="#i-undo"/></svg>Restore</button></div>
+       <div class="row" style="padding:7px 10px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="history-v3">
+        <span class="pill" data-testid="history-v3-pill">v3</span><span class="sm">One requirement at a time, each with an ID</span>
+        <span class="grow"></span><span class="xs faint">18 Sep 2026</span>
+        <button class="pick" onclick="say('Brings v3 back as the wording in use and saves it as v5.')" data-testid="restore-v3"><svg><use href="#i-undo"/></svg>Restore</button></div>
+       <div class="row" style="padding:7px 10px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="history-v2">
+        <span class="pill" data-testid="history-v2-pill">v2</span><span class="sm">Quotes the repository when it contradicts the owner</span>
+        <span class="grow"></span><span class="xs faint">12 Sep 2026</span>
+        <button class="pick" onclick="say('Brings v2 back as the wording in use and saves it as v5.')" data-testid="restore-v2"><svg><use href="#i-undo"/></svg>Restore</button></div>
+       <div class="row" style="padding:7px 10px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="history-v1">
+        <span class="pill" data-testid="history-v1-pill">v1</span><span class="sm">Seeded with the build</span>
+        <span class="grow"></span><span class="xs faint">4 Sep 2026</span>
+        <button class="pick" onclick="say('Brings the seeded wording back and saves it as v5.')" data-testid="restore-v1"><svg><use href="#i-undo"/></svg>Restore</button></div>
+      </div>
+     </div>
+
+    </div>
+   </div>
+
+  </div>
+ </div>
+</div>
+</body>
+</html>

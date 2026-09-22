@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Usage Guide</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout no-toc">
+  <main>
+    <h1>Chatur — Usage Guide</h1>
+    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-UsageGuide.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#test-users">Test users</a></li>
+        <li><a href="#execution-guide">Execution guide</a></li>
+        <li><a href="#how-to-test-screen-by-screen">How to test, screen by screen</a></li>
+        <li class="h3"><a href="#sign-in">Sign in</a></li>
+        <li class="h3"><a href="#register">Register</a></li>
+        <li class="h3"><a href="#start-window">Start window</a></li>
+        <li class="h3"><a href="#main-window">Main window</a></li>
+        <li class="h3"><a href="#prerequisites">Prerequisites</a></li>
+        <li class="h3"><a href="#settings">Settings</a></li>
+        <li class="h3"><a href="#repository">Repository</a></li>
+        <li class="h3"><a href="#an-empty-folder">An empty folder</a></li>
+        <li><a href="#automated-tests">Automated tests</a></li>
+        <li><a href="#known-limitations">Known limitations</a></li>
+        <li><a href="#platform-notes">Platform notes</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Large</td></tr>
+<tr><td>Date</td><td>2026-09-22</td></tr>
+</tbody>
+</table>
+<h2 id="test-users">Test users<a class="anchor-link" href="#test-users">#</a></h2>
+<p>Chatur signs in through App Manager, so a test user is a real App Manager account on the Chatur application. None of these exists yet; they are made once, at the start of phase 1 step 1, and never invented again by an agent.</p>
+<table>
+<thead><tr><th>#</th><th>User</th><th>Password source</th><th>Role</th><th>Exists</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>chatur-owner@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Owner</code></td><td>User (the owner's own account shape)</td><td>no</td></tr>
+<tr><td>2</td><td>chatur-second@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Second</code></td><td>User (a second machine on the same account)</td><td>no</td></tr>
+<tr><td>3</td><td>chatur-yolo-tester@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Yolo</code></td><td>User (unattended runs)</td><td>no</td></tr>
+</tbody>
+</table>
+<h2 id="execution-guide">Execution guide<a class="anchor-link" href="#execution-guide">#</a></h2>
+<p>Prerequisites: .NET 10 SDK, the MAUI workloads, Node 20 or newer with Playwright for the browser checks, and a NuGet credential for the owner's GitHub Packages feed (TrBlazeUI and TechieRag live there, not on nuget.org). A Mac builds the Mac Catalyst head; a Windows machine builds the Windows head.</p>
+<pre><code>dotnet restore Chatur.sln
+dotnet run --project src/ChaturDb
+dotnet build Chatur.sln -c Debug
+dotnet run --project src/Chatur.WebHarness
+dotnet build src/Chatur -c Debug -f net10.0-maccatalyst
+dotnet build src/Chatur -c Debug -f net10.0-windows10.0.19041.0</code></pre>
+<p>Open http://localhost:5280 for the web harness — the views in a browser, which is how the automated screen checks see them — and sign in as user 1. The Mac and Windows heads are the real application and are started from the build output.</p>
+<p>Commands that depend on projects not yet built are marked in the roadmap: <code>ChaturDb</code> exists from step 1, <code>Chatur.WebHarness</code> from step 1, and the MAUI heads from step 1; nothing here waits on a later step.</p>
+<h2 id="how-to-test-screen-by-screen">How to test, screen by screen<a class="anchor-link" href="#how-to-test-screen-by-screen">#</a></h2>
+<h3 id="sign-in">Sign in<a class="anchor-link" href="#sign-in">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> user 1
+</li>
+<li><strong>Steps:</strong> 1) Start Chatur. 2) Type the email and password. 3) Leave "remember this device" on and press Sign in.
+</li>
+<li><strong>Expected:</strong> The start window opens. Quitting and starting again does not ask for the password. A wrong password shows App Manager's own message and nothing else.
+</li>
+<li><strong>Covers:</strong> REQ-UI-001, REQ-UI-002, REQ-FN-001, REQ-FN-002, REQ-FN-003
+</li>
+</ul>
+<h3 id="register">Register<a class="anchor-link" href="#register">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> nobody — this makes user 2
+</li>
+<li><strong>Steps:</strong> 1) From Sign in, choose "Create an account". 2) Fill in the name, the email and a password that breaks the rule. 3) Correct it and submit.
+</li>
+<li><strong>Expected:</strong> The rule list marks what is missing while typing, the weak password is refused before anything is sent, and the finished account lands in the start window.
+</li>
+<li><strong>Covers:</strong> REQ-FN-004, REQ-UI-003, REQ-FN-005, REQ-FN-006
+</li>
+</ul>
+<h3 id="start-window">Start window<a class="anchor-link" href="#start-window">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> user 1
+</li>
+<li><strong>Steps:</strong> 1) Read the recent list. 2) Open a folder that holds a solution. 3) Come back and use "Clone a repository" on a small GitHub repository.
+</li>
+<li><strong>Expected:</strong> Recent projects list newest first with their paths; opening one lands in the main window with its files down the left; the clone finishes and opens.
+</li>
+<li><strong>Covers:</strong> REQ-UI-004 to REQ-UI-008, REQ-FN-007, REQ-FN-008
+</li>
+</ul>
+<h3 id="main-window">Main window<a class="anchor-link" href="#main-window">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> user 1
+</li>
+<li><strong>Steps:</strong> 1) Ask the chosen agent for a small change. 2) Watch the steps. 3) Approve the change. 4) Press Run.
+</li>
+<li><strong>Expected:</strong> The agent is already chosen with a reason beside the box; every step appears as it happens; the file is read-only until the change is settled; approving writes it; Run streams the output.
+</li>
+<li><strong>Covers:</strong> REQ-UI-009 to REQ-UI-020, REQ-FN-009 to REQ-FN-024
+</li>
+</ul>
+<h3 id="prerequisites">Prerequisites<a class="anchor-link" href="#prerequisites">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> user 1
+</li>
+<li><strong>Steps:</strong> 1) Project ▸ Prerequisites. 2) Read the tool list. 3) Copy a fix for a missing tool.
+</li>
+<li><strong>Expected:</strong> Every tool the project needs, with the version found or "not found" and a command ready to copy; Chatur's own version and commit; the update offer when a newer nightly exists.
+</li>
+<li><strong>Covers:</strong> REQ-UI-016 to REQ-UI-018, REQ-FN-012, REQ-FN-013
+</li>
+</ul>
+<h3 id="settings">Settings<a class="anchor-link" href="#settings">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> user 1
+</li>
+<li><strong>Steps:</strong> 1) Tools ▸ Settings. 2) Add a provider with a pasted key and test it. 3) Reorder a tier on Routing. 4) Change the theme on Appearance.
+</li>
+<li><strong>Expected:</strong> The provider answers and its models appear in routing; the chain keeps the new order after a restart; the theme repaints every window at once and survives a restart; no secret is in the database or the log.
+</li>
+<li><strong>Covers:</strong> REQ-UI-021 to REQ-UI-033, REQ-FN-025 to REQ-FN-036, REQ-UI-044, REQ-FN-048
+</li>
+</ul>
+<h3 id="repository">Repository<a class="anchor-link" href="#repository">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> user 1
+</li>
+<li><strong>Steps:</strong> 1) Make a change and approve it. 2) Open the Repository. 3) Tick two files, write a message with a requirement id and check in. 4) Push.
+</li>
+<li><strong>Expected:</strong> The changed files list with their diffs; the check-in commits only the ticked files; the ahead count moves; an agent asking to run a source-control command is refused and shown.
+</li>
+<li><strong>Covers:</strong> REQ-UI-041 to REQ-UI-044, REQ-FN-044 to REQ-FN-048
+</li>
+</ul>
+<h3 id="an-empty-folder">An empty folder<a class="anchor-link" href="#an-empty-folder">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> user 1
+</li>
+<li><strong>Steps:</strong> 1) Start window ▸ New empty folder. 2) Ask the agent to think a product through. 3) Let it propose a brief.
+</li>
+<li><strong>Expected:</strong> Build and Run are dead because there is nothing to build; the conversation has the whole window; the Analyst is suggested; nothing is written until the proposal is approved.
+</li>
+<li><strong>Covers:</strong> REQ-UI-009, REQ-UI-010, REQ-FN-009, REQ-FN-010
+</li>
+</ul>
+<h2 id="automated-tests">Automated tests<a class="anchor-link" href="#automated-tests">#</a></h2>
+<pre><code>dotnet test Chatur.Tests
+npx playwright test tests/playwright --config tests/playwright/chatur.config.js</code></pre>
+<p>The xUnit suite covers <code>Chatur.Core</code> — every guard class for what it allows and what it refuses, the routing chain and its fallback, the measurement writer's refusals, and the agent loop. The Playwright suite drives <code>Chatur.WebHarness</code> and checks every view against its mockup at 1440 and 820 in both themes. The Windows head is driven through the Windows test bridge; the Mac head once the Mac is registered in <code>core-config.yaml</code>.</p>
+<h2 id="known-limitations">Known limitations<a class="anchor-link" href="#known-limitations">#</a></h2>
+<ul>
+<li>The Mac app window is not checked automatically until the owner's Mac is registered in <code>core-config.yaml</code>; until then a Mac-only fault is caught by the owner using the nightly build (BRD-94).
+</li>
+<li>Sign-in needs App Manager to be reachable the first time on each machine. Whether a stored token lets Chatur work with no internet afterwards is an open question in the BRD.
+</li>
+<li>Phase 1 has no debugger, no property grid and no package-manager screens; the editor is for quick edits (BRD scope).
+</li>
+<li>TechieRag must gain sign-in other than a key, the OpenAI Responses style, streamed tool calls, a fallback chain of any length, and pause-and-resume before phase 1 step 2 — <code>docs/Chatur-TechieRag-Feedback.md</code> when the first entry is filed.
+</li>
+<li>Installers are not signed before phase 4 (BRD-155).
+</li>
+</ul>
+<h2 id="platform-notes">Platform notes<a class="anchor-link" href="#platform-notes">#</a></h2>
+<p>Mac Catalyst and Windows are equal from the first release, and every requirement is verified on the Mac first, then on Windows (BRD-94). The Mac Catalyst head builds only on a Mac; the Windows head only on Windows. Tokens live in the Keychain on the Mac and Credential Manager on Windows, and the database and the log file live in the user's application-data folder on both.</p>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

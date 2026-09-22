@@ -1,0 +1,1152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Business Requirements</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout">
+  <nav class="side">
+    <h1>Chatur — Business Requirements</h1>
+    <div class="sub">Last rendered: 2026-09-22</div>
+    <div class="group">Contents</div>
+    <ol>
+        <li><a href="#summary">1. Summary</a></li>
+        <li><a href="#scope">2. Scope</a></li>
+        <li><a href="#users-and-roles">3. Users and roles</a></li>
+        <li><a href="#screens-and-flow">4. Screens and flow</a></li>
+        <li><a href="#requirements">5. Requirements</a></li>
+        <li class="h3"><a href="#sign-in">Sign in</a></li>
+        <li class="h3"><a href="#register">Register</a></li>
+        <li class="h3"><a href="#start">Start</a></li>
+        <li class="h3"><a href="#workbench-the-project-you-are-in">Workbench — the project you are in</a></li>
+        <li class="h3"><a href="#workbench-build-and-run">Workbench — build and run</a></li>
+        <li class="h3"><a href="#prerequisites">Prerequisites</a></li>
+        <li class="h3"><a href="#settings-providers">Settings — providers</a></li>
+        <li class="h3"><a href="#settings-routing">Settings — routing</a></li>
+        <li class="h3"><a href="#workbench-the-conversation">Workbench — the conversation</a></li>
+        <li class="h3"><a href="#settings-agents">Settings — agents</a></li>
+        <li class="h3"><a href="#settings-the-agent-editor">Settings — the agent editor</a></li>
+        <li class="h3"><a href="#workbench-sessions">Workbench — sessions</a></li>
+        <li class="h3"><a href="#workbench-changes-and-guards">Workbench — changes and guards</a></li>
+        <li class="h3"><a href="#settings-corrections">Settings — corrections</a></li>
+        <li class="h3"><a href="#settings-measurements">Settings — measurements</a></li>
+        <li class="h3"><a href="#settings-appearance">Settings — appearance</a></li>
+        <li class="h3"><a href="#workbench-the-files">Workbench — the files</a></li>
+        <li class="h3"><a href="#repository">Repository</a></li>
+        <li><a href="#non-functional-requirements">6. Non-functional requirements</a></li>
+        <li><a href="#development-status">7. Development status</a></li>
+        <li><a href="#context-diagram">8. Context diagram</a></li>
+        <li><a href="#constraints-and-assumptions">9. Constraints and assumptions</a></li>
+        <li><a href="#risks">10. Risks</a></li>
+    </ol>
+  </nav>
+  <main>
+    <h1>Chatur — Business Requirements</h1>
+    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-BRD.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#summary">1. Summary</a></li>
+        <li><a href="#scope">2. Scope</a></li>
+        <li><a href="#users-and-roles">3. Users and roles</a></li>
+        <li><a href="#screens-and-flow">4. Screens and flow</a></li>
+        <li><a href="#requirements">5. Requirements</a></li>
+        <li class="h3"><a href="#sign-in">Sign in</a></li>
+        <li class="h3"><a href="#register">Register</a></li>
+        <li class="h3"><a href="#start">Start</a></li>
+        <li class="h3"><a href="#workbench-the-project-you-are-in">Workbench — the project you are in</a></li>
+        <li class="h3"><a href="#workbench-build-and-run">Workbench — build and run</a></li>
+        <li class="h3"><a href="#prerequisites">Prerequisites</a></li>
+        <li class="h3"><a href="#settings-providers">Settings — providers</a></li>
+        <li class="h3"><a href="#settings-routing">Settings — routing</a></li>
+        <li class="h3"><a href="#workbench-the-conversation">Workbench — the conversation</a></li>
+        <li class="h3"><a href="#settings-agents">Settings — agents</a></li>
+        <li class="h3"><a href="#settings-the-agent-editor">Settings — the agent editor</a></li>
+        <li class="h3"><a href="#workbench-sessions">Workbench — sessions</a></li>
+        <li class="h3"><a href="#workbench-changes-and-guards">Workbench — changes and guards</a></li>
+        <li class="h3"><a href="#settings-corrections">Settings — corrections</a></li>
+        <li class="h3"><a href="#settings-measurements">Settings — measurements</a></li>
+        <li class="h3"><a href="#settings-appearance">Settings — appearance</a></li>
+        <li class="h3"><a href="#workbench-the-files">Workbench — the files</a></li>
+        <li class="h3"><a href="#repository">Repository</a></li>
+        <li><a href="#non-functional-requirements">6. Non-functional requirements</a></li>
+        <li><a href="#development-status">7. Development status</a></li>
+        <li><a href="#context-diagram">8. Context diagram</a></li>
+        <li><a href="#constraints-and-assumptions">9. Constraints and assumptions</a></li>
+        <li><a href="#risks">10. Risks</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Large</td></tr>
+<tr><td>Phase</td><td>1 of 4</td></tr>
+<tr><td>Stack answer set</td><td>dotnet (<code>.tfcore/templates/stack-defaults/dotnet.md</code>)</td></tr>
+<tr><td>Status</td><td>Draft</td></tr>
+<tr><td>Date</td><td>2026-09-21</td></tr>
+</tbody>
+</table>
+<h2 id="summary">1. Summary<a class="anchor-link" href="#summary">#</a></h2>
+<p>Chatur is a development environment for Mac and Windows where one person builds software by directing AI agents. The owner picks a project, chats with a role — analyst, architect, flow master, verifier or a library specialist — and that role reads, searches, edits and creates files, runs commands, and builds and runs the project, while the owner watches, approves each change and stops the work whenever he wants. It replaces the owner's TechieFlow framework and the coding tools it sits on, and talks to the AI models directly through TechieRag. The roles, their rights, their commands, the rules and the steps of a process are rows in Chatur's own database, so when one of them proves wrong during work Chatur corrects it on the spot and logs the correction for the owner to keep or undo. Nothing is carried by hand to a second repository. This phase, the Workbench, is the whole product at its smallest: sign in, find and run a project, connect models, chat with a role, watch and approve what the agent does, and edit and check in the result.</p>
+<h2 id="scope">2. Scope<a class="anchor-link" href="#scope">#</a></h2>
+<p><strong>In:</strong></p>
+<ul>
+<li>Installing on a real Mac and a real Windows machine from a download that every change to the main branch produces, with the owner's data surviving each update.
+</li>
+<li>Signing in, registering and signing out through App Manager.
+</li>
+<li>Finding projects in the folders the owner names, and choosing one to work on.
+</li>
+<li>Building, running and stopping a project with a target that fits the machine, watching the output live.
+</li>
+<li>A Prerequisites view: each tool a project needs before it will build, the version found, the fix when missing, and Chatur's own version and commit.
+</li>
+<li>Model sources — a pasted key, a local model, a ChatGPT subscription sign-in — with secrets in the operating system's store.
+</li>
+<li>Model routing: a tier per role and per kind of work, fallback chains, and a stronger model after repeated failed fixes.
+</li>
+<li>Chatting with a chosen role about the selected project, seeing which model answered and the tokens used.
+</li>
+<li>Roles, rights, commands, rules and process steps as versioned rows in Chatur's database, exported and imported between machines.
+</li>
+<li>An agent that reads, searches, edits and creates files, runs commands and builds the project, with every request passing guards first.
+</li>
+<li>Watching the agent live, stopping it, and choosing "ask me first" or "go ahead" for a session that can be continued later.
+</li>
+<li>Reviewing each change as before and after, and approving or rejecting it.
+</li>
+<li>Corrections Chatur makes to its own roles and rules, logged and reviewable.
+</li>
+<li>The five measurement files written into each project's <code>docs/metrics</code> folder, with <code>chatur</code> as the name of the tool.
+</li>
+<li>A built-in editor for quick edits, and a Repository view for changes, check-in, push, pull, branches and history.
+</li>
+<li>Later phases: the project workflow as Chatur processes, the end-to-end unattended run, and the move to more users. See <code>docs/Chatur-Phases.md</code>.
+</li>
+</ul>
+<p><strong>Out:</strong></p>
+<ul>
+<li>Starting, wrapping or depending on Claude Code, OpenCode, Codex or TechieFlow's scripts, and putting anything into a project's folder.
+</li>
+<li>A Claude subscription sign-in, which Anthropic does not allow. Claude is used with a key.
+</li>
+<li>A debugger, a property grid and package-manager screens. The editor is for quick edits.
+</li>
+<li>Chatur correcting a bug in its own program. That follows the feedback process and arrives as the next build.
+</li>
+<li>Payments, a phone version and a web version of Chatur.
+</li>
+<li>Signed installers before phase 4.
+</li>
+</ul>
+<h2 id="users-and-roles">3. Users and roles<a class="anchor-link" href="#users-and-roles">#</a></h2>
+<table>
+<thead><tr><th>Role</th><th>Who they are</th><th>What they need</th></tr></thead>
+<tbody>
+<tr><td>Visitor</td><td>Someone who has opened Chatur and is not signed in</td><td>To sign in, or to register an account</td></tr>
+<tr><td>Owner</td><td>The developer who owns the projects, working on a Mac and a Windows machine</td><td>Everything: projects, models, chat, the agent, changes, the editor and source control</td></tr>
+<tr><td>Licensed developer</td><td>Another developer, signed in and licensed through App Manager (phase 4)</td><td>The same as the owner, on his own projects, within his licence</td></tr>
+</tbody>
+</table>
+<p>Inside Chatur the AI plays its own agents — the Analyst, the Architect, the Flow master and the Verifier. They are rows in Chatur's database with their own rights, commands and rules, not people who sign in. The agents page in Settings is where the owner reads and changes them, and where a library specialist such as a TrBlazeUI or TechieRag agent is added.</p>
+<h2 id="screens-and-flow">4. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
+<p>Chatur is a desktop application with three windows. The <strong>start window</strong> opens first and holds nothing but the projects worked in and the ways into one. The <strong>main window</strong> is where work happens: a menu bar, a toolbar, the project's files down the left with the branch beneath them, one content area of tabs, and the conversation pinned to its right. The <strong>secondary window</strong> holds everything that is not the work — prerequisites, the repository, every setting — as a title bar, a list down its left, and one page; it carries no file tree and no conversation, because there is nothing to say to an agent while changing a setting. Sign in and Register come before any window is usable.</p>
+<table>
+<thead><tr><th>Screen</th><th>Route</th><th>Role</th><th>Mockup</th><th>Fields</th></tr></thead>
+<tbody>
+<tr><td>Sign in</td><td><code>/sign-in</code></td><td>Visitor</td><td><a href="mockups/sign-in.html">mockup</a></td><td>email, password, remember this device</td></tr>
+<tr><td>Register</td><td><code>/register</code></td><td>Visitor</td><td><a href="mockups/register.html">mockup</a></td><td>first name, last name, email, password, confirm password</td></tr>
+<tr><td>Start</td><td><code>/start</code></td><td>Owner</td><td><a href="mockups/start.html">mockup</a></td><td>recent projects, search, clone, open a solution, open a folder, new project, new empty folder</td></tr>
+<tr><td>Workbench</td><td><code>/</code></td><td>Owner</td><td><a href="mockups/main.html">mockup</a></td><td>files, tabs, file text, conversation, message, model, agent, mode, run target, output</td></tr>
+<tr><td>Prerequisites</td><td><code>/prerequisites</code></td><td>Owner</td><td><a href="mockups/prerequisites.html">mockup</a></td><td>tool, needed, found, fix, Chatur version, commit</td></tr>
+<tr><td>Settings</td><td><code>/settings/{page}</code></td><td>Owner</td><td><a href="mockups/settings-providers.html">mockup</a></td><td>the page chosen in the list, and its own fields</td></tr>
+<tr><td>Add a provider (dialog)</td><td>on <code>/settings/providers</code></td><td>Owner</td><td><a href="mockups/settings-providers.html">mockup</a></td><td>name, connector, sign-in method, web address, key</td></tr>
+<tr><td>Export and import (dialog)</td><td>on <code>/settings/agents</code></td><td>Owner</td><td><a href="mockups/settings-agents.html">mockup</a></td><td>file, what to include</td></tr>
+<tr><td>Repository</td><td><code>/repository</code></td><td>Owner</td><td><a href="mockups/repository.html">mockup</a></td><td>branch, changed files, message, check in, push, pull, history</td></tr>
+</tbody>
+</table>
+<p>Settings is seven pages, each its own component with its own code behind it: <a href="mockups/settings-providers.html">providers</a>, <a href="mockups/settings-routing.html">routing</a>, <a href="mockups/settings-agents.html">agents</a>, <a href="mockups/settings-corrections.html">corrections</a>, <a href="mockups/settings-measurements.html">measurements</a>, <a href="mockups/settings-appearance.html">appearance</a>, <a href="mockups/settings-account.html">account</a>. An empty folder opened from the start window is a state of the Workbench, not a screen of its own: there is nothing to build, so the conversation takes the whole window and an agent helps think the thing through before any code exists — <a href="mockups/folder-only.html">drawn here</a>.</p>
+<p><strong>Primary journey:</strong></p>
+<ol>
+<li>The owner opens Chatur and signs in with his App Manager account.
+</li>
+<li>The Start view lists where he was and the projects found in the folders he named.
+</li>
+<li>He opens one. The files appear down the left and the conversation is already there on the right.
+</li>
+<li>He asks for a change. Chatur has already chosen the agent that suits the project's state, and he can change it beside the Send button.
+</li>
+<li>He watches it read, search and propose, and approves or rejects each change before it reaches a file.
+</li>
+<li>He builds and runs from the toolbar, and the output fills the strip along the bottom.
+</li>
+<li>He opens a file when he wants one; the conversation keeps its half, or he closes the file view and gives it the window.
+</li>
+<li>He checks the work in himself from the Repository view, which no model may do.
+</li>
+</ol>
+<h2 id="requirements">5. Requirements<a class="anchor-link" href="#requirements">#</a></h2>
+<h3 id="sign-in">Sign in<a class="anchor-link" href="#sign-in">#</a></h3>
+<p>The way into Chatur for a returning owner, using his App Manager account.</p>
+<ul>
+<li><strong>BRD-1</strong> — Sign in with an account. <em>Screen:</em> Sign in · <em>Mockup:</em> <a href="mockups/sign-in.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner enters a known email and password on Sign in, then Chatur opens the Projects screen signed in.
+</li>
+</ul>
+</li>
+<li><strong>BRD-2</strong> — The password never leaves the machine as text. <em>Screen:</em> Sign in · <em>Mockup:</em> <a href="mockups/sign-in.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Chatur sends a sign-in, then the password field carries the encrypted value and the plain password appears nowhere in the request.
+</li>
+</ul>
+</li>
+<li><strong>BRD-3</strong> — A refused sign-in says why. <em>Screen:</em> Sign in · <em>Mockup:</em> <a href="mockups/sign-in.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the password is wrong on Sign in, then Sign in shows the server's own message and the owner stays on the screen.
+</li>
+</ul>
+</li>
+<li><strong>BRD-4</strong> — The installation names its device. <em>Screen:</em> Sign in · <em>Mockup:</em> <a href="mockups/sign-in.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Chatur signs in, then it sends the device identifier it generated on first run, and sends the same one every time after.
+</li>
+</ul>
+</li>
+<li><strong>BRD-5</strong> — Staying signed in. <em>Screen:</em> Sign in · <em>Mockup:</em> <a href="mockups/sign-in.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner closes Chatur while signed in and opens it again, then it opens on Projects without asking for the password.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="register">Register<a class="anchor-link" href="#register">#</a></h3>
+<p>Where a new account is made, for the owner's second machine or for another developer later.</p>
+<ul>
+<li><strong>BRD-6</strong> — Register an account. <em>Screen:</em> Register · <em>Mockup:</em> <a href="mockups/register.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner fills in name, email and a password that meets the rule, then the account is created and Chatur opens Projects.
+</li>
+</ul>
+</li>
+<li><strong>BRD-7</strong> — The password rule is visible while typing. <em>Screen:</em> Register · <em>Mockup:</em> <a href="mockups/register.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner types a password on Register, then the screen shows which parts of the rule are met and which are not.
+</li>
+</ul>
+</li>
+<li><strong>BRD-8</strong> — A weak password is caught before it is sent. <em>Screen:</em> Register · <em>Mockup:</em> <a href="mockups/register.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the password breaks the rule on Register, then Register refuses to send and marks the field.
+</li>
+</ul>
+</li>
+<li><strong>BRD-9</strong> — An email already in use is reported. <em>Screen:</em> Register · <em>Mockup:</em> <a href="mockups/register.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the email already has an account on Register, then Register shows the server's message and keeps what was typed.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="start">Start<a class="anchor-link" href="#start">#</a></h3>
+<p>What the window holds before a project is open: where the owner was, what Chatur found, and the folders it searches.</p>
+<ul>
+<li><strong>BRD-10</strong> — Name the folders Chatur searches. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner adds a folder in the Project folders dialog, then it appears in the folder list on Projects.
+</li>
+</ul>
+</li>
+<li><strong>BRD-11</strong> — Chatur lists what it found. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a named folder holds projects on Start, then Projects lists each one with its name, path and when it was last opened.
+</li>
+</ul>
+</li>
+<li><strong>BRD-12</strong> — Choose the project to work on. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens a project from the list, then the Workbench opens on it and it becomes the selected project.
+</li>
+</ul>
+</li>
+<li><strong>BRD-13</strong> — The choice survives a restart. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Chatur is closed and opened again on Start, then the same project is still selected.
+</li>
+</ul>
+</li>
+<li><strong>BRD-14</strong> — Nothing named yet says what to do. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When no folder has been named on Start, then Projects shows an empty state with a button that opens the Project folders dialog.
+</li>
+</ul>
+</li>
+<li><strong>BRD-15</strong> — Remove a folder. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner removes a folder in the dialog, then its projects leave the list and the folder is gone after a restart.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="workbench-the-project-you-are-in">Workbench — the project you are in<a class="anchor-link" href="#workbench-the-project-you-are-in">#</a></h3>
+<p>The top bar of the one working screen: which project, which branch, and the way out.</p>
+<ul>
+<li><strong>BRD-16</strong> — What the selected project is. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a project is selected on Workbench, then the toolbar names it and its branch, and its files are listed down the left.
+</li>
+</ul>
+</li>
+<li><strong>BRD-17</strong> — Straight into the work. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a project opens, then the conversation with a role is already there, with no further step to reach it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-18</strong> — Change project without going back. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner picks another project in the top bar, then the Workbench and every other screen show the new project.
+</li>
+</ul>
+</li>
+<li><strong>BRD-19</strong> — Sign out. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner signs out on Workbench, then Chatur returns to Sign in and the stored token no longer opens the app.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="workbench-build-and-run">Workbench — build and run<a class="anchor-link" href="#workbench-build-and-run">#</a></h3>
+<p>The Run control in the top bar and the output strip along the bottom. Only a role whose rights allow it may run anything.</p>
+<ul>
+<li><strong>BRD-20</strong> — Only targets that fit the machine. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Run opens, then only a target this machine can build can be chosen, and one needing another machine is shown as unavailable.
+</li>
+</ul>
+</li>
+<li><strong>BRD-21</strong> — Build the project. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner builds on Workbench, then Run shows the result as succeeded or failed with the time it took.
+</li>
+</ul>
+</li>
+<li><strong>BRD-22</strong> — Run the project. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner runs the chosen target on Workbench, then the program starts and Run shows it as running.
+</li>
+</ul>
+</li>
+<li><strong>BRD-23</strong> — Watch the output live. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the program writes a line on Workbench, then it appears in the output panel while the program is still running.
+</li>
+</ul>
+</li>
+<li><strong>BRD-24</strong> — Stop everything the run started. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner stops the run on Workbench, then every program it started ends and Run shows it as stopped.
+</li>
+</ul>
+</li>
+<li><strong>BRD-25</strong> — A failed build shows the errors. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a build fails on Workbench, then the output strip lists each error with its file and line, and opening one opens that file.
+</li>
+</ul>
+</li>
+<li><strong>BRD-26</strong> — The last target is offered first. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner returns to Run for a project on Workbench, then the target he used last time is already chosen.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="prerequisites">Prerequisites<a class="anchor-link" href="#prerequisites">#</a></h3>
+<p>What the project needs before it will build, what is installed, and what Chatur itself is. Not to be confused with the requirements of the product itself, which live in this document.</p>
+<ul>
+<li><strong>BRD-27</strong> — Every tool, with the version found. <em>Screen:</em> Prerequisites · <em>Mockup:</em> <a href="mockups/prerequisites.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Doctor opens for a project, then each tool it needs is listed with the version found or "not found".
+</li>
+</ul>
+</li>
+<li><strong>BRD-28</strong> — A missing tool says how to fix it. <em>Screen:</em> Prerequisites · <em>Mockup:</em> <a href="mockups/prerequisites.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a tool is missing from the machine, then its row on Prerequisites shows the command that installs it, ready to copy.
+</li>
+</ul>
+</li>
+<li><strong>BRD-29</strong> — Which Chatur this is. <em>Screen:</em> Prerequisites · <em>Mockup:</em> <a href="mockups/prerequisites.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Doctor opens, then it shows Chatur's own version and the commit the build came from.
+</li>
+</ul>
+</li>
+<li><strong>BRD-30</strong> — Homebrew tools are found on a Mac. <em>Screen:</em> Prerequisites · <em>Mockup:</em> <a href="mockups/prerequisites.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Chatur is started from Finder on a Mac, then Doctor still finds tools installed with Homebrew.
+</li>
+</ul>
+</li>
+<li><strong>BRD-31</strong> — A newer build is offered. <em>Screen:</em> Prerequisites · <em>Mockup:</em> <a href="mockups/prerequisites.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a newer nightly build exists on Prerequisites, then Doctor says so and links to the download for this machine.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="settings-providers">Settings — providers<a class="anchor-link" href="#settings-providers">#</a></h3>
+<p>The first tab: where the model sources are connected, and where their secrets are kept.</p>
+<ul>
+<li><strong>BRD-32</strong> — Connect a source with a pasted key. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner adds a provider and pastes a key on Settings, then it is listed as connected and its models can be chosen in routing.
+</li>
+</ul>
+</li>
+<li><strong>BRD-33</strong> — Connect a local model. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner adds a local model with its web address on Settings, then it is listed as connected with no key.
+</li>
+</ul>
+</li>
+<li><strong>BRD-34</strong> — Sign in to a ChatGPT subscription. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner chooses subscription sign-in, then the browser opens, and after he signs in the provider is listed as connected.
+</li>
+</ul>
+</li>
+<li><strong>BRD-35</strong> — Secrets go to the machine's own store. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a key or token is saved on Settings, then it is in the operating system's store and Chatur's database holds only the name it is stored under.
+</li>
+</ul>
+</li>
+<li><strong>BRD-36</strong> — Check that a source answers. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner tests a provider on Settings, then its row shows whether it answered, and the message when it did not.
+</li>
+</ul>
+</li>
+<li><strong>BRD-37</strong> — Remove a source. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner removes a provider on Settings, then it leaves the list and its secret is deleted from the store.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="settings-routing">Settings — routing<a class="anchor-link" href="#settings-routing">#</a></h3>
+<p>The routing tab: which model does which work, and what happens when one is not available.</p>
+<ul>
+<li><strong>BRD-38</strong> — A tier for each role. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner sets a role's tier on Settings, then work started by that role uses a model from that tier.
+</li>
+</ul>
+</li>
+<li><strong>BRD-39</strong> — A tier for each kind of work. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner sets a kind of work to a tier on Settings, then that setting wins over the role's tier for that work.
+</li>
+</ul>
+</li>
+<li><strong>BRD-40</strong> — Order the fallback chain. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner reorders the models in a tier, then the new order is the order Chatur tries them in.
+</li>
+</ul>
+</li>
+<li><strong>BRD-41</strong> — A limited model steps aside. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the chosen model is limited or unavailable on Settings, then Chatur uses the next in the chain and says which model answered.
+</li>
+</ul>
+</li>
+<li><strong>BRD-42</strong> — Repeated failed fixes climb a tier. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the same fix has failed the set number of times on Settings, then Chatur moves that work to a stronger tier and records the move.
+</li>
+</ul>
+</li>
+<li><strong>BRD-43</strong> — Routing is remembered. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Chatur is closed and opened again on Settings, then every tier, chain and role setting is as it was left.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="workbench-the-conversation">Workbench — the conversation<a class="anchor-link" href="#workbench-the-conversation">#</a></h3>
+<p>The panel pinned to the right of the window, where the work starts. By default the owner is talking to the model itself; an agent is chosen beside the Send button.</p>
+<ul>
+<li><strong>BRD-44</strong> — Choose who to talk to. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a project opens, then Chatur has already chosen the agent that suits its state, and says beside the box why.
+</li>
+</ul>
+</li>
+<li><strong>BRD-45</strong> — Ask and be answered. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner sends a message about the selected project on Workbench, then a reply from the chosen role appears in the conversation.
+</li>
+</ul>
+</li>
+<li><strong>BRD-46</strong> — Which model answered. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a reply arrives on Workbench, then it names the model that produced it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-47</strong> — The reply arrives as it is written. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a reply is being produced on Workbench, then its text grows in the conversation before the reply is finished.
+</li>
+</ul>
+</li>
+<li><strong>BRD-48</strong> — What it cost. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a reply is finished on Workbench, then the Workbench shows the tokens it used and the running total for the session.
+</li>
+</ul>
+</li>
+<li><strong>BRD-49</strong> — Watch what the agent is doing. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the agent reads a file, edits one or runs a command on Workbench, then that step appears in the activity panel as it happens.
+</li>
+</ul>
+</li>
+<li><strong>BRD-50</strong> — Stop the work. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner presses stop on Workbench, then the agent stops, the activity panel says so, and no further step is taken.
+</li>
+</ul>
+</li>
+<li><strong>BRD-51</strong> — Ask me first, or go ahead. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner sets the session's mode on Workbench, then the mode is kept with the session and shown while it runs.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="settings-agents">Settings — agents<a class="anchor-link" href="#settings-agents">#</a></h3>
+<p>The agents tab: the list of agents Chatur plays, read from its own database. Chatur ships the Analyst, the Architect, the Flow master and the Verifier; a library specialist is added here, not built in.</p>
+<ul>
+<li><strong>BRD-52</strong> — Roles come from the database. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a role's wording is changed in the database, then the roles tab shows the new wording without any file being edited.
+</li>
+</ul>
+</li>
+<li><strong>BRD-53</strong> — Rights at a glance. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the roles tab opens, then each role shows what it may do, its commands and the tier it uses.
+</li>
+</ul>
+</li>
+<li><strong>BRD-54</strong> — Take the roles to the other machine. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner exports on Settings, then Chatur writes one file holding every role, right, command and rule with its version.
+</li>
+</ul>
+</li>
+<li><strong>BRD-55</strong> — Bring them in. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner imports that file on the other machine, then the roles there are the same, with their rights, commands and rules.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="settings-the-agent-editor">Settings — the agent editor<a class="anchor-link" href="#settings-the-agent-editor">#</a></h3>
+<p>The right-hand side of the agents tab, where one agent is read and changed, with its history kept.</p>
+<ul>
+<li><strong>BRD-56</strong> — Change what a role is. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner edits a role's wording, commands or rules and saves on Settings, then the list and the next session use the new text.
+</li>
+</ul>
+</li>
+<li><strong>BRD-57</strong> — Set the role's model tier. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner sets a role's tier on the roles tab, then the routing tab shows the same tier for that role.
+</li>
+</ul>
+</li>
+<li><strong>BRD-58</strong> — Every save keeps the one before. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner saves a change on Settings, then the history list gains a version with the date and what changed.
+</li>
+</ul>
+</li>
+<li><strong>BRD-59</strong> — A role may only do what its rights allow. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the analyst, which cannot change code, asks to edit a file on Settings, then the request is refused and the refusal is shown.
+</li>
+</ul>
+</li>
+<li><strong>BRD-60</strong> — Only the verifier marks work verified. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When any other role asks to mark a requirement verified on Settings, then the request is refused and nothing is written.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="workbench-sessions">Workbench — sessions<a class="anchor-link" href="#workbench-sessions">#</a></h3>
+<p>The work already done, kept so it can be picked up again from the history in the workbench.</p>
+<ul>
+<li><strong>BRD-61</strong> — What has been worked on. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Sessions opens, then each session shows its project, role, mode, when it started and its state.
+</li>
+</ul>
+</li>
+<li><strong>BRD-62</strong> — Pick up where it stopped. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner continues a session on Workbench, then the Workbench opens with that conversation, its role and its mode.
+</li>
+</ul>
+</li>
+<li><strong>BRD-63</strong> — A session keeps its record. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a session is opened again after a restart on Workbench, then every message, step and refusal is still there in order.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="workbench-changes-and-guards">Workbench — changes and guards<a class="anchor-link" href="#workbench-changes-and-guards">#</a></h3>
+<p>The card beside the conversation. Nothing is written to a file until the owner has seen it there.</p>
+<ul>
+<li><strong>BRD-64</strong> — See the change itself. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the agent proposes an edit on Workbench, then Changes shows the file with its old and new text side by side.
+</li>
+</ul>
+</li>
+<li><strong>BRD-65</strong> — Approve it. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner approves a change on Workbench, then the file on disk holds the new text and the row moves to approved.
+</li>
+</ul>
+</li>
+<li><strong>BRD-66</strong> — Reject it. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner rejects a change on Workbench, then the file on disk is untouched and the row moves to rejected.
+</li>
+</ul>
+</li>
+<li><strong>BRD-67</strong> — Ask me first means ask. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the session is in "ask me first", then no file is written until the owner has approved that change.
+</li>
+</ul>
+</li>
+<li><strong>BRD-68</strong> — Everything the agent asks for passes the guards. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the agent asks to use any tool on Workbench, then the guards decide first, and a refused request never reaches the tool.
+</li>
+</ul>
+</li>
+<li><strong>BRD-69</strong> — A model never runs source control. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a model asks to run a source-control command on Workbench, then the guard refuses it and the refusal is shown in the activity.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="settings-corrections">Settings — corrections<a class="anchor-link" href="#settings-corrections">#</a></h3>
+<p>The corrections tab: what Chatur changed about itself, and the owner's word on it.</p>
+<ul>
+<li><strong>BRD-70</strong> — A correction is written down. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-corrections.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Chatur changes an agent, a rule or a step's wording in its database, then the corrections page gains a row with what changed, why and when.
+</li>
+</ul>
+</li>
+<li><strong>BRD-71</strong> — Keep it. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-corrections.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner keeps a correction on Settings, then it stays in force and the row moves to kept.
+</li>
+</ul>
+</li>
+<li><strong>BRD-72</strong> — Undo it. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-corrections.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner undoes a correction on Settings, then the wording before it returns and the row moves to undone.
+</li>
+</ul>
+</li>
+<li><strong>BRD-73</strong> — Kept corrections feed the next build. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-corrections.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner exports the seed data on Settings, then every kept correction is in it and every undone one is not.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="settings-measurements">Settings — measurements<a class="anchor-link" href="#settings-measurements">#</a></h3>
+<p>The measurements tab: the same numbers TechieFlow writes today, written by Chatur into each project.</p>
+<ul>
+<li><strong>BRD-74</strong> — The five files. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When an agent session runs in a project, then runs, gates, misses, sessions and commits files exist in its <code>docs/metrics</code> folder.
+</li>
+</ul>
+</li>
+<li><strong>BRD-75</strong> — Chatur signs its work. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Chatur writes a record on Settings, then the field naming the tool reads <code>chatur</code>.
+</li>
+</ul>
+</li>
+<li><strong>BRD-76</strong> — What was not measured stays empty. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a number was not measured on Settings, then its field is written empty and never filled with a guess.
+</li>
+</ul>
+</li>
+<li><strong>BRD-77</strong> — An unknown field is refused. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a record carries a field or value the schema does not know on Settings, then the write is refused and the reason is logged.
+</li>
+</ul>
+</li>
+<li><strong>BRD-78</strong> — A failed write never stops the work. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a measurement file cannot be written on Settings, then the session carries on and Measurements shows the failure.
+</li>
+</ul>
+</li>
+<li><strong>BRD-79</strong> — What has been written. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Measurements opens, then each stream shows how many records it holds and the newest one's time.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="settings-appearance">Settings — appearance<a class="anchor-link" href="#settings-appearance">#</a></h3>
+<p>The appearance tab: how Chatur looks, and how a new look is added without a new Chatur.</p>
+<ul>
+<li><strong>BRD-156</strong> — Choose how Chatur looks. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-appearance.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner picks a theme, or light or dark, on the appearance page, then every window changes at once and the choice survives a restart.
+</li>
+</ul>
+</li>
+<li><strong>BRD-157</strong> — A theme is data, not code. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-appearance.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner adds a theme file on Settings, then it joins the list and can be chosen, with no new build of Chatur.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="workbench-the-files">Workbench — the files<a class="anchor-link" href="#workbench-the-files">#</a></h3>
+<p>The files card: enough of an editor for a quick change, and a door to the owner's real one. It appears only for a role that may change code.</p>
+<ul>
+<li><strong>BRD-80</strong> — Browse the project. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the files card opens, then it shows the project's solution and folders, and a folder can be opened and closed.
+</li>
+</ul>
+</li>
+<li><strong>BRD-81</strong> — Open a file. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens a file from the tree, then its text appears in a new tab named after the file.
+</li>
+</ul>
+</li>
+<li><strong>BRD-82</strong> — Edit and save. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner changes the text and saves on Workbench, then the file on disk holds the new text.
+</li>
+</ul>
+</li>
+<li><strong>BRD-83</strong> — An unsaved tab is marked. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a tab has unsaved changes on Workbench, then it is marked, and closing it asks before the change is lost.
+</li>
+</ul>
+</li>
+<li><strong>BRD-84</strong> — Open it in the owner's editor. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner chooses his own editor for a file on Workbench, then that program opens with the file.
+</li>
+</ul>
+</li>
+<li><strong>BRD-85</strong> — Open it with whatever the machine uses. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens a file with the system's default application, then the machine's own choice of program opens it.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="repository">Repository<a class="anchor-link" href="#repository">#</a></h3>
+<p>The owner's own hand on check-in, push and branches.</p>
+<ul>
+<li><strong>BRD-86</strong> — What changed. <em>Screen:</em> Repository · <em>Mockup:</em> <a href="mockups/repository.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Source control opens, then every changed file is listed with its state, and choosing one shows its old and new text.
+</li>
+</ul>
+</li>
+<li><strong>BRD-87</strong> — Check in. <em>Screen:</em> Repository · <em>Mockup:</em> <a href="mockups/repository.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner checks in the chosen files with a message, then those files are committed and the list empties of them.
+</li>
+</ul>
+</li>
+<li><strong>BRD-88</strong> — Push and pull. <em>Screen:</em> Repository · <em>Mockup:</em> <a href="mockups/repository.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner pushes or pulls on Repository, then Source control shows the result and how far ahead or behind the branch now is.
+</li>
+</ul>
+</li>
+<li><strong>BRD-89</strong> — Switch branch. <em>Screen:</em> Repository · <em>Mockup:</em> <a href="mockups/repository.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner switches to another branch on Repository, then the header names it and the changed files are that branch's.
+</li>
+</ul>
+</li>
+<li><strong>BRD-90</strong> — An automatic check-in goes to its own branch. <em>Screen:</em> Repository · <em>Mockup:</em> <a href="mockups/repository.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a process checks in by itself, then the commit is on the run's own branch and its message carries the requirement ids.
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="non-functional-requirements">6. Non-functional requirements<a class="anchor-link" href="#non-functional-requirements">#</a></h2>
+<table>
+<thead><tr><th>Id</th><th>Area</th><th>Requirement</th><th>Measure</th></tr></thead>
+<tbody>
+<tr><td>BRD-91</td><td>Security</td><td>Every secret — model key, subscription token, App Manager token — is kept in the operating system's store for secrets, never in the database, a file or a log</td><td>When the owner connects a provider and then reads the database and the log, then the secret is in neither</td></tr>
+<tr><td>BRD-92</td><td>Logging</td><td>Serilog file logging is wired at startup before anything else can fail</td><td>When startup is broken on purpose, then the log file exists on disk and holds the failure</td></tr>
+<tr><td>BRD-93</td><td>Data</td><td>A database change that has shipped in a nightly build is never edited; a new one is added, and an update keeps the owner's data</td><td>When the owner makes data on the previous nightly and installs the new one, then every row is still there</td></tr>
+<tr><td>BRD-94</td><td>Portability</td><td>Every requirement works on Mac Catalyst and on Windows, verified on the Mac first</td><td>When a requirement is verified, then its verdict on the checklist names both the Mac and Windows</td></tr>
+<tr><td>BRD-95</td><td>Guards</td><td>Every guard class has unit tests covering what it allows and what it refuses</td><td>When the tests run, then the test project holds a test per guard for what it allows and what it refuses</td></tr>
+</tbody>
+</table>
+<h2 id="development-status">7. Development status<a class="anchor-link" href="#development-status">#</a></h2>
+<p>Written by the status gate after every build, verify and handoff; not by hand.</p>
+<p><strong>Snapshot as of 2026-09-22.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-Checklist.md</code>.</p>
+<table>
+<thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Sign in</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
+<tr><td>Register</td><td>4</td><td>0</td><td>4</td><td>Planned</td></tr>
+<tr><td>Start</td><td>6</td><td>0</td><td>6</td><td>Planned</td></tr>
+<tr><td>Workbench</td><td>34</td><td>0</td><td>34</td><td>Planned</td></tr>
+<tr><td>Prerequisites</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
+<tr><td>Settings</td><td>33</td><td>0</td><td>33</td><td>Planned</td></tr>
+<tr><td>Repository</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
+<tr><td>Non-functional</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
+</tbody>
+</table>
+<h2 id="context-diagram">8. Context diagram<a class="anchor-link" href="#context-diagram">#</a></h2>
+<div class="diagram">
+  <div class="dt">
+    <button data-zout title="Zoom out">&minus;</button>
+    <span class="zlabel">100%</span>
+    <button data-zin title="Zoom in">+</button>
+    <button data-fit title="Fit to width">Fit</button>
+    <button data-one title="Actual size">1:1</button>
+    <button data-fs title="Fullscreen">&#9166;</button>
+    <button data-pop title="Open in new tab">&#8599;</button>
+  </div>
+  <pre class="mermaid">flowchart LR
+  Owner(["Owner"]) --&gt; Chatur["Chatur"]
+  Chatur --&gt; DB[("SQLite in application data")]
+  Chatur --&gt; Store["Keychain / Credential Manager"]
+  Chatur --&gt; AM["App Manager"]
+  Chatur --&gt; Rag["TechieRag"]
+  Rag --&gt; Models["Model providers"]
+  Chatur --&gt; Proj["The owner's project folders"]
+  Chatur --&gt; Metrics["docs/metrics in each project"]</pre>
+</div>
+<h2 id="constraints-and-assumptions">9. Constraints and assumptions<a class="anchor-link" href="#constraints-and-assumptions">#</a></h2>
+<ul>
+<li>The technical decisions are already taken and are in <code>docs/Chatur-Technical-Decisions.md</code>. Day one records them and does not reopen them.
+</li>
+<li>Anything TechieRag lacks — sign-in other than a key, the OpenAI Responses style, live streaming of tool calls, a fallback chain of any length, pause and resume for approval — is added in the TechieRag repository before the step that needs it, never worked around in Chatur.
+</li>
+<li>The owner installs and uses each nightly build on his real Mac and his real Windows machine before the next step begins.
+</li>
+<li>The browser checks run against <code>Chatur.WebHarness</code> because a browser cannot look inside a Mac or Windows app window. The Windows app window is checked through the Windows test bridge; the Mac app window once the Mac is registered in <code>core-config.yaml</code>.
+</li>
+<li>Chatur needs nothing installed in a project's folder, and reads and writes the same documents TechieFlow uses.
+</li>
+</ul>
+<h2 id="risks">10. Risks<a class="anchor-link" href="#risks">#</a></h2>
+<table>
+<thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>A TechieRag gap blocks a step</td><td>Likely</td><td>High</td><td>The additions are listed and made in the TechieRag repository before the step begins; the gap goes in <code>docs/Chatur-TechieRag-Feedback.md</code>, never worked around</td></tr>
+<tr><td>The agent loop is bigger than one step's worth of work</td><td>Likely</td><td>High</td><td>Step 3 is only the loop, the guards and the change review; the workflow that uses it is phase 2</td></tr>
+<tr><td>A Mac-only failure is found late</td><td>Possible</td><td>Medium</td><td>Every requirement is verified on the Mac first; the Mac app window is driven automatically once the Mac is registered</td></tr>
+<tr><td>Self-correction changes a role in a way the owner did not want</td><td>Possible</td><td>Medium</td><td>Every correction is logged, shown on the corrections tab, and can be undone; nothing is silent</td></tr>
+<tr><td>Roles as database rows make a change harder to read than a file</td><td>Possible</td><td>Low</td><td>Every save is versioned with its history, and the whole set exports to one file</td></tr>
+</tbody>
+</table>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

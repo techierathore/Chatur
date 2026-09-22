@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Integrations</title>
+<link rel="stylesheet" href="chatur.css">
+<script>(function(){var t=localStorage.getItem('chatur-theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');})();</script>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="8" y="8" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></symbol>
+<symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+<symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15.5 7.5 3 3L22 7l-3-3"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></symbol>
+<symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-5-4.5-8.6-10-8.6Z"/></symbol>
+<symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+<symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/><path d="m9.5 12 1.8 1.8 3.2-3.6"/></symbol>
+</defs></svg>
+<script>
+function say(m){alert(m);}
+function closeAll(keep){document.querySelectorAll('.menu.open,.popwrap.open').forEach(function(e){if(e!==keep)e.classList.remove('open');});}
+function pop(btn,ev){ev.stopPropagation();var w=btn.parentNode;var was=w.classList.contains('open');closeAll();if(!was)w.classList.add('open');}
+document.addEventListener('click',function(){closeAll();});
+function toggleTheme(){var d=document.documentElement.classList.toggle('dark');localStorage.setItem('chatur-theme',d?'dark':'light');}
+function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.setAttribute('data-theme',p);localStorage.setItem('chatur-palette',p);
+ var n=document.getElementById('palette-name');if(n)n.textContent=p.charAt(0).toUpperCase()+p.slice(1);
+ document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
+ var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
+document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=list.parentNode;
+ var v=wrap.querySelector('[data-value]');if(v)v.textContent=btn.getAttribute('data-choice')||'';
+ var h=wrap.querySelector('input[type=hidden]');if(h)h.value=btn.getAttribute('data-choice')||'';
+ list.querySelectorAll('.tick').forEach(function(s){s.innerHTML='';});
+ var t=btn.querySelector('.tick');if(t)t.innerHTML='✓';closeAll();}
+function flip(btn,msg){btn.classList.toggle('on');say(msg);}
+</script>
+
+<div class="subwin" data-testid="window">
+
+ <div class="subbar" data-testid="subbar">
+  <a class="logo" href="index.html" data-testid="logo" title="Logo goes here — click for the list of screens">C</a>
+  <span class="t" data-testid="window-title">Integrations</span>
+  <span class="grow"></span>
+  <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
+  <div class="popwrap" data-testid="palette">
+   <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one is the Appearance page"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
+   <div class="pop right" id="palette-pop" data-testid="palette-pop">
+    <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber</button>
+    <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo</button>
+    <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal</button>
+    <button onclick="setPalette('slate',event)"><span class="tick" id="palette-tick-slate"></span>Slate</button>
+   </div>
+  </div>
+  <a class="pick" href="main.html" data-testid="close-window"><svg><use href="#i-x"/></svg>Close</a>
+ </div>
+
+ <div class="subbody">
+
+  <nav class="subnav" data-testid="subnav">
+   <div class="g">This project</div>
+   <a href="prerequisites.html" data-testid="nav-prerequisites"><svg><use href="#i-wrench"/></svg>Prerequisites</a>
+   <a href="repository.html" data-testid="nav-repository"><svg><use href="#i-branch"/></svg>Repository</a>
+   <a href="worktrees.html" data-testid="nav-worktrees"><svg><use href="#i-copy"/></svg>Working copies<span class="pill" style="margin-left:auto">later</span></a>
+   <div class="g">Chatur</div>
+   <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
+   <a href="settings-routing.html" data-testid="nav-routing"><svg><use href="#i-route"/></svg>Routing</a>
+   <a href="settings-agents.html" data-testid="nav-agents"><svg><use href="#i-users"/></svg>Agents</a>
+   <a href="settings-corrections.html" data-testid="nav-corrections"><svg><use href="#i-refresh"/></svg>Corrections</a>
+   <a href="settings-measurements.html" data-testid="nav-measurements"><svg><use href="#i-chart"/></svg>Measurements</a>
+   <a href="settings-appearance.html" data-testid="nav-appearance"><svg><use href="#i-palette"/></svg>Appearance</a>
+   <a href="settings-account.html" data-testid="nav-account"><svg><use href="#i-person"/></svg>Account</a>
+   <div class="g">Your account</div>
+   <a href="licence.html" data-testid="nav-licence"><svg><use href="#i-key"/></svg>Licence<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="feedback.html" data-testid="nav-feedback"><svg><use href="#i-alert"/></svg>Feedback<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="integrations.html" data-testid="nav-integrations" class="on"><svg><use href="#i-route"/></svg>Integrations</a>
+   <a href="all-projects.html" data-testid="nav-all-projects"><svg><use href="#i-chart"/></svg>All projects<span class="pill" style="margin-left:auto">later</span></a>
+  </nav>
+
+  <div class="subpage" data-testid="page">
+
+   <div class="row" data-testid="integrations-heading" style="flex-wrap:wrap;gap:10px">
+    <div><div class="h1">Chatur&#39;s actions, offered to other tools</div>
+     <div class="lead">Six actions over <span class="mono">https://api.appmanager.com</span>. Two are off, so they are not there at all.</div></div>
+    <span class="grow"></span>
+    <button class="pick" onclick="say('Makes a new token for another tool. It is shown once.')" data-testid="new-token"><svg><use href="#i-plus"/></svg>New token</button>
+   </div>
+
+   <div class="panel" data-testid="actions-panel">
+    <div class="ph"><svg><use href="#i-link"/></svg>What Chatur offers<span class="grow"></span><span class="xs faint" data-testid="actions-count">4 of 6 on</span></div>
+    <div class="wide">
+     <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px" data-testid="actions-table">
+      <thead><tr class="xs dim" style="text-align:left">
+       <th style="padding:8px 14px;font-weight:500">Action</th><th style="padding:8px 14px;font-weight:500">What it does</th><th style="padding:8px 14px;font-weight:500">What starts it</th><th style="padding:8px 14px;font-weight:500">Address</th><th style="padding:8px 14px;font-weight:500">State</th><th style="padding:8px 14px;font-weight:500"></th></tr></thead>
+      <tbody>
+       <tr style="border-top:1px solid var(--line2)" data-testid="action-row-start"><td style="padding:9px 14px"><b style="font-weight:500">Start a process</b></td><td style="padding:9px 14px"><span class="sm dim">Begins a named process and gives back a run number</span></td><td class="sm dim" style="padding:9px 14px">Another tool, or a schedule</td><td class="mono" style="padding:9px 14px;white-space:nowrap">POST /v1/chatur/process/start</td><td style="padding:9px 14px"><span class="pill ok" style="white-space:nowrap" data-testid="action-state-start">on</span></td><td style="padding:9px 14px"><button class="sw on" data-testid="action-switch-start" title="Start a process — on" onclick="flip(this,'Start a process — now off.')"></button></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="action-row-board"><td style="padding:9px 14px"><b style="font-weight:500">Read the board</b></td><td style="padding:9px 14px"><span class="sm dim">Gives back every card and its column</span></td><td class="sm dim" style="padding:9px 14px">Another tool</td><td class="mono" style="padding:9px 14px;white-space:nowrap">GET /v1/chatur/board</td><td style="padding:9px 14px"><span class="pill ok" style="white-space:nowrap" data-testid="action-state-board">on</span></td><td style="padding:9px 14px"><button class="sw on" data-testid="action-switch-board" title="Read the board — on" onclick="flip(this,'Read the board — now off.')"></button></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="action-row-change"><td style="padding:9px 14px"><b style="font-weight:500">Propose a change</b></td><td style="padding:9px 14px"><span class="sm dim">Opens a change for you to accept — never applied on its own</span></td><td class="sm dim" style="padding:9px 14px">Another tool</td><td class="mono" style="padding:9px 14px;white-space:nowrap">POST /v1/chatur/change</td><td style="padding:9px 14px"><span class="pill" style="white-space:nowrap" data-testid="action-state-change">off</span></td><td style="padding:9px 14px"><button class="sw" data-testid="action-switch-change" title="Propose a change — off" onclick="flip(this,'Propose a change — now on.')"></button></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="action-row-verify"><td style="padding:9px 14px"><b style="font-weight:500">Run the verifier</b></td><td style="padding:9px 14px"><span class="sm dim">Checks a phase and gives back a verdict per requirement</span></td><td class="sm dim" style="padding:9px 14px">A process, or another tool</td><td class="mono" style="padding:9px 14px;white-space:nowrap">POST /v1/chatur/verify</td><td style="padding:9px 14px"><span class="pill ok" style="white-space:nowrap" data-testid="action-state-verify">on</span></td><td style="padding:9px 14px"><button class="sw on" data-testid="action-switch-verify" title="Run the verifier — on" onclick="flip(this,'Run the verifier — now off.')"></button></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="action-row-metrics"><td style="padding:9px 14px"><b style="font-weight:500">Fetch the measurements</b></td><td style="padding:9px 14px"><span class="sm dim">Gives back runs, misses and token counts</span></td><td class="sm dim" style="padding:9px 14px">Another tool</td><td class="mono" style="padding:9px 14px;white-space:nowrap">GET /v1/chatur/metrics</td><td style="padding:9px 14px"><span class="pill ok" style="white-space:nowrap" data-testid="action-state-metrics">on</span></td><td style="padding:9px 14px"><button class="sw on" data-testid="action-switch-metrics" title="Fetch the measurements — on" onclick="flip(this,'Fetch the measurements — now off.')"></button></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="action-row-issue"><td style="padding:9px 14px"><b style="font-weight:500">Raise an issue</b></td><td style="padding:9px 14px"><span class="sm dim">Sends an entry to App Manager, as the feedback screen does</span></td><td class="sm dim" style="padding:9px 14px">Chatur, or another tool</td><td class="mono" style="padding:9px 14px;white-space:nowrap">POST /v1/chatur/issue</td><td style="padding:9px 14px"><span class="pill" style="white-space:nowrap" data-testid="action-state-issue">off</span></td><td style="padding:9px 14px"><button class="sw" data-testid="action-switch-issue" title="Raise an issue — off" onclick="flip(this,'Raise an issue — now on.')"></button></td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+
+   <div class="panel" data-testid="example-call">
+    <div class="ph">One call, and what it gives back<span class="grow"></span>
+     <button class="iconbtn" onclick="say('Copied the call and its answer.')" data-testid="copy-example"><svg><use href="#i-copy"/></svg></button></div>
+    <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+     <pre class="mono" style="margin:0;padding:11px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);overflow-x:auto;line-height:1.75" data-testid="example-pre">POST https://api.appmanager.com/v1/chatur/process/start
+Authorization: Bearer chatur_pat_7q4m…
+Content-Type: application/json
+
+{ "project": "TfLens", "process": "build-phase", "phase": 4 }
+
+200 OK
+{ "run": 483,
+  "state": "queued",
+  "worktree": "~/code/.chatur/wt/req-ui-121",
+  "started": null,
+  "follow": "/v1/chatur/run/483" }</pre>
+     <span class="xs faint">The token is made in Settings · Account and is shown once. An action that is off answers 404, as though it were never there.</span>
+    </div>
+   </div>
+
+   <div class="panel" data-testid="verifier-windows">
+    <div class="ph"><svg><use href="#i-monitor"/></svg>The verifier on real windows</div>
+    <div style="padding:12px 14px 4px">
+     <div class="row" style="align-items:flex-start;gap:9px;color:var(--dim)" data-testid="verifier-line">
+      <svg style="margin-top:2px"><use href="#i-check"/></svg>
+      <span class="sm grow">It drives the windows of the Mac and Windows applications Chatur built — it presses the real buttons in the real window, on the machine that built it, and keeps a screenshot of each screen it saw.</span>
+     </div>
+    </div>
+    <div class="wide">
+     <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:600px" data-testid="checks-table">
+      <thead><tr class="xs dim" style="text-align:left">
+       <th style="padding:8px 14px;font-weight:500">Application</th><th style="padding:8px 14px;font-weight:500">Machine</th><th style="padding:8px 14px;font-weight:500">Screenshots kept</th><th style="padding:8px 14px;font-weight:500">When</th><th style="padding:8px 14px;font-weight:500">Result</th></tr></thead>
+      <tbody>
+       <tr style="border-top:1px solid var(--line2)" data-testid="check-row-1"><td style="padding:9px 14px;white-space:nowrap">TfLens · Mac Catalyst</td><td class="dim" style="padding:9px 14px;white-space:nowrap">Techie&#39;s MacBook Pro</td><td style="padding:9px 14px">14</td><td class="dim" style="padding:9px 14px;white-space:nowrap">22 Sep 2026 11:20</td><td style="padding:9px 14px"><span class="pill ok" style="white-space:nowrap" data-testid="check-state-1"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>passed</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="check-row-2"><td style="padding:9px 14px;white-space:nowrap">TfLens · Windows</td><td class="dim" style="padding:9px 14px;white-space:nowrap">TR-WIN-DESK</td><td style="padding:9px 14px">12</td><td class="dim" style="padding:9px 14px;white-space:nowrap">22 Sep 2026 08:40</td><td style="padding:9px 14px"><span class="pill ok" style="white-space:nowrap" data-testid="check-state-2"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>passed</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="check-row-3"><td style="padding:9px 14px;white-space:nowrap">AstroLyfe · Mac Catalyst</td><td class="dim" style="padding:9px 14px;white-space:nowrap">Techie&#39;s MacBook Pro</td><td style="padding:9px 14px">9</td><td class="dim" style="padding:9px 14px;white-space:nowrap">21 Sep 2026 17:55</td><td style="padding:9px 14px"><span class="pill warn" style="white-space:nowrap" data-testid="check-state-3">2 to look at</span></td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+
+   <div class="panel" data-testid="downloads-panel">
+    <div class="ph"><svg><use href="#i-shield"/></svg>Signed downloads</div>
+    <div style="padding:6px 14px 13px">
+     <div class="row" style="gap:12px;padding:10px 0;border-top:1px solid var(--line2);flex-wrap:wrap" data-testid="download-mac">
+      <svg style="color:var(--dim)"><use href="#i-down"/></svg>
+      <div class="grow" style="min-width:180px"><div class="sm" style="font-weight:500">Chatur 0.1.0 · Mac <span class="mono faint">Chatur-0.1.0.dmg</span></div>
+       <div class="xs dim">Signed by Developer ID Application — Techie Rathore (TR9Q4M2F8A)</div></div>
+      <span class="pill ok" style="white-space:nowrap" data-testid="download-mac-notarised"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>Notarised</span>
+      <span class="xs dim" data-testid="download-mac-when">20 Sep 2026 18:40</span>
+     </div>
+     <div class="row" style="gap:12px;padding:10px 0;border-top:1px solid var(--line2);flex-wrap:wrap" data-testid="download-win">
+      <svg style="color:var(--dim)"><use href="#i-down"/></svg>
+      <div class="grow" style="min-width:180px"><div class="sm" style="font-weight:500">Chatur 0.1.0 · Windows <span class="mono faint">Chatur-0.1.0.msix</span></div>
+       <div class="xs dim">Signed by a code-signing certificate — Techie Rathore, through App Manager</div></div>
+      <span class="pill" style="white-space:nowrap" data-testid="download-win-notarised">Notarising does not apply</span>
+      <span class="xs dim" data-testid="download-win-when">20 Sep 2026 18:52</span>
+     </div>
+     <div class="xs faint" style="padding-top:9px">Notarising is an Apple step, so it applies to the Mac download only. Both were signed on the machine that built them; neither was touched afterwards.</div>
+    </div>
+   </div>
+
+  </div>
+ </div>
+</div>
+</body>
+</html>

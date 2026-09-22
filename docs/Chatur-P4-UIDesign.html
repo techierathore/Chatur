@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — UI Design — Phase 4: More users</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout no-toc">
+  <main>
+    <h1>Chatur — UI Design — Phase 4: More users</h1>
+    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-P4-UIDesign.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#screens">Screens</a></li>
+        <li class="h3"><a href="#screen-feedback-and-issues-feedback">Screen: Feedback and issues (/feedback)</a></li>
+        <li class="h3"><a href="#screen-licence-licence">Screen: Licence (/licence)</a></li>
+        <li class="h3"><a href="#screen-all-projects-all-projects">Screen: All projects (/all-projects)</a></li>
+        <li class="h3"><a href="#screen-worktrees-worktrees">Screen: Worktrees (/worktrees)</a></li>
+        <li class="h3"><a href="#screen-integrations-integrations">Screen: Integrations (/integrations)</a></li>
+        <li><a href="#where-the-rest-lives">Where the rest lives</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Small</td></tr>
+<tr><td>Phase</td><td>4 of 4</td></tr>
+</tbody>
+</table>
+<h2 id="screens">Screens<a class="anchor-link" href="#screens">#</a></h2>
+<p>Each of these opens as a tab in the one window, with the conversation still pinned to its right.</p>
+<h3 id="screen-feedback-and-issues-feedback">Screen: Feedback and issues (<code>/feedback</code>)<a class="anchor-link" href="#screen-feedback-and-issues-feedback">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/feedback.html">mockups/feedback.html</a> · <strong>Roles:</strong> Owner, Licensed developer · <strong>BRD:</strong> BRD-137 to BRD-140</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>feedback-form</code></td><td>Select ×2 + Input + Textarea + Switch</td><td>what it is about, how bad it is, the title, the detail, and whether to attach this session</td></tr>
+<tr><td><code>feedback-destination</code></td><td>text</td><td>where this entry will go, named before it is sent</td></tr>
+<tr><td><code>feedback-table</code></td><td>DataTable</td><td>six entries: id, what it is about, title, when raised, the state, the answer in short</td></tr>
+<tr><td><code>feedback-queued-note</code></td><td>Alert (info)</td><td>the two held since the network went at 09:12, and that they go by themselves</td></tr>
+<tr><td><code>feedback-routing</code></td><td>Panel</td><td>everything goes through App Manager; an entry about a library reaches that library's own team</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>About</td><td>select</td><td>yes</td><td>Chatur itself, TrBlazeUI, TechieRag or App Manager; never blank</td></tr>
+<tr><td>Severity</td><td>select</td><td>yes</td><td>blocker, major or minor; major to begin with</td></tr>
+<tr><td>Title</td><td>text</td><td>yes</td><td>4 to 80 characters, one line</td></tr>
+<tr><td>Detail</td><td>textarea</td><td>yes</td><td>at least 20 characters</td></tr>
+<tr><td>Attach this session</td><td>switch</td><td>no</td><td>on by default</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> none — the field that fails is named under the form, never in a dialog</p>
+<p><strong>States:</strong> empty: nothing raised — one line saying the form above is the whole of it · loading: the refresh spins and the rows dim, keeping their values · error: App Manager unreachable — the note says when it last tried and offers Try again, and the form still takes entries and queues them</p>
+<h3 id="screen-licence-licence">Screen: Licence (<code>/licence</code>)<a class="anchor-link" href="#screen-licence-licence">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/licence.html">mockups/licence.html</a> · <strong>Roles:</strong> Owner, Licensed developer · <strong>BRD:</strong> BRD-141 to BRD-144</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>licence-panel</code></td><td>Card + Progress</td><td>the name, the state, the expiry, the days left, the seats, the key with a copy button, and the days used</td></tr>
+<tr><td><code>licence-warning</code></td><td>Alert (warning)</td><td>the server's own message about two devices against a cap of one</td></tr>
+<tr><td><code>devices-table</code></td><td>DataTable</td><td>each machine: platform, app version, last seen, sign-ins, its state, and Forget and Block</td></tr>
+<tr><td><code>features-panel</code></td><td>Switch ×6</td><td>the features this licence carries, two off</td></tr>
+<tr><td><code>features-note</code></td><td>Panel</td><td>a feature that is off is drawn nowhere — no menu entry, no tab, no button</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>—</td><td>—</td><td>—</td><td>nothing is typed; Forget on the machine you are using warns that you sign in again here, and Block on a blocked machine reads Unblock</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> Forget this device · Block this device — both confirm first</p>
+<p><strong>States:</strong> empty: one machine only — no warning row and a single row in the table · loading: the recheck spins, the pills go grey, the bar keeps its width · error: App Manager unreachable — the state reads when it was last checked and that Chatur is working offline, the licence stays usable for its grace days, and no switch is touched</p>
+<h3 id="screen-all-projects-all-projects">Screen: All projects (<code>/all-projects</code>)<a class="anchor-link" href="#screen-all-projects-all-projects">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/all-projects.html">mockups/all-projects.html</a> · <strong>Roles:</strong> Owner, Licensed developer · <strong>BRD:</strong> BRD-145 to BRD-148</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>projects-controls</code></td><td>Input + Select + Tabs</td><td>the search, the sort, and Cards or Table</td></tr>
+<tr><td><code>projects-tiles</code></td><td>Card ×4</td><td>projects, open requirements, verified, sessions this week</td></tr>
+<tr><td><code>projects-table</code></td><td>DataTable</td><td>six projects: folder, phase, requirements, open, verified, last worked, state, and Open</td></tr>
+<tr><td><code>sync-panel</code></td><td>Card + Button</td><td>when agents and rules last synced, the two machines and their state, and Sync now</td></tr>
+<tr><td><code>sync-note</code></td><td>Panel</td><td>a change on one machine reaches the other at the next sync</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Search</td><td>search</td><td>no</td><td>free text; a folder that cannot be read is greyed and says so rather than being dropped</td></tr>
+<tr><td>Sort</td><td>select</td><td>no</td><td>last worked on, name, or open requirements</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> none</p>
+<p><strong>States:</strong> empty: no projects — a blank state offering Add a project; a search matching nothing says so and offers to clear it · loading: the tiles read as dashes and the last rows stay, dimmed · error: a failed sync marks that machine and offers Try again; the project rows are read locally and a sync failure never touches them</p>
+<h3 id="screen-worktrees-worktrees">Screen: Worktrees (<code>/worktrees</code>)<a class="anchor-link" href="#screen-worktrees-worktrees">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/worktrees.html">mockups/worktrees.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-149 to BRD-151</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>worktrees-table</code></td><td>DataTable</td><td>four copies: folder, branch, who is using it, its state, when it was made, and Remove</td></tr>
+<tr><td><code>add-worktree-dialog</code></td><td>Dialog</td><td>the branch, the folder, and whether the next run takes its own copy</td></tr>
+<tr><td><code>isolation-note</code></td><td>Panel</td><td>every file a run changes stays in its own copy; each copy has its own branch; two runs never share one</td></tr>
+<tr><td><code>worktree-facts</code></td><td>Card</td><td>how many copies, how much disk, the oldest, how many are stale</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Branch</td><td>select or typed</td><td>yes</td><td>a branch already checked out elsewhere offers that copy instead of making a second</td></tr>
+<tr><td>Folder</td><td>text</td><td>yes</td><td>must be empty and outside the project folder; one with files in it says so and Add stays inert</td></tr>
+<tr><td>Give the next run its own copy</td><td>switch</td><td>no</td><td>on by default</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> Add a working copy</p>
+<p><strong>States:</strong> empty: only the owner's own folder — one line saying so, with the same dialog · loading: a copy being made appears at once, marked, with Remove disabled · error: no disk, or a branch that has gone — the row says it could not be made with the reason from the repository, and offers Try again; Remove on a copy a run holds is refused and names the run</p>
+<h3 id="screen-integrations-integrations">Screen: Integrations (<code>/integrations</code>)<a class="anchor-link" href="#screen-integrations-integrations">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/integrations.html">mockups/integrations.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-152 to BRD-155</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>actions-table</code></td><td>DataTable + Switch</td><td>six actions: what it does, what starts it, its address, its state, and its switch; two are off</td></tr>
+<tr><td><code>example-call</code></td><td>CodeBlock</td><td>one call and the answer it gives, with a copy button; the token is shown once, and an action that is off answers as missing</td></tr>
+<tr><td><code>verifier-windows</code></td><td>Card + DataTable</td><td>the verifier driving the windows of the Mac and Windows applications Chatur built, and the last three checks with their screenshots</td></tr>
+<tr><td><code>downloads-panel</code></td><td>DataTable</td><td>the Mac and the Windows download: what signed each, whether it was notarised, and when</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Action on or off</td><td>switch</td><td>no</td><td>turning one on with no token made warns first</td></tr>
+<tr><td>Address</td><td>read-only</td><td>—</td><td>Chatur owns it; it is never typed</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> Make a token — shown once and never again</p>
+<p><strong>States:</strong> empty: no token yet — the example panel says to make one to see a call that works · loading: a switch shows a half state while App Manager is told, and goes back if it refuses · error: App Manager unreachable — a row saying the actions are still served but their state has not reached App Manager, with the switches left alone</p>
+<h2 id="where-the-rest-lives">Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
+<table>
+<thead><tr><th>What</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td>The window, the theme and the design system</td><td><a href="Chatur-UIDesign.md">phase 1 UI design</a></td></tr>
+<tr><td>The click-through flow across every phase</td><td><a href="Chatur-UIDesign.md">phase 1 UI design</a></td></tr>
+<tr><td>This phase's requirements</td><td><a href="Chatur-P4-BRD.md">Chatur-P4-BRD.md</a></td></tr>
+</tbody>
+</table>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Run queue</title>
+<link rel="stylesheet" href="chatur.css">
+<script>(function(){var t=localStorage.getItem('chatur-theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');})();</script>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+<symbol id="i-folder-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H21a1 1 0 0 1 .97 1.24l-1.4 5.6A2 2 0 0 1 18.63 18H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/></symbol>
+<symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="7 4 19 12 7 20 7 4"/></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="5.5" y="5.5" rx="2"/></symbol>
+<symbol id="i-hammer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.4 8.4a2.1 2.1 0 0 1-3-3L12 9"/><path d="M17.6 6.4 14 10l-1-1 3.6-3.6a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 1 0 2.8L17 13l-1-1"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.7 20.3 21 12 3.7 3.7 6 12Z"/><path d="M6 12h15"/></symbol>
+<symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></symbol>
+<symbol id="i-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="8" y="8" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="4" height="14" x="6" y="5" rx="1"/><rect width="4" height="14" x="14" y="5" rx="1"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"/><path d="M18.5 6 17.7 19a2 2 0 0 1-2 1.9H8.3a2 2 0 0 1-2-1.9L5.5 6"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+</defs></svg>
+<script>
+function say(m){alert(m);}
+function closeAll(keep){document.querySelectorAll('.menu.open,.popwrap.open').forEach(function(e){if(e!==keep)e.classList.remove('open');});}
+function menu(btn,ev){ev.stopPropagation();var m=btn.parentNode;var was=m.classList.contains('open');closeAll();if(!was)m.classList.add('open');}
+function pop(btn,ev){ev.stopPropagation();var w=btn.parentNode;var was=w.classList.contains('open');closeAll();if(!was)w.classList.add('open');}
+function choose(btn,label,ev){ev.stopPropagation();var w=btn.closest('.popwrap');var t=w.querySelector('[data-value]');if(t)t.textContent=label;
+ w.querySelectorAll('.pop .tick').forEach(function(s){s.innerHTML='';});var tk=btn.querySelector('.tick');if(tk)tk.innerHTML='✓';closeAll();}
+document.addEventListener('click',function(){closeAll();});
+document.addEventListener('mouseover',function(e){var m=e.target.closest?e.target.closest('.menu'):null;
+ if(m&&document.querySelector('.menu.open')&&!m.classList.contains('open')){closeAll();m.classList.add('open');}});
+function toggleTheme(){var d=document.documentElement.classList.toggle('dark');localStorage.setItem('chatur-theme',d?'dark':'light');}
+function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.setAttribute('data-theme',p);localStorage.setItem('chatur-palette',p);
+ var n=document.getElementById('palette-name');if(n)n.textContent=p.charAt(0).toUpperCase()+p.slice(1);
+ document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
+ var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
+document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+</script>
+
+<div class="win" data-testid="window">
+
+ <div class="menubar" data-testid="menubar">
+  <a class="logo" href="index.html" data-testid="logo" title="Logo goes here — click for the list of screens">C</a>
+  <span class="wordmark" data-testid="wordmark">Chatur</span>
+
+  <div class="menu" data-testid="menu-file"><button onclick="menu(this,event)">File</button>
+   <div class="drop" data-testid="menu-file-items">
+    <button onclick="say('Starts a new project here.')">New project…<span class="sub">⇧⌘N</span></button>
+    <button onclick="say('Opens a .sln and reads its projects.')">Open a solution…<span class="sub">⌘O</span></button>
+    <button onclick="say('Opens any folder as a project.')">Open a folder…<span class="sub">⇧⌘O</span></button>
+    <button onclick="say('Clones a repository from GitHub and opens it.')">Clone a repository…</button>
+    <hr>
+    <a href="start.html">Recent projects<span class="sub">▸</span></a>
+    <hr>
+    <button onclick="say('Saves the open file.')">Save<span class="sub">⌘S</span></button>
+    <button onclick="say('Saves every open file.')">Save all<span class="sub">⌥⌘S</span></button>
+    <hr>
+    <a href="start.html">Close project</a>
+    <button onclick="say('Quits Chatur.')">Exit<span class="sub">⌘Q</span></button>
+   </div>
+  </div>
+
+  <div class="menu" data-testid="menu-edit"><button onclick="menu(this,event)">Edit</button>
+   <div class="drop" data-testid="menu-edit-items">
+    <button onclick="say('Undoes the last change in the open file.')">Undo<span class="sub">⌘Z</span></button>
+    <button disabled onclick="say('Nothing to redo.')" title="Nothing to redo">Redo<span class="sub">⇧⌘Z</span></button>
+    <hr>
+    <button onclick="say('Cut.')">Cut<span class="sub">⌘X</span></button>
+    <button onclick="say('Copy.')">Copy<span class="sub">⌘C</span></button>
+    <button onclick="say('Paste.')">Paste<span class="sub">⌘V</span></button>
+    <hr>
+    <button onclick="say('Searches every file in TfLens.')">Find in files…<span class="sub">⇧⌘F</span></button>
+    <button onclick="say('Jumps to a file by name.')">Go to file…<span class="sub">⌘P</span></button>
+   </div>
+  </div>
+
+  <div class="menu" data-testid="menu-view"><button onclick="menu(this,event)">View</button>
+   <div class="drop" data-testid="menu-view-items">
+    <button onclick="say('Hides or shows the files panel.')"><span class="tick">✓</span>Files</button>
+    <button onclick="say('Hides or shows the conversation. Hidden, the file view takes the window.')"><span class="tick">✓</span>Chat</button>
+    <button onclick="say('Hides or shows the output strip.')"><span class="tick">✓</span>Output</button>
+    <hr>
+    <a href="prerequisites.html"><span class="tick"></span>Prerequisites</a>
+    <a href="repository.html"><span class="tick"></span>Repository</a>
+    <hr>
+    <a href="settings-appearance.html"><span class="tick"></span>Appearance…</a>
+    <button onclick="say('Makes everything larger or smaller.')"><span class="tick"></span>Zoom<span class="sub">▸</span></button>
+   </div>
+  </div>
+
+  <div class="menu" data-testid="menu-project"><button onclick="menu(this,event)">Project</button>
+   <div class="drop" data-testid="menu-project-items">
+    <button onclick="say('Builds TfLens.')">Build<span class="sub">⌘B</span></button>
+    <button onclick="say('Runs the chosen target.')">Run<span class="sub">⌘R</span></button>
+    <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
+    <hr>
+    <div class="grouplbl">Run target</div>
+    <button onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
+    <button onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
+    <button onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
+    <button onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
+    <hr>
+    <a href="prerequisites.html">Prerequisites…</a>
+    <a href="repository.html">Repository…</a>
+   </div>
+  </div>
+
+  <div class="menu" data-testid="menu-tools"><button onclick="menu(this,event)">Tools</button>
+   <div class="drop" data-testid="menu-tools-items">
+    <a href="settings-providers.html">Settings…<span class="sub">⌘,</span></a>
+    <hr>
+    <div class="grouplbl">Go straight to</div>
+    <a href="settings-providers.html">Model providers</a>
+    <a href="settings-routing.html">Routing</a>
+    <a href="settings-agents.html">Agents</a>
+    <a href="settings-corrections.html">Corrections</a>
+    <a href="settings-measurements.html">Measurements</a>
+    <a href="settings-appearance.html">Appearance</a>
+   </div>
+  </div>
+
+  <div class="menu" data-testid="menu-help"><button onclick="menu(this,event)">Help</button>
+   <div class="drop" data-testid="menu-help-items">
+    <button onclick="say('Chatur 0.1.0, built from a91f3c2.')">About Chatur</button>
+    <a href="feedback.html">Send feedback…</a>
+    <a href="prerequisites.html">Check for updates</a>
+   </div>
+  </div>
+
+  <div class="whoami" data-testid="signed-in">
+   <div class="popwrap" data-testid="account">
+    <button class="pick" style="height:26px;border:0" onclick="pop(this,event)"><span class="av">TR</span><span class="nm">Techie Rathore</span><svg><use href="#i-chevron"/></svg></button>
+    <div class="pop right" data-testid="account-pop">
+     <div class="note">techierathore@gmail.com</div>
+     <a href="settings-account.html">Account</a>
+     <a href="licence.html">Licence</a>
+     <a href="settings-providers.html">Settings…</a>
+     <hr>
+     <a href="sign-in.html">Sign out</a>
+    </div>
+   </div>
+   <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
+   <div class="popwrap" data-testid="palette">
+    <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one lives in Settings ▸ Appearance"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
+    <div class="pop right" id="palette-pop" data-testid="palette-pop">
+     <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber<span class="swatchrow"><i style="background:oklch(0.795 0.135 70)"></i><i style="background:oklch(0.222 0.012 65)"></i></span></button>
+     <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo<span class="swatchrow"><i style="background:oklch(0.675 0.165 275)"></i><i style="background:oklch(0.218 0.016 275)"></i></span></button>
+     <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal<span class="swatchrow"><i style="background:oklch(0.755 0.115 195)"></i><i style="background:oklch(0.216 0.019 195)"></i></span></button>
+     <button onclick="setPalette('slate',event)"><span class="tick" id="palette-tick-slate"></span>Slate<span class="swatchrow"><i style="background:oklch(0.72 0.085 250)"></i><i style="background:oklch(0.212 0.010 250)"></i></span></button>
+     <div class="note">Settings ▸ Appearance is where this really lives.</div>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <div class="toolbar" data-testid="toolbar">
+  <button class="tb primary" onclick="say('Builds and runs TfLens on this machine.')" data-testid="run"><svg><use href="#i-play"/></svg>Run</button>
+  <button class="tb" onclick="say('Stops the run and every program it started.')" data-testid="stop"><svg><use href="#i-stop"/></svg>Stop</button>
+  <button class="tb" onclick="say('Builds without running.')" data-testid="build"><svg><use href="#i-hammer"/></svg>Build</button>
+  <span class="sep"></span>
+  <div class="popwrap" data-testid="target">
+   <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
+   <div class="pop" data-testid="target-pop">
+    <button onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
+    <button onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
+    <button onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
+    <button onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
+    <div class="note">Only what this machine can build. A Windows head needs the Windows machine.</div>
+   </div>
+  </div>
+  <span class="sep"></span>
+  <div class="popwrap" data-testid="branch-pick">
+   <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
+   <div class="pop" data-testid="branch-pop">
+    <button onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
+    <button onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
+    <button onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
+    <hr>
+    <a href="repository.html">Open the repository…</a>
+   </div>
+  </div>
+  <button class="find" onclick="say('Finds a file, a symbol or some text in TfLens.')" data-testid="find"><svg><use href="#i-search"/></svg>Find in TfLens<span class="grow"></span><span class="xs faint">⌘P</span></button>
+ </div>
+
+ <div class="body">
+
+  <div class="panel files" data-testid="files-panel">
+   <div class="ph" data-testid="files-head">Files</div>
+   <div class="tree" data-testid="file-tree">
+    <a href="main.html"><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
+    <a href="main.html" class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
+    <a href="main.html" class="d2"><svg><use href="#i-folder-open"/></svg>TfLens</a>
+    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Program.cs</a>
+    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Query.cs</a>
+    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Coverage.razor</a>
+    <a href="main.html" class="d2"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
+    <a href="main.html" class="d1"><svg><use href="#i-folder"/></svg>docs</a>
+   </div>
+   <a class="branch" href="repository.html" data-testid="branch"><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
+  </div>
+
+  <div class="split">
+
+   <div class="panel half" data-testid="tool-area">
+    <div class="tabs" data-testid="tabs">
+     <span class="tab on" data-testid="tab-run-queue">Run queue<button class="x" onclick="say('Closes this tab. The queue keeps working.')">×</button></span>
+     <a class="tab" href="main.html" data-testid="tab-query">Query.cs</a>
+     <button class="closepane" title="Close the file view" onclick="say('Closes this pane. The chat takes the whole window.')" data-testid="close-file-view">×</button>
+    </div>
+
+    <div style="flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:16px" data-testid="run-queue">
+
+     <div class="row" style="flex-wrap:wrap" data-testid="queue-heading">
+      <div><div style="font-size:15px;font-weight:600">Runs waiting their turn</div>
+       <div class="sm dim">Chatur takes them one at a time, from the top.</div></div>
+      <span class="grow"></span>
+      <span class="pill" data-testid="queue-count">1 running · 3 waiting</span>
+      <a class="pick" href="auto-run.html" data-testid="go-auto-run">Running now</a>
+      <button class="send" onclick="say('Opens the brief form so you can add a run to the end of the queue.')" data-testid="queue-a-run"><svg><use href="#i-plus"/></svg>Queue a run</button>
+     </div>
+
+     <div class="panel" data-testid="queue-panel">
+      <div class="ph"><span>The queue</span><span class="grow"></span><span class="xs" style="text-transform:none;letter-spacing:0">5 runs</span></div>
+      <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px" data-testid="queue-table">
+       <thead><tr class="xs dim" style="text-align:left">
+        <th style="padding:8px 9px;font-weight:500">#</th>
+        <th style="padding:8px 9px;font-weight:500;white-space:nowrap">Project</th>
+        <th style="padding:8px 9px;font-weight:500;width:34%">Brief</th>
+        <th style="padding:8px 9px;font-weight:500">State</th>
+        <th style="padding:8px 9px;font-weight:500">Started</th>
+        <th style="padding:8px 9px;font-weight:500">Time</th>
+        <th style="padding:8px 9px;font-weight:500">Do</th></tr></thead>
+       <tbody>
+
+        <tr style="border-top:1px solid var(--line2);background:var(--accent-soft)" data-testid="queue-row-1">
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">1</td>
+         <td style="padding:9px 9px">TfLens</td>
+         <td style="padding:9px 9px">Coverage panel, then verify</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="pill" style="color:var(--accent)" data-testid="queue-state-1"><span class="dots"><i></i><i></i><i></i></span>running</span></td>
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">11:18</td>
+         <td class="mono" style="padding:9px 9px;white-space:nowrap">1 h 42 m</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="row" style="gap:3px">
+          <button class="iconbtn" title="Pause" onclick="say('Pauses TfLens at the end of this step.')" data-testid="pause-1"><svg><use href="#i-pause"/></svg></button>
+          <button class="iconbtn" title="Resume — this run is not paused" disabled style="color:var(--faint);cursor:default" onclick="say('Nothing to resume.')" data-testid="resume-1"><svg><use href="#i-play"/></svg></button>
+          <button class="iconbtn" title="Remove — a running run must be paused or stopped first" disabled style="color:var(--faint);cursor:default" onclick="say('Stop it first.')" data-testid="remove-1"><svg><use href="#i-trash"/></svg></button>
+         </span></td></tr>
+
+        <tr style="border-top:1px solid var(--line2)" data-testid="queue-row-2">
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">2</td>
+         <td style="padding:9px 9px">AstroLyfe</td>
+         <td style="padding:9px 9px">Chart screen from the P3 brief</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="pill" data-testid="queue-state-2">waiting</span></td>
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">—</td>
+         <td class="dim mono" style="padding:9px 9px;white-space:nowrap">—</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="row" style="gap:3px">
+          <button class="iconbtn" title="Pause — this run has not started" disabled style="color:var(--faint);cursor:default" onclick="say('It has not started.')" data-testid="pause-2"><svg><use href="#i-pause"/></svg></button>
+          <button class="iconbtn" title="Resume — this run has not started" disabled style="color:var(--faint);cursor:default" onclick="say('It has not started.')" data-testid="resume-2"><svg><use href="#i-play"/></svg></button>
+          <button class="iconbtn" title="Remove" onclick="say('Takes AstroLyfe out of the queue. It is never started.')" data-testid="remove-2"><svg><use href="#i-trash"/></svg></button>
+         </span></td></tr>
+
+        <tr style="border-top:1px solid var(--line2)" data-testid="queue-row-3">
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">3</td>
+         <td style="padding:9px 9px">MyDiary</td>
+         <td style="padding:9px 9px">Rewrite the entry editor</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="pill warn" data-testid="queue-state-3">paused</span></td>
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">09:40</td>
+         <td class="mono" style="padding:9px 9px;white-space:nowrap">26 m</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="row" style="gap:3px">
+          <button class="iconbtn" title="Pause — already paused" disabled style="color:var(--faint);cursor:default" onclick="say('Already paused.')" data-testid="pause-3"><svg><use href="#i-pause"/></svg></button>
+          <button class="iconbtn" title="Resume" onclick="say('MyDiary carries on from step 3, where it stopped.')" data-testid="resume-3"><svg><use href="#i-play"/></svg></button>
+          <button class="iconbtn" title="Remove" onclick="say('Takes MyDiary out of the queue. The three steps it finished stay in its report.')" data-testid="remove-3"><svg><use href="#i-trash"/></svg></button>
+         </span></td></tr>
+
+        <tr style="border-top:1px solid var(--line2)" data-testid="queue-row-4">
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">4</td>
+         <td style="padding:9px 9px">TfLens</td>
+         <td style="padding:9px 9px">Settings: providers and routing</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="pill" data-testid="queue-state-4">waiting</span></td>
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">—</td>
+         <td class="dim mono" style="padding:9px 9px;white-space:nowrap">—</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="row" style="gap:3px">
+          <button class="iconbtn" title="Pause — this run has not started" disabled style="color:var(--faint);cursor:default" onclick="say('It has not started.')" data-testid="pause-4"><svg><use href="#i-pause"/></svg></button>
+          <button class="iconbtn" title="Resume — this run has not started" disabled style="color:var(--faint);cursor:default" onclick="say('It has not started.')" data-testid="resume-4"><svg><use href="#i-play"/></svg></button>
+          <button class="iconbtn" title="Remove" onclick="say('Takes this run out of the queue. It is never started.')" data-testid="remove-4"><svg><use href="#i-trash"/></svg></button>
+         </span></td></tr>
+
+        <tr style="border-top:1px solid var(--line2)" data-testid="queue-row-5">
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">—</td>
+         <td style="padding:9px 9px">AstroLyfe</td>
+         <td style="padding:9px 9px">Nightly verify of what is open</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="pill ok" data-testid="queue-state-5"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>finished</span></td>
+         <td class="dim" style="padding:9px 9px;white-space:nowrap">02:00</td>
+         <td class="mono" style="padding:9px 9px;white-space:nowrap">3 h 14 m</td>
+         <td style="padding:9px 9px;white-space:nowrap"><span class="row" style="gap:3px">
+          <button class="iconbtn" title="Pause — this run has finished" disabled style="color:var(--faint);cursor:default" onclick="say('It has finished.')" data-testid="pause-5"><svg><use href="#i-pause"/></svg></button>
+          <button class="iconbtn" title="Resume — this run has finished" disabled style="color:var(--faint);cursor:default" onclick="say('It has finished.')" data-testid="resume-5"><svg><use href="#i-play"/></svg></button>
+          <button class="iconbtn" title="Remove — a finished run is kept for its report" disabled style="color:var(--faint);cursor:default" onclick="say('Its report is kept.')" data-testid="remove-5"><svg><use href="#i-trash"/></svg></button>
+         </span></td></tr>
+
+       </tbody>
+      </table>
+      </div>
+      <div class="row" style="padding:9px 12px;border-top:1px solid var(--line2);flex-wrap:wrap;gap:12px" data-testid="queue-legend">
+       <span class="row xs dim" style="gap:5px"><svg style="width:12px;height:12px"><use href="#i-pause"/></svg>Pause</span>
+       <span class="row xs dim" style="gap:5px"><svg style="width:12px;height:12px"><use href="#i-play"/></svg>Resume</span>
+       <span class="row xs dim" style="gap:5px"><svg style="width:12px;height:12px"><use href="#i-trash"/></svg>Remove</span>
+       <span class="xs faint">Greyed out where it cannot apply to that run.</span>
+      </div>
+     </div>
+
+     <div class="panel" data-testid="how-queue-behaves">
+      <div class="ph">How the queue behaves</div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:11px">
+       <div class="row" style="align-items:flex-start;gap:9px"><svg style="margin-top:3px;color:var(--dim)"><use href="#i-list"/></svg>
+        <div class="grow"><b class="sm">One run at a time.</b>
+         <div class="sm dim">The next one starts the moment the one above it finishes, is stopped or is removed. Nothing runs in parallel, so two runs never touch the same file at once.</div></div></div>
+       <div class="row" style="align-items:flex-start;gap:9px"><svg style="margin-top:3px;color:var(--dim)"><use href="#i-pause"/></svg>
+        <div class="grow"><b class="sm">A paused run carries on from the step it stopped on.</b>
+         <div class="sm dim">MyDiary paused inside step 3. When it resumes it re-reads the checklist and picks step 3 back up — it does not begin again at step 1.</div></div></div>
+       <div class="row" style="align-items:flex-start;gap:9px"><svg style="margin-top:3px;color:var(--dim)"><use href="#i-refresh"/></svg>
+        <div class="grow"><b class="sm">A resumed run continues from the open requirement furthest from verified.</b>
+         <div class="sm dim">Blocked first, then partial, then untouched — so the hardest thing left is the next thing attempted, not the easiest.</div></div></div>
+      </div>
+     </div>
+
+     <div class="row" style="align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r2);color:var(--dim)" data-testid="removed-note">
+      <svg style="margin-top:2px"><use href="#i-alert"/></svg>
+      <span class="sm">A removed run is never started. Whatever it already did stays where it is — the files it wrote, the requirements it closed and the tokens it spent are all in its <a href="run-report.html" style="color:var(--accent)">run record</a>.</span>
+     </div>
+
+    </div>
+   </div>
+
+   <div class="panel half chat" data-testid="chat-panel">
+    <div class="ph" data-testid="chat-head"><span>Chat</span>
+     <span class="row">
+      <button class="iconbtn" onclick="say('Starts a new conversation.')" data-testid="new-chat"><svg><use href="#i-plus"/></svg></button>
+      <div class="popwrap" data-testid="history">
+       <button class="iconbtn" onclick="pop(this,event)" title="Earlier conversations"><svg><use href="#i-list"/></svg></button>
+       <div class="pop right" data-testid="history-pop">
+        <div class="note">Earlier on TfLens</div>
+        <button onclick="say('Opens that conversation where it stopped.')">Can AstroLyfe go before MyDiary · today</button>
+        <button onclick="say('Opens that conversation where it stopped.')">Why MyDiary paused on step 3 · yesterday</button>
+        <button onclick="say('Opens that conversation where it stopped.')">One run at a time · Friday</button>
+       </div>
+      </div>
+     </span>
+    </div>
+    <div class="talk" data-testid="conversation">
+     <div class="msg me" data-testid="msg-1"><span class="who">TR</span>
+      <div class="body"><span class="name">You<span class="model">13:04</span></span>
+       <div class="said">Can AstroLyfe go before MyDiary?</div></div></div>
+     <div class="msg agent" data-testid="msg-2"><span class="who"><svg><use href="#i-sparkle"/></svg></span>
+      <div class="body"><span class="name">Flow master<span class="model">Claude Sonnet 5 · 412 tokens</span></span>
+       <div class="said">Drag it to position 2 and it starts as soon as TfLens finishes — one at a time, always. MyDiary drops to 3 and keeps its place inside step 3, so moving it costs nothing.</div>
+       <div class="step"><svg class="ok"><use href="#i-check"/></svg>TfLens finishes in about 50 minutes</div>
+       <div class="step"><svg><use href="#i-pause"/></svg>MyDiary paused on step 3 of 8</div>
+      </div></div>
+    </div>
+    <div class="ask" data-testid="composer">
+     <div class="box">
+      <textarea data-testid="ask-input" placeholder="Ask about the queue…"></textarea>
+      <div class="tools">
+       <div class="popwrap" data-testid="model-pick">
+        <button class="pick" onclick="pop(this,event)"><svg><use href="#i-sparkle"/></svg><span data-value>Claude Sonnet 5</span><svg><use href="#i-chevron"/></svg></button>
+        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop">
+         <button onclick="choose(this,'Claude Opus 5',event)"><span class="tick"></span>Claude Opus 5<span class="sub">tier 1</span></button>
+         <button onclick="choose(this,'Claude Sonnet 5',event)"><span class="tick">✓</span>Claude Sonnet 5<span class="sub">tier 2</span></button>
+         <button onclick="choose(this,'Claude Haiku 4.5',event)"><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
+         <button onclick="choose(this,'GPT-5',event)"><span class="tick"></span>GPT-5<span class="sub">tier 1</span></button>
+         <button onclick="choose(this,'Qwen3-30B',event)"><span class="tick"></span>Qwen3-30B<span class="sub">local</span></button>
+         <hr>
+         <a href="settings-routing.html">Which model does which work…</a>
+        </div>
+       </div>
+       <div class="popwrap" data-testid="agent-pick">
+        <button class="pick" onclick="pop(this,event)"><span data-value>Flow master</span><svg><use href="#i-chevron"/></svg></button>
+        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="agent-pop">
+         <button onclick="choose(this,'No agent',event)"><span class="tick"></span>No agent — the model itself</button>
+         <hr>
+         <button onclick="choose(this,'Analyst',event)"><span class="tick"></span>Analyst</button>
+         <button onclick="choose(this,'Architect',event)"><span class="tick"></span>Architect</button>
+         <button onclick="choose(this,'Flow master',event)"><span class="tick">✓</span>Flow master</button>
+         <button onclick="choose(this,'Verifier',event)"><span class="tick"></span>Verifier</button>
+         <div class="note">Chatur suggested the Flow master — the queue is its work.</div>
+         <hr>
+         <a href="settings-agents.html">Agents…</a>
+        </div>
+       </div>
+       <span class="grow"></span>
+       <button class="send" onclick="say('Sends the message.')" data-testid="send"><svg><use href="#i-send"/></svg>Send</button>
+      </div>
+     </div>
+    </div>
+   </div>
+
+  </div>
+ </div>
+</div>
+</body>
+</html>

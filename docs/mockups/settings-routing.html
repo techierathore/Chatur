@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Routing</title>
+<link rel="stylesheet" href="chatur.css">
+<script>(function(){var t=localStorage.getItem('chatur-theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');})();</script>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="8" y="8" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></symbol>
+<symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+<symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15.5 7.5 3 3L22 7l-3-3"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></symbol>
+<symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-5-4.5-8.6-10-8.6Z"/></symbol>
+<symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.2-9.5L3 6"/></symbol>
+</defs></svg>
+<script>
+function say(m){alert(m);}
+function closeAll(keep){document.querySelectorAll('.menu.open,.popwrap.open').forEach(function(e){if(e!==keep)e.classList.remove('open');});}
+function pop(btn,ev){ev.stopPropagation();var w=btn.parentNode;var was=w.classList.contains('open');closeAll();if(!was)w.classList.add('open');}
+document.addEventListener('click',function(){closeAll();});
+function toggleTheme(){var d=document.documentElement.classList.toggle('dark');localStorage.setItem('chatur-theme',d?'dark':'light');}
+function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.setAttribute('data-theme',p);localStorage.setItem('chatur-palette',p);
+ var n=document.getElementById('palette-name');if(n)n.textContent=p.charAt(0).toUpperCase()+p.slice(1);
+ document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
+ var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
+document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+</script>
+<script>
+function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
+ w.querySelectorAll('.tick').forEach(function(s){s.innerHTML='';});
+ var t=b.querySelector('.tick');if(t)t.innerHTML='✓';
+ var v=w.querySelector('[data-value]');if(v)v.textContent=b.getAttribute('data-label');closeAll();}
+function toggleSwitch(b,ev){if(ev)ev.stopPropagation();var on=b.classList.toggle('on');
+ var s=document.getElementById(b.getAttribute('data-state'));if(s)s.textContent=on?'on':'off';}
+</script>
+
+<div class="subwin" data-testid="window">
+
+ <div class="subbar" data-testid="subbar">
+  <a class="logo" href="index.html" data-testid="logo" title="Logo goes here — click for the list of screens">C</a>
+  <span class="t" data-testid="window-title">Routing</span>
+  <span class="pill" data-testid="scope">TfLens</span>
+  <span class="grow"></span>
+  <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
+  <div class="popwrap" data-testid="palette">
+   <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one is the Appearance page"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
+   <div class="pop right" id="palette-pop" data-testid="palette-pop">
+    <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber</button>
+    <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo</button>
+    <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal</button>
+    <button onclick="setPalette('slate',event)"><span class="tick" id="palette-tick-slate"></span>Slate</button>
+   </div>
+  </div>
+  <a class="pick" href="main.html" data-testid="close-window"><svg><use href="#i-x"/></svg>Close</a>
+ </div>
+
+ <div class="subbody">
+
+  <nav class="subnav" data-testid="subnav">
+   <div class="g">This project</div>
+   <a href="prerequisites.html" data-testid="nav-prerequisites"><svg><use href="#i-wrench"/></svg>Prerequisites</a>
+   <a href="repository.html" data-testid="nav-repository"><svg><use href="#i-branch"/></svg>Repository</a>
+   <a href="worktrees.html" data-testid="nav-worktrees"><svg><use href="#i-copy"/></svg>Working copies<span class="pill" style="margin-left:auto">later</span></a>
+   <div class="g">Chatur</div>
+   <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
+   <a href="settings-routing.html" data-testid="nav-routing" class="on"><svg><use href="#i-route"/></svg>Routing</a>
+   <a href="settings-agents.html" data-testid="nav-agents"><svg><use href="#i-users"/></svg>Agents</a>
+   <a href="settings-corrections.html" data-testid="nav-corrections"><svg><use href="#i-refresh"/></svg>Corrections</a>
+   <a href="settings-measurements.html" data-testid="nav-measurements"><svg><use href="#i-chart"/></svg>Measurements</a>
+   <a href="settings-appearance.html" data-testid="nav-appearance"><svg><use href="#i-palette"/></svg>Appearance</a>
+   <a href="settings-account.html" data-testid="nav-account"><svg><use href="#i-person"/></svg>Account</a>
+   <div class="g">Your account</div>
+   <a href="licence.html" data-testid="nav-licence"><svg><use href="#i-key"/></svg>Licence<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="feedback.html" data-testid="nav-feedback"><svg><use href="#i-alert"/></svg>Feedback<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="integrations.html" data-testid="nav-integrations"><svg><use href="#i-route"/></svg>Integrations<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="all-projects.html" data-testid="nav-all-projects"><svg><use href="#i-chart"/></svg>All projects<span class="pill" style="margin-left:auto">later</span></a>
+  </nav>
+
+  <div class="subpage" data-testid="page">
+
+   <div class="row" data-testid="routing-heading">
+    <div><div class="h1">Routing</div>
+     <div class="lead">Which model does which work, and what happens when one will not answer.</div></div>
+    <span class="grow"></span>
+    <button class="pick" onclick="say('Puts the three tiers back the way Chatur ships them.')" data-testid="reset-tiers"><svg><use href="#i-undo"/></svg>Reset the tiers</button>
+   </div>
+
+   <div class="panel" data-testid="tier-1">
+    <div class="ph">Tier 1 — the strongest<span class="grow"></span><span class="pill" data-testid="tier-1-count">3 models</span></div>
+    <div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px">
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-1-row-1">
+      <span class="pill" data-testid="tier-1-pos-1">1</span><span>Claude Opus 5</span><span class="xs faint">Anthropic</span><span class="grow"></span>
+      <button class="iconbtn" title="Move up" onclick="say('Already first in the chain.')" data-testid="tier-1-up-1"><svg><use href="#i-up"/></svg></button>
+      <button class="iconbtn" title="Move down" onclick="say('Moves Claude Opus 5 below GPT-5.')" data-testid="tier-1-down-1"><svg><use href="#i-chevron"/></svg></button>
+      <button class="iconbtn" title="Remove" onclick="say('Takes Claude Opus 5 out of Tier 1.')" data-testid="tier-1-remove-1"><svg><use href="#i-trash"/></svg></button></div>
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-1-row-2">
+      <span class="pill" data-testid="tier-1-pos-2">2</span><span>GPT-5</span><span class="xs faint">OpenAI</span><span class="grow"></span>
+      <button class="iconbtn" title="Move up" onclick="say('Moves GPT-5 to the front of Tier 1.')" data-testid="tier-1-up-2"><svg><use href="#i-up"/></svg></button>
+      <button class="iconbtn" title="Move down" onclick="say('Moves GPT-5 below Claude Sonnet 5.')" data-testid="tier-1-down-2"><svg><use href="#i-chevron"/></svg></button>
+      <button class="iconbtn" title="Remove" onclick="say('Takes GPT-5 out of Tier 1.')" data-testid="tier-1-remove-2"><svg><use href="#i-trash"/></svg></button></div>
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-1-row-3">
+      <span class="pill" data-testid="tier-1-pos-3">3</span><span>Claude Sonnet 5</span><span class="xs faint">Anthropic</span><span class="grow"></span>
+      <button class="iconbtn" title="Move up" onclick="say('Moves Claude Sonnet 5 above GPT-5.')" data-testid="tier-1-up-3"><svg><use href="#i-up"/></svg></button>
+      <button class="iconbtn" title="Move down" onclick="say('Already last in the chain.')" data-testid="tier-1-down-3"><svg><use href="#i-chevron"/></svg></button>
+      <button class="iconbtn" title="Remove" onclick="say('Takes Claude Sonnet 5 out of Tier 1.')" data-testid="tier-1-remove-3"><svg><use href="#i-trash"/></svg></button></div>
+     <button class="pick" style="align-self:flex-start" onclick="say('Adds another model to the end of Tier 1.')" data-testid="tier-1-add"><svg><use href="#i-plus"/></svg>Add a model</button>
+    </div>
+   </div>
+
+   <div class="panel" data-testid="tier-2">
+    <div class="ph">Tier 2 — everyday<span class="grow"></span><span class="pill" data-testid="tier-2-count">3 models</span></div>
+    <div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px">
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-2-row-1">
+      <span class="pill" data-testid="tier-2-pos-1">1</span><span>Claude Sonnet 5</span><span class="xs faint">Anthropic</span><span class="grow"></span>
+      <button class="iconbtn" title="Move up" onclick="say('Already first in the chain.')" data-testid="tier-2-up-1"><svg><use href="#i-up"/></svg></button>
+      <button class="iconbtn" title="Move down" onclick="say('Moves Claude Sonnet 5 below GPT-5 mini.')" data-testid="tier-2-down-1"><svg><use href="#i-chevron"/></svg></button>
+      <button class="iconbtn" title="Remove" onclick="say('Takes Claude Sonnet 5 out of Tier 2.')" data-testid="tier-2-remove-1"><svg><use href="#i-trash"/></svg></button></div>
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-2-row-2">
+      <span class="pill" data-testid="tier-2-pos-2">2</span><span>GPT-5 mini</span><span class="xs faint">OpenAI</span><span class="grow"></span>
+      <button class="iconbtn" title="Move up" onclick="say('Moves GPT-5 mini to the front of Tier 2.')" data-testid="tier-2-up-2"><svg><use href="#i-up"/></svg></button>
+      <button class="iconbtn" title="Move down" onclick="say('Moves GPT-5 mini below Claude Haiku 4.5.')" data-testid="tier-2-down-2"><svg><use href="#i-chevron"/></svg></button>
+      <button class="iconbtn" title="Remove" onclick="say('Takes GPT-5 mini out of Tier 2.')" data-testid="tier-2-remove-2"><svg><use href="#i-trash"/></svg></button></div>
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-2-row-3">
+      <span class="pill" data-testid="tier-2-pos-3">3</span><span>Claude Haiku 4.5</span><span class="xs faint">Anthropic</span><span class="grow"></span>
+      <button class="iconbtn" title="Move up" onclick="say('Moves Claude Haiku 4.5 above GPT-5 mini.')" data-testid="tier-2-up-3"><svg><use href="#i-up"/></svg></button>
+      <button class="iconbtn" title="Move down" onclick="say('Already last in the chain.')" data-testid="tier-2-down-3"><svg><use href="#i-chevron"/></svg></button>
+      <button class="iconbtn" title="Remove" onclick="say('Takes Claude Haiku 4.5 out of Tier 2.')" data-testid="tier-2-remove-3"><svg><use href="#i-trash"/></svg></button></div>
+     <button class="pick" style="align-self:flex-start" onclick="say('Adds another model to the end of Tier 2.')" data-testid="tier-2-add"><svg><use href="#i-plus"/></svg>Add a model</button>
+    </div>
+   </div>
+
+   <div class="panel" data-testid="tier-3">
+    <div class="ph">Tier 3 — on this machine<span class="grow"></span><span class="pill" data-testid="tier-3-count">1 model</span></div>
+    <div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px">
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-3-row-1">
+      <span class="pill" data-testid="tier-3-pos-1">1</span><span>Qwen3-30B</span><span class="xs faint">Local · Ollama</span><span class="grow"></span>
+      <button class="iconbtn" title="Move up" onclick="say('Already first in the chain.')" data-testid="tier-3-up-1"><svg><use href="#i-up"/></svg></button>
+      <button class="iconbtn" title="Move down" onclick="say('Already last in the chain.')" data-testid="tier-3-down-1"><svg><use href="#i-chevron"/></svg></button>
+      <button class="iconbtn" title="Remove" onclick="say('Takes Qwen3-30B out of Tier 3. The tier would then be empty.')" data-testid="tier-3-remove-1"><svg><use href="#i-trash"/></svg></button></div>
+     <button class="pick" style="align-self:flex-start" onclick="say('Adds another model to the end of Tier 3.')" data-testid="tier-3-add"><svg><use href="#i-plus"/></svg>Add a model</button>
+    </div>
+   </div>
+
+   <div class="panel" style="overflow:visible" data-testid="agent-tiers-panel">
+    <div class="ph">A tier for each agent</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px" data-testid="agent-tiers-table">
+     <thead><tr class="xs dim" style="text-align:left">
+      <th style="padding:8px 14px;font-weight:500">Agent</th>
+      <th style="padding:8px 14px;font-weight:500">Tier</th>
+      <th style="padding:8px 14px;font-weight:500">First model in the chain</th></tr></thead>
+     <tbody>
+      <tr style="border-top:1px solid var(--line2)" data-testid="agent-tier-analyst"><td style="padding:9px 14px">Analyst</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="analyst-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="analyst-tier-button"><span data-value>Tier 2</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="analyst-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="analyst-tier-1"><span class="tick"></span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="analyst-tier-2"><span class="tick">✓</span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="analyst-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim" style="padding:9px 14px">Claude Sonnet 5</td></tr>
+      <tr style="border-top:1px solid var(--line2)" data-testid="agent-tier-architect"><td style="padding:9px 14px">Architect</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="architect-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="architect-tier-button"><span data-value>Tier 1</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="architect-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="architect-tier-1"><span class="tick">✓</span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="architect-tier-2"><span class="tick"></span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="architect-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim" style="padding:9px 14px">Claude Opus 5</td></tr>
+      <tr style="border-top:1px solid var(--line2)" data-testid="agent-tier-flowmaster"><td style="padding:9px 14px">Flow master</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="flowmaster-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="flowmaster-tier-button"><span data-value>Tier 1</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="flowmaster-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="flowmaster-tier-1"><span class="tick">✓</span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="flowmaster-tier-2"><span class="tick"></span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="flowmaster-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim" style="padding:9px 14px">Claude Opus 5</td></tr>
+      <tr style="border-top:1px solid var(--line2)" data-testid="agent-tier-verifier"><td style="padding:9px 14px">Verifier</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="verifier-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="verifier-tier-button"><span data-value>Tier 2</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="verifier-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="verifier-tier-1"><span class="tick"></span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="verifier-tier-2"><span class="tick">✓</span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="verifier-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim" style="padding:9px 14px">Claude Sonnet 5</td></tr>
+     </tbody>
+    </table>
+   </div>
+
+   <div class="panel" style="overflow:visible" data-testid="work-tiers-panel">
+    <div class="ph">A tier for each kind of work</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px" data-testid="work-tiers-table">
+     <thead><tr class="xs dim" style="text-align:left">
+      <th style="padding:8px 14px;font-weight:500">Kind of work</th>
+      <th style="padding:8px 14px;font-weight:500">Tier</th>
+      <th style="padding:8px 14px;font-weight:500">Why</th></tr></thead>
+     <tbody>
+      <tr style="border-top:1px solid var(--line2)" data-testid="work-write-code"><td style="padding:9px 14px">Write code</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="write-code-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="write-code-tier-button"><span data-value>Tier 1</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="write-code-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="write-code-tier-1"><span class="tick">✓</span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="write-code-tier-2"><span class="tick"></span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="write-code-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim xs" style="padding:9px 14px">The work the whole build rests on</td></tr>
+      <tr style="border-top:1px solid var(--line2)" data-testid="work-review-code"><td style="padding:9px 14px">Review code</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="review-code-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="review-code-tier-button"><span data-value>Tier 1</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="review-code-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="review-code-tier-1"><span class="tick">✓</span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="review-code-tier-2"><span class="tick"></span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="review-code-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim xs" style="padding:9px 14px">A missed fault costs more than the tokens</td></tr>
+      <tr style="border-top:1px solid var(--line2)" data-testid="work-plan"><td style="padding:9px 14px">Plan</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="plan-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="plan-tier-button"><span data-value>Tier 2</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="plan-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="plan-tier-1"><span class="tick"></span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="plan-tier-2"><span class="tick">✓</span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="plan-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim xs" style="padding:9px 14px">Short, and read by you before it runs</td></tr>
+      <tr style="border-top:1px solid var(--line2)" data-testid="work-verify"><td style="padding:9px 14px">Verify</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="verify-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="verify-tier-button"><span data-value>Tier 2</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="verify-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="verify-tier-1"><span class="tick"></span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="verify-tier-2"><span class="tick">✓</span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="verify-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim xs" style="padding:9px 14px">Reads a result that is already written down</td></tr>
+      <tr style="border-top:1px solid var(--line2)" data-testid="work-chat"><td style="padding:9px 14px">Chat</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="chat-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="chat-tier-button"><span data-value>Tier 2</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="chat-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="chat-tier-1"><span class="tick"></span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="chat-tier-2"><span class="tick">✓</span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="chat-tier-3"><span class="tick"></span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim xs" style="padding:9px 14px">Answers you wait for, so speed counts</td></tr>
+      <tr style="border-top:1px solid var(--line2)" data-testid="work-summarise"><td style="padding:9px 14px">Summarise</td>
+       <td style="padding:9px 14px">
+        <div class="popwrap" data-testid="summarise-tier">
+         <button class="pick" onclick="pop(this,event)" data-testid="summarise-tier-button"><span data-value>Tier 3</span><svg><use href="#i-chevron"/></svg></button>
+         <div class="pop" data-testid="summarise-tier-pop">
+          <button data-label="Tier 1" onclick="choose(this,event)" data-testid="summarise-tier-1"><span class="tick"></span>Tier 1 — the strongest</button>
+          <button data-label="Tier 2" onclick="choose(this,event)" data-testid="summarise-tier-2"><span class="tick"></span>Tier 2 — everyday</button>
+          <button data-label="Tier 3" onclick="choose(this,event)" data-testid="summarise-tier-3"><span class="tick">✓</span>Tier 3 — on this machine</button>
+         </div></div></td>
+       <td class="dim xs" style="padding:9px 14px">Cheap, frequent, and never leaves the machine</td></tr>
+     </tbody>
+    </table>
+    <div class="row" style="align-items:flex-start;gap:9px;padding:11px 14px;border-top:1px solid var(--line2);color:var(--dim)" data-testid="work-wins-note">
+     <svg style="margin-top:2px"><use href="#i-alert"/></svg>
+     <span class="sm">The kind of work wins over the agent. The Verifier sits in Tier 2, but when it is asked to write code it is given Tier 1.</span></div>
+   </div>
+
+   <div class="panel" data-testid="fallback-panel">
+    <div class="ph">When a model will not answer</div>
+    <div style="padding:12px 14px;display:flex;flex-direction:column;gap:11px">
+     <div class="sm" data-testid="fallback-line">Chatur moves to the next model in that tier's chain, tells you in the conversation which one answered, and carries on. It does not stop to ask.</div>
+     <div class="row" style="flex-wrap:wrap" data-testid="fallback-threshold">
+      <span class="sm">Move up a tier after</span>
+      <input class="fld" type="number" value="3" min="1" max="10" data-testid="failed-fixes" style="width:64px">
+      <span class="sm">failed fixes</span></div>
+     <div class="xs faint">A model that has failed to fix the same thing three times is given the tier above it, once, for that one piece of work.</div>
+    </div>
+   </div>
+
+   <div class="panel" data-testid="auto-routing-panel">
+    <div class="ph">Automatic routing<span class="grow"></span><span class="pill" data-testid="auto-routing-later">later</span></div>
+    <div style="padding:12px 14px;display:flex;flex-direction:column;gap:11px">
+     <div class="row" data-testid="auto-routing-switch-row">
+      <button class="sw" data-state="auto-routing-state" onclick="toggleSwitch(this,event)" title="Let Chatur choose the model" data-testid="auto-routing-switch"></button>
+      <span class="sm">Let Chatur choose the model</span><span class="grow"></span><span class="xs faint" id="auto-routing-state">off</span></div>
+     <div class="sm dim" data-testid="auto-routing-line-1">A small model inside TechieRag reads the request and chooses the tier, so a one-line question never reaches Claude Opus 5.</div>
+     <div class="sm dim" data-testid="auto-routing-line-2">Turning it off restores these tiers exactly as they are above — nothing here is lost while it is on.</div>
+    </div>
+   </div>
+
+  </div>
+ </div>
+</div>
+</body>
+</html>

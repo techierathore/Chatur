@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Business Requirements — Phase 3: End to end and unattended</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout no-toc">
+  <main>
+    <h1>Chatur — Business Requirements — Phase 3: End to end and unattended</h1>
+    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-P3-BRD.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#summary">1. Summary</a></li>
+        <li><a href="#screens-and-flow">2. Screens and flow</a></li>
+        <li><a href="#requirements">3. Requirements</a></li>
+        <li class="h3"><a href="#end-to-end-run">End-to-end run</a></li>
+        <li class="h3"><a href="#run-queue">Run queue</a></li>
+        <li class="h3"><a href="#run-report">Run report</a></li>
+        <li class="h3"><a href="#settings">Settings</a></li>
+        <li><a href="#development-status">4. Development status</a></li>
+        <li><a href="#where-the-rest-lives">5. Where the rest lives</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Small</td></tr>
+<tr><td>Phase</td><td>3 of 4</td></tr>
+<tr><td>Status</td><td>Draft</td></tr>
+<tr><td>Date</td><td>2026-09-21</td></tr>
+</tbody>
+</table>
+<h2 id="summary">1. Summary<a class="anchor-link" href="#summary">#</a></h2>
+<p>Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way — this is the extra command, not the replacement. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off.</p>
+<h2 id="screens-and-flow">2. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
+<p>One row per routed page this phase adds; dialogs are written exactly as in the phase-1 BRD.</p>
+<table>
+<thead><tr><th>Screen</th><th>Route</th><th>Role</th><th>Mockup</th><th>Fields</th></tr></thead>
+<tbody>
+<tr><td>End-to-end run</td><td><code>/auto</code></td><td>Owner</td><td><a href="mockups/auto-run.html">mockup</a></td><td>brief, project, role now working, step, state, stop</td></tr>
+<tr><td>Run queue</td><td><code>/auto/queue</code></td><td>Owner</td><td><a href="mockups/run-queue.html">mockup</a></td><td>queued run, project, state, position, started</td></tr>
+<tr><td>Run report</td><td><code>/auto/report</code></td><td>Owner</td><td><a href="mockups/run-report.html">mockup</a></td><td>requirement, verdict, miss, model, tokens, time</td></tr>
+</tbody>
+</table>
+<p><strong>Primary journey:</strong></p>
+<ol>
+<li>The owner hands a brief to the end-to-end run and starts it.
+</li>
+<li>Chatur starts each role as it is needed and shows which one is working and on what.
+</li>
+<li>A usage limit, a stall or a crash pauses the run; it waits, resumes and records what happened.
+</li>
+<li>The run stops at "ready for the owner's acceptance test" and never says complete before that.
+</li>
+<li>The owner reads the report afterwards: every requirement, every miss, and what it cost.
+</li>
+</ol>
+<h2 id="requirements">3. Requirements<a class="anchor-link" href="#requirements">#</a></h2>
+<h3 id="end-to-end-run">End-to-end run<a class="anchor-link" href="#end-to-end-run">#</a></h3>
+<p>One command, a brief in, work ready for the owner's acceptance test out.</p>
+<ul>
+<li><strong>BRD-118</strong> — A brief in, the whole chain run. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner starts an end-to-end run with a brief on End-to-end run, then Chatur runs the chain of processes without being told each one.
+</li>
+</ul>
+</li>
+<li><strong>BRD-119</strong> — Each role starts when it is needed. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the chain reaches work another role owns on End-to-end run, then that role is started and the screen names it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-120</strong> — It stops at the acceptance test. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the chain finishes on End-to-end run, then the run's state reads ready for the owner's acceptance test, and nothing further is run.
+</li>
+</ul>
+</li>
+<li><strong>BRD-121</strong> — What is happening now. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When End-to-end run opens with a run going, then it shows the agent working, the process, the step and the requirement.
+</li>
+</ul>
+</li>
+<li><strong>BRD-122</strong> — Step by step is untouched. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When no run is going on End-to-end run, then every process can still be started on its own from Processes.
+</li>
+</ul>
+</li>
+<li><strong>BRD-123</strong> — A limit is waited out. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a model reports a usage limit on End-to-end run, then the run pauses, waits and carries on by itself, and the wait is recorded.
+</li>
+</ul>
+</li>
+<li><strong>BRD-124</strong> — A stall or a crash is survived. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a step stalls or the work crashes on End-to-end run, then Chatur retries it, records the retry, and carries on or stops with a reason.
+</li>
+</ul>
+</li>
+<li><strong>BRD-125</strong> — Never complete while work is open. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When any requirement of the run is still open, then the run cannot be marked complete.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="run-queue">Run queue<a class="anchor-link" href="#run-queue">#</a></h3>
+<p>More than one run, waiting its turn, and able to be picked up again.</p>
+<ul>
+<li><strong>BRD-126</strong> — Queue a run. <em>Screen:</em> Run queue · <em>Mockup:</em> <a href="mockups/run-queue.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner queues a run on Run queue, then it is listed with its project and its position in the queue.
+</li>
+</ul>
+</li>
+<li><strong>BRD-127</strong> — One at a time. <em>Screen:</em> Run queue · <em>Mockup:</em> <a href="mockups/run-queue.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a run is already going on Run queue, then the next one in the queue does not start until it has ended.
+</li>
+</ul>
+</li>
+<li><strong>BRD-128</strong> — Pause and start again. <em>Screen:</em> Run queue · <em>Mockup:</em> <a href="mockups/run-queue.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner pauses a run and resumes it on Run queue, then it carries on from the step it was paused on.
+</li>
+</ul>
+</li>
+<li><strong>BRD-129</strong> — Take one out. <em>Screen:</em> Run queue · <em>Mockup:</em> <a href="mockups/run-queue.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner removes a queued run on Run queue, then it leaves the queue and is not started.
+</li>
+</ul>
+</li>
+<li><strong>BRD-130</strong> — A resumed run picks the weakest work first. <em>Screen:</em> Run queue · <em>Mockup:</em> <a href="mockups/run-queue.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a run resumes after a stop on Run queue, then it continues from the open requirement furthest from verified.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="run-report">Run report<a class="anchor-link" href="#run-report">#</a></h3>
+<p>What the run did, for the owner to read when it is over.</p>
+<ul>
+<li><strong>BRD-131</strong> — Every requirement and its verdict. <em>Screen:</em> Run report · <em>Mockup:</em> <a href="mockups/run-report.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a run has ended on Run report, then its report lists every requirement it touched with the verdict it was left at.
+</li>
+</ul>
+</li>
+<li><strong>BRD-132</strong> — Every miss, and whose gap it was. <em>Screen:</em> Run report · <em>Mockup:</em> <a href="mockups/run-report.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the run recorded misses on Run report, then the report lists each one with what it was and whose gap it was.
+</li>
+</ul>
+</li>
+<li><strong>BRD-133</strong> — What it cost. <em>Screen:</em> Run report · <em>Mockup:</em> <a href="mockups/run-report.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the report opens, then it shows the tokens, the models used and the time the run took.
+</li>
+</ul>
+</li>
+<li><strong>BRD-134</strong> — Read an earlier one. <em>Screen:</em> Run report · <em>Mockup:</em> <a href="mockups/run-report.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner picks an earlier run on Run report, then that run's report is shown instead of the newest.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="settings">Settings<a class="anchor-link" href="#settings">#</a></h3>
+<p>The routing tab of the phase-1 Settings screen gains the automatic choice the brief asks for last.</p>
+<ul>
+<li><strong>BRD-135</strong> — A small model picks the model. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When automatic routing is on, then each piece of work is given a model chosen by the small model inside TechieRag.
+</li>
+</ul>
+</li>
+<li><strong>BRD-136</strong> — The owner can take it back. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner turns automatic routing off on Settings, then the tiers and chains he set are used again.
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="development-status">4. Development status<a class="anchor-link" href="#development-status">#</a></h2>
+<p>Written by the status gate after every build, verify and handoff; not by hand.</p>
+<p><strong>Snapshot as of 2026-09-22.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
+<table>
+<thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>End-to-end run</td><td>8</td><td>0</td><td>8</td><td>Planned</td></tr>
+<tr><td>Run queue</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
+<tr><td>Run report</td><td>4</td><td>0</td><td>4</td><td>Planned</td></tr>
+<tr><td>Settings</td><td>2</td><td>0</td><td>2</td><td>Planned</td></tr>
+</tbody>
+</table>
+<h2 id="where-the-rest-lives">5. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
+<table>
+<thead><tr><th>What</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td>Scope, users and roles, the context diagram</td><td><a href="Chatur-BRD.md">phase 1 BRD</a></td></tr>
+<tr><td>Non-functional requirements for the whole application</td><td><a href="Chatur-BRD.md">phase 1 BRD</a></td></tr>
+<tr><td>Constraints, assumptions and risks</td><td><a href="Chatur-BRD.md">phase 1 BRD</a></td></tr>
+<tr><td>The Settings screen whose routing tab this phase adds to</td><td><a href="Chatur-BRD.md">phase 1 BRD</a></td></tr>
+<tr><td>Every phase, its screens and its BRD range</td><td><a href="Chatur-Phases.md">Chatur-Phases.md</a></td></tr>
+<tr><td>This phase's work list</td><td><a href="Chatur-P3-Checklist.md">Chatur-P3-Checklist.md</a></td></tr>
+</tbody>
+</table>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

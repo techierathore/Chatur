@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Architecture</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout">
+  <nav class="side">
+    <h1>Chatur — Architecture</h1>
+    <div class="sub">Last rendered: 2026-09-22</div>
+    <div class="group">Contents</div>
+    <ol>
+        <li><a href="#stack-decisions">1. Stack decisions</a></li>
+        <li><a href="#solution-structure">2. Solution structure</a></li>
+        <li><a href="#component-map">3. Component map</a></li>
+        <li><a href="#data-model">4. Data model</a></li>
+        <li><a href="#cross-cutting">5. Cross-cutting</a></li>
+        <li><a href="#decisions-log">6. Decisions log</a></li>
+        <li><a href="#module-responsibilities">7. Module responsibilities</a></li>
+        <li><a href="#open-questions">8. Open questions</a></li>
+    </ol>
+  </nav>
+  <main>
+    <h1>Chatur — Architecture</h1>
+    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-Architecture.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#stack-decisions">1. Stack decisions</a></li>
+        <li><a href="#solution-structure">2. Solution structure</a></li>
+        <li><a href="#component-map">3. Component map</a></li>
+        <li><a href="#data-model">4. Data model</a></li>
+        <li><a href="#cross-cutting">5. Cross-cutting</a></li>
+        <li><a href="#decisions-log">6. Decisions log</a></li>
+        <li><a href="#module-responsibilities">7. Module responsibilities</a></li>
+        <li><a href="#open-questions">8. Open questions</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Large</td></tr>
+<tr><td>Stack answer set</td><td>dotnet (<code>.tfcore/templates/stack-defaults/dotnet.md</code>)</td></tr>
+<tr><td>Date</td><td>2026-09-21</td></tr>
+</tbody>
+</table>
+<h2 id="stack-decisions">1. Stack decisions<a class="anchor-link" href="#stack-decisions">#</a></h2>
+<p>One row per stack question. "Source" says where the answer came from: the answer set, the owner, or the existing code.</p>
+<table>
+<thead><tr><th>Q</th><th>Topic</th><th>Decision</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Q1</td><td>Configuration</td><td>Non-secret settings live in <code>appsettings.json</code>, layered by <code>appsettings.{Environment}.json</code>. No second settings mechanism is created. Per-machine choices the owner makes in the app (project folders, selected project, run target) are rows in the database, not settings files.</td><td>answer set: dotnet</td></tr>
+<tr><td>Q2</td><td>Secrets in development</td><td>Project user secrets (<code>dotnet user-secrets</code>) on the developer machine. <code>appsettings.Development.json</code> is committed and never holds a real secret. <code>secrets.example.json</code> lists every key the application reads. At run time on a real machine, model keys and sign-in tokens are in the operating system's store — see Q4 and §5.</td><td>answer set: dotnet</td></tr>
+<tr><td>Q3</td><td>Database</td><td><strong>Override of the answer set.</strong> SQLite, one file in the user's application-data folder, never beside the program. Dapper for data access, DbUp for migrations, no EF Core. A migration that has shipped in a nightly build is never edited; a new one is added.</td><td>owner, day-1 (<code>docs/Chatur-Technical-Decisions.md</code>)</td></tr>
+<tr><td>Q4</td><td>Authentication</td><td>App Manager, as <code>docs/AppManager-api-usage-guide.md</code> describes: <code>POST /AuthSvc/device-register</code> and <code>POST /AuthSvc/device-login</code> with a <code>deviceId</code> generated once per installation and kept, passwords RSA-encrypted with the key from <code>GET /AuthSvc/public-key</code>. Tokens live in the Keychain on the Mac and Credential Manager on Windows. Feedback, issues, licences and feature control use App Manager in phase 4.</td><td>answer set: dotnet (Q4 asked) + owner, day-1</td></tr>
+<tr><td>Q5</td><td>Logging</td><td>Serilog, wired at startup before anything else can fail. A log file under the application-data folder beside the database on a real machine, and under <code>bin/</code> in development.</td><td>answer set: dotnet (file path adjusted for a desktop app, owner day-1)</td></tr>
+<tr><td>Q6</td><td>Tests</td><td>xUnit, from day one, running on macOS and on Windows. Unit tests for <code>Chatur.Core</code> and every guard class; Playwright tests against <code>Chatur.WebHarness</code> for the screens; the Windows app window is driven by the Windows test bridge, the Mac app window by Appium once the Mac is registered in <code>core-config.yaml</code>.</td><td>answer set: dotnet + owner, day-1</td></tr>
+<tr><td>Q7</td><td>Layout and naming</td><td><code>src/</code> and <code>tests/</code> at the root. The primary head is named exactly <code>Chatur</code>. Secondary projects take a descriptive suffix.</td><td>answer set: dotnet</td></tr>
+<tr><td>Q8</td><td>User interface</td><td>TrBlazeUI 2.0.9 (<code>TrBlazeUI.Components</code>, <code>TrBlazeUI.Icons.Lucide</code>, GitHub Packages feed) for every view. Views live in <code>ChaturUI</code>, a Razor class library, and are rendered by a <code>BlazorWebView</code> in the MAUI host — interactive by nature, so no Blazor render mode is chosen. The same components render in <code>Chatur.WebHarness</code> for the browser checks. TrBlazeUI ships no named themes, only a stock grey set of OKLCH variables, so Chatur names its own: Amber by default, with Indigo, Teal and Slate, each a file of values in the same shape.</td><td>answer set: dotnet + owner, day-1 and 2026-09-22</td></tr>
+<tr><td>Q11</td><td>Standing rules</td><td>The answer set's eleven rules, with two adjustments for a desktop app: log files go to the application-data folder on a real machine (rule 6 keeps <code>bin/</code> for development), and migrations live in <code>ChaturDb</code> (rule 5) rather than a folder of loose scripts. Added for this product: a model never runs a source-control command by its own choice, and anything TechieRag lacks is added in the TechieRag repository, never worked around in Chatur.</td><td>answer set: dotnet + owner, day-1</td></tr>
+</tbody>
+</table>
+<p>Q9 (hosting) and Q10 (production secrets) are not yet asked; they are answered after user acceptance testing. Chatur ships as a download, so Q9 is about the release pipeline — see §6.</p>
+<h2 id="solution-structure">2. Solution structure<a class="anchor-link" href="#solution-structure">#</a></h2>
+<table>
+<thead><tr><th>Project</th><th>Kind</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>Chatur</code></td><td>MAUI Blazor Hybrid app (Mac Catalyst, Windows)</td><td>The primary head. Hosts the <code>BlazorWebView</code>, owns platform services: the secret store, the file dialogs, launching processes, opening a file in another program.</td></tr>
+<tr><td><code>ChaturUI</code></td><td>Razor class library</td><td>Every view and component, built with TrBlazeUI. No behaviour beyond presentation. One folder per view: the window shell (menu bar, toolbar, files panel, tab host, conversation panel, output strip), then one component per view that opens as a tab, and one per Settings tab. Every component is a <code>.razor</code> file with its own <code>.razor.cs</code> code-behind — never markup and logic in one file, and never one page holding several tabs. The themes live here too, as one file of OKLCH values per theme.</td></tr>
+<tr><td><code>Chatur.Core</code></td><td>class library</td><td>Every behaviour behind one action layer: projects, build and run, models and routing, the agent loop, guards, roles and rules, corrections, measurements, source control, App Manager. No screens.</td></tr>
+<tr><td><code>ChaturDb</code></td><td>migrations project (console)</td><td>DbUp migrations and the seed data for roles, rules and process wording. Run by the app at startup.</td></tr>
+<tr><td><code>Chatur.WebHarness</code></td><td>Blazor web app</td><td>Test only. Shows <code>ChaturUI</code>'s screens in a browser so the headless browser checks can run on every build. Never shipped to the owner.</td></tr>
+<tr><td><code>Chatur.Tests</code></td><td>xUnit test project</td><td>Unit tests for <code>Chatur.Core</code> and every guard class; runs on macOS and on Windows.</td></tr>
+</tbody>
+</table>
+<h2 id="component-map">3. Component map<a class="anchor-link" href="#component-map">#</a></h2>
+<div class="diagram">
+  <div class="dt">
+    <button data-zout title="Zoom out">&minus;</button>
+    <span class="zlabel">100%</span>
+    <button data-zin title="Zoom in">+</button>
+    <button data-fit title="Fit to width">Fit</button>
+    <button data-one title="Actual size">1:1</button>
+    <button data-fs title="Fullscreen">&#9166;</button>
+    <button data-pop title="Open in new tab">&#8599;</button>
+  </div>
+  <pre class="mermaid">flowchart TB
+  UI["ChaturUI screens (TrBlazeUI)"] --&gt; Act["Chatur.Core action layer"]
+  Act --&gt; Agent["Agent loop"]
+  Act --&gt; Proj["Projects, build and run"]
+  Act --&gt; Roles["Roles, rules and corrections"]
+  Act --&gt; Metrics["Measurement writer"]
+  Agent --&gt; Guards["Guards"]
+  Guards --&gt; Tools["Tools: read, search, edit, run, build"]
+  Agent --&gt; Rag["TechieRag model client"]
+  Rag --&gt; Providers["Model providers"]
+  Act --&gt; Data["Dapper data access"]
+  Data --&gt; DB[("SQLite in application data")]
+  Act --&gt; AM["App Manager API"]
+  Act --&gt; Secrets["Keychain / Credential Manager"]
+  Metrics --&gt; Files["The project's docs/metrics files"]</pre>
+</div>
+<p><strong>How a request travels</strong> (one typical request, in words; per-screen detail is in the DevGuide):</p>
+<ol>
+<li>The owner types a message on the Chat screen and presses send. The screen calls one method on the action layer, passing the selected project, the chosen role and the text.
+</li>
+<li>The action layer reads the role, its rights and its model tier from the database, then asks the routing component which model to use and hands the conversation to TechieRag.
+</li>
+<li>The model answers with a tool request. Every request goes through the guards first: the role's rights, the "ask me first" setting, and the standing refusal of source-control commands. A refused request never reaches a tool.
+</li>
+<li>An allowed tool runs — reading a file, editing one, running a build. An edit is held as a proposed change until the owner approves it on the Changes screen, unless the session is in "go ahead".
+</li>
+<li>The loop records the step, the tokens and the model in the session, and the measurement writer appends a record to the project's <code>docs/metrics</code> files.
+</li>
+<li>The screen shows the reply, the model that answered and the running token count, and the activity panel adds the step.
+</li>
+</ol>
+<h2 id="data-model">4. Data model<a class="anchor-link" href="#data-model">#</a></h2>
+<div class="diagram">
+  <div class="dt">
+    <button data-zout title="Zoom out">&minus;</button>
+    <span class="zlabel">100%</span>
+    <button data-zin title="Zoom in">+</button>
+    <button data-fit title="Fit to width">Fit</button>
+    <button data-one title="Actual size">1:1</button>
+    <button data-fs title="Fullscreen">&#9166;</button>
+    <button data-pop title="Open in new tab">&#8599;</button>
+  </div>
+  <pre class="mermaid">erDiagram
+  PROJECT ||--o{ SESSION : "is worked in"
+  PROJECT ||--o{ RUNTARGET : "offers"
+  PROJECTFOLDER ||--o{ PROJECT : "contains"
+  ROLE ||--o{ ROLERIGHT : "holds"
+  ROLE ||--o{ ROLECOMMAND : "answers to"
+  ROLE ||--o{ SESSION : "acts in"
+  RULE }o--|| ROLE : "applies to"
+  SESSION ||--o{ SESSIONEVENT : "records"
+  SESSION ||--o{ CHANGE : "proposes"
+  CORRECTION }o--|| ROLE : "amends"
+  PROVIDER ||--o{ MODEL : "serves"
+  MODEL ||--o{ ROUTINGENTRY : "is chosen by"
+  PROJECT {
+    int ProjectId PK
+    string Name
+    string Path
+    string Kind
+    datetime LastOpenedUtc
+  }
+  ROLE {
+    int RoleId PK
+    string Code
+    string Name
+    string Wording
+    int Version
+    datetime ValidFromUtc
+  }
+  SESSION {
+    int SessionId PK
+    int ProjectId FK
+    int RoleId FK
+    string Mode
+    string State
+  }
+  CHANGE {
+    int ChangeId PK
+    int SessionId FK
+    string FilePath
+    string Before
+    string After
+    string Status
+  }
+  CORRECTION {
+    int CorrectionId PK
+    string Target
+    string Before
+    string After
+    string Why
+    string Status
+  }</pre>
+</div>
+<table>
+<thead><tr><th>Entity</th><th>Key fields</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>ProjectFolder</td><td><code>FolderId</code>, <code>Path</code></td><td>A folder the owner named for Chatur to search.</td></tr>
+<tr><td>Project</td><td><code>ProjectId</code>, <code>Path</code>, <code>Name</code>, <code>Kind</code></td><td>Found by searching the folders. One is the selected project.</td></tr>
+<tr><td>RunTarget</td><td><code>RunTargetId</code>, <code>ProjectId</code>, <code>Name</code>, <code>Command</code>, <code>Platform</code></td><td>The targets that fit this machine; the one last used is offered first.</td></tr>
+<tr><td>Provider</td><td><code>ProviderId</code>, <code>Name</code>, <code>Connector</code>, <code>SignInMethod</code>, <code>BaseUrl</code></td><td>One connector, one sign-in method, one web address, so a new vendor is a new row. The secret itself is in the operating system's store; the row keeps only the name it is stored under.</td></tr>
+<tr><td>Model</td><td><code>ModelId</code>, <code>ProviderId</code>, <code>Tier</code>, <code>Identifier</code></td><td>A model a provider serves, in a tier.</td></tr>
+<tr><td>RoutingEntry</td><td><code>RoutingEntryId</code>, <code>RoleId</code>, <code>WorkKind</code>, <code>Tier</code>, <code>Order</code></td><td>The tier for a role and a kind of work, and the order of the fallback chain.</td></tr>
+<tr><td>Role</td><td><code>RoleId</code>, <code>Code</code>, <code>Wording</code>, <code>Version</code>, <code>ValidFromUtc</code></td><td>Versioned. An edit writes a new version; the old one stays for the history.</td></tr>
+<tr><td>RoleRight</td><td><code>RoleRightId</code>, <code>RoleId</code>, <code>Action</code>, <code>Allowed</code></td><td>What the role may do. The guards read this and nothing else.</td></tr>
+<tr><td>RoleCommand</td><td><code>RoleCommandId</code>, <code>RoleId</code>, <code>Command</code>, <code>Description</code></td><td>The commands the role answers to.</td></tr>
+<tr><td>Rule</td><td><code>RuleId</code>, <code>Scope</code>, <code>Text</code>, <code>Version</code></td><td>Versioned the same way as Role.</td></tr>
+<tr><td>ProcessStepText</td><td><code>StepTextId</code>, <code>ProcessCode</code>, <code>StepCode</code>, <code>Text</code>, <code>Version</code></td><td>The wording of a step. The steps and checks themselves are code.</td></tr>
+<tr><td>Session</td><td><code>SessionId</code>, <code>ProjectId</code>, <code>RoleId</code>, <code>Mode</code>, <code>State</code></td><td><code>Mode</code> is "ask me first" or "go ahead". A session can be continued later.</td></tr>
+<tr><td>SessionEvent</td><td><code>EventId</code>, <code>SessionId</code>, <code>Seq</code>, <code>Kind</code>, <code>Payload</code>, <code>Model</code>, <code>Tokens</code></td><td>One row per step: message, tool request, refusal, result.</td></tr>
+<tr><td>Change</td><td><code>ChangeId</code>, <code>SessionId</code>, <code>FilePath</code>, <code>Before</code>, <code>After</code>, <code>Status</code></td><td>A proposed edit, waiting for approve or reject.</td></tr>
+<tr><td>Correction</td><td><code>CorrectionId</code>, <code>Target</code>, <code>Before</code>, <code>After</code>, <code>Why</code>, <code>Status</code></td><td>A change Chatur made to a role, rule or step wording, in the same shape as a miss, kept or undone.</td></tr>
+<tr><td>Setting</td><td><code>Key</code>, <code>Value</code></td><td>Per-machine choices made in the app, including the chosen theme and whether it follows light, dark or the machine.</td></tr>
+<tr><td>Theme</td><td><code>ThemeId</code>, <code>Name</code>, <code>Values</code>, <code>Source</code></td><td>A named set of colour values in the shape TrBlazeUI takes. Four ship with the build; <code>Source</code> says whether a theme came with the build or was added from a file.</td></tr>
+<tr><td>Installation</td><td><code>DeviceId</code>, <code>CreatedUtc</code></td><td>The identifier sent to App Manager at sign-in, generated once and kept.</td></tr>
+</tbody>
+</table>
+<h2 id="cross-cutting">5. Cross-cutting<a class="anchor-link" href="#cross-cutting">#</a></h2>
+<ul>
+<li><strong>Identity:</strong> App Manager. The installation generates a <code>deviceId</code> once and keeps it; sign-in and registration send it, and the answer carries the device and any licence cap. The access and refresh tokens are written to the Keychain on the Mac and Credential Manager on Windows, never to the database. Sign-out sends the refresh token so only this device is signed out.
+</li>
+<li><strong>Secrets:</strong> every model key, subscription token and App Manager token is in the operating system's store. The database keeps the name a secret is stored under, never the secret.
+</li>
+<li><strong>Configuration:</strong> <code>appsettings.json</code> plus the environment layer for non-secret settings; the database for what the owner chooses in the app.
+</li>
+<li><strong>Logging:</strong> Serilog, wired first at startup, writing a file beside the database on a real machine and under <code>bin/</code> in development.
+</li>
+<li><strong>Errors:</strong> a failure the owner caused is shown on the screen in the server's or the tool's own words. A failure inside Chatur is logged with its detail and shown as one plain sentence with a way to send it as feedback. A failed measurement write is logged and never stops the work.
+</li>
+<li><strong>Guards:</strong> every tool request passes guard classes that have unit tests. They read the role's rights, the session's mode and the standing refusals. A source-control command asked for by a model is always refused.
+</li>
+<li><strong>Measurements:</strong> <code>runs.jsonl</code>, <code>gates.jsonl</code>, <code>misses.jsonl</code>, <code>sessions.jsonl</code> and <code>commits.jsonl</code> in each project's <code>docs/metrics</code> folder, appended and never edited, with <code>chatur</code> as the name of the tool. Chatur's own schema lives in this repository and starts as a copy of TechieFlow's; it must keep matching in every field TfLens reads.
+</li>
+</ul>
+<h2 id="decisions-log">6. Decisions log<a class="anchor-link" href="#decisions-log">#</a></h2>
+<p>One row per decision. Every package added to the project has a row saying why.</p>
+<table>
+<thead><tr><th>Date</th><th>Decision</th><th>Why</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>2026-09-21</td><td>.NET 10, MAUI Blazor Hybrid for Mac Catalyst and Windows, equal from the first release</td><td>The owner works on both machines and needs the same tool on each</td><td>decided</td></tr>
+<tr><td>2026-09-21</td><td>Screens in <code>ChaturUI</code> with TrBlazeUI; behaviour in <code>Chatur.Core</code> behind one action layer</td><td>Keeps the screens testable in a browser and the behaviour testable without a window</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>Package <code>TrBlazeUI.Components</code> 2.0.9 and <code>TrBlazeUI.Icons.Lucide</code> 2.0.9, from the owner's GitHub Packages feed</td><td>The owner's component library; every view is built from it. 2.0.9 answers all ten gaps Chatur filed, so <code>TreeView</code>, <code>DiffView</code>, <code>CodeEditor</code>, <code>EditorTabs</code>, <code>LogView</code>, <code>Typing</code>, <code>NavList</code>, <code>SortableList</code>, <code>DataTable</code> row selection and the small <code>Switch</code> replace ten controls that would otherwise have been hand-built</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>Three windows, not one: a start window (recent projects, open, clone, new), the main window (menu bar, files, tabs, conversation, output), and one secondary window carrying everything that is not the work — Prerequisites, Repository, Settings, Licence, Feedback, Integrations, All projects, Working copies</td><td>A settings page has no business carrying a file tree and a conversation, and git operations are not a tab in the editor (owner review, 2026-09-22)</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>Every menu and every picker in the product opens a real list; nothing that looks like a drop-down may be a label</td><td>Said plainly at the review: a control that looks like it opens and does not is worse than no control</td><td>decided</td></tr>
+<tr><td>2026-09-21</td><td>Package <code>TechieRag</code> 1.0.7</td><td>Every model call goes through it; Chatur never starts another company's coding tool</td><td>planned</td></tr>
+<tr><td>2026-09-21</td><td><code>nuget.config</code> naming the owner's private GitHub Packages feed beside nuget.org, with no credentials in the file</td><td>TrBlazeUI and TechieRag come from that feed; the token stays in the machine's own NuGet settings, outside the repository</td><td>planned</td></tr>
+<tr><td>2026-09-21</td><td>Packages <code>Dapper</code>, <code>DbUp</code> and <code>Microsoft.Data.Sqlite</code></td><td>Data access and migrations, as the technical decisions require; no EF Core</td><td>planned</td></tr>
+<tr><td>2026-09-21</td><td>Package <code>Serilog</code> with the file sink</td><td>Stack answer set Q5</td><td>planned</td></tr>
+<tr><td>2026-09-21</td><td>SQLite in the user's application-data folder</td><td>The owner's data must survive every update, which a file beside the program does not</td><td>decided</td></tr>
+<tr><td>2026-09-21</td><td>A shipped migration is never edited; a new one is added</td><td>A nightly build the owner already runs has that migration applied</td><td>decided</td></tr>
+<tr><td>2026-09-21</td><td>Roles, rights, commands, rules and step wording are versioned database rows, seeded from data that ships with each build</td><td>Prose files failed; Chatur must be able to correct them itself and show the history</td><td>decided</td></tr>
+<tr><td>2026-09-21</td><td>What TechieRag lacks is added in the TechieRag repository</td><td>Standing rule 3 of the answer set; a workaround here would hide the gap</td><td>decided</td></tr>
+<tr><td>2026-09-21</td><td><code>Chatur.WebHarness</code>, a test-only web head</td><td>The browser checks cannot look inside a Mac or Windows app window, and the screens are the same components</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>Chatur is one desktop window with a menu bar (File, Edit, View, Project, Tools, Help), a toolbar, the project's files down the left with the branch beneath them, one content area of tabs, and the conversation pinned to the right at half the width</td><td>Two earlier designs were refused for being a web application wearing a desktop name: a sidebar of pages, then a rail of roles. A view is a tab, not a route (owner review, 2026-09-22)</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>The conversation is never more than half the window and never goes away, except when the owner closes the file view, when it takes the whole window; a folder with no project in it starts that way</td><td>The product is the conversation. Files are what it is talking about (owner, 2026-09-22)</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>The agent is chosen beside the Send button, the model itself is the default, and Chatur pre-selects the agent that suits the project's state and says why</td><td>Picking a role before knowing what you want is friction; the state of the project already says who should work (owner, 2026-09-22)</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>Agents differ by what they may do, never by colour. Chatur seeds the Analyst, the Architect, the Flow master and the Verifier; a library specialist such as a TrBlazeUI or TechieRag agent is added by the owner, not built in</td><td>Colour-coding roles made six themes out of one product; and a library agent belongs to the library, not to Chatur (owner, 2026-09-22)</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>Theming is a system, not two palettes: a theme is a named set of OKLCH values in the shape TrBlazeUI takes, held as data, chosen on Settings ▸ Appearance, and one can be added from a file without a new build. Amber ships as the default, with Indigo, Teal and Slate</td><td>TrBlazeUI itself has no named themes — it takes a shadcn theme block — so Chatur has to own the naming, and the owner wants to add more later (owner, 2026-09-22)</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>Each Settings tab is its own routed component with its own code-behind; the tab strip is navigation, not a control</td><td>So a tab can be read, tested and changed on its own, instead of one page and one class holding all seven (owner, 2026-09-21)</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>A file with a change waiting on it is read-only in the editor until the change is approved or rejected</td><td>Otherwise the owner is typing into a file that has two versions of itself on screen (owner, 2026-09-22)</td><td>decided</td></tr>
+<tr><td>2026-09-22</td><td>The screen that lists the tools a project needs is called Prerequisites, under the Project menu</td><td>"Doctor" says nothing about what it is for, and "Requirements" collides with the requirements of the product itself (owner, 2026-09-22)</td><td>decided</td></tr>
+<tr><td>2026-09-21</td><td>Automatic check-ins go to the run's own branch, with the requirement ids in the message; pushing and merging stay with the owner</td><td>A model that can commit, reset or push freely can lose work</td><td>decided</td></tr>
+<tr><td>2026-09-21</td><td>Release by GitHub Actions: a Mac job (Mac Catalyst <code>.app</code>, zipped) and a Windows job (unpackaged, self-contained, <code>WindowsPackageType</code> None, zipped). Every push to main publishes a nightly pre-release; a version tag publishes a named release. Version and commit are stamped into the build. No code signing before phase 4</td><td>The owner installs from the download on both real machines from step 1</td><td>decided</td></tr>
+</tbody>
+</table>
+<h2 id="module-responsibilities">7. Module responsibilities<a class="anchor-link" href="#module-responsibilities">#</a></h2>
+<table>
+<thead><tr><th>Module</th><th>Responsibility</th><th>Depends on</th></tr></thead>
+<tbody>
+<tr><td>Projects</td><td>Search the named folders, hold the selected project, read its stack</td><td>Data access</td></tr>
+<tr><td>Build and run</td><td>Offer the targets that fit the machine, build, run, stream output, stop the whole process tree</td><td>Projects</td></tr>
+<tr><td>Doctor</td><td>Probe each tool a project needs, report version or fix, report Chatur's own version and commit</td><td>Projects</td></tr>
+<tr><td>Models</td><td>Providers, their secrets, their models, and the routing that picks one</td><td>Secret store, TechieRag</td></tr>
+<tr><td>Agent loop</td><td>Run a session: messages, tool requests, results, tokens, stop</td><td>Models, Guards, Tools</td></tr>
+<tr><td>Guards</td><td>Decide whether a tool request may run</td><td>Roles</td></tr>
+<tr><td>Roles and rules</td><td>Read, edit and version roles, rights, commands, rules and step wording; correct them and log the correction</td><td>Data access</td></tr>
+<tr><td>Changes</td><td>Hold proposed edits, apply or discard them</td><td>Agent loop</td></tr>
+<tr><td>Measurements</td><td>Append the five streams to the project's <code>docs/metrics</code> folder</td><td>Projects</td></tr>
+<tr><td>Accounts</td><td>Sign in, register, sign out, tokens, devices, licence</td><td>App Manager, Secret store</td></tr>
+<tr><td>Source control</td><td>Show changes, check in, push, pull, switch branches, and the run's own branch</td><td>Projects</td></tr>
+</tbody>
+</table>
+<h2 id="open-questions">8. Open questions<a class="anchor-link" href="#open-questions">#</a></h2>
+<ul>
+<li>Can Chatur be used with no internet, given that sign-in goes through App Manager? A stored token that is still valid would allow it; the answer decides whether a "work offline" state is needed.
+</li>
+<li>Which App Manager server address and application identity does Chatur use, and where do its API key and secret live on a real machine?
+</li>
+<li>Which run targets belong in step 1 beyond web, Mac and Windows: an Android emulator, an iOS simulator, plain .NET and Node programs?
+</li>
+</ul>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>
