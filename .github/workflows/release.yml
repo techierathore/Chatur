@@ -144,15 +144,30 @@ jobs:
           [ -n "$want" ] || { echo "::error::No _RecommendedXcodeVersion in $props."; exit 1; }
           installed="$(ls -d /Applications/Xcode_*.app 2>/dev/null | xargs -n1 basename | sort -V | tr '\n' ' ')"
           echo "::notice::SDK $sdk, workload set $MACCATALYST_WORKLOAD_SET, Mac Catalyst $manifest wants Xcode $want. Installed: $installed"
-          chosen="$(ls -d /Applications/Xcode_"$want".app /Applications/Xcode_"$want".*.app 2>/dev/null | sort -V | tail -n1 || true)"
-          if [ -z "$chosen" ]; then
-            chosen="$(ls -d /Applications/Xcode_"${want%%.*}".*.app 2>/dev/null | sort -V | tail -n1 || true)"
-            [ -n "$chosen" ] || { echo "::error::No Xcode ${want%%.*}.x on this runner. Installed: $installed"; exit 1; }
+          # Candidates of the wanted version, real folders first: on the runner image some Xcode_X.Y.Z.app
+          # entries are aliases of Xcode_X.Y.app, and actool cannot find the macOS SDK through an alias
+          # (run 37209733217: 'SDK .../Xcode_26.6.0.app/.../MacOSX.sdk cannot be located').
+          list() { for a in $(ls -d "$@" 2>/dev/null | sort -V -r); do [ -L "$a" ] || echo "$a"; done; for a in $(ls -d "$@" 2>/dev/null | sort -V -r); do [ -L "$a" ] && echo "$a"; done; true; }
+          candidates="$(list /Applications/Xcode_"$want".app /Applications/Xcode_"$want".*.app)"
+          if [ -z "$candidates" ]; then
+            candidates="$(list /Applications/Xcode_"${want%%.*}".*.app)"
+            [ -n "$candidates" ] || { echo "::error::No Xcode ${want%%.*}.x on this runner. Installed: $installed"; exit 1; }
             echo "XCODE_CHECK=-p:ValidateXcodeVersion=false" >> "$GITHUB_ENV"
-            echo "::warning::No Xcode $want on this runner; using $(basename "$chosen") with the strict Xcode check off."
+            echo "::warning::No Xcode $want on this runner; using the newest ${want%%.*}.x with the strict Xcode check off."
           fi
-          sudo xcode-select -s "$chosen/Contents/Developer"
-          echo "::notice::Selected $(basename "$chosen"): $(xcodebuild -version | tr '\n' ' ')"
+          # Keep the first candidate whose macOS SDK and actool (the asset catalog compiler) can be found.
+          chosen=""
+          for c in $candidates; do
+            real="$(cd "$c" && pwd -P)"
+            sudo xcode-select -s "$real/Contents/Developer"
+            sudo xcodebuild -runFirstLaunch >/dev/null 2>&1 || true
+            if sdkpath="$(xcrun --sdk macosx --show-sdk-path 2>/dev/null)" && [ -d "$sdkpath" ] && xcrun --sdk macosx --find actool >/dev/null 2>&1; then
+              chosen="$real"; break
+            fi
+            echo "::warning::$(basename "$c") ($real) has no usable macOS SDK or actool; trying the next one."
+          done
+          [ -n "$chosen" ] || { echo "::error::No candidate Xcode has a usable macOS SDK and actool: $(echo $candidates)"; exit 1; }
+          echo "::notice::Selected $chosen: $(xcodebuild -version | tr '\n' ' ') macOS SDK $(xcrun --sdk macosx --show-sdk-path), actool $(xcrun --sdk macosx --find actool)"
 
       - name: Authenticate to the GitHub Packages feed
         env:
