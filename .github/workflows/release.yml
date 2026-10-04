@@ -100,9 +100,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The Mac Catalyst workload must match the runner's Xcode. The newest .NET SDK band brings
+      # Mac Catalyst 27, which needs Xcode 27, and the runner's newest Xcode is 26.x. So this job stays
+      # on the 10.0.3xx SDK band and its workload set 10.0.303.1 (Mac Catalyst 26.5, built for Xcode 26).
+      # Move both together when the runner image ships Xcode 27.
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.3xx
+
+      # The runner image may already carry a newer SDK, and dotnet picks the highest installed one.
+      # This global.json exists only on the runner, for this job; it is never committed.
+      - name: Hold the SDK to the 10.0.3xx band
+        shell: bash
+        run: |
+          echo '{ "sdk": { "version": "10.0.300", "rollForward": "latestPatch" } }' > global.json
+          dotnet --version
 
       # .NET 10 MAUI needs a current Xcode. Prefer the newest installed one; list what is there so a
       # mismatch is visible in the log.
@@ -115,7 +127,7 @@ jobs:
           xcodebuild -version
 
       - name: Install MAUI workload
-        run: dotnet workload install maui-maccatalyst
+        run: dotnet workload install maui-maccatalyst --version 10.0.303.1
 
       - name: Authenticate to the GitHub Packages feed
         env:

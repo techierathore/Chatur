@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Status</h1>
-    <div class="sub">Last rendered: 2026-10-03</div>
+    <div class="sub">Last rendered: 2026-10-04</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#where-i-am">Where I am</a></li>
@@ -121,7 +121,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Status</h1>
-    <div class="subtitle">Rendered 2026-10-03 &middot; source <code>PROJECT-STATUS.md</code></div>
+    <div class="subtitle">Rendered 2026-10-04 &middot; source <code>PROJECT-STATUS.md</code></div>
     <div class="cta-next" style="padding:20px; background:var(--cta-bg); border:2px solid var(--accent); border-radius:10px; margin:20px 0;">
       <div style="font-size:11px; color:var(--muted); letter-spacing:.5px;">NEXT COMMAND TO RUN</div>
       <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:flow-master *build-phase Chatur</div>
@@ -177,7 +177,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <ul>
 <li>REQ-FN-012 needs Chatur started from Finder on a Mac; no Mac is registered for automatic checks (<code>.tfcore/core-config.yaml</code>).
 </li>
-<li>REQ-NFR-006 needs the owner's first push to main, which runs the release workflow and publishes the nightly.
+<li>REQ-NFR-006: the first push to main failed on the Mac job (the newest .NET Mac workload needs Xcode 27; the runner has 26.6). The workflow now pins the Mac job to the 10.0.3xx SDK and workload set 10.0.303.1 (2026-10-04); it needs the owner's next push to run.
 </li>
 </ul>
 <h2 id="verification-log">Verification log<a class="anchor-link" href="#verification-log">#</a></h2>
