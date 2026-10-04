@@ -1,16 +1,16 @@
 ---
 project: Chatur
-last_updated: 2026-10-03
-current_phase: Phase 1 of 4 (Workbench) · Build — 1 to fix, 96 of 98 verified
+last_updated: 2026-10-04
+current_phase: Phase 1 of 4 (Workbench) · Build — 1 not built, 96 of 98 verified
 last_verified_build: PASS
-last_verified_date: 2026-10-03
+last_verified_date: 2026-10-04
 ---
 
 # Chatur — Status
 
 ## Where I am
 
-Phase 1 of 4 (Workbench), build nearly done. 96 of 98 rows are Verified: every test passes, and all twelve screens pass render, visual and the mockup comparison at both widths. Every TechieFlow, TrBlazeUI and TechieRag entry is closed. The two rows left need things only the owner has: a Mac, and the first push to main that runs the release workflow.
+Phase 1 of 4 (Workbench), build nearly done. 96 of 98 rows are Verified. The release pipeline now builds both downloads and publishes `v0.1.0-nightly` from the pushed commit, but the downloaded Windows build never leaves "Loading Chatur…": it has no App Manager address. One decision is waiting for you: which App Manager released builds sign in to (docs/Chatur-Decision-Request.md).
 
 ## Next command to run
 
@@ -22,7 +22,7 @@ OpenCode:
 ```
 /flow-master *build-phase Chatur
 ```
-Why: 1 rows carry a defect (⚠ in Remarks) that a fix must clear before a verify: REQ-NFR-006; working docs/Chatur-Checklist.md.
+Why: 1 rows are not built yet: REQ-NFR-006; working docs/Chatur-Checklist.md.
 
 ## Open requirements
 
@@ -31,16 +31,17 @@ Why: 1 rows carry a defect (⚠ in Remarks) that a fix must clear before a verif
 | Not Started | 0 |
 | In Progress | 0 |
 | Implemented | 0 |
-| Needs re-verify | 2 |
+| Needs re-verify | 1 |
 | Blocked | 0 |
+| FAIL | 1 |
 
+- [ ] REQ-NFR-006 — The release workflow builds and publishes the Mac and Windows zips (FAIL)
 - [ ] REQ-FN-012 — Homebrew tools are found on a Mac (Needs re-verify)
-- [ ] REQ-NFR-006 — The release workflow builds and publishes the Mac and Windows zips (Needs re-verify)
 
 ## Known blockers
 
-- REQ-FN-012 needs Chatur started from Finder on a Mac; no Mac is registered for automatic checks (`.tfcore/core-config.yaml`).
-- REQ-NFR-006: the first push to main failed on the Mac job (the newest .NET Mac workload needs Xcode 27; the runner has 26.6). The Mac job now selects Xcode 26.5 correctly (seen in run 37193762096). The next failure was the Mac app itself: it referenced the ChaturDb console project, which a self-contained Mac app may not (NETSDK1150). Fixed in src/Chatur/Chatur.csproj. Run 37209733217 passed the Xcode check (26.6) and failed in the asset compiler: the macOS SDK could not be found through the alias folder Xcode_26.6.0.app. The job now selects the real Xcode folder and checks the SDK and actool before building (2026-10-04). It needs the owner's next push.
+- REQ-NFR-006: the nightly release holds both zips built from the pushed commit, and the build carries version 0.1.0-nightly and that commit, but the downloaded app hangs on its loading screen because no App Manager address is configured for released builds. Waiting on the owner's decision; the hang itself is a fault to fix either way.
+- REQ-FN-012 needs Chatur started from Finder on a Mac; no Mac is registered for automatic checks.
 
 ## Verification log
 
@@ -48,11 +49,11 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 | Date | Phase | Result | Status table |
 |---|---|---|---|
-| 2026-10-03 | amend-docs | 29/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 | 2026-10-03 | verify-phase | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 | 2026-10-03 | verify-phase | 34/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 | 2026-10-03 | verify-phase | 77/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 | 2026-10-03 | build-phase | 96/98 Verified | docs/Chatur-Checklist.md#requirements-status |
+| 2026-10-04 | verify-phase | 96/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 
 ## Library feedback summary
 
@@ -62,11 +63,11 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 ## Standards compliance
 
-- Last check 2026-10-03: no standards script exists yet; nothing measured.
+- Last check 2026-10-04: no standards script exists yet; nothing measured.
 
 ## Deferred / future
 
-- Hosting and production secrets are answered after user acceptance testing.
+- Production hosting and secrets: the App Manager address for released builds is now needed (decision request).
 - The logo is a placeholder; the owner supplies the real one.
 - No BRD row yet: the Settings account page controls, Start's other ways in, hiding the output strip, merging a process branch.
 - Start's "Get started" buttons are disabled; the mockup draws them active.

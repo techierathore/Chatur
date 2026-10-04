@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Business Requirements</h1>
-    <div class="sub">Last rendered: 2026-10-03</div>
+    <div class="sub">Last rendered: 2026-10-04</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#summary">1. Summary</a></li>
@@ -141,7 +141,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Business Requirements</h1>
-    <div class="subtitle">Rendered 2026-10-03 &middot; source <code>Chatur-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-10-04 &middot; source <code>Chatur-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -188,9 +188,9 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Date</td><td>2026-09-21</td></tr>
 </tbody>
 </table>
-<h2 id="summary">1. Summary<a class="anchor-link" href="#summary">#</a></h2>
+<h2 id="summary"><a id="1-summary"></a>1. Summary<a class="anchor-link" href="#summary">#</a></h2>
 <p>Chatur is a development environment for Mac and Windows where one person builds software by directing AI agents. The owner picks a project, chats with a role — analyst, architect, flow master, verifier or a library specialist — and that role reads, searches, edits and creates files, runs commands, and builds and runs the project, while the owner watches, approves each change and stops the work whenever he wants. It replaces the owner's TechieFlow framework and the coding tools it sits on, and talks to the AI models directly through TechieRag. The roles, their rights, their commands, the rules and the steps of a process are rows in Chatur's own database, so when one of them proves wrong during work Chatur corrects it on the spot and logs the correction for the owner to keep or undo. Nothing is carried by hand to a second repository. This phase, the Workbench, is the whole product at its smallest: sign in, find and run a project, connect models, chat with a role, watch and approve what the agent does, and edit and check in the result.</p>
-<h2 id="scope">2. Scope<a class="anchor-link" href="#scope">#</a></h2>
+<h2 id="scope"><a id="2-scope"></a>2. Scope<a class="anchor-link" href="#scope">#</a></h2>
 <p><strong>In:</strong></p>
 <ul>
 <li>Installing on a real Mac and a real Windows machine from a download that every change to the main branch produces, with the owner's data surviving each update.
@@ -243,7 +243,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li>Choosing text size and line spacing on the appearance page. The mockup draws it as a later-phase panel (decided 2026-10-03).
 </li>
 </ul>
-<h2 id="users-and-roles">3. Users and roles<a class="anchor-link" href="#users-and-roles">#</a></h2>
+<h2 id="users-and-roles"><a id="3-users-and-roles"></a>3. Users and roles<a class="anchor-link" href="#users-and-roles">#</a></h2>
 <table>
 <thead><tr><th>Role</th><th>Who they are</th><th>What they need</th></tr></thead>
 <tbody>
@@ -253,7 +253,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <p>Inside Chatur the AI plays its own agents — the Analyst, the Architect, the Flow master and the Verifier. They are rows in Chatur's database with their own rights, commands and rules, not people who sign in. The agents page in Settings is where the owner reads and changes them, and where a library specialist such as a TrBlazeUI or TechieRag agent is added.</p>
-<h2 id="screens-and-flow">4. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
+<h2 id="screens-and-flow"><a id="4-screens-and-flow"></a>4. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
 <p>Chatur is a desktop application with three windows. The <strong>start window</strong> opens first and holds nothing but the projects worked in and the ways into one. The <strong>main window</strong> is where work happens: a menu bar, a toolbar, the project's files down the left with the branch beneath them, one content area of tabs, and the conversation pinned to its right. The <strong>secondary window</strong> holds everything that is not the work — prerequisites, the repository, every setting — as a title bar, a list down its left, and one page; it carries no file tree and no conversation, because there is nothing to say to an agent while changing a setting. Sign in and Register come before any window is usable.</p>
 <table>
 <thead><tr><th>Screen</th><th>Route</th><th>Role</th><th>Mockup</th><th>Fields</th></tr></thead>
@@ -289,7 +289,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li>He checks the work in himself from the Repository view, which no model may do.
 </li>
 </ol>
-<h2 id="requirements">5. Requirements<a class="anchor-link" href="#requirements">#</a></h2>
+<h2 id="requirements"><a id="5-requirements"></a>5. Requirements<a class="anchor-link" href="#requirements">#</a></h2>
 <h3 id="sign-in">Sign in<a class="anchor-link" href="#sign-in">#</a></h3>
 <p>The way into Chatur for a returning owner, using his App Manager account.</p>
 <ul>
@@ -392,7 +392,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="workbench-the-project-you-are-in">Workbench — the project you are in<a class="anchor-link" href="#workbench-the-project-you-are-in">#</a></h3>
+<h3 id="workbench-the-project-you-are-in"><a id="workbench--the-project-you-are-in"></a>Workbench — the project you are in<a class="anchor-link" href="#workbench-the-project-you-are-in">#</a></h3>
 <p>The top bar of the one working screen: which project, which branch, and the way out.</p>
 <ul>
 <li><strong>BRD-16</strong> — What the selected project is. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
@@ -420,7 +420,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="workbench-build-and-run">Workbench — build and run<a class="anchor-link" href="#workbench-build-and-run">#</a></h3>
+<h3 id="workbench-build-and-run"><a id="workbench--build-and-run"></a>Workbench — build and run<a class="anchor-link" href="#workbench-build-and-run">#</a></h3>
 <p>The Run control in the top bar and the output strip along the bottom. Only a role whose rights allow it may run anything.</p>
 <ul>
 <li><strong>BRD-20</strong> — Only targets that fit the machine. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
@@ -500,7 +500,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="settings-providers">Settings — providers<a class="anchor-link" href="#settings-providers">#</a></h3>
+<h3 id="settings-providers"><a id="settings--providers"></a>Settings — providers<a class="anchor-link" href="#settings-providers">#</a></h3>
 <p>The first tab: where the model sources are connected, and where their secrets are kept.</p>
 <ul>
 <li><strong>BRD-32</strong> — Connect a source with a pasted key. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
@@ -542,7 +542,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="settings-routing">Settings — routing<a class="anchor-link" href="#settings-routing">#</a></h3>
+<h3 id="settings-routing"><a id="settings--routing"></a>Settings — routing<a class="anchor-link" href="#settings-routing">#</a></h3>
 <p>The routing tab: which model does which work, and what happens when one is not available.</p>
 <ul>
 <li><strong>BRD-38</strong> — A tier for each role. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
@@ -582,7 +582,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="workbench-the-conversation">Workbench — the conversation<a class="anchor-link" href="#workbench-the-conversation">#</a></h3>
+<h3 id="workbench-the-conversation"><a id="workbench--the-conversation"></a>Workbench — the conversation<a class="anchor-link" href="#workbench-the-conversation">#</a></h3>
 <p>The panel pinned to the right of the window, where the work starts. By default the owner is talking to the model itself; an agent is chosen beside the Send button.</p>
 <ul>
 <li><strong>BRD-44</strong> — Choose who to talk to. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
@@ -636,7 +636,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="settings-agents">Settings — agents<a class="anchor-link" href="#settings-agents">#</a></h3>
+<h3 id="settings-agents"><a id="settings--agents"></a>Settings — agents<a class="anchor-link" href="#settings-agents">#</a></h3>
 <p>The agents tab: the list of agents Chatur plays, read from its own database. Chatur ships the Analyst, the Architect, the Flow master and the Verifier; a library specialist is added here, not built in.</p>
 <ul>
 <li><strong>BRD-52</strong> — Roles come from the database. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
@@ -664,7 +664,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="settings-the-agent-editor">Settings — the agent editor<a class="anchor-link" href="#settings-the-agent-editor">#</a></h3>
+<h3 id="settings-the-agent-editor"><a id="settings--the-agent-editor"></a>Settings — the agent editor<a class="anchor-link" href="#settings-the-agent-editor">#</a></h3>
 <p>The right-hand side of the agents tab, where one agent is read and changed, with its history kept.</p>
 <ul>
 <li><strong>BRD-56</strong> — Change what a role is. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
@@ -698,7 +698,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="workbench-sessions">Workbench — sessions<a class="anchor-link" href="#workbench-sessions">#</a></h3>
+<h3 id="workbench-sessions"><a id="workbench--sessions"></a>Workbench — sessions<a class="anchor-link" href="#workbench-sessions">#</a></h3>
 <p>The work already done, kept so it can be picked up again from the history in the workbench.</p>
 <ul>
 <li><strong>BRD-61</strong> — What has been worked on. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
@@ -720,7 +720,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="workbench-changes-and-guards">Workbench — changes and guards<a class="anchor-link" href="#workbench-changes-and-guards">#</a></h3>
+<h3 id="workbench-changes-and-guards"><a id="workbench--changes-and-guards"></a>Workbench — changes and guards<a class="anchor-link" href="#workbench-changes-and-guards">#</a></h3>
 <p>The card beside the conversation. Nothing is written to a file until the owner has seen it there.</p>
 <ul>
 <li><strong>BRD-64</strong> — See the change itself. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
@@ -760,7 +760,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="settings-corrections">Settings — corrections<a class="anchor-link" href="#settings-corrections">#</a></h3>
+<h3 id="settings-corrections"><a id="settings--corrections"></a>Settings — corrections<a class="anchor-link" href="#settings-corrections">#</a></h3>
 <p>The corrections tab: what Chatur changed about itself, and the owner's word on it.</p>
 <ul>
 <li><strong>BRD-70</strong> — A correction is written down. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-corrections.html">mockup</a>
@@ -788,7 +788,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="settings-measurements">Settings — measurements<a class="anchor-link" href="#settings-measurements">#</a></h3>
+<h3 id="settings-measurements"><a id="settings--measurements"></a>Settings — measurements<a class="anchor-link" href="#settings-measurements">#</a></h3>
 <p>The measurements tab: the same numbers TechieFlow writes today, written by Chatur into each project.</p>
 <ul>
 <li><strong>BRD-74</strong> — The five files. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
@@ -828,7 +828,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="settings-appearance">Settings — appearance<a class="anchor-link" href="#settings-appearance">#</a></h3>
+<h3 id="settings-appearance"><a id="settings--appearance"></a>Settings — appearance<a class="anchor-link" href="#settings-appearance">#</a></h3>
 <p>The appearance tab: how Chatur looks, and how a new look is added without a new Chatur.</p>
 <ul>
 <li><strong>BRD-156</strong> — Choose how Chatur looks. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-appearance.html">mockup</a>
@@ -844,7 +844,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h3 id="workbench-the-files">Workbench — the files<a class="anchor-link" href="#workbench-the-files">#</a></h3>
+<h3 id="workbench-the-files"><a id="workbench--the-files"></a>Workbench — the files<a class="anchor-link" href="#workbench-the-files">#</a></h3>
 <p>The files card: enough of an editor for a quick change, and a door to the owner's real one. It appears only for a role that may change code.</p>
 <ul>
 <li><strong>BRD-80</strong> — Browse the project. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
@@ -918,7 +918,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h2 id="non-functional-requirements">6. Non-functional requirements<a class="anchor-link" href="#non-functional-requirements">#</a></h2>
+<h2 id="non-functional-requirements"><a id="6-non-functional-requirements"></a>6. Non-functional requirements<a class="anchor-link" href="#non-functional-requirements">#</a></h2>
 <table>
 <thead><tr><th>Id</th><th>Area</th><th>Requirement</th><th>Measure</th></tr></thead>
 <tbody>
@@ -930,9 +930,9 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>BRD-158</td><td>Release</td><td>A GitHub Actions workflow has a macOS job that builds the Mac Catalyst <code>.app</code> and zips it, and a Windows job that builds the unpackaged, self-contained Windows app (<code>WindowsPackageType</code> None) and zips it. Every push to main publishes a <code>nightly</code> pre-release with both downloads; a <code>v*</code> tag publishes a named release. Version and commit are stamped into the build, so Prerequisites shows them (BRD-29) and the newer-build check finds the release (BRD-31). No code signing (added 2026-09-30)</td><td>When a commit is pushed to main, then the <code>nightly</code> pre-release holds a Mac zip and a Windows zip built from that commit, and Prerequisites in that build shows the same version and commit</td></tr>
 </tbody>
 </table>
-<h2 id="development-status">7. Development status<a class="anchor-link" href="#development-status">#</a></h2>
+<h2 id="development-status"><a id="7-development-status"></a>7. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-10-03.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-10-04.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
@@ -946,7 +946,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Non-functional</td><td>6</td><td>5</td><td>1</td><td>Partial</td></tr>
 </tbody>
 </table>
-<h2 id="context-diagram">8. Context diagram<a class="anchor-link" href="#context-diagram">#</a></h2>
+<h2 id="context-diagram"><a id="8-context-diagram"></a>8. Context diagram<a class="anchor-link" href="#context-diagram">#</a></h2>
 <div class="diagram">
   <div class="dt">
     <button data-zout title="Zoom out">&minus;</button>
@@ -967,7 +967,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   Chatur --&gt; Proj["The owner's project folders"]
   Chatur --&gt; Metrics["docs/metrics in each project"]</pre>
 </div>
-<h2 id="constraints-and-assumptions">9. Constraints and assumptions<a class="anchor-link" href="#constraints-and-assumptions">#</a></h2>
+<h2 id="constraints-and-assumptions"><a id="9-constraints-and-assumptions"></a>9. Constraints and assumptions<a class="anchor-link" href="#constraints-and-assumptions">#</a></h2>
 <ul>
 <li>The technical decisions are already taken and are in <code>docs/Chatur-Technical-Decisions.md</code>. Day one records them and does not reopen them.
 </li>
@@ -982,7 +982,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li>Chatur needs nothing installed in a project's folder, and reads and writes the same documents TechieFlow uses.
 </li>
 </ul>
-<h2 id="risks">10. Risks<a class="anchor-link" href="#risks">#</a></h2>
+<h2 id="risks"><a id="10-risks"></a>10. Risks<a class="anchor-link" href="#risks">#</a></h2>
 <table>
 <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
 <tbody>
