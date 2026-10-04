@@ -155,11 +155,19 @@ jobs:
           dotnet nuget update source "$NUGET_SOURCE_NAME" --configfile nuget.config
           --username "$NUGET_FEED_USER" --password "$FEED_TOKEN" --store-password-in-clear-text
 
+      # Each build error is also written as an annotation, so a failure can be read without the log.
       - name: Publish (Mac Catalyst, unsigned)
-        run: >
-          dotnet publish src/Chatur/Chatur.csproj -f net10.0-maccatalyst -c Release
-          -p:CreatePackage=false -p:EnableCodeSigning=false -p:_RequireCodeSigning=false
-          ${{ needs.meta.outputs.msbuild_props }} ${{ env.XCODE_CHECK }}
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet publish src/Chatur/Chatur.csproj -f net10.0-maccatalyst -c Release \
+            -p:CreatePackage=false -p:EnableCodeSigning=false -p:_RequireCodeSigning=false \
+            ${{ needs.meta.outputs.msbuild_props }} ${{ env.XCODE_CHECK }} 2>&1 | tee publish.log || {
+            grep -E ': error [A-Z]*[0-9]+' publish.log | sort -u | head -20 | while IFS= read -r line; do
+              echo "::error::${line}"
+            done
+            exit 1
+          }
 
       - name: Zip the .app
         shell: bash

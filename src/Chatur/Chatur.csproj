@@ -6,7 +6,6 @@
          Mac Catalyst on a machine that is neither. -->
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">net10.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
-
     <OutputType>Exe</OutputType>
     <RootNamespace>Chatur</RootNamespace>
     <UseMaui>true</UseMaui>
@@ -18,6 +17,12 @@
 
     <!-- Release by GitHub Actions, unpackaged and self-contained (Architecture §6, 2026-09-21). -->
     <WindowsPackageType>None</WindowsPackageType>
+
+    <!-- ChaturDb is both a console run by hand and the library this head calls for
+         ChaturDbMigrator.Migrate (Architecture §2 "ChaturDb"). A Mac Catalyst app is always
+         self-contained, and the SDK refuses a self-contained app that references a non-self-contained
+         executable (NETSDK1150). The head only uses ChaturDb as a library, so that check is off here. -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
@@ -53,7 +58,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Chatur.Core\Chatur.Core.csproj" />
     <ProjectReference Include="..\ChaturUI\ChaturUI.csproj" />
-    <ProjectReference Include="..\ChaturDb\ChaturDb.csproj" />
+    <!-- Built as the plain net10.0 library this head loads: the head's runtime and self-contained
+         settings are not passed on to the ChaturDb console (see ValidateExecutableReferencesMatchSelfContained). -->
+    <ProjectReference Include="..\ChaturDb\ChaturDb.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
   </ItemGroup>
 
   <ItemGroup>

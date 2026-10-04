@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | App | Chatur |
-| Count | 191 logged: 4 open, 187 fixed, 0 will not fix |
+| Count | 192 logged: 4 open, 188 fixed, 0 will not fix |
 | Source | `docs/metrics/misses.jsonl`, one row per miss record. Rewritten by `tf-misses-md.sh` on every new record. Never edit it: a wrong row is corrected by a new record. |
 | Updated | 2026-10-04 |
 
@@ -18,10 +18,11 @@
 | MISS-Chatur-20260930-36 (REQ-FN-012) | 2026-09-30 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20260930-01 (REQ-NFR-006) | 2026-09-30 by owner | the app's spec | BRD §2 Scope and Technical-Decisions 'Release' promised a nightly download from every push to main, but no BRD requirement carried the release pipeline, so no checklist row built or verified it (added as BRD-158 / REQ-NFR-006 on 2026-09-30). |
 
-## Fixed (187)
+## Fixed (188)
 
 | Miss | Found | Closed | Whose gap | What went wrong |
 |---|---|---|---|---|
+| MISS-Chatur-20261004-03 (REQ-NFR-006) | 2026-10-04 by owner | 2026-10-04 by fix-issues | not sorted | The Mac app could not build: it references the ChaturDb console project, which a self-contained Mac app may not reference, and the Mac target had never been compiled before the push. |
 | MISS-Chatur-20261004-02 (REQ-NFR-006) | 2026-10-04 by owner | 2026-10-04 by fix-issues | not sorted | The second Mac build fix chose the Xcode from the newest Mac workload folder on the runner instead of the pinned one, so the build still failed. |
 | MISS-Chatur-20261004-01 (REQ-NFR-006) | 2026-10-04 by owner | 2026-10-04 by fix-issues | not sorted | The Mac build on GitHub failed because the workflow took the newest .NET workload, which needs an Xcode the runner does not have. |
 | MISS-Chatur-20261003-25 (REQ-FN-039) | 2026-10-03 by gate | 2026-10-03 by build-phase | not sorted | no sentence recorded (partial-implementation, src) |
