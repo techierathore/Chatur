@@ -40,7 +40,7 @@ Why: 1 rows carry a defect (⚠ in Remarks) that a fix must clear before a verif
 ## Known blockers
 
 - REQ-FN-012 needs Chatur started from Finder on a Mac; no Mac is registered for automatic checks (`.tfcore/core-config.yaml`).
-- REQ-NFR-006: the first push to main failed on the Mac job (the newest .NET Mac workload needs Xcode 27; the runner has 26.6). The workflow now pins the Mac job to the 10.0.3xx SDK and workload set 10.0.303.1 (2026-10-04); it needs the owner's next push to run.
+- REQ-NFR-006: the first push to main failed on the Mac job (the newest .NET Mac workload needs Xcode 27; the runner has 26.6). The workflow pins the Mac job to the 10.0.3xx SDK and workload set 10.0.303.1, and selects the Xcode that workload was built for (26.5), falling back to the newest 26.x (2026-10-04); it needs the owner's next push to run.
 
 ## Verification log
 

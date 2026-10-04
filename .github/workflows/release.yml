@@ -116,18 +116,35 @@ jobs:
           echo '{ "sdk": { "version": "10.0.300", "rollForward": "latestPatch" } }' > global.json
           dotnet --version
 
-      # .NET 10 MAUI needs a current Xcode. Prefer the newest installed one; list what is there so a
-      # mismatch is visible in the log.
-      - name: Select Xcode
+      - name: Install MAUI workload
+        run: dotnet workload install maui-maccatalyst --version 10.0.303.1
+
+      # The Mac Catalyst SDK checks the Xcode version it was built for, and that version is in the
+      # SDK pack's folder name (Microsoft.MacCatalyst.Sdk.net10.0_26.5 -> Xcode 26.5). Select the newest
+      # installed Xcode of exactly that version; if there is none, fall back to the newest Xcode of the
+      # same major version and say so. Everything installed is listed so a mismatch shows in the log.
+      - name: Select the Xcode the Mac Catalyst SDK was built for
         shell: bash
         run: |
           ls -d /Applications/Xcode*.app || true
-          newest="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -n1 || true)"
-          if [ -n "$newest" ]; then sudo xcode-select -s "$newest/Contents/Developer"; fi
+          root="${DOTNET_ROOT:-$(dirname "$(command -v dotnet)")}"
+          pack="$(ls -d "$root"/packs/Microsoft.MacCatalyst.Sdk.net10.0_* 2>/dev/null | sort -V | tail -n1 || true)"
+          want="${pack##*_}"
+          echo "Mac Catalyst SDK pack: ${pack:-none found} -> wants Xcode ${want:-unknown}"
+          chosen=""
+          if [ -n "$want" ]; then
+            chosen="$(ls -d /Applications/Xcode_"$want".app /Applications/Xcode_"$want".*.app 2>/dev/null | sort -V | tail -n1 || true)"
+            if [ -z "$chosen" ]; then
+              major="${want%%.*}"
+              chosen="$(ls -d /Applications/Xcode_"$major".*.app 2>/dev/null | sort -V | tail -n1 || true)"
+              echo "::warning::No Xcode $want on this runner; using the newest Xcode $major.x instead: ${chosen:-none}"
+            fi
+          fi
+          if [ -z "$chosen" ]; then
+            chosen="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -n1 || true)"
+          fi
+          if [ -n "$chosen" ]; then sudo xcode-select -s "$chosen/Contents/Developer"; fi
           xcodebuild -version
-
-      - name: Install MAUI workload
-        run: dotnet workload install maui-maccatalyst --version 10.0.303.1
 
       - name: Authenticate to the GitHub Packages feed
         env:
