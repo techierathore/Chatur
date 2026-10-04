@@ -1,0 +1,27 @@
+@* The build and run output, live, with the result as a pill (UI Design "Screen: Workbench", region
+   `output`). IBuildRunActions.StreamOutputAsync feeds LogView's Lines (REQ-UI-014); a build's errors
+   list underneath with file and line, each one opening that file (REQ-UI-016). *@
+<Card Class="mx-2 mb-2 flex-none" data-testid="output">
+    @* The mockup's `.oh` is the header (icon, "Output", the result pill) and `output-text` is the text below it. *@
+    <div class="flex h-8 items-center gap-2 border-b px-3 text-xs text-muted-foreground">
+        <LucideIcon Name="terminal" Size="14" />
+        Output
+        <Badge Variant="@StatusVariant" data-testid="output-status">@objStatusText</Badge>
+    </div>
+    <div data-testid="output-text">
+        <LogView Lines="@objLines" Height="8rem" EmptyText="Build or run the project to see its output here." />
+    </div>
+    @if (objErrors.Count > 0)
+    {
+        <div class="flex flex-col gap-1 border-t p-2" data-testid="output-errors">
+            @foreach (var vError in objErrors)
+            {
+                <button type="button" class="flex items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-accent" @onclick="() => OpenErrorFileAsync(vError)" data-testid="output-error">
+                    <LucideIcon Name="circle-x" Size="12" Class="text-destructive" />
+                    <span class="font-mono">@vError.FilePath:@vError.Line</span>
+                    <span class="text-muted-foreground">@vError.Message</span>
+                </button>
+            }
+        </div>
+    }
+</Card>

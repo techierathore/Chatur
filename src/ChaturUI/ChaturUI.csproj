@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ChaturUI</RootNamespace>
+    <AssemblyName>ChaturUI</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.*" />
+    <!-- Architecture §1 Q8: every view is built from TrBlazeUI 2.1.2, from the owner's GitHub
+         Packages feed named in nuget.config. -->
+    <PackageReference Include="TrBlazeUI.Components" Version="2.1.2" />
+    <PackageReference Include="TrBlazeUI.Icons.Lucide" Version="2.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chatur.Core\Chatur.Core.csproj" />
+  </ItemGroup>
+
+</Project>

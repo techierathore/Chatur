@@ -24,7 +24,7 @@ One row per stack question. "Source" says where the answer came from: the answer
 | Q8 | User interface | TrBlazeUI 2.0.9 (`TrBlazeUI.Components`, `TrBlazeUI.Icons.Lucide`, GitHub Packages feed) for every view. Views live in `ChaturUI`, a Razor class library, and are rendered by a `BlazorWebView` in the MAUI host — interactive by nature, so no Blazor render mode is chosen. The same components render in `Chatur.WebHarness` for the browser checks. TrBlazeUI ships no named themes, only a stock grey set of OKLCH variables, so Chatur names its own: Amber by default, with Indigo, Teal and Slate, each a file of values in the same shape. | answer set: dotnet + owner, day-1 and 2026-09-22 |
 | Q11 | Standing rules | The answer set's eleven rules, with two adjustments for a desktop app: log files go to the application-data folder on a real machine (rule 6 keeps `bin/` for development), and migrations live in `ChaturDb` (rule 5) rather than a folder of loose scripts. Added for this product: a model never runs a source-control command by its own choice, and anything TechieRag lacks is added in the TechieRag repository, never worked around in Chatur. | answer set: dotnet + owner, day-1 |
 
-Q9 (hosting) and Q10 (production secrets) are not yet asked; they are answered after user acceptance testing. Chatur ships as a download, so Q9 is about the release pipeline — see §6.
+Q9 (hosting) and Q10 (production secrets) are not yet asked; they are answered after user acceptance testing. Chatur ships as a download, so Q9 is about the release pipeline — see §6 and BRD-158 (`.github/workflows/release.yml`).
 
 ## 2. Solution structure
 
@@ -183,6 +183,10 @@ One row per decision. Every package added to the project has a row saying why.
 | 2026-09-22 | The screen that lists the tools a project needs is called Prerequisites, under the Project menu | "Doctor" says nothing about what it is for, and "Requirements" collides with the requirements of the product itself (owner, 2026-09-22) | decided |
 | 2026-09-21 | Automatic check-ins go to the run's own branch, with the requirement ids in the message; pushing and merging stay with the owner | A model that can commit, reset or push freely can lose work | decided |
 | 2026-09-21 | Release by GitHub Actions: a Mac job (Mac Catalyst `.app`, zipped) and a Windows job (unpackaged, self-contained, `WindowsPackageType` None, zipped). Every push to main publishes a nightly pre-release; a version tag publishes a named release. Version and commit are stamped into the build. No code signing before phase 4 | The owner installs from the download on both real machines from step 1 | decided |
+| 2026-09-30 | `.github/workflows/release.yml`: a `macos` job and a `windows` job, each building and zipping its app; a push to main replaces the `nightly` pre-release with both zips, a `v*` tag publishes a named release; the build is stamped with the version and commit that `PrerequisiteActions.OwnVersionAsync` reads and `GitHubReleaseClient` compares against | The release decision above had no requirement carrying it; BRD-158 does now | planned (BRD-158) |
+| 2026-09-30 | Package `TechieRag` 1.0.8, replacing 1.0.7 | 1.0.8 adds the ChatGPT subscription sign-in and typed streaming (`ChatStreamEventsAsync`: text, tool call, completed), which answer TR-RAG-001 and TR-RAG-002 | planned (BRD-34, BRD-47) |
+| 2026-09-30 | ChatGPT subscription sign-in is TechieRag's device-code flow (`UseChatGptSubscriptionLlm`). Chatur supplies the callback that opens the browser and shows the code, and an `ISubscriptionSessionStore` over Keychain / Credential Manager. This replaces the local listener the technical decisions named | 1.0.8 signs in by device code, so no listener is needed; the session must survive a restart and stay out of the database | planned (BRD-34) |
+| 2026-09-30 | The agent loop streams every turn through `ChatStreamEventsAsync`; a tool-call event goes through the guards as before. `PaceReplyAsync` is removed | Real streaming with tool calls is now in the library, so the workaround would hide nothing and cost a slower reply | planned (BRD-47) |
 
 ## 7. Module responsibilities
 
@@ -191,7 +195,7 @@ One row per decision. Every package added to the project has a row saying why.
 | Projects | Search the named folders, hold the selected project, read its stack | Data access |
 | Build and run | Offer the targets that fit the machine, build, run, stream output, stop the whole process tree | Projects |
 | Doctor | Probe each tool a project needs, report version or fix, report Chatur's own version and commit | Projects |
-| Models | Providers, their secrets, their models, and the routing that picks one | Secret store, TechieRag |
+| Models | Providers, their secrets, their models, the routing that picks one, and the subscription session store over the secret store | Secret store, TechieRag |
 | Agent loop | Run a session: messages, tool requests, results, tokens, stop | Models, Guards, Tools |
 | Guards | Decide whether a tool request may run | Roles |
 | Roles and rules | Read, edit and version roles, rights, commands, rules and step wording; correct them and log the correction | Data access |

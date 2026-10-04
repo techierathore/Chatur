@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="amber" class="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <!-- TrBlazeUI setup (.trblazeui/TrBlazeUI-AI-Reference.md §1 "CSS Imports (in order)"): the
+         library sheet, then the theme, dark-by-default and Amber until Settings ▸ Appearance
+         (cluster L) changes it (UI Design "Theme: both, dark by default; Amber ships"). -->
+    <link rel="stylesheet" href="_content/TrBlazeUI.Components/trblazeui.css" />
+    <link rel="stylesheet" href="_content/ChaturUI/themes/amber.css" />
+    <link rel="stylesheet" href="_content/ChaturUI/themes/indigo.css" />
+    <link rel="stylesheet" href="_content/ChaturUI/themes/teal.css" />
+    <link rel="stylesheet" href="_content/ChaturUI/themes/slate.css" />
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+
+<body>
+    <ChaturRoutes @rendermode="InteractiveServer" />
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>

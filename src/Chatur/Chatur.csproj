@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!-- Platform-conditional so this project builds on either owner machine (Architecture §1 Q7,
+         Foundation brief). Empty unless one of the two conditions below matches — never defaults to
+         Mac Catalyst on a machine that is neither. -->
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Chatur</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ApplicationTitle>Chatur</ApplicationTitle>
+    <ApplicationId>com.techierathore.chatur</ApplicationId>
+    <ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+
+    <!-- Release by GitHub Actions, unpackaged and self-contained (Architecture §6, 2026-09-21). -->
+    <WindowsPackageType>None</WindowsPackageType>
+
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+
+    <!-- Fixed — another agent stores the Owner/Second/Yolo test-user passwords under this id
+         (Foundation brief). Never regenerate it. -->
+    <UserSecretsId>chatur-3f1c9a52-0d4e-4b7a-9c1e-5a8e2b7d6f10</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#F0A93A" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#1E1B16" BaseSize="128,128" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+    <!-- Reads the same Windows-side %APPDATA%\Microsoft\UserSecrets\chatur-3f1c9a52-...\secrets.json
+         a `dotnet user-secrets` write targets (App Manager base URL/keys, test-user passwords) — a
+         debug-build-only local development convenience, the MAUI-head analogue of the automatic
+         user-secrets load `WebApplication.CreateBuilder` gives Chatur.WebHarness in Development
+         (`MauiApp.CreateBuilder` has no such default). Never referenced or loaded outside DEBUG, so a
+         Release build never reads or ships a secrets file. -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0" Condition="'$(Configuration)' == 'Debug'" />
+    <!-- A rolling log file, wired before anything else can fail (Coding Standards §Logging,
+         REQ-NFR-002) — a desktop app has no console. -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chatur.Core\Chatur.Core.csproj" />
+    <ProjectReference Include="..\ChaturUI\ChaturUI.csproj" />
+    <ProjectReference Include="..\ChaturDb\ChaturDb.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="appsettings.json" />
+  </ItemGroup>
+
+</Project>

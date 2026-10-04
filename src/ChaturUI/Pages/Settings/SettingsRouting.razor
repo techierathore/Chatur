@@ -1,0 +1,208 @@
+@page "/settings/routing"
+@layout Layouts.SecondaryLayout
+@inject IRoutingActions RoutingActions
+@inject IRoleActions RoleActions
+@inject IProviderActions ProviderActions
+@inject ToastService Toast
+
+@* UI Design "Screen: Settings" ▸ Routing — mockups/settings-routing.html. Wires IRoutingActions
+   (REQ-FN-018 a tier per role, REQ-FN-019 a tier per kind of work, REQ-FN-020 the fallback chain,
+   REQ-FN-022 the failed-fix threshold, REQ-FN-023 routing remembered). *@
+<div class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-center gap-2" data-testid="routing-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Routing</h1>
+            <p class="text-sm text-muted-foreground">Which model does which work, and what happens when one will not answer.</p>
+        </div>
+        <span class="flex-1"></span>
+        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="ResetTiersAsync" data-testid="reset-tiers">
+            <LucideIcon Name="undo-2" Size="14" />
+            Reset the tiers
+        </Button>
+    </div>
+
+    @if (objTiers is null)
+    {
+        <div class="grid grid-cols-3 gap-4" data-testid="tiers">
+            <Empty Title="Routing not read yet" Description="The tiers are read from Chatur's database." Size="EmptySize.Small" />
+        </div>
+    }
+    else
+    {
+        <div class="flex flex-col gap-4" data-testid="tiers">
+            @foreach (var vTier in objTiers)
+            {
+                var vTierNumber = vTier.Tier;
+                var vAvailable = AvailableModels(vTier);
+                <Card data-testid="@($"tier-{vTierNumber}")">
+                    <CardHeader>
+                        <CardTitle>
+                            <span class="flex items-center justify-between">
+                                <span>@TierLabel(vTierNumber)</span>
+                                <Badge Variant="BadgeVariant.Secondary" data-testid="@($"tier-{vTierNumber}-count")">@CountText(vTier.ModelIdsInOrder.Count)</Badge>
+                            </span>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent Class="flex flex-col gap-2">
+                        @for (var vIndex = 0; vIndex < vTier.ModelIdsInOrder.Count; vIndex++)
+                        {
+                            var vPosition = vIndex + 1;
+                            var vModelId = vTier.ModelIdsInOrder[vIndex];
+                            var vModel = ModelOf(vModelId);
+                            <div class="flex flex-wrap items-center gap-2 rounded border px-2 py-1.5" data-testid="@($"tier-{vTierNumber}-row-{vPosition}")">
+                                <Badge Variant="BadgeVariant.Secondary" data-testid="@($"tier-{vTierNumber}-pos-{vPosition}")">@vPosition</Badge>
+                                <span class="text-sm">@(vModel?.Identifier ?? $"Model {vModelId}")</span>
+                                <span class="text-xs text-muted-foreground">@vModel?.ProviderName</span>
+                                <span class="flex-1"></span>
+                                <Button Size="ButtonSize.IconSmall" Variant="ButtonVariant.Ghost" Disabled="@(vIndex == 0)"
+                                        OnClick="() => MoveAsync(vTierNumber, vPosition - 1, -1)" AriaLabel="Move up"
+                                        data-testid="@($"tier-{vTierNumber}-up-{vPosition}")">
+                                    <LucideIcon Name="chevron-up" Size="14" />
+                                </Button>
+                                <Button Size="ButtonSize.IconSmall" Variant="ButtonVariant.Ghost" Disabled="@(vIndex == vTier.ModelIdsInOrder.Count - 1)"
+                                        OnClick="() => MoveAsync(vTierNumber, vPosition - 1, 1)" AriaLabel="Move down"
+                                        data-testid="@($"tier-{vTierNumber}-down-{vPosition}")">
+                                    <LucideIcon Name="chevron-down" Size="14" />
+                                </Button>
+                                <Button Size="ButtonSize.IconSmall" Variant="ButtonVariant.Ghost"
+                                        OnClick="() => RemoveAsync(vTierNumber, vPosition - 1)" AriaLabel="Remove"
+                                        data-testid="@($"tier-{vTierNumber}-remove-{vPosition}")">
+                                    <LucideIcon Name="trash-2" Size="14" />
+                                </Button>
+                            </div>
+                        }
+                        <Select TValue="string" Value="@((string?)null)" ValueChanged="@(async (string? aValue) => await AddAsync(vTierNumber, aValue))"
+                                Disabled="@(vAvailable.Count == 0)" Class="w-64" data-testid="@($"tier-{vTierNumber}-add-select")">
+                            <SelectTrigger Class="w-64" data-testid="@($"tier-{vTierNumber}-add")">
+                                <SelectValue Placeholder="@(vAvailable.Count == 0 ? "No models to add" : "Add a model")" />
+                            </SelectTrigger>
+                            <SelectContent data-testid="@($"tier-{vTierNumber}-add-pop")">
+                                @foreach (var vCandidate in vAvailable)
+                                {
+                                    <SelectItem Value="@(vCandidate.ModelId.ToString())" Text="@vCandidate.Identifier" TValue="string"
+                                                data-testid="@($"tier-{vTierNumber}-add-{vCandidate.ModelId}")">@vCandidate.Identifier (@vCandidate.ProviderName)</SelectItem>
+                                }
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+            }
+        </div>
+    }
+
+    <Card data-testid="agent-tiers-panel">
+        <CardHeader>
+            <CardTitle>A tier for each agent</CardTitle>
+        </CardHeader>
+        <CardContent>
+            @if (objAgents is null)
+            {
+                <Empty Title="Agents not read yet" Size="EmptySize.Small" />
+            }
+            else
+            {
+                <DataTable TData="AgentRow" Data="@objAgents" ShowPagination="false" MinWidth="520px" Density="DataTableDensity.Compact" data-testid="agent-tiers-table"
+                           RowAttributes="@(r => new Dictionary<string, object> { ["data-testid"] = $"agent-tier-{r.Key}", ["class"] = "border-t" })">
+                    <Columns>
+                        <DataTableColumn TData="AgentRow" TValue="string" Property="@(r => r.Name)" Header="Agent" CellClass="font-medium whitespace-nowrap" />
+                        <DataTableColumn TData="AgentRow" TValue="string" Property="@(r => r.Key)" Header="Tier" Width="220px">
+                            <CellTemplate Context="agent">
+                                <Select TValue="string" Value="@agent.Tier.ToString()" DisplayTextSelector="@(t => $"Tier {t}")"
+                                        ValueChanged="@(async (string? aValue) => await SetAgentTierAsync(agent, aValue))"
+                                        Class="flex h-7 w-40" data-testid="@($"{agent.Key}-tier")">
+                                    <SelectTrigger Class="h-7 w-40" data-testid="@($"{agent.Key}-tier-button")">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent data-testid="@($"{agent.Key}-tier-pop")">
+                                        @for (var vTierNumber = 1; vTierNumber <= 3; vTierNumber++)
+                                        {
+                                            <SelectItem Value="@vTierNumber.ToString()" Text="@($"Tier {vTierNumber}")" TValue="string"
+                                                        data-testid="@($"{agent.Key}-tier-{vTierNumber}")">@TierLabel(vTierNumber)</SelectItem>
+                                        }
+                                    </SelectContent>
+                                </Select>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="AgentRow" TValue="string" Property="@(r => r.FirstModel)" Header="First model in the chain" CellClass="text-muted-foreground" />
+                    </Columns>
+                </DataTable>
+            }
+        </CardContent>
+    </Card>
+
+    <Card data-testid="work-tiers-panel">
+        <CardHeader>
+            <CardTitle>A tier for each kind of work</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <DataTable TData="WorkRow" Data="@objWork" ShowPagination="false" MinWidth="620px" Density="DataTableDensity.Compact" data-testid="work-tiers-table"
+                       RowAttributes="@(r => new Dictionary<string, object> { ["data-testid"] = $"work-{r.Kind}", ["class"] = "border-t" })">
+                <Columns>
+                    <DataTableColumn TData="WorkRow" TValue="string" Property="@(r => r.Label)" Header="Kind of work" CellClass="font-medium whitespace-nowrap" />
+                    <DataTableColumn TData="WorkRow" TValue="string" Property="@(r => r.Kind)" Header="Tier" Width="220px">
+                        <CellTemplate Context="work">
+                            <Select TValue="string" Value="@work.Tier.ToString()" DisplayTextSelector="@(t => $"Tier {t}")"
+                                    ValueChanged="@(async (string? aValue) => await SetWorkTierAsync(work, aValue))"
+                                    Class="flex h-7 w-40" data-testid="@($"{work.Kind}-tier")">
+                                <SelectTrigger Class="h-7 w-40" data-testid="@($"{work.Kind}-tier-button")">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent data-testid="@($"{work.Kind}-tier-pop")">
+                                    @for (var vTierNumber = 1; vTierNumber <= 3; vTierNumber++)
+                                    {
+                                        <SelectItem Value="@vTierNumber.ToString()" Text="@($"Tier {vTierNumber}")" TValue="string"
+                                                    data-testid="@($"{work.Kind}-tier-{vTierNumber}")">@TierLabel(vTierNumber)</SelectItem>
+                                    }
+                                </SelectContent>
+                            </Select>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="WorkRow" TValue="string" Property="@(r => r.Why)" Header="Why" CellClass="text-xs text-muted-foreground" />
+                </Columns>
+            </DataTable>
+            <Alert Variant="AlertVariant.Default" data-testid="work-wins-note">
+                <AlertIcon><LucideIcon Name="triangle-alert" Size="16" /></AlertIcon>
+                <AlertDescription>
+                    The kind of work wins over the agent. The Verifier sits in Tier 2, but when it is asked to write code it is given Tier 1.
+                </AlertDescription>
+            </Alert>
+        </CardContent>
+    </Card>
+
+    <Card data-testid="fallback-panel">
+        <CardHeader>
+            <CardTitle>When a model will not answer</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <p class="text-xs" data-testid="fallback-line">Chatur moves to the next model in that tier's chain, tells you in the conversation which one answered, and carries on. It does not stop to ask.</p>
+            <div class="flex flex-wrap items-center gap-2" data-testid="fallback-threshold">
+                <span class="text-sm">Move up a tier after</span>
+                <Input Type="InputType.Number" Value="@objThreshold.ToString()" ValueChanged="SetThresholdAsync"
+                       Class="w-16" AriaLabel="Failed fixes before moving up a tier" data-testid="failed-fixes" />
+                <span class="text-sm">failed fixes</span>
+            </div>
+            <p class="text-xs text-muted-foreground">A model that has failed to fix the same thing three times is given the tier above it, once, for that one piece of work.</p>
+        </CardContent>
+    </Card>
+
+    <Card data-testid="auto-routing-panel">
+        <CardHeader>
+            <CardTitle>
+                <span class="flex items-center justify-between">
+                    <span>Automatic routing</span>
+                    <Badge Variant="BadgeVariant.Secondary" data-testid="auto-routing-later">later</Badge>
+                </span>
+            </CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <div class="flex items-center gap-3" data-testid="auto-routing-switch-row">
+                <Switch Checked="false" Disabled="true" Outlined="true" AriaLabel="Let Chatur choose the model" data-testid="auto-routing-switch" />
+                <span class="text-sm">Let Chatur choose the model</span>
+                <span class="flex-1"></span>
+                <span class="text-xs text-muted-foreground" data-testid="auto-routing-state">off</span>
+            </div>
+            <p class="text-sm text-muted-foreground" data-testid="auto-routing-line-1">A small model inside TechieRag reads the request and chooses the tier, so a one-line question never reaches Claude Opus 5.</p>
+            <p class="text-sm text-muted-foreground" data-testid="auto-routing-line-2">Turning it off restores these tiers exactly as they are above — nothing here is lost while it is on.</p>
+        </CardContent>
+    </Card>
+</div>

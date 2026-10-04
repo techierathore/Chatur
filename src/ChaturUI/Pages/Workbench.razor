@@ -1,0 +1,17 @@
+@page "/"
+@layout Layouts.MainLayout
+
+@* UI Design "Screen: Workbench" — mockups/main.html. The main window's own content: the files
+   panel, then the tabs/editor and the conversation side by side. MainLayout's body row hosts these
+   two as its direct children and puts the output strip after it, as the mockup's `.body` and `.out`
+   are laid out. Every region is a child component the owning cluster fills in; see each
+   component's own doc comment.
+   [fix 2026-09-23] mockups/chatur.css mirrors this exact split: the files panel is its own
+   flex-none column (`.files`), while the editor and the conversation share a `.split` that the
+   UIDesign "Rules" stack below 1100px; MainLayout's style block (below 820px) drops the files
+   panel outright. Both keep the panel's own scroll, never the window's. *@
+<FilesPanel />
+<div class="workbench-split flex min-w-0 flex-1 gap-2 overflow-hidden">
+    <EditorArea />
+    <ConversationPanel />
+</div>

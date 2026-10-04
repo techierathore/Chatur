@@ -1,0 +1,214 @@
+@* The conversation, pinned right at half the window's width (UI Design "Screen: Workbench", region
+   `conversation`). Cluster G renders the message thread itself (REQ-FN-025 through REQ-FN-027); this
+   region owns the sessions list (REQ-UI-031), the activity panel and its refusals (REQ-UI-022,
+   REQ-UI-033), stopping the work (REQ-UI-023), the session's mode (REQ-UI-024), the token total
+   (REQ-UI-021) and the proposed change's diff (REQ-UI-032). *@
+<Card Class="flex min-w-0 flex-1 flex-col overflow-hidden" data-testid="chat-panel">
+    <div class="flex h-9 flex-none items-center justify-between border-b px-3" data-testid="chat-head">
+        <span class="text-xs font-medium uppercase text-muted-foreground">Chat</span>
+        <span class="row flex items-center gap-1">
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" Disabled="@(ProjectId is null || objSending)" OnClick="NewChatAsync" AriaLabel="New conversation" title="Starts a new conversation. This one is kept in the history." data-testid="new-chat">
+                <LucideIcon Name="plus" Size="14" />
+            </Button>
+            @* What has been worked on (REQ-UI-031): every session for this project, with its role, mode, when it started and its state. *@
+            <DropdownMenu Open="objHistoryOpen" OpenChanged="OnHistoryOpenChangedAsync">
+                <DropdownMenuTrigger AsChild>
+                    <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" data-testid="history">
+                        <LucideIcon Name="list" Size="14" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent Class="max-h-80 w-80 overflow-y-auto" data-testid="history-pop">
+                    <DropdownMenuLabel>Earlier on @(AppStateService.SelectedProject?.Name ?? "this project")</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    @if (objSessions.Count == 0)
+                    {
+                        <DropdownMenuItem Disabled="true">Nothing worked on yet</DropdownMenuItem>
+                    }
+                    else
+                    {
+                        @foreach (var vSession in objSessions)
+                        {
+                            <DropdownMenuItem OnClick="() => SelectSession(vSession)" data-testid="@($"session-{vSession.SessionId}")">
+                                <span class="flex flex-1 flex-col">
+                                    <span>@vSession.RoleName · @vSession.Mode</span>
+                                    <span class="text-xs text-muted-foreground">@(AppStateService.SelectedProject?.Name) · @vSession.StartedUtc.ToLocalTime().ToString("d MMM, HH:mm") · @vSession.State</span>
+                                </span>
+                            </DropdownMenuItem>
+                        }
+                    }
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </span>
+    </div>
+
+    <ScrollArea Class="min-h-0 flex-1" StickToEnd="true" data-testid="conversation">
+        @if (AppStateService.SelectedProject is null)
+        {
+            <Empty Title="No project open" Description="Open a project to start a conversation with an agent." Size="EmptySize.Small" />
+        }
+        else if (objCurrentSession is null)
+        {
+            <Empty Title="No sessions yet" Description="Send a message below to start one." Size="EmptySize.Small" />
+        }
+        else
+        {
+            <div class="flex flex-col gap-3 p-3" data-testid="conversation-thread">
+                @if (objMessages.Count == 0)
+                {
+                    @* A conversation with nothing said yet says so, rather than showing a blank panel. *@
+                    <p class="text-sm text-muted-foreground" data-testid="conversation-empty">
+                        Nothing said yet. Ask @(objCurrentSession.RoleName) about this project below.
+                    </p>
+                }
+                @for (var vIndex = 0; vIndex < objMessages.Count; vIndex++)
+                {
+                    var vMessage = objMessages[vIndex];
+                    var vIsMe = vMessage.Role == "user";
+                    var vIsLastAgent = !vIsMe && vIndex == objMessages.FindLastIndex(m => m.Role != "user");
+                    @* The mockup's `.msg`: a round avatar (the owner's initials, or the agent's sparkle), then a body with the
+                       name line (model and tokens) and what was said; the agent's steps and proposed change sit under the last reply. *@
+                    <div class="msg @(vIsMe ? "me" : "agent") flex gap-3 text-sm" data-testid="@($"msg-{vIndex + 1}")">
+                        <span class="who flex size-7 flex-none items-center justify-center rounded-full text-xs font-semibold @(vIsMe ? "border bg-muted text-muted-foreground" : "bg-primary/15 text-primary")">
+                            @if (vIsMe)
+                            {
+                                @OwnerInitials
+                            }
+                            else
+                            {
+                                <LucideIcon Name="sparkles" Size="13" />
+                            }
+                        </span>
+                        <div class="body flex min-w-0 flex-1 flex-col gap-2">
+                            <span class="name flex items-center gap-2 text-xs font-semibold">
+                                @(vIsMe ? "You" : objCurrentSession!.RoleName)
+                                @if (vIsMe && vMessage.At is { } vAt)
+                                {
+                                    <span class="model text-xs font-normal text-muted-foreground">@vAt.ToString("HH:mm")</span>
+                                }
+                                else if (vMessage.ModelName is not null)
+                                {
+                                    <span class="model text-xs font-normal text-muted-foreground">@vMessage.ModelName@(vMessage.Tokens is { } vMessageTokens ? $" · {vMessageTokens:N0} tokens" : "")</span>
+                                }
+                                @if (!vMessage.IsFinal)
+                                {
+                                    <LucideIcon Name="loader-circle" Size="12" Class="animate-spin" />
+                                }
+                            </span>
+                            <div class="said whitespace-pre-wrap leading-relaxed @(vIsMe ? "inline-block self-start rounded-lg bg-muted px-3 py-2" : "")">@vMessage.Text</div>
+                            @if (vIsLastAgent)
+                            {
+                                <ConversationActivity Events="objActivity" Changes="objProposedChanges" OnOpen="OpenChangeAsync" OnApprove="ApproveAsync" OnReject="RejectAsync" />
+                            }
+                        </div>
+                    </div>
+                }
+                @if (!objMessages.Any(m => m.Role != "user"))
+                {
+                    @* No reply yet (a refusal can come first): the steps still show, under the thread. *@
+                    <ConversationActivity Events="objActivity" Changes="objProposedChanges" OnOpen="OpenChangeAsync" OnApprove="ApproveAsync" OnReject="RejectAsync" />
+                }
+            </div>
+        }
+    </ScrollArea>
+
+    <div class="flex-none border-t p-3" data-testid="composer">
+        @* The mockup's `.box`: one bordered box that holds the borderless message field and the row of
+           pickers and Send beneath it; the hint sits outside it. *@
+        <div class="flex flex-col gap-2 rounded-lg border bg-background p-3">
+        <Textarea Class="min-h-12 resize-y rounded-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0" Placeholder="Ask about the project…" @bind-Value="objMessageText" Disabled="@(objCurrentSession is null || objSending)" AriaLabel="Message" data-testid="ask-input" />
+        @* Wraps rather than overlapping: with a model and a role chosen the row is wider than the chat panel (REQ-UI-024). *@
+        <div class="flex flex-wrap items-center gap-2">
+            @* Choose which model answers (BRD-46, UI Design "Screen: Workbench" `Model`): any model a connected provider serves, or the routing's own choice. *@
+            <span class="inline-flex" data-testid="model-pick">
+            <DropdownMenu Open="objModelPickOpen" OpenChanged="OnModelPickOpenChangedAsync">
+                <DropdownMenuTrigger AsChild>
+                    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7 shrink-0 whitespace-nowrap rounded-full bg-card" Disabled="@(objCurrentSession is null)">
+                        <LucideIcon Name="sparkles" Size="14" />
+                        <span class="max-w-40 truncate">@(SelectedModel?.Identifier ?? "Automatic")</span>
+                        <LucideIcon Name="chevron-down" Size="14" />
+                    </Button>
+                </DropdownMenuTrigger>
+                @* A provider can list dozens of models (OpenCode Go lists 30): the list scrolls instead of running off the window. *@
+                <DropdownMenuContent Class="max-h-80 overflow-y-auto" data-testid="model-pop">
+                    <DropdownMenuItem OnClick="() => SelectModel(null)" data-testid="model-auto">
+                        @if (SelectedModel is null)
+                        {
+                            <LucideIcon Name="check" Size="14" />
+                        }
+                        <span class="ml-2">Automatic — the routing chooses</span>
+                    </DropdownMenuItem>
+                    @if (objModels.Count > 0)
+                    {
+                        <DropdownMenuSeparator />
+                    }
+                    @foreach (var vModel in objModels)
+                    {
+                        <DropdownMenuItem OnClick="() => SelectModel(vModel.ModelId)" data-testid="@($"model-{vModel.ModelId}")">
+                            @if (vModel.ModelId == objSelectedModelId)
+                            {
+                                <LucideIcon Name="check" Size="14" />
+                            }
+                            <span class="ml-2">@vModel.Identifier</span>
+                            <span class="ml-2 text-xs text-muted-foreground">@vModel.ProviderName · tier @vModel.Tier</span>
+                        </DropdownMenuItem>
+                    }
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem Href="/settings/routing" data-testid="model-routing-link">Which model does which work…</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            </span>
+            @* Choose who to talk to (REQ-FN-024): Chatur's own suggestion is pre-selected, with why beside the box. *@
+            <span class="inline-flex" data-testid="agent-pick">
+            <DropdownMenu @bind-Open="objAgentPickOpen">
+                <DropdownMenuTrigger AsChild>
+                    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7 shrink-0 whitespace-nowrap rounded-full bg-card" Disabled="@(objCurrentSession is null)">
+                        @(objRoles.FirstOrDefault(r => r.RoleId == objSelectedRoleId)?.Name ?? "No agent")
+                        <LucideIcon Name="chevron-down" Size="14" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent data-testid="agent-pop">
+                    <DropdownMenuItem OnClick="() => SelectRole(null)">No agent — the model itself</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    @foreach (var vRole in objRoles)
+                    {
+                        <DropdownMenuItem OnClick="() => SelectRole(vRole.RoleId)" data-testid="@($"agent-{vRole.Code}")">
+                            @vRole.Name
+                            @if (vRole.RoleId == objSuggestion?.RoleId)
+                            {
+                                <span class="text-xs text-muted-foreground">suggested</span>
+                            }
+                        </DropdownMenuItem>
+                    }
+                </DropdownMenuContent>
+            </DropdownMenu>
+            </span>
+            <ToggleGroup TValue="SessionMode" Value="@(objCurrentSession?.Mode ?? SessionMode.AskFirst)" ValueChanged="SetModeAsync"
+                         Joined="true" AllowDeselect="false" Variant="ToggleVariant.Default" Size="ToggleSize.Small" AriaLabel="Mode"
+                         OnVariant="ToggleOnVariant.Card" Class="shrink-0 rounded-full border bg-muted p-0.5"
+                         Disabled="@(objCurrentSession is null)" data-testid="mode">
+                <ToggleGroupItem TValue="SessionMode" Value="SessionMode.AskFirst" Class="h-7 whitespace-nowrap rounded-full px-3 text-xs leading-7">Ask first</ToggleGroupItem>
+                <ToggleGroupItem TValue="SessionMode" Value="SessionMode.GoAhead" Class="h-7 whitespace-nowrap rounded-full px-3 text-xs leading-7">Go ahead</ToggleGroupItem>
+            </ToggleGroup>
+            <span class="flex-1"></span>
+            <span class="font-mono text-xs text-muted-foreground" data-testid="cost">@(objTotalTokens is { } vTokens ? $"{vTokens:N0} tokens" : "—")</span>
+            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7" Disabled="@(objCurrentSession is null)" OnClick="StopAsync" data-testid="stop-agent">
+                <LucideIcon Name="square" Size="14" />
+                Stop
+            </Button>
+            <Button Variant="ButtonVariant.Default" Size="ButtonSize.Small" Class="h-7 rounded-full" Disabled="@(objCurrentSession is null || objSending || string.IsNullOrWhiteSpace(objMessageText))" OnClick="SendMessageAsync" data-testid="send">
+                <LucideIcon Name="send" Size="14" />
+                Send
+            </Button>
+        </div>
+        </div>
+        @if (objSuggestion is { } vSuggestion)
+        {
+            <div class="hint mt-[7px] text-xs text-muted-foreground" data-testid="agent-why">@vSuggestion.Why</div>
+        }
+        else
+        {
+            @* No project or no session yet, so nothing to suggest from: the hint is still there and says what it will do. *@
+            <div class="hint mt-[7px] text-xs text-muted-foreground" data-testid="agent-why">Open a project and Chatur suggests who to ask first. You can change it above, or work with the model alone.</div>
+        }
+    </div>
+</Card>

@@ -1,0 +1,97 @@
+@* The main window's toolbar: run, stop, build, the run target, the branch, find (UI Design "Screen:
+   Workbench", region `toolbar`). Build/Run/Stop/target wire to IBuildRunActions (REQ-UI-011 through
+   REQ-UI-013, REQ-UI-015); the branch and find controls are not cluster H's rows. *@
+<div class="flex h-9 flex-none items-center gap-2 border-b bg-card px-2" data-testid="toolbar">
+    @* Build and Run share the same output slot for a project (BuildRunActions' RunState), so only one
+       of them may be going at a time — starting the other mid-way would cancel the first outright. *@
+    <Button Variant="ButtonVariant.Default" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null || objSelectedTarget is null || IsBusy)" OnClick="RunAsync" data-testid="run">
+        <LucideIcon Name="play" Size="14" />
+        Run
+    </Button>
+    <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null || !IsBusy)" OnClick="StopAsync" data-testid="stop">
+        <LucideIcon Name="square" Size="14" />
+        Stop
+    </Button>
+    @* [fix 2026-09-23] Grouped so the narrow-width rule below (UIDesign "Rules": below 980 the
+       toolbar drops what only reports) can hide the reporting controls as one unit, matching
+       mockups/chatur.css's own `.toolbar [data-testid="build"],[data-testid="target"],[data-testid="repo"],.sep{display:none}`. *@
+    <div class="flex items-center gap-2" data-testid="toolbar-reporting">
+        <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null || objSelectedTarget is null || IsBusy)" OnClick="BuildAsync" data-testid="build">
+            <LucideIcon Name="hammer" Size="14" />
+            Build
+        </Button>
+        <Separator Orientation="SeparatorOrientation.Vertical" Class="h-5" />
+
+        @* Only a target this machine can build is selectable (REQ-UI-011); the rest show, disabled. *@
+        <div class="inline-flex" data-testid="target">
+        <DropdownMenu>
+            <DropdownMenuTrigger AsChild>
+                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null || objTargets.Count == 0)">
+                    @(objSelectedTarget?.Name ?? (ProjectId is null ? "No project open" : "No target found"))
+                    <LucideIcon Name="chevron-down" Size="14" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent data-testid="target-pop">
+                @foreach (var vTarget in objTargets)
+                {
+                    <DropdownMenuItem OnClick="() => SelectTarget(vTarget)" Disabled="@(!vTarget.IsAvailableOnThisMachine)" data-testid="@($"target-{vTarget.RunTargetId}")">
+                        @if (vTarget == objSelectedTarget)
+                        {
+                            <LucideIcon Name="check" Size="14" />
+                        }
+                        <span>@vTarget.Name</span>
+                        @if (!vTarget.IsAvailableOnThisMachine)
+                        {
+                            <span class="ml-2 text-xs text-muted-foreground">needs another machine</span>
+                        }
+                    </DropdownMenuItem>
+                }
+            </DropdownMenuContent>
+        </DropdownMenu>
+        </div>
+    </div>
+    @* The branch picker (BRD-16 "the toolbar names the project and its branch"; mockups/main.html `branch-pick`):
+       names the branch checked out, what is to push, and switches to another. Outside the reporting
+       group above because it acts on the project, so a narrow window keeps it. *@
+    <div data-testid="branch-pick">
+        <DropdownMenu>
+            <DropdownMenuTrigger AsChild>
+                <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null)" data-testid="repo">
+                    <LucideIcon Name="git-branch" Size="14" />
+                    @(string.IsNullOrEmpty(objBranchStatus?.Branch) ? "—" : objBranchStatus.Branch)
+                    @if (objBranchStatus is { Ahead: > 0 } vStatus)
+                    {
+                        <Badge Variant="BadgeVariant.Outline" data-testid="toolbar-ahead">@vStatus.Ahead to push</Badge>
+                    }
+                    <LucideIcon Name="chevron-down" Size="14" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent data-testid="branch-pop">
+                @if (objBranches.Count == 0)
+                {
+                    <DropdownMenuItem Disabled="true">No branches found</DropdownMenuItem>
+                }
+                else
+                {
+                    @foreach (var vBranch in objBranches)
+                    {
+                        <DropdownMenuItem OnClick="() => SwitchBranchAsync(vBranch)" data-testid="@($"toolbar-branch-{vBranch}")">
+                            @if (vBranch == objBranchStatus?.Branch)
+                            {
+                                <LucideIcon Name="check" Size="14" />
+                            }
+                            <span class="ml-2 font-mono">@vBranch</span>
+                        </DropdownMenuItem>
+                    }
+                }
+                <DropdownMenuSeparator />
+                <DropdownMenuItem Href="/repository" data-testid="toolbar-open-repository">Open the repository…</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    </div>
+    <span class="flex-1"></span>
+    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7" Disabled="true" data-testid="find">
+        <LucideIcon Name="search" Size="14" />
+        Find
+    </Button>
+</div>

@@ -1,0 +1,155 @@
+@page "/settings/corrections"
+@layout Layouts.SecondaryLayout
+@inject ICorrectionActions CorrectionActions
+@inject ToastService Toast
+@inject ChaturUI.Services.FileDownloadInterop FileDownload
+@inject ChaturUI.Services.BrowserInterop Browser
+
+@* UI Design "Screen: Settings" ▸ Corrections — mockups/settings-corrections.html. Cluster K wires
+   ICorrectionActions.KeepAsync/UndoAsync/ExportSeedAsync; cluster L (this page) wires the table and
+   the diff (REQ-UI-034, REQ-FN-037 through REQ-FN-039). [fix 2026-10-02] Every panel the mockup draws
+   is on the first view: with no correction yet the table shows the mockup's empty state and the
+   detail panel shows an empty diff — never sample rows. *@
+<div class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-center gap-3" data-testid="corrections-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Corrections</h1>
+            <p class="text-sm text-muted-foreground">What Chatur changed about its own wording after it got something wrong.</p>
+        </div>
+        <span class="flex-1"></span>
+        <Button Variant="ButtonVariant.Outline" OnClick="ExportSeedAsync" Disabled="@(objCorrections is null or { Count: 0 })" data-testid="export-seed">
+            <LucideIcon Name="download" Size="14" />
+            Export seed data
+        </Button>
+    </div>
+
+    <Card data-testid="corrections-panel">
+        <CardHeader>
+            <CardTitle>Corrections<span class="ml-2"><Badge Variant="BadgeVariant.Secondary" data-testid="corrections-count">@(objCorrections?.Count ?? 0)</Badge></span></CardTitle>
+        </CardHeader>
+        <CardContent>
+            @if (objCorrections is null)
+            {
+                <Empty Title="Reading corrections…" Size="EmptySize.Small" data-testid="corrections-table" />
+            }
+            else if (objCorrections.Count == 0)
+            {
+                <div data-testid="corrections-table">
+                    <Empty Title="No corrections yet" Description="Chatur has not corrected any of its own roles, rules or step wording." Size="EmptySize.Small" />
+                </div>
+            }
+            else
+            {
+                <DataTable TData="Correction" Data="@objCorrections"
+                           SelectionMode="DataTableSelectionMode.Single"
+                           @bind-SelectedItems="objSelected"
+                           ShowPagination="false"
+                           MinWidth="820px"
+                           Class="border-0"
+                           RowAttributes="@(c => new Dictionary<string, object> { ["data-testid"] = $"correction-{c.CorrectionId}", ["class"] = "border-t" })"
+                           data-testid="corrections-table">
+                    <Columns>
+                        <DataTableColumn TData="Correction" TValue="string" Property="@(c => c.Target)" Header="What changed" />
+                        <DataTableColumn TData="Correction" TValue="string" Property="@(c => KindOf(c))" Header="Kind" Width="90px">
+                            <CellTemplate Context="correction">
+                                <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="@($"correction-{correction.CorrectionId}-kind")">@KindOf(correction)</Badge>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="Correction" TValue="string" Property="@(c => c.Why)" Header="Why" CellClass="text-muted-foreground text-xs" />
+                        <DataTableColumn TData="Correction" TValue="string" Property="@(c => c.CreatedUtc.ToLocalTime().ToString("d MMM yyyy · HH:mm"))" Header="When" CellClass="whitespace-nowrap text-xs text-muted-foreground" />
+                        <DataTableColumn TData="Correction" TValue="string" Property="@(c => c.Status)" Header="State" Width="140px">
+                            <CellTemplate Context="correction">
+                                <Badge Variant="@StatusVariant(correction.Status)" Class="gap-1 rounded-full border-transparent" data-testid="@($"correction-{correction.CorrectionId}-state")">
+                                    @if (correction.Status == "Kept")
+                                    {
+                                        <LucideIcon Name="check" Size="11" />
+                                    }
+                                    @correction.Status.ToLowerInvariant()
+                                </Badge>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="Correction" TValue="string" Property="@(c => c.CorrectionId.ToString())" Header="" Width="180px">
+                            <CellTemplate Context="correction">
+                                <div class="flex gap-1">
+                                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => KeepAsync(correction)" Disabled="@(correction.Status == "Kept")" data-testid="@($"keep-{correction.CorrectionId}")">
+                                        <LucideIcon Name="check" Size="14" />
+                                        Keep
+                                    </Button>
+                                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => UndoAsync(correction)" Disabled="@(correction.Status == "Undone")" data-testid="@($"undo-{correction.CorrectionId}")">
+                                        <LucideIcon Name="undo-2" Size="14" />
+                                        Undo
+                                    </Button>
+                                </div>
+                            </CellTemplate>
+                        </DataTableColumn>
+                    </Columns>
+                </DataTable>
+            }
+        </CardContent>
+    </Card>
+
+    <Card data-testid="correction-detail">
+        <CardHeader>
+            <div class="flex items-center gap-2">
+                <CardTitle>@(objSelected.Count == 0 ? "The newest correction" : "The chosen correction")</CardTitle>
+                <span class="flex-1"></span>
+                @if (SelectedCorrection is { } vHeadCorrection)
+                {
+                    <Badge Variant="@StatusVariant(vHeadCorrection.Status)">@vHeadCorrection.Status.ToLowerInvariant()</Badge>
+                }
+                else
+                {
+                    <Badge Variant="BadgeVariant.Secondary">none yet</Badge>
+                }
+            </div>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            @if (SelectedCorrection is { } vDetail)
+            {
+                <div>
+                    <b class="font-semibold">@vDetail.Target</b>
+                    <div class="text-sm text-muted-foreground">@KindOf(vDetail) · wording</div>
+                </div>
+            }
+            else
+            {
+                <div>
+                    <b class="font-semibold">Nothing has been corrected yet</b>
+                    <div class="text-sm text-muted-foreground">The newest correction appears here with what changed and why.</div>
+                </div>
+            }
+
+            <div class="rounded-md border" data-testid="correction-diff">
+                <div class="flex items-center gap-2 border-b px-3 py-1.5">
+                    <LucideIcon Name="pencil" Size="14" />
+                    <span class="text-sm">@(SelectedCorrection is { } vDiffHead ? $"{vDiffHead.Target} · wording" : "No change to show")</span>
+                    <span class="flex-1"></span>
+                    <Button Size="ButtonSize.IconSmall" Variant="ButtonVariant.Ghost" OnClick="CopyDiffAsync" Disabled="@(SelectedCorrection is null)" AriaLabel="Copy the change" data-testid="copy-diff">
+                        <LucideIcon Name="copy" Size="14" />
+                    </Button>
+                </div>
+                <DiffView Before="@(SelectedCorrection?.Before ?? string.Empty)" After="@(SelectedCorrection?.After ?? string.Empty)" BeforeLabel="Before" AfterLabel="After" EmptyText="No change to show" />
+            </div>
+
+            <div data-testid="correction-reason">
+                <span class="text-xs text-muted-foreground">Why Chatur changed it</span>
+                <div class="mt-1 text-sm">@(SelectedCorrection?.Why ?? "Nothing recorded yet.")</div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2" data-testid="correction-session">
+                <span class="text-xs text-muted-foreground">Seen in</span>
+                <Button Href="/" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="correction-session-link">
+                    <LucideIcon Name="link" Size="14" />
+                    No session is recorded for it — open the main window
+                </Button>
+            </div>
+        </CardContent>
+    </Card>
+
+    <Alert Variant="AlertVariant.Default" data-testid="seed-note">
+        <AlertIcon><LucideIcon Name="triangle-alert" Size="16" /></AlertIcon>
+        <AlertDescription>
+            A correction you keep goes into the next build's seed data, so Chatur starts there rather than learning it again. A correction you undo does not — the wording it replaced comes back and the record stays here for the reading.
+        </AlertDescription>
+    </Alert>
+</div>

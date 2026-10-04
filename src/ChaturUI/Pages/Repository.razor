@@ -1,0 +1,318 @@
+@page "/repository"
+@layout Layouts.SecondaryLayout
+@inject IProjectActions ProjectActions
+@inject ISourceControlActions SourceControl
+@inject IAccountActions Accounts
+@inject Chatur.Core.Platform.IClock Clock
+@inject ToastService ToastService
+
+@* UI Design "Screen: Repository" — mockups/repository.html. Cluster M wires ISourceControlActions
+   into `changes-panel`/`diff-panel`/`checkin-panel`/the push-pull row (REQ-UI-042 through
+   REQ-UI-044); cluster N wires the `branch-row`'s real branch list and switch (REQ-FN-047). The
+   run's own automatic check-in (REQ-FN-048) has no control on this screen — it runs by itself when
+   an agent run finishes. *@
+<div class="flex flex-col gap-4">
+
+    <div class="flex flex-wrap items-start justify-between gap-3" data-testid="page-heading">
+        @if (objProject is null)
+        {
+            <div>
+                <h1 class="text-lg font-semibold">Repository</h1>
+                <p class="text-sm text-muted-foreground">No project is open.</p>
+            </div>
+        }
+        else
+        {
+            <div>
+                <h1 class="text-lg font-semibold">Changes on @(objStatus?.Branch ?? "…")</h1>
+                <p class="text-sm text-muted-foreground">
+                    Files in <span class="break-all font-mono">@objProject.Path</span> differ from the last check-in.
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="ahead">@(objStatus?.Ahead ?? 0) to push</Badge>
+                <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="behind">@(objStatus?.Behind ?? 0) to pull</Badge>
+                <Button Variant="ButtonVariant.Outline" OnClick="PullChangesAsync" Disabled="objIsBusy" data-testid="pull">
+                    <LucideIcon Name="arrow-down" Size="16" />
+                    Pull
+                </Button>
+                <Button OnClick="PushChangesAsync" Disabled="objIsBusy" data-testid="push">
+                    <LucideIcon Name="arrow-up" Size="16" />
+                    Push
+                </Button>
+            </div>
+        }
+    </div>
+
+    @if (objProject is not null)
+    {
+        <div class="flex flex-wrap items-center gap-2" data-testid="branch-row">
+            <span class="text-sm text-muted-foreground">Branch</span>
+            <div data-testid="branch-pick">
+            <DropdownMenu>
+                <DropdownMenuTrigger AsChild>
+                    <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" data-testid="branch-current">
+                        <LucideIcon Name="git-branch" Size="14" />
+                        @(objStatus?.Branch ?? "—")
+                        <LucideIcon Name="chevron-down" Size="14" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent data-testid="branch-pop">
+                    @if (objBranches.Count == 0)
+                    {
+                        <DropdownMenuItem Disabled="true">No branches found</DropdownMenuItem>
+                    }
+                    else
+                    {
+                        @foreach (var vBranch in objBranches)
+                        {
+                            <DropdownMenuItem OnClick="() => SwitchBranchAsync(vBranch)" data-testid="@($"branch-option-{vBranch}")">
+                                @if (vBranch == objStatus?.Branch)
+                                {
+                                    <LucideIcon Name="check" Size="14" />
+                                }
+                                <span class="ml-2 font-mono">@vBranch</span>
+                            </DropdownMenuItem>
+                        }
+                    }
+                </DropdownMenuContent>
+            </DropdownMenu>
+            </div>
+            <Button Variant="ButtonVariant.Outline" Disabled="true" data-testid="new-branch">
+                <LucideIcon Name="plus" Size="14" />
+                New branch…
+            </Button>
+        </div>
+    }
+
+    <Card data-testid="changes-panel">
+        <CardHeader>
+            <CardTitle>Changes</CardTitle>
+        </CardHeader>
+        <CardContent>
+            @if (objProject is null)
+            {
+                <Empty Title="Nothing to show" Description="Open a project to see what has changed in its working copy." Size="EmptySize.Small" />
+            }
+            else if (objIsLoading)
+            {
+                <div class="flex justify-center p-6">
+                    <Spinner />
+                </div>
+            }
+            else if (objChanges.Count == 0)
+            {
+                <Empty Title="Nothing has changed" Description="Every file matches the last check-in." Size="EmptySize.Small" />
+            }
+            else
+            {
+                <div class="mb-3 flex items-center justify-end">
+                    <Badge Variant="BadgeVariant.Outline" data-testid="chosen-count">@objChosen.Count of @objChanges.Count chosen</Badge>
+                </div>
+                <DataTable TData="ChangedFile" Data="@objChanges" MinWidth="560px" ShowPagination="false"
+                           SelectionMode="DataTableSelectionMode.Multiple" @bind-SelectedItems="objChosen"
+                           HeaderRowAttributes="ChangesHeadAttributes" SelectAllAttributes="ChooseAllAttributes"
+                           data-testid="changes-table">
+                    <Columns>
+                        <DataTableColumn TData="ChangedFile" TValue="string" Property="@(f => f.Path)" Header="File"
+                                         CellClass="whitespace-nowrap" HeaderClass="whitespace-nowrap">
+                            <CellTemplate Context="row">
+                                <Button Variant="ButtonVariant.Link" Class="h-auto p-0 font-mono" OnClick="@(() => ShowDiffAsync(row.Path))"
+                                        data-testid="@($"change-path-{row.Path}")">
+                                    @row.Path
+                                </Button>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="ChangedFile" TValue="string" Property="@(f => f.State)" Header="State">
+                            <CellTemplate Context="row">
+                                <Badge Variant="@StateVariant(row.State)" data-testid="@($"change-state-{row.Path}")">@row.State</Badge>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="ChangedFile" TValue="int" Property="@(f => f.LinesAdded)" Header="Added" Align="DataTableColumnAlign.End">
+                            <CellTemplate Context="row">
+                                <span class="font-mono" data-testid="@($"change-added-{row.Path}")">+@row.LinesAdded</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="ChangedFile" TValue="int" Property="@(f => f.LinesRemoved)" Header="Removed" Align="DataTableColumnAlign.End">
+                            <CellTemplate Context="row">
+                                <span class="font-mono" data-testid="@($"change-removed-{row.Path}")">−@row.LinesRemoved</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                    </Columns>
+                </DataTable>
+            }
+        </CardContent>
+    </Card>
+
+    @if (objProject is not null && objChanges.Count > 0)
+    {
+        <Card data-testid="diff-panel">
+            <CardHeader>
+                <CardTitle>What changed in the file you are on</CardTitle>
+            </CardHeader>
+            <CardContent Class="flex flex-col gap-2">
+                <div class="flex items-center justify-between gap-2" data-testid="diff">
+                    <span class="font-mono text-sm" data-testid="diff-file">@objCurrentDiffFile</span>
+                    <Button Variant="ButtonVariant.Link" Disabled="true" data-testid="diff-open">Open in the editor</Button>
+                </div>
+                <CodeBlock Language="diff" Code="@objCurrentDiff" />
+            </CardContent>
+        </Card>
+    }
+
+    <Card data-testid="checkin-panel">
+        <CardHeader>
+            <CardTitle>Check in</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <Field>
+                <FieldLabel For="checkin-message">Message</FieldLabel>
+                <FieldContent>
+                    <Textarea Id="checkin-message" @bind-Value="objCheckInMessage" Disabled="@(objProject is null || objIsBusy)"
+                              Placeholder="[REQ-*] what changed" data-testid="checkin-message" />
+                </FieldContent>
+            </Field>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm text-muted-foreground" data-testid="checkin-author">@objCheckInAuthorLine</span>
+                <span class="flex-1"></span>
+                <Button OnClick="CheckInChosenAsync" Disabled="@(!CanCheckIn)" data-testid="checkin-submit">
+                    <LucideIcon Name="check" Size="16" />
+                    Check in @objChosen.Count file(s)
+                </Button>
+            </div>
+        </CardContent>
+    </Card>
+
+    @* BRD §4 Repository "history": the newest check-ins on this branch, and which of them only a process's own branch holds. *@
+    <Card data-testid="history-panel">
+        <CardHeader>
+            <CardTitle>History</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <div data-testid="history-table">
+                @if (objProject is null)
+                {
+                    <Empty Title="Nothing to show" Description="Open a project to see its check-ins." Size="EmptySize.Small" />
+                }
+                else if (objIsLoading)
+                {
+                    <div class="flex justify-center p-6" data-testid="history-loading">
+                        <Spinner />
+                    </div>
+                }
+                else if (objHistory.Count == 0)
+                {
+                    <Empty Title="No check-ins yet" Description="Nothing has been checked in on this branch." Size="EmptySize.Small" data-testid="history-empty" />
+                }
+                else
+                {
+                    <DataTable TData="CommitEntry" Data="@objHistory" MinWidth="600px" ShowPagination="false" HeaderRowAttributes="HistoryHeadAttributes"
+                               RowAttributes="@(c => new Dictionary<string, object> { ["data-testid"] = $"commit-row-{NumberOf(c)}", ["class"] = "border-t" })">
+                        <Columns>
+                            <DataTableColumn TData="CommitEntry" TValue="string" Property="@(c => c.Hash)" Header="Check-in">
+                                <CellTemplate Context="row">
+                                    <span class="font-mono" data-testid="@($"commit-hash-{NumberOf(row)}")">@row.Hash</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="CommitEntry" TValue="string" Property="@(c => c.Message)" Header="Message">
+                                <CellTemplate Context="row">
+                                    <span data-testid="@($"commit-message-{NumberOf(row)}")">@row.Message</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="CommitEntry" TValue="string" Property="@(c => c.Author)" Header="Who">
+                                <CellTemplate Context="row">
+                                    <span class="text-muted-foreground" data-testid="@($"commit-who-{NumberOf(row)}")">@row.Author</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="CommitEntry" TValue="DateTime" Property="@(c => c.WhenUtc)" Header="When" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="row">
+                                    <span class="text-muted-foreground" data-testid="@($"commit-when-{NumberOf(row)}")">@FormatWhen(row.WhenUtc)</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="CommitEntry" TValue="bool" Property="@(c => c.WrittenByProcess)" Header="By hand">
+                                <CellTemplate Context="row">
+                                    @if (row.WrittenByProcess)
+                                    {
+                                        <Badge Variant="BadgeVariant.Warning" Class="gap-1 rounded-full border-transparent" data-testid="@($"commit-made-{NumberOf(row)}")">
+                                            <LucideIcon Name="sparkles" Size="11" />
+                                            a process wrote it
+                                        </Badge>
+                                    }
+                                </CellTemplate>
+                            </DataTableColumn>
+                        </Columns>
+                    </DataTable>
+                }
+            </div>
+            <div class="border-t pt-3 text-xs text-muted-foreground" data-testid="history-note">
+                Every line here carries the name it was checked in under. A process writes the work and the message; the check-in is still yours.
+            </div>
+        </CardContent>
+    </Card>
+
+    @* UI Design "Screen: Repository" `agent-checkins`: the branches a process checked in to by itself (REQ-FN-048), with the requirement ids they carry. *@
+    <Card data-testid="process-branches-panel">
+        <CardHeader>
+            <CardTitle>Branches a process made</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <div data-testid="process-branches-table">
+                @if (objProject is not null && objIsLoading)
+                {
+                    <div class="flex justify-center p-6" data-testid="process-branches-loading">
+                        <Spinner />
+                    </div>
+                }
+                else if (objProject is null || objProcessBranches.Count == 0)
+                {
+                    <Empty Title="No process has checked in by itself" Description="A run that finishes checks in to a branch of its own, and it is listed here until its work is taken in." Size="EmptySize.Small" data-testid="process-branches-empty" />
+                }
+                else
+                {
+                    <DataTable TData="ProcessBranch" Data="@objProcessBranches" MinWidth="640px" ShowPagination="false" HeaderRowAttributes="ProcessBranchesHeadAttributes"
+                               RowAttributes="@(b => new Dictionary<string, object> { ["data-testid"] = $"process-branch-row-{NumberOf(b)}", ["class"] = "border-t" })">
+                        <Columns>
+                            <DataTableColumn TData="ProcessBranch" TValue="string" Property="@(b => b.Name)" Header="Branch">
+                                <CellTemplate Context="row">
+                                    <span class="font-mono" data-testid="@($"process-branch-name-{NumberOf(row)}")">@row.Name</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProcessBranch" TValue="string" Property="@(b => b.Name)" Header="What it carries">
+                                <CellTemplate Context="row">
+                                    <span class="font-mono text-muted-foreground" data-testid="@($"process-branch-reqs-{NumberOf(row)}")">@RequirementRange(row)</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProcessBranch" TValue="int" Property="@(b => b.CheckInCount)" Header="Check-ins">
+                                <CellTemplate Context="row">
+                                    <span data-testid="@($"process-branch-count-{NumberOf(row)}")">@row.CheckInCount</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProcessBranch" TValue="DateTime" Property="@(b => b.LastCheckInUtc)" Header="Last touched" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="row">
+                                    <span class="text-muted-foreground" data-testid="@($"process-branch-when-{NumberOf(row)}")">@FormatWhen(row.LastCheckInUtc)</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProcessBranch" TValue="string" Property="@(b => b.Name)" Header="" Align="DataTableColumnAlign.End">
+                                <CellTemplate Context="row">
+                                    <Button Variant="ButtonVariant.Outline" OnClick="@(() => ExplainMerge(row))" data-testid="@($"process-branch-merge-{NumberOf(row)}")">
+                                        <LucideIcon Name="git-merge" Size="14" />
+                                        Merge into @(objMainBranch)…
+                                    </Button>
+                                </CellTemplate>
+                            </DataTableColumn>
+                        </Columns>
+                    </DataTable>
+                }
+            </div>
+        </CardContent>
+    </Card>
+
+    <div class="flex items-start gap-2 rounded-md border p-3 text-sm text-muted-foreground" data-testid="owner-note">
+        <LucideIcon Name="circle-slash" Size="16" Class="mt-0.5 flex-none" />
+        <span>
+            Pushing and merging stay with you. A model asking to run a source-control command is refused
+            every time — the command is written out here so you can read it, and never run.
+        </span>
+    </div>
+
+</div>

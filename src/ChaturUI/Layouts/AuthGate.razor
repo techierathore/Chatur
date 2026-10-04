@@ -1,0 +1,9 @@
+@* Wraps every window's content except Sign in and Register. Reads IAccountActions.CurrentUserAsync
+   and redirects to /sign-in when nobody is signed in (Foundation brief "Auth gating"). *@
+@inject IAccountActions Accounts
+@inject NavigationManager Nav
+
+@if (objIsSignedIn)
+{
+    @ChildContent
+}

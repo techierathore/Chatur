@@ -1,0 +1,24 @@
+@* Recursive helper for FilesPanel (REQ-UI-039): TreeView's ChildContent is markup, so a tree read
+   from IFileActions.TreeAsync as plain data needs one small component that renders itself again for
+   every folder's children. Selection (and so opening a file, REQ-UI-040) is handled by the enclosing
+   TreeView's own @bind-SelectedValue — this component only lays the rows out. Not a page of its own —
+   never routed, never listed anywhere else. *@
+@foreach (var vNode in Nodes)
+{
+    @if (vNode.IsFolder)
+    {
+        var vPath = vNode.RelativePath;
+        <TreeItem Label="@vNode.Name" Value="@vPath" Expanded="@objOpen.Contains(vPath)" ExpandedChanged="@(vOpen => SetOpen(vPath, vOpen))" data-testid="@($"tree-{vPath}")">
+            <Icon><LucideIcon Name="@(objOpen.Contains(vPath) ? "folder-open" : "folder")" Size="16" /></Icon>
+            <ChildContent>
+                <FileTreeBranch Nodes="@vNode.Children" />
+            </ChildContent>
+        </TreeItem>
+    }
+    else
+    {
+        <TreeItem Label="@vNode.Name" Value="@vNode.RelativePath" data-testid="@($"tree-{vNode.RelativePath}")">
+            <Icon><LucideIcon Name="file" Size="16" /></Icon>
+        </TreeItem>
+    }
+}

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Both a console (run by hand via the dotnet CLI's "run" command against this project, passing
+         the connection string as its one argument) and a library the heads reference for
+         ChaturDbMigrator.Migrate at startup (Architecture §2 "ChaturDb"). -->
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ChaturDb</RootNamespace>
+    <AssemblyName>ChaturDb</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dbup-sqlite" Version="6.*" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded, not loose files at the repository root (Coding Standards §Database). Clusters add
+         a new script named 00NN-<Cluster letter>-<What>.sql starting at 0010 + the cluster's index
+         (A=1 … O=15) to avoid collisions — see the numbering table in ChaturDbMigrator's doc comment. -->
+    <EmbeddedResource Include="Scripts\*.sql" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Chatur.Core</RootNamespace>
+    <AssemblyName>Chatur.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Architecture §2: Chatur.Core references only Microsoft.Extensions.* abstractions, Dapper,
+         Microsoft.Data.Sqlite and TechieRag — never a UI package, never EF Core. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.*" />
+    <!-- Microsoft.Extensions.Http (not just the abstractions): the App Manager client needs the
+         AddHttpClient/typed-client DI helpers, not only the ILogger/IConfiguration abstractions
+         (Architecture §5 "Identity" — every account and device call goes through App Manager). -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.*" />
+    <PackageReference Include="Dapper" Version="2.*" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.*" />
+    <PackageReference Include="TechieRag" Version="1.0.9" />
+  </ItemGroup>
+
+</Project>

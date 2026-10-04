@@ -1,0 +1,109 @@
+@page "/register"
+@layout Layouts.BareLayout
+
+@* UI Design "Screen: Register" — mockups/register.html. The live password-rule checklist while
+   typing (REQ-UI-003) and the email-already-in-use error that keeps what was typed (REQ-UI-004)
+   are cluster D's work; the real submit and the weak-password refusal are cluster C's
+   (REQ-FN-004, REQ-FN-005). *@
+<Card Class="max-h-full w-96 max-w-full flex-none overflow-auto" data-testid="register-card">
+    <CardHeader data-testid="register-heading">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold leading-8 text-primary-foreground">C</span>
+        <CardTitle>Create an App Manager account</CardTitle>
+        <CardDescription data-testid="register-subtitle">
+            One account carries your licence, your model keys and every machine you use Chatur on.
+        </CardDescription>
+    </CardHeader>
+    <CardContent Class="flex flex-col gap-4">
+        @if (!string.IsNullOrEmpty(objErrorMessage) && !objEmailInUse)
+        {
+            <Alert Variant="AlertVariant.Danger" data-testid="register-error">
+                <AlertDescription>@objErrorMessage</AlertDescription>
+            </Alert>
+        }
+        <div class="flex flex-col gap-4" data-testid="register-form">
+            <div class="flex gap-3" data-testid="field-name">
+                <Field Class="flex-1" data-testid="field-first-name">
+                    <FieldLabel For="first-name">First name</FieldLabel>
+                    <FieldContent>
+                        <Input Id="first-name" @bind-Value="objFirstName" Required="true" data-testid="input-first-name" />
+                    </FieldContent>
+                </Field>
+                <Field Class="flex-1" data-testid="field-last-name">
+                    <FieldLabel For="last-name">Last name</FieldLabel>
+                    <FieldContent>
+                        <Input Id="last-name" @bind-Value="objLastName" Required="true" data-testid="input-last-name" />
+                    </FieldContent>
+                </Field>
+            </div>
+            <Field IsInvalid="@objEmailInUse" data-testid="field-email">
+                <FieldLabel For="reg-email">Email</FieldLabel>
+                <FieldContent>
+                    <Input Id="reg-email" Type="InputType.Email" @bind-Value="objEmail" Required="true"
+                           AriaInvalid="@objEmailInUse" data-testid="input-email" />
+                    <FieldError hidden="@(!objEmailInUse)" data-testid="email-error">
+                        <LucideIcon Name="triangle-alert" Size="12" />@objErrorMessage <a class="underline" href="/sign-in" aria-hidden="@(!objEmailInUse ? "true" : "false")" data-testid="email-error-signin">Sign in instead</a>.
+                    </FieldError>
+                </FieldContent>
+            </Field>
+            <Field IsInvalid="@objPasswordInvalid" data-testid="field-password">
+                <FieldLabel For="reg-password">Password</FieldLabel>
+                <FieldContent>
+                    <Input Id="reg-password" Type="InputType.Password" @bind-Value="objPassword" Required="true" data-testid="input-password" />
+                    @if (objPasswordInvalid)
+                    {
+                        <FieldError data-testid="password-error">At least 8 characters with a capital letter, a number and a special character.</FieldError>
+                    }
+                </FieldContent>
+                @if (!string.IsNullOrEmpty(objPassword))
+                {
+                <div class="flex flex-col gap-2" data-testid="password-rules">
+                    <PasswordStrength Value="@objPassword" MinimumLength="8" Class="w-full" />
+                    <div class="flex gap-1" data-testid="strength-bars">
+                        <div class="h-1 flex-1 rounded-full @(RuleMetCount >= 1 ? "bg-alert-success" : "bg-muted")" data-testid="strength-bar-1"><span class="sr-only">@(RuleMetCount >= 1 ? "met" : "not met")</span></div>
+                        <div class="h-1 flex-1 rounded-full @(RuleMetCount >= 2 ? "bg-alert-success" : "bg-muted")" data-testid="strength-bar-2"><span class="sr-only">@(RuleMetCount >= 2 ? "met" : "not met")</span></div>
+                        <div class="h-1 flex-1 rounded-full @(RuleMetCount >= 3 ? "bg-alert-success" : "bg-muted")" data-testid="strength-bar-3"><span class="sr-only">@(RuleMetCount >= 3 ? "met" : "not met")</span></div>
+                        <div class="h-1 flex-1 rounded-full @(RuleMetCount >= 4 ? "bg-alert-success" : "bg-muted")" data-testid="strength-bar-4"><span class="sr-only">@(RuleMetCount >= 4 ? "met" : "not met")</span></div>
+                    </div>
+                    <div class="flex items-center gap-2" data-testid="strength-label">
+                        <span class="text-xs text-muted-foreground flex-1">Strength</span>
+                        <Badge Variant="BadgeVariant.Secondary" data-testid="strength-value">@RuleMetCount of 4 rules met</Badge>
+                    </div>
+                    <span class="flex items-center gap-1.5 text-xs @(RuleStatus.HasLength ? "text-alert-success" : "text-destructive")" data-testid="rule-length">
+                        <LucideIcon Name="@(RuleStatus.HasLength ? "check" : "x")" Size="12" />at least 8 characters
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs @(RuleStatus.HasCapital ? "text-alert-success" : "text-destructive")" data-testid="rule-capital">
+                        <LucideIcon Name="@(RuleStatus.HasCapital ? "check" : "x")" Size="12" />a capital letter
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs @(RuleStatus.HasNumber ? "text-alert-success" : "text-destructive")" data-testid="rule-number">
+                        <LucideIcon Name="@(RuleStatus.HasNumber ? "check" : "x")" Size="12" />a number
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs @(RuleStatus.HasSpecial ? "text-alert-success" : "text-destructive")" data-testid="rule-special">
+                        <LucideIcon Name="@(RuleStatus.HasSpecial ? "check" : "x")" Size="12" />a special character
+                    </span>
+                </div>
+                }
+            </Field>
+            <Field data-testid="field-confirm">
+                <FieldLabel For="reg-confirm">Confirm password</FieldLabel>
+                <FieldContent>
+                    <Input Id="reg-confirm" Type="InputType.Password" @bind-Value="objConfirmPassword" Required="true" data-testid="input-confirm" />
+                    <span class="flex items-center gap-1.5 text-xs @(PasswordsMatch ? "text-alert-success" : "text-muted-foreground")" hidden="@(string.IsNullOrEmpty(objConfirmPassword))" data-testid="confirm-ok">
+                        <LucideIcon Name="@(PasswordsMatch ? "check" : "x")" Size="12" />@(PasswordsMatch ? "both fields match" : "does not match the password above")
+                    </span>
+                </FieldContent>
+            </Field>
+            <Button Type="ButtonType.Button" Class="mt-2 w-full" OnClick="HandleSubmitAsync" Disabled="@objIsSubmitting" data-testid="register-submit"><ButtonIcon><LucideIcon Name="send" Size="16" /></ButtonIcon>Create account</Button>
+        </div>
+        <div class="text-center text-sm text-muted-foreground" data-testid="signin-line">
+            Already have an account? <a class="text-primary" href="/sign-in" data-testid="signin-link">Sign in</a>
+        </div>
+        <div class="flex flex-col gap-1.5 rounded-md border bg-background p-3" data-testid="device-note">
+            <span class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <LucideIcon Name="lock" Size="12" />Registered as — <span class="font-mono" data-testid="device-name">@MachineName</span>
+            </span>
+            <span class="text-xs text-muted-foreground">
+                This is the first machine on the account. Others can be added later, and each one keeps its own token — in the Keychain on a Mac, in Credential Manager on Windows.
+            </span>
+        </div>
+    </CardContent>
+</Card>

@@ -1,0 +1,26 @@
+@* The signed-in user at the right of a window's top bar, and the menu under it (mockups/main.html
+   and mockups/start.html, `account` / `account-pop`): who is signed in, the way to Account and
+   Settings, and Sign out (REQ-FN-009, UI Design "Screen: Start" `startbar`, "Screen: Workbench"
+   `menubar`). Shared by the start window and the main window. *@
+@* The mockup's `account` is the wrapper and its one child is the pill (a bordered, fully rounded
+   button holding the avatar, the name and a chevron), so the test id sits on the wrapper. *@
+<span class="inline-flex" data-testid="account">
+    <DropdownMenu>
+        <DropdownMenuTrigger AsChild>
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7 gap-2 rounded-full bg-card pl-1 pr-2">
+                @* Avatar's smallest size is 32px, taller than the pill; a round Badge carries the initials. *@
+                <Badge Variant="BadgeVariant.Outline" Class="h-5 w-5 justify-center rounded-full p-0">@Initials</Badge>
+                <span class="text-xs" data-testid="account-name">@(AppStateService.CurrentUser?.DisplayName ?? "Signed in")</span>
+                <LucideIcon Name="chevron-down" Size="14" />
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent Class="w-56" data-testid="account-pop">
+            <DropdownMenuLabel>@(AppStateService.CurrentUser?.Email ?? string.Empty)</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem Href="/settings/account" data-testid="account-link">Account</DropdownMenuItem>
+            <DropdownMenuItem Href="/settings/providers" data-testid="account-settings">Settings…</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem OnClick="SignOutAsync" data-testid="sign-out">Sign out</DropdownMenuItem>
+        </DropdownMenuContent>
+    </DropdownMenu>
+</span>

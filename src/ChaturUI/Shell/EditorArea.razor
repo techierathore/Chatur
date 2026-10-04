@@ -1,0 +1,63 @@
+@* The open-file tabs and the editor (UI Design "Screen: Workbench", regions `tabs` and `editor`).
+   EditorTabs marks an unsaved tab and asks before it closes (REQ-UI-041); opening a file from the
+   tree shows its text here in a tab named after it (REQ-UI-040). *@
+@if (Workbench.FileViewVisible)
+{
+<Card Class="flex min-w-0 flex-1 flex-col overflow-hidden" data-testid="files-area">
+    <div class="flex h-9 flex-none items-center justify-between border-b" data-testid="tabs">
+        @if (Workbench.OpenFiles.Count == 0)
+        {
+            <span class="px-3 text-xs text-muted-foreground">No files open</span>
+        }
+        else
+        {
+            <EditorTabs Items="@TabItems" ActiveId="@Workbench.ActiveId" ActiveIdChanged="OnActiveIdChanged" OnClose="RequestClose" />
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" Disabled="@(Workbench.ActiveFile is null)" OnClick="OpenInEditorAsync" title="Open in your own editor" data-testid="open-in-editor">
+                <LucideIcon Name="external-link" Size="14" />
+            </Button>
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" Disabled="@(Workbench.ActiveFile is null)" OnClick="OpenWithDefaultAppAsync" title="Open with the default application on this machine" data-testid="open-with-default">
+                <LucideIcon Name="app-window" Size="14" />
+            </Button>
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="mr-2 h-7" Disabled="@(Workbench.ActiveFile is null || !Workbench.ActiveFile.IsDirty || Workbench.HasPendingChange(Workbench.ActiveFile.RelativePath))" OnClick="SaveActiveAsync" data-testid="save-file">
+                <LucideIcon Name="save" Size="14" />
+                Save
+            </Button>
+        }
+        @* Gives the conversation the whole window; clicking a file in the tree, or Open on a proposed change, brings the file view back (UI Design "Screen: Workbench", `tabs`). *@
+        <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="mr-1 h-7 w-7" OnClick="Workbench.CloseFileView"
+                AriaLabel="Close the file view" title="Close the file view — the chat takes the whole window" data-testid="close-file-view">
+            ×
+        </Button>
+    </div>
+    <div class="min-h-0 flex-1 overflow-auto" data-testid="editor">
+        @if (Workbench.ActiveFile is { } vFile)
+        {
+            @if (Workbench.HasPendingChange(vFile.RelativePath))
+            {
+                <div class="flex items-center gap-2 px-3 pt-2 text-sm text-alert-warning" data-testid="editor-read-only-note">
+                    <LucideIcon Name="ban" Size="14" />
+                    <span>Read-only while a change waits on this file — approve or reject it first.</span>
+                </div>
+            }
+            <CodeEditor Value="@vFile.CurrentContent" ValueChanged="OnContentChanged" ReadOnly="@Workbench.HasPendingChange(vFile.RelativePath)" Rows="28" DebounceMilliseconds="200" Class="h-full" />
+        }
+        else
+        {
+            <Empty Title="Nothing open" Description="Open a file from the files panel to start editing." Size="EmptySize.Small" />
+        }
+    </div>
+</Card>
+}
+
+<AlertDialog Open="@(objPendingCloseId is not null)" OpenChanged="OnCloseDialogOpenChanged">
+    <AlertDialogContent data-testid="close-unsaved-dialog">
+        <AlertDialogHeader>
+            <AlertDialogTitle>Close without saving?</AlertDialogTitle>
+            <AlertDialogDescription>This tab has changes that have not been saved. Closing it now loses them.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+            <Button Variant="ButtonVariant.Outline" OnClick="CancelClose" data-testid="close-unsaved-cancel">Keep editing</Button>
+            <Button Variant="ButtonVariant.Destructive" OnClick="ConfirmDiscardAndClose" data-testid="close-unsaved-discard">Close without saving</Button>
+        </AlertDialogFooter>
+    </AlertDialogContent>
+</AlertDialog>

@@ -20,3 +20,11 @@ playwright-report/
 logs/
 /docs/.last-verify.json
 .DS_Store
+
+# Build output — dotnet (managed by scaffold/update-framework.sh)
+bin/
+obj/
+*.user
+TestResults/
+.vs/
+.idea/

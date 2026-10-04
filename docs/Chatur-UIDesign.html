@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — UI Design</h1>
-    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-UIDesign.md</code></div>
+    <div class="subtitle">Rendered 2026-10-01 &middot; source <code>Chatur-UIDesign.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -115,7 +115,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li><a href="#screens">Screens</a></li>
         <li class="h3"><a href="#screen-sign-in-sign-in">Screen: Sign in (/sign-in)</a></li>
         <li class="h3"><a href="#screen-register-register">Screen: Register (/register)</a></li>
-        <li class="h3"><a href="#screen-start-start">Screen: Start (/start)</a></li>
+        <li class="h3"><a href="#screen-start-start-all-1">Screen: Start (/start?all=1)</a></li>
         <li class="h3"><a href="#screen-workbench">Screen: Workbench (/)</a></li>
         <li class="h3"><a href="#screen-prerequisites-prerequisites">Screen: Prerequisites (/prerequisites)</a></li>
         <li class="h3"><a href="#screen-settings-settings-tab">Screen: Settings (/settings/{tab})</a></li>
@@ -193,8 +193,9 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </table>
 <p><strong>Dialogs opened here:</strong> none</p>
 <p><strong>States:</strong> empty: no error, no bars filled, the strength reads none of four met · loading: the button is busy and the fields are read-only · error: under the field that caused it, never one lump at the top</p>
-<h3 id="screen-start-start">Screen: Start (<code>/start</code>)<a class="anchor-link" href="#screen-start-start">#</a></h3>
+<h3 id="screen-start-start-all-1">Screen: Start (<code>/start?all=1</code>)<a class="anchor-link" href="#screen-start-start-all-1">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/start.html">mockups/start.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-10 to BRD-15</p>
+<p>Reached on purpose at <code>/start?all=1</code> (the project switcher's "All projects…"). The bare <code>/start</code>, where Chatur lands after sign-in, forwards straight to the Workbench when a project is already chosen (BRD-13), so it shows this screen only when nothing is chosen yet (amended 2026-10-01).</p>
 <p>A window of its own, the one that opens first. It carries no menu bar, no file tree and no conversation, because nothing is open yet.</p>
 <table>
 <thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
@@ -272,14 +273,15 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <p><strong>States:</strong> empty: no project open, so only This Chatur fills · loading: each row shows a checking mark while its version command runs, and the tiles hold their last numbers · error: a probe that fails leaves its row unknown with the command's own message, and the attention tile counts it</p>
 <h3 id="screen-settings-settings-tab">Screen: Settings (<code>/settings/{tab}</code>)<a class="anchor-link" href="#screen-settings-settings-tab">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/settings-providers.html">mockups/settings-providers.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-32 to BRD-43, BRD-52 to BRD-60, BRD-70 to BRD-79, BRD-156, BRD-157</p>
-<p>Seven tabs, seven components. The strip is navigation, not a control.</p>
+<p>Seven tabs, seven components; the strip is navigation.</p>
 <table>
 <thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
 <tbody>
 <tr><td><code>settings-tabs</code></td><td>Tabs as links</td><td><a href="mockups/settings-providers.html">providers</a> · <a href="mockups/settings-routing.html">routing</a> · <a href="mockups/settings-agents.html">agents</a> · <a href="mockups/settings-corrections.html">corrections</a> · <a href="mockups/settings-measurements.html">measurements</a> · <a href="mockups/settings-appearance.html">appearance</a> · <a href="mockups/settings-account.html">account</a></td></tr>
 <tr><td><code>providers-table</code></td><td>DataTable</td><td>per provider: connector, sign-in, address, models, state, Test, Remove</td></tr>
-<tr><td><code>secrets-panel</code></td><td>Card</td><td>the Keychain, Credential Manager, and that the database keeps only the name</td></tr>
-<tr><td><code>tier-1</code> … <code>tier-3</code></td><td>Card ×3</td><td>each chain in order, with up, down, remove and add</td></tr>
+<tr><td><code>secrets-panel</code></td><td>Card</td><td>Keychain / Credential Manager; the database keeps only the name</td></tr>
+<tr><td><code>signin-code-panel</code></td><td>Field</td><td>the browser sign-in code, Copy</td></tr>
+<tr><td><code>tier-1</code> … <code>tier-3</code></td><td>Card ×3</td><td>each chain in order: up, down, remove, add</td></tr>
 <tr><td><code>agent-tiers-table</code> / <code>work-tiers-table</code></td><td>DataTable + Select</td><td>the tier per agent and per kind of work; the work wins</td></tr>
 <tr><td><code>agents-layout</code></td><td>list + detail</td><td>the four agents; the chosen one's wording, rights, rules, history</td></tr>
 <tr><td><code>corrections-table</code></td><td>DataTable + diff</td><td>what Chatur changed about itself; Keep or Undo</td></tr>

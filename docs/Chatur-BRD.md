@@ -43,6 +43,7 @@ Chatur is a development environment for Mac and Windows where one person builds 
 - Chatur correcting a bug in its own program. That follows the feedback process and arrives as the next build.
 - Payments, a phone version and a web version of Chatur.
 - Signed installers before phase 4.
+- Choosing text size and line spacing on the appearance page. The mockup draws it as a later-phase panel (decided 2026-10-03).
 
 ## 3. Users and roles
 
@@ -62,7 +63,7 @@ Chatur is a desktop application with three windows. The **start window** opens f
 |---|---|---|---|---|
 | Sign in | `/sign-in` | Visitor | [mockup](mockups/sign-in.html) | email, password, remember this device |
 | Register | `/register` | Visitor | [mockup](mockups/register.html) | first name, last name, email, password, confirm password |
-| Start | `/start` | Owner | [mockup](mockups/start.html) | recent projects, search, clone, open a solution, open a folder, new project, new empty folder |
+| Start | `/start?all=1` | Owner | [mockup](mockups/start.html) | recent projects, search, clone, open a solution, open a folder, new project, new empty folder |
 | Workbench | `/` | Owner | [mockup](mockups/main.html) | files, tabs, file text, conversation, message, model, agent, mode, run target, output |
 | Prerequisites | `/prerequisites` | Owner | [mockup](mockups/prerequisites.html) | tool, needed, found, fix, Chatur version, commit |
 | Settings | `/settings/{page}` | Owner | [mockup](mockups/settings-providers.html) | the page chosen in the list, and its own fields |
@@ -186,7 +187,8 @@ The first tab: where the model sources are connected, and where their secrets ar
 - **BRD-33** — Connect a local model. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-providers.html)
   - *Acceptance:* When the owner adds a local model with its web address on Settings, then it is listed as connected with no key.
 - **BRD-34** — Sign in to a ChatGPT subscription. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-providers.html)
-  - *Acceptance:* When the owner chooses subscription sign-in, then the browser opens, and after he signs in the provider is listed as connected.
+  - *Acceptance:* When the owner chooses subscription sign-in, then the browser opens, Chatur shows the sign-in code, and after he enters it the provider is listed as connected.
+  - *Built on (amended 2026-09-30):* TechieRag 1.0.8's `UseChatGptSubscriptionLlm`, a device-code sign-in. Chatur supplies the callback that opens the browser and shows the code, and a session store over the operating system's secret store.
 - **BRD-35** — Secrets go to the machine's own store. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-providers.html)
   - *Acceptance:* When a key or token is saved on Settings, then it is in the operating system's store and Chatur's database holds only the name it is stored under.
 - **BRD-36** — Check that a source answers. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-providers.html)
@@ -223,6 +225,7 @@ The panel pinned to the right of the window, where the work starts. By default t
   - *Acceptance:* When a reply arrives on Workbench, then it names the model that produced it.
 - **BRD-47** — The reply arrives as it is written. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When a reply is being produced on Workbench, then its text grows in the conversation before the reply is finished.
+  - *Built on (amended 2026-09-30):* TechieRag 1.0.8's `ChatStreamEventsAsync`, which streams text and tool calls in the same turn, so every tool call still passes the guards. The earlier workaround that handed out a finished reply in pieces (`PaceReplyAsync`) is removed.
 - **BRD-48** — What it cost. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When a reply is finished on Workbench, then the Workbench shows the tokens it used and the running total for the session.
 - **BRD-49** — Watch what the agent is doing. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
@@ -368,23 +371,24 @@ The owner's own hand on check-in, push and branches.
 | BRD-93 | Data | A database change that has shipped in a nightly build is never edited; a new one is added, and an update keeps the owner's data | When the owner makes data on the previous nightly and installs the new one, then every row is still there |
 | BRD-94 | Portability | Every requirement works on Mac Catalyst and on Windows, verified on the Mac first | When a requirement is verified, then its verdict on the checklist names both the Mac and Windows |
 | BRD-95 | Guards | Every guard class has unit tests covering what it allows and what it refuses | When the tests run, then the test project holds a test per guard for what it allows and what it refuses |
+| BRD-158 | Release | A GitHub Actions workflow has a macOS job that builds the Mac Catalyst `.app` and zips it, and a Windows job that builds the unpackaged, self-contained Windows app (`WindowsPackageType` None) and zips it. Every push to main publishes a `nightly` pre-release with both downloads; a `v*` tag publishes a named release. Version and commit are stamped into the build, so Prerequisites shows them (BRD-29) and the newer-build check finds the release (BRD-31). No code signing (added 2026-09-30) | When a commit is pushed to main, then the `nightly` pre-release holds a Mac zip and a Windows zip built from that commit, and Prerequisites in that build shows the same version and commit |
 
 ## 7. Development status
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-09-22.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
+**Snapshot as of 2026-10-03.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
-| Sign in | 5 | 0 | 5 | Planned |
-| Register | 4 | 0 | 4 | Planned |
-| Start | 6 | 0 | 6 | Planned |
-| Workbench | 34 | 0 | 34 | Planned |
-| Prerequisites | 5 | 0 | 5 | Planned |
-| Settings | 33 | 0 | 33 | Planned |
-| Repository | 5 | 0 | 5 | Planned |
-| Non-functional | 5 | 0 | 5 | Planned |
+| Sign in | 5 | 5 | 0 | Done |
+| Register | 4 | 4 | 0 | Done |
+| Start | 6 | 6 | 0 | Done |
+| Workbench | 34 | 34 | 0 | Done |
+| Prerequisites | 5 | 4 | 1 | Partial |
+| Settings | 33 | 33 | 0 | Done |
+| Repository | 5 | 5 | 0 | Done |
+| Non-functional | 6 | 5 | 1 | Partial |
 
 ## 8. Context diagram
 
@@ -403,6 +407,7 @@ flowchart LR
 ## 9. Constraints and assumptions
 
 - The technical decisions are already taken and are in `docs/Chatur-Technical-Decisions.md`. Day one records them and does not reopen them.
+- Chatur uses TechieRag 1.0.8, which brings the subscription sign-in and streaming with tool calls (amended 2026-09-30).
 - Anything TechieRag lacks — sign-in other than a key, the OpenAI Responses style, live streaming of tool calls, a fallback chain of any length, pause and resume for approval — is added in the TechieRag repository before the step that needs it, never worked around in Chatur.
 - The owner installs and uses each nightly build on his real Mac and his real Windows machine before the next step begins.
 - The browser checks run against `Chatur.WebHarness` because a browser cannot look inside a Mac or Windows app window. The Windows app window is checked through the Windows test bridge; the Mac app window once the Mac is registered in `core-config.yaml`.

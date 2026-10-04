@@ -1,0 +1,37 @@
+@* The agent's steps as the mockup's `.step` chips, then any proposed change as its card (REQ-UI-022,
+   REQ-UI-032, REQ-UI-033). It sits under the last reply in the conversation, as the mockup draws it. *@
+<div class="flex flex-col gap-2" data-testid="activity-panel">
+    @foreach (var vEvent in Events)
+    {
+        <div class="step flex h-6 max-w-full items-center gap-2 self-start rounded-md bg-muted px-2 text-xs @(vEvent.Kind == "refusal" ? "text-destructive" : "text-muted-foreground")" data-testid="activity-step">
+            <LucideIcon Name="@ActivityIcon(vEvent)" Size="13" />
+            <span class="min-w-0 truncate">@vEvent.Description</span>
+            @if (vEvent.Kind == "refusal")
+            {
+                <Badge Variant="BadgeVariant.Destructive">refused</Badge>
+            }
+        </div>
+    }
+
+    @foreach (var vChange in Changes)
+    {
+        <div class="rounded-md border p-2" data-testid="proposed-change">
+            <div class="mb-2 flex items-center justify-between">
+                <span class="flex items-center gap-2 font-mono text-xs" data-testid="change-file">
+                    <LucideIcon Name="file-pen" Size="14" />
+                    @vChange.FilePath
+                </span>
+                <span class="flex gap-1">
+                    @* Opens the file in the file view beside the conversation, where it stays read-only until this change is settled. *@
+                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => OnOpen.InvokeAsync(vChange)" data-testid="change-open">Open</Button>
+                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Default" OnClick="() => OnApprove.InvokeAsync(vChange)" data-testid="change-approve">
+                        <LucideIcon Name="check" Size="14" />
+                        Approve
+                    </Button>
+                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => OnReject.InvokeAsync(vChange)" data-testid="change-reject">Reject</Button>
+                </span>
+            </div>
+            <DiffView Before="@vChange.Before" After="@vChange.After" ShowHeader="false" />
+        </div>
+    }
+</div>

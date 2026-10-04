@@ -1,0 +1,12 @@
+{
+  "name": "chatur-playwright",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Headless browser checks for Chatur, run against Chatur.WebHarness (Architecture §2).",
+  "scripts": {
+    "test": "playwright test -c chatur.config.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}

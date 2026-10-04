@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Chatur.Tests</RootNamespace>
+    <AssemblyName>Chatur.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="xunit" Version="2.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
+    <!-- REQ-NFR-002: reproduces the same Serilog file-sink startup shape Chatur/MauiProgram.cs and
+         Chatur.WebHarness/Program.cs use, so the test proves the real wiring, not a stand-in. -->
+    <PackageReference Include="Serilog" Version="4.*" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Chatur.Core\Chatur.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\ChaturDb\ChaturDb.csproj" />
+  </ItemGroup>
+
+</Project>

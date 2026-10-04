@@ -1,0 +1,25 @@
+@page "/settings/account"
+@layout Layouts.SecondaryLayout
+
+@* UI Design "Screen: Settings" — the account and machine panels named in the mockups' `nav-account`
+   entry. No dedicated BRD rows in phase 1 beyond what Sign in/Register already cover; this page
+   exists so the nav item has somewhere real to land. *@
+<div class="flex flex-col gap-4">
+    <div>
+        <h1 class="text-lg font-semibold">Account</h1>
+        <p class="text-sm text-muted-foreground">Who is signed in, and what this machine is.</p>
+    </div>
+    <Card data-testid="account-panel">
+        <CardContent>
+            <Empty Title="Not signed in" Description="Sign in to see your account here." Size="EmptySize.Small" />
+        </CardContent>
+    </Card>
+    <Card data-testid="machine-panel">
+        <CardHeader>
+            <CardTitle>This machine</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Empty Title="Device id not read yet" Description="Generated once on first run and kept afterwards." Size="EmptySize.Small" />
+        </CardContent>
+    </Card>
+</div>

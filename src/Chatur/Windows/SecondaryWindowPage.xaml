@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- The secondary window: Prerequisites, Repository, Settings — everything that is not the work
+     (Architecture §6, 2026-09-22 "one secondary window carrying everything that is not the work"). -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ChaturUI="clr-namespace:ChaturUI;assembly=ChaturUI"
+             x:Class="Chatur.Windows.SecondaryWindowPage"
+             AutomationId="chatur-secondary-page">
+
+    <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html" AutomationId="chatur-secondary-webview">
+        <BlazorWebView.RootComponents>
+            <RootComponent Selector="#app" ComponentType="{x:Type ChaturUI:ChaturRoutes}" />
+        </BlazorWebView.RootComponents>
+    </BlazorWebView>
+
+</ContentPage>

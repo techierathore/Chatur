@@ -1,0 +1,28 @@
+@* The project's file tree, with the branch beneath it (UI Design "Screen: Workbench", region
+   `files-panel`). IFileActions.TreeAsync feeds the tree (REQ-UI-039); selecting a file reads and
+   opens it into a tab (REQ-UI-040). ISourceControlActions for the branch row is not cluster H's row. *@
+<Card Class="flex w-60 flex-none flex-col overflow-hidden" data-testid="files-panel">
+    <div class="flex h-8 flex-none items-center border-b px-3 text-xs font-medium uppercase text-muted-foreground" data-testid="files-head">
+        Files
+    </div>
+    <div class="flex-1 overflow-auto" data-testid="file-tree">
+        @if (AppStateService.SelectedProject is null)
+        {
+            <Empty Title="No project open" Description="Open a project from Start to see its files." Size="EmptySize.Small" />
+        }
+        else if (objTree.Count == 0)
+        {
+            <Empty Title="Nothing found" Description="This project's folder has no files yet." Size="EmptySize.Small" />
+        }
+        else
+        {
+            <TreeView SelectedValue="@objSelectedPath" SelectedValueChanged="OnSelectedPathChangedAsync" AriaLabel="Files">
+                <FileTreeBranch Nodes="@objTree" />
+            </TreeView>
+        }
+    </div>
+    <a href="/repository" class="flex h-8 flex-none items-center gap-2 border-t px-3 text-xs text-muted-foreground hover:bg-accent" data-testid="branch">
+        <LucideIcon Name="git-branch" Size="14" />
+        @(objBranchName ?? "—")
+    </a>
+</Card>

@@ -1,0 +1,120 @@
+<Project>
+
+  <!-- Shared MSBuild settings for every project in the Chatur solution (Architecture Q7, Coding
+       Standards "Enforcement"). Every project sets its own TargetFramework/TargetFrameworks —
+       deliberately NOT defaulted here: Directory.Build.props is imported before a project's own
+       PropertyGroup, so a blanket "TargetFramework = net10.0" fallback here would win over
+       src/Chatur/Chatur.csproj's platform-conditional TargetFrameworks (evaluated later in that
+       file) and break its Windows/Mac Catalyst multi-targeting (NETSDK1005: restore resolves the
+       conditional TFM, then build silently falls back to plain "net10.0", which was never
+       restored). -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- Version and commit stamping (Architecture §6, 2026-09-21 decision "Version and commit are
+       stamped into the build"; REQ-UI-018, cluster J). Every build gets the same $(Version) and the
+       same commit, read straight out of .git by a managed MSBuild task below — never git.exe, so
+       this never runs afoul of Hard rule 1 ("git is manual"; that rule is about an agent invoking
+       the git CLI, not about the build reading its own repository's ref files). A future CI release
+       job overrides the nightly channel with `-p:VersionSuffix=` (empty) or
+       `-p:ChaturReleaseBuild=true` for a tagged build; nothing here needs to change for that.
+       Chatur.Core.Prerequisites.PrerequisiteActions.OwnVersionAsync reads the result back out of
+       AssemblyInformationalVersionAttribute / AssemblyMetadataAttribute at run time — never
+       hard-coded. -->
+  <PropertyGroup>
+    <VersionPrefix Condition="'$(VersionPrefix)' == ''">0.1.0</VersionPrefix>
+    <VersionSuffix Condition="'$(VersionSuffix)' == '' and '$(ChaturReleaseBuild)' != 'true'">nightly</VersionSuffix>
+  </PropertyGroup>
+
+  <UsingTask TaskName="ChaturResolveGitCommit" TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <RepoRoot ParameterType="System.String" Required="true" />
+      <CommitSha ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        string vGitDir = Path.Combine(RepoRoot, ".git");
+        string vSha = "unknown";
+        try
+        {
+            string vHeadPath = Path.Combine(vGitDir, "HEAD");
+            if (File.Exists(vHeadPath))
+            {
+                string vHead = File.ReadAllText(vHeadPath).Trim();
+                if (vHead.StartsWith("ref: "))
+                {
+                    string vRefPath = vHead.Substring(5).Trim();
+                    string vRefFile = Path.Combine(vGitDir, vRefPath.Replace('/', Path.DirectorySeparatorChar));
+                    if (File.Exists(vRefFile))
+                    {
+                        vSha = File.ReadAllText(vRefFile).Trim();
+                    }
+                    else
+                    {
+                        string vPackedRefs = Path.Combine(vGitDir, "packed-refs");
+                        if (File.Exists(vPackedRefs))
+                        {
+                            foreach (var vLine in File.ReadAllLines(vPackedRefs))
+                            {
+                                if (vLine.Length > 0 && vLine[0] != '^' && vLine.EndsWith(vRefPath, StringComparison.Ordinal))
+                                {
+                                    int vSpace = vLine.IndexOf(' ');
+                                    if (vSpace > 0)
+                                    {
+                                        vSha = vLine.Substring(0, vSpace).Trim();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (vHead.Length >= 7)
+                {
+                    vSha = vHead;
+                }
+            }
+        }
+        catch
+        {
+            vSha = "unknown";
+        }
+        CommitSha = vSha;
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="ChaturStampBuildInfo" BeforeTargets="CoreGenerateAssemblyInfo;GenerateAssemblyInfo">
+    <ChaturResolveGitCommit RepoRoot="$(MSBuildThisFileDirectory)">
+      <Output TaskParameter="CommitSha" PropertyName="ChaturCommitSha" />
+    </ChaturResolveGitCommit>
+    <PropertyGroup>
+      <SourceRevisionId Condition="'$(SourceRevisionId)' == ''">$(ChaturCommitSha)</SourceRevisionId>
+      <ChaturBuiltUtc>$([System.DateTime]::UtcNow.ToString("o"))</ChaturBuiltUtc>
+      <InformationalVersion>$(Version)+$(SourceRevisionId)</InformationalVersion>
+    </PropertyGroup>
+    <!-- Added straight as @(AssemblyAttribute) rather than the well-known @(AssemblyMetadata) item:
+         the SDK's own AssemblyMetadata -> AssemblyAttribute conversion lives inside
+         GetAssemblyAttributes, a dependency of CoreGenerateAssemblyInfo that this target's
+         BeforeTargets ordering does not reliably run ahead of, so those items never reached the
+         conversion. WriteCodeFragment (CoreGenerateAssemblyInfo's own task) reads @(AssemblyAttribute)
+         directly, and this target is guaranteed to finish before that target's own body runs. -->
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>Chatur.CommitSha</_Parameter1>
+        <_Parameter2>$(SourceRevisionId)</_Parameter2>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>Chatur.BuiltUtc</_Parameter1>
+        <_Parameter2>$(ChaturBuiltUtc)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+
+</Project>

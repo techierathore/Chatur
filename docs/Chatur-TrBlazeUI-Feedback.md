@@ -4,17 +4,17 @@
 |---|---|
 | App | Chatur |
 | Upstream | TrBlazeUI |
-| Updated | 2026-09-22 |
+| Updated | 2026-10-02 |
 
 ## Summary
 
-10 entries: 0 blocking now, 0 open, 10 closed.
+14 entries: 1 blocking (TR-014, 9 Settings Agents rows), 3 fixed upstream (TR-011, TR-012, TR-013), 10 closed.
 
 All ten were answered on 2026-09-22 and all ten have now been re-checked in Chatur against
 2.0.9. Six were fixed in code; four needed no code, because the control already existed. Each
 entry below carries the control that now does the job and the Chatur requirement that uses it.
 
-Nothing is blocked. All ten were found while designing Chatur's screens on day one, against the 2.0.7 component reference; the mockups are drawn from controls that do exist, and each entry says what was used instead.
+The first ten were found on day one, against the 2.0.7 reference; each entry says what was used instead.
 
 > **Upstream reply 2026-09-22 — read it before acting on this file. The action is: upgrade
 > to 2.0.9.** Four entries (TR-001, TR-002, TR-005, TR-009) and most of a fifth (TR-008)
@@ -146,9 +146,179 @@ Nothing is blocked. All ten were found while designing Chatur's screens on day o
 - **Workaround:** Hand-built anchors with an inline layout and a chosen class.
 - **Suggested fix:** A `ListDetail` or a `NavList<TItem>` with an item template and `@bind-Selected`. This is the commonest shape in the whole product and it has no control.
 
+### TR-011 — DataTable rows, its header row and its choose-all cell cannot carry an attribute
+
+> ✅ **Closed 2026-10-02** — re-checked here: Upgraded to TrBlazeUI 2.1.1 (GitHub Packages). Moved changes-head, history-head and process-branches-head to DataTable HeaderRowAttributes, choose-all to SelectAllAttributes, provider-{name} and agent-tier-{role} to RowAttributes; removed the tier-cell wrapper. Measured on the running app 2026-10-02: provider-opencode-go and agent-tier-analyst are <tr> rows; changes-head, history-head and process-branches-head are <tr> in <thead>; choose-all is the control itself (role=checkbox, one-page grid). All 96 acceptance tests pass.
+
+- **Status:** open, filed 2026-09-30
+- **Severity:** minor
+- **Blocks:** no — Chatur puts the test hook on a cell's own content instead, and the work carried on. Only the verifier's check that every mockup control is on the page cannot find these four hooks.
+- **Repro:** TrBlazeUI 2.0.9 reference §6 "DataTable" and the "Every public component accepts arbitrary HTML attributes" note: attributes passed to `DataTable` land on the table, `DataTableColumn` renders none, and there is no parameter for a row, the `<thead>` row, or the choose-all cell that `SelectionMode="Multiple"` draws.
+- **Expected:** A way to name those parts, e.g. `RowAttributes="Func<TData, IReadOnlyDictionary<string, object>>"` (so each row can carry `data-testid="change-row-{path}"`), `HeaderRowAttributes`, and a `SelectAllAttributes` (or a fixed, documented `data-testid` on the choose-all box).
+- **Actual:** Chatur's mockups anchor `changes-head`, `choose-all`, `history-head` and `process-branches-head` on the Repository screen, and `provider-{name}` / `agent-tier-{role}` on a row; none can be put where the mockup puts it.
+- **Encountered in:** REQ-UI-042, REQ-UI-043, REQ-UI-028 and the Repository history and process-branch cards (BRD-86 to BRD-90)
+- **Workaround:** the hook sits on a wrapper inside a cell (`agent-tier-{role}` on the tier cell); the header and choose-all hooks are not placed.
+- **Suggested fix:** `RowAttributes`, `HeaderRowAttributes` and `SelectAllAttributes` parameters on `DataTable`.
+
+### TR-012 — ToggleGroup's chosen item cannot take another colour
+
+> ✅ **Closed 2026-10-02** — re-checked here: Set OnVariant=ToggleOnVariant.Card on the Workbench mode toggle and the Sign in remember toggle, both on a muted track (bg-muted). Measured 2026-10-02 on TrBlazeUI 2.1.1: chosen item background oklch(0.222 0.012 65) equals --card exactly on both; the track is oklch(0.262 0.015 65).
+
+- **Status:** open, filed 2026-10-01
+- **Severity:** minor
+- **Blocks:** no — the mode toggle works; only its chosen colour differs from the mockup.
+- **Repro:** TrBlazeUI 2.0.9 `ToggleGroup`: the chosen item is fixed to `bg-accent`, and `data-[state=on]:bg-card` (or any on-state class) is not in the shipped CSS.
+- **Expected:** a parameter for the chosen item's look, e.g. `OnVariant` (`Accent`, `Card`, `Primary`), or the on-state classes shipped.
+- **Actual:** with a theme whose `--accent` is a soft tint, the chosen "Ask first" reads as a tinted pill where the mockup draws a plain card segment.
+- **Encountered in:** REQ-UI-024 (Workbench mode toggle), and the Sign in "remember this device" toggle
+- **Workaround:** none; the colour stays the library's.
+- **Suggested fix:** an `OnVariant` parameter on `ToggleGroup`.
+
+### TR-013 — ToggleGroup's DisposeAsync lets a "task was canceled" error escape
+
+> ✅ **Closed 2026-10-02** — re-checked here: Full verification on TrBlazeUI 2.1.1 (96 acceptance tests, every screen, live model) on 2026-10-02, then searched the server log app-5280.log: 0 'A task was canceled' rendering errors, 0 mentions of ToggleGroup, and none for any other control.
+
+- **Status:** open, filed 2026-10-01
+- **Severity:** minor
+- **Blocks:** no — seen when a page closes or reloads, when the connection is ending anyway; no lost work traced to it.
+- **Repro:** TrBlazeUI 2.0.9, Blazor Server: close or reload a page holding a `ToggleGroup`. The log shows "Unhandled exception rendering component: A task was canceled" at `ToggleGroup\`1.DisposeAsync()` → `JSObjectReference.DisposeAsync()`, then "Unhandled exception in circuit". 18 times in one verification run of Chatur.
+- **Expected:** a component's `DisposeAsync` swallows `JSDisconnectedException` and `TaskCanceledException` from its own JS module dispose, as the Blazor guidance asks.
+- **Actual:** the exception escapes and is reported as unhandled for the circuit.
+- **Encountered in:** REQ-UI-024 (Workbench mode toggle), the Sign in "remember this device" toggle
+- **Workaround:** none.
+- **Suggested fix:** wrap the module dispose in `try { … } catch (JSDisconnectedException) { } catch (TaskCanceledException) { }`.
+
+### TR-014 — A switch that is off cannot be given a visible border
+
+> ✅ **Closed 2026-10-03** — re-checked here: 2026-10-03: upgraded TrBlazeUI.Components and Icons.Lucide 2.1.1 -> 2.1.2 (newest on the GitHub Packages feed; no later release exists), set Outlined=true on the Rights switches in SettingsAgents.razor (no border class was present). tf-mockup-parity.sh --screen settings-agents=/settings/agents: PASS, 0 findings at 1280 and 390 (no border-width finding). The off switch measures 2px solid in --border on a muted track with a grey thumb.
+
+- **Status:** fixed upstream 2026-10-03 (`Switch.Outlined`, unreleased — see the 2026-10-03 reply), filed 2026-10-02
+- **Severity:** minor
+- **Blocks:** no — the Rights switches on Settings ▸ Agents work and read clearly; only the off-state outline differs from the mockup.
+- **Repro:** TrBlazeUI 2.1.1 `Switch`: the root carries `border-transparent`, and `border-input` / `border-border` come earlier in `trblazeui.css`, so a `Class="border border-input"` on the switch loses to it. Chatur has no Tailwind build, so a class the shipped CSS does not already order after `border-transparent` (or an `!` variant) cannot be added.
+- **Expected:** an off switch draws a visible rule in `--input`, as the mockup's `.sw` does (a solid 1px `var(--line)` border when off, transparent when on), or `Switch` takes a parameter/variant for it, e.g. `Outlined`.
+- **Actual:** the off switch has a 1px transparent border, so `tf-mockup-parity` reports "border style differs — mockup solid, app none" for `switch-changes-code`, `switch-runs-commands` and `switch-marks-verified` at both widths.
+- **Encountered in:** REQ-UI-026 (Settings ▸ Agents, Rights panel)
+- **Workaround:** none; a colour written into the component would break "a theme is a file of OKLCH values", and an inline style is not allowed.
+- **Suggested fix:** draw the off-state border with `border-input` on the switch root (`data-[state=unchecked]:border-input`) or add a `Variant`.
+
 ## Replies from TrBlazeUI
 
 <!-- The upstream team's answers, newest block first. Left in full: this is the record. -->
+
+### 2026-10-03 — TR-014 is fixed in the library; not released yet
+
+| Entry | State | What you get |
+|---|---|---|
+| **TR-014** an off switch cannot be given a visible border | fixed (unreleased; in the library's `[Unreleased]` changelog, ships in the next version after 2.1.0) | `Switch` gains `Outlined` (bool, default false). With it set, an off switch draws the mockup's `.sw` look: a `bg-muted` track (`--soft`), a solid border in `--border` (`--line`) and a `bg-muted-foreground` thumb (`--faint`). When on, it looks like any other switch and the border is transparent. A switch without `Outlined` is unchanged. |
+
+Why it also changes the track and the thumb, not only the border: every Chatur theme sets
+`--input` equal to `--border`, and the off track is `bg-input`, so a border in either colour on
+that track would be invisible. The library's test now checks that the off border colour differs
+from the track colour.
+
+```razor
+<Switch @bind-Checked="objCanChangeCode" Outlined="true" data-testid="switch-changes-code" />
+```
+
+Two things to know: the border is 2px (`border-2`, the switch's existing width, kept so its size
+and thumb travel do not move), while the mockup's `.sw` draws 1px; if `tf-mockup-parity` compares
+width as well as style it will report that. And drop `Class="border border-input"` from the three
+Rights switches: it never took effect and is no longer needed.
+
+### 2026-10-02 — TR-011, TR-012 and TR-013 are fixed in 2.1.0, which is out
+
+All three are fixed in the library and tested there. **They are in 2.1.0, released 2026-10-02
+on GitHub Packages** (`https://nuget.pkg.github.com/techierathore/index.json`), which is the
+source Chatur uses. Upgrade to 2.1.0 and re-check them. (This reply was first written on
+2026-10-01, before the release, and said the fixes were not published yet. They are now.)
+
+| Entry | State | What you get |
+|---|---|---|
+| **TR-011** attributes on rows, the header row and the choose-all control | fixed | `DataTable` gains the three parameters you asked for: `RowAttributes` (a function of the row's item), `HeaderRowAttributes` and `SelectAllAttributes`. |
+| **TR-012** the chosen item's colour | fixed | `ToggleGroup` gains `OnVariant`: `ToggleOnVariant.Accent` (the default, and the look it has today), `Card` or `Primary`. The classes behind `Card` and `Primary` are now in the shipped stylesheet. |
+| **TR-013** "A task was canceled" from `ToggleGroup.DisposeAsync` | fixed | `ToggleGroup` now swallows `TaskCanceledException` as well as `JSDisconnectedException`, in `DisposeAsync` and around its first-render script import. |
+
+#### TR-011 — how to use it
+
+```razor
+<DataTable TData="ChangedFile" Data="@objFiles"
+           SelectionMode="DataTableSelectionMode.Multiple"
+           RowAttributes="@(f => new Dictionary<string, object> { ["data-testid"] = $"change-row-{f.Path}" })"
+           HeaderRowAttributes="ChangesHead"
+           SelectAllAttributes="ChooseAll">
+    …
+</DataTable>
+
+@code {
+    private static readonly IReadOnlyDictionary<string, object> ChangesHead =
+        new Dictionary<string, object> { ["data-testid"] = "changes-head" };
+
+    private static readonly IReadOnlyDictionary<string, object> ChooseAll =
+        new Dictionary<string, object> { ["data-testid"] = "choose-all" };
+}
+```
+
+Four things worth knowing before you move your hooks:
+
+1. **`SelectAllAttributes` lands on the control the user operates, and that control changes
+   shape.** When every row fits on one page it is a checkbox (`role="checkbox"`). When the grid
+   is paged it is a menu button holding a picture of a checkbox. Your `choose-all` hook finds
+   the right one either way, but a test that expects `role="checkbox"` on it will only be right
+   for a one-page grid.
+2. **There is also a fixed hook that needs no parameter.** The choose-all control's wrapper
+   always carries `data-slot="datatable-select-all"`. You asked for either the parameter or a
+   fixed hook; you have both.
+3. **A `class` entry is added to the part's own classes**, not swapped for them.
+4. **The three are read when the grid paints.** The grid does not repaint while its `Data`
+   reference is unchanged, so if what `RowAttributes` returns changes for rows already on
+   screen, call `Refresh()` on the grid.
+
+`DataTableColumn` still renders no element, so `provider-{name}` and `agent-tier-{role}` go on
+the row through `RowAttributes`, not on a column.
+
+#### TR-012 — how to use it
+
+```razor
+<ToggleGroup TValue="string" @bind-Value="objMode" Joined="true" AllowDeselect="false"
+             OnVariant="ToggleOnVariant.Card" Class="bg-muted" AriaLabel="Mode">
+    <ToggleGroupItem TValue="string" Value="@("ask")">Ask first</ToggleGroupItem>
+    <ToggleGroupItem TValue="string" Value="@("auto")">Automatic</ToggleGroupItem>
+</ToggleGroup>
+```
+
+`Card` paints the chosen item with `--card` and `--card-foreground`; `Primary` with `--primary`
+and `--primary-foreground`. One thing to check against your mockup: **on a page whose background
+is the same colour as its cards, a `Card` segment looks the same chosen or not.** The example
+puts the group on `bg-muted` for that reason. If your mockup draws the track differently, tell
+us what it draws.
+
+`OnVariant` sits on the group and applies to all of its items. A class of your own such as
+`data-[state=on]:bg-card` still does nothing — only the three looks are in the stylesheet.
+
+#### TR-013 — what we found
+
+We reproduced it. A `ToggleGroup` makes two calls to the browser when it is disposed. If the
+page closes or reloads between them, the second call is never answered, the server gives up on
+it after one minute, and that cancellation was escaping. Before the fix, one run here logged the
+error 44 times; after it, none, with the page made to stop answering at exactly that point.
+
+**2.1.0 fixes `ToggleGroup` only.** The same catch was missing from the dispose of 17 other
+controls, among them `NavList`, `TreeView`, `ScrollArea`, `CodeEditor`, `Select` and the sidebar,
+all of which Chatur uses. Those were fixed on 2026-10-02, after 2.1.0 was cut, and arrive with
+the release after it. So on 2.1.0 your log may still show "A task was canceled" naming one of
+those controls. That is known and already fixed in source; you do not need to file it. One case
+cannot be fixed in this library: the framework's own `Virtualize`, which
+`CommandVirtualizedGroup` renders, throws the same error from its own dispose.
+
+#### What we need from you
+
+Upgrade to 2.1.0 from GitHub Packages. Move the four hooks onto `HeaderRowAttributes`,
+`SelectAllAttributes` and `RowAttributes`, set `OnVariant` on the mode toggle and the "remember
+this device" toggle, run your verification again, and check the log for the error naming
+`ToggleGroup`. Then close each entry here or tell us what does not fit.
+
+---
 
 ### 2026-09-22 — all ten answered; six needed code, four did not
 

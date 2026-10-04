@@ -1,0 +1,151 @@
+@page "/start"
+@layout Layouts.StartLayout
+@inject IProjectActions Projects
+@inject NavigationManager Nav
+
+@* UI Design "Screen: Start" — mockups/start.html. Cluster E wires IProjectActions.ScanAsync into
+   `recent-list` and the Project folders dialog (REQ-UI-005 through REQ-UI-009); cluster F wires
+   `SelectedProjectAsync` surviving a restart and reopens it straight into the Workbench on load
+   (REQ-FN-006, see Start.razor.cs). *@
+<div class="flex flex-none flex-col gap-4 p-6 sm:min-h-0 sm:min-w-0 sm:flex-1" data-testid="recent-side">
+    <div class="flex flex-wrap items-center gap-3">
+        <div class="min-w-40 flex-1">
+            <h1 class="text-base font-semibold outline-none" tabindex="-1">Open recent</h1>
+            <p class="text-sm text-muted-foreground" data-testid="recent-subtitle">
+                @(objFolders.Count == 0
+                    ? "No folders have been named yet."
+                    : $"{objProjects.Count} project(s) across {objFolders.Count} named folder(s).")
+            </p>
+        </div>
+        @* `recent-search` filters the list by name or any part of a path (UI Design "Screen: Start"). *@
+        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="ToggleSearch" data-testid="recent-search">
+            <LucideIcon Name="search" Size="14" />
+            Search
+        </Button>
+        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="OpenFoldersDialog" data-testid="manage-folders">
+            <LucideIcon Name="settings" Size="14" />
+            Project folders…
+        </Button>
+    </div>
+
+    @if (objSearchOpen)
+    {
+        <Input @bind-Value="objSearchText" Type="InputType.Search" Placeholder="A name, or any part of a path" AriaLabel="Search the recent projects" data-testid="recent-search-input" />
+    }
+
+    @* [fix 2026-10-02] The list scrolls inside a ScrollArea, so `recent-list` itself never holds more than
+       its own box (UIDesign "Rules": a panel scrolls inside itself). Before, the list was its own
+       scroller, and with more rows than the window holds it read as cut off against the mockup's
+       un-clipped list; the 2026-10-02 shrink-0 attempt moved the cut to `recent-side`. *@
+    <div class="h-80 rounded-lg border bg-card sm:h-auto sm:min-h-0 sm:flex-1" data-testid="recent-list">
+        @if (objIsLoading)
+        {
+            <div class="flex flex-col gap-2" data-testid="recent-loading">
+                <Skeleton Class="h-10 w-full" />
+                <Skeleton Class="h-10 w-full" />
+            </div>
+        }
+        else if (objProjects.Count == 0)
+        {
+            <Empty Title="Nothing opened yet" Description="Name a folder to search, or use one of the ways in on the right." Size="EmptySize.Small">
+                <Button OnClick="OpenFoldersDialog" data-testid="name-a-folder">
+                    <LucideIcon Name="folder-open" Size="16" />
+                    Name a folder…
+                </Button>
+            </Empty>
+        }
+        else if (VisibleProjects.Count == 0)
+        {
+            <Empty Title="No project matches" Description="Nothing in the list has that in its name or path." Size="EmptySize.Small" data-testid="recent-no-match" />
+        }
+        else
+        {
+            <ScrollArea Class="h-full" data-testid="project-scroll">
+            <ItemGroup data-testid="project-list">
+                @foreach (var vProject in VisibleProjects)
+                {
+                    <Item Class="cursor-pointer hover:bg-accent" @onclick="() => OpenProjectAsync(vProject.ProjectId)" data-testid="@($"project-{vProject.ProjectId}")">
+                        <ItemMedia>
+                            <LucideIcon Name="@(vProject.Kind == "Solution" ? "file-text" : "folder")"
+                                        Size="18"
+                                        Class="@(vProject.Kind == "Solution" ? "text-primary" : "text-muted-foreground")" />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle data-testid="@($"project-{vProject.ProjectId}-name")">@vProject.Name</ItemTitle>
+                            <ItemDescription Class="font-mono" data-testid="@($"project-{vProject.ProjectId}-path")">@vProject.Path</ItemDescription>
+                        </ItemContent>
+                        <ItemActions>
+                            <span class="text-xs text-muted-foreground" data-testid="@($"project-{vProject.ProjectId}-when")">@FormatWhen(vProject.LastOpenedUtc)</span>
+                            @if (objForgetMode)
+                            {
+                                @* Stops the click reaching the row, which would open the project. *@
+                                <span @onclick:stopPropagation="true">
+                                    <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" OnClick="() => ForgetAsync(vProject.ProjectId)"
+                                            AriaLabel="@($"Remove {vProject.Name} from the list")" data-testid="@($"forget-{vProject.ProjectId}")">
+                                        <LucideIcon Name="x" Size="14" />
+                                    </Button>
+                                </span>
+                            }
+                        </ItemActions>
+                    </Item>
+                }
+            </ItemGroup>
+            </ScrollArea>
+        }
+    </div>
+
+    <div class="flex items-center gap-2" data-testid="recent-note">
+        <span class="text-xs text-muted-foreground">A solution opens with its projects read. A folder opens as it is.</span>
+        <span class="flex-1"></span>
+        @* `forget` drops a project from the list; the folder on disk is untouched (UI Design "Screen: Start"). Pressed, each row offers its own x. *@
+        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="shrink-0 whitespace-nowrap" Disabled="@(objProjects.Count == 0)" OnClick="ToggleForgetMode" data-testid="forget">
+            <LucideIcon Name="@(objForgetMode ? "check" : "x")" Size="14" />
+            @(objForgetMode ? "Done" : "Remove from the list")
+        </Button>
+    </div>
+</div>
+
+<div class="flex w-full flex-none flex-col gap-3 overflow-auto border-l bg-card p-6 sm:w-96" data-testid="get-started">
+    <div>
+        <h2 class="text-base font-semibold">Get started</h2>
+        <p class="text-sm text-muted-foreground">Open something that exists, or make something new.</p>
+    </div>
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" Disabled="true" data-testid="clone-repo">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
+            <LucideIcon Name="github" Size="18" />
+        </span>
+        <span class="flex flex-col items-start">
+            <span class="font-medium">Clone a repository</span>
+            <span class="text-xs text-muted-foreground">From GitHub, or any address you paste</span>
+        </span>
+    </Button>
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" Disabled="true" data-testid="open-solution">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
+            <LucideIcon Name="folder-open" Size="18" />
+        </span>
+        <span class="flex flex-col items-start">
+            <span class="font-medium">Open a solution</span>
+            <span class="text-xs text-muted-foreground">A .sln, with its projects read</span>
+        </span>
+    </Button>
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" Disabled="true" data-testid="open-folder">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
+            <LucideIcon Name="folder" Size="18" />
+        </span>
+        <span class="flex flex-col items-start">
+            <span class="font-medium">Open a folder</span>
+            <span class="text-xs text-muted-foreground">Anything on disk, project or not</span>
+        </span>
+    </Button>
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" Disabled="true" data-testid="new-project">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
+            <LucideIcon Name="plus" Size="18" />
+        </span>
+        <span class="flex flex-col items-start">
+            <span class="font-medium">New project</span>
+            <span class="text-xs text-muted-foreground">A solution from a template</span>
+        </span>
+    </Button>
+</div>
+
+<ProjectFoldersDialog @bind-Open="objDialogOpen" FoldersChanged="ReloadAsync" />

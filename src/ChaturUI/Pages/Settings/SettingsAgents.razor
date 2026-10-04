@@ -1,0 +1,268 @@
+@page "/settings/agents"
+@layout Layouts.SecondaryLayout
+@inject IRoleActions RoleActions
+@inject IRoutingActions RoutingActions
+@inject IProviderActions ProviderActions
+@inject ToastService Toast
+@inject ChaturUI.Services.FileDownloadInterop FileDownload
+
+@* UI Design "Screen: Settings" ▸ Agents — mockups/settings-agents.html. Cluster K wires
+   IRoleActions.SaveAsync/ExportAsync/ImportAsync/MarkVerifiedAsync; cluster L (this page) wires the
+   list-and-detail layout, the tier picker and history (REQ-UI-025 through REQ-UI-030, REQ-FN-028,
+   REQ-FN-029). [fix 2026-10-02] The "Showing" and "Tier" pickers are a Collapsible whose list stays
+   mounted (a Select or DropdownMenu unmounts its list while closed, so the mockup's anchored list
+   items would never be on the page). *@
+<div class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-center gap-3" data-testid="agents-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Agents</h1>
+            <p class="text-sm text-muted-foreground">The agents Chatur plays, and what each one is allowed to do.</p>
+        </div>
+        <span class="flex-1"></span>
+        <Button Variant="ButtonVariant.Outline" OnClick="ExportAsync" data-testid="export-agents">
+            <LucideIcon Name="download" Size="14" />
+            Export
+        </Button>
+        <Button Variant="ButtonVariant.Outline" OnClick="ToggleImportPicker" data-testid="import-agents">
+            <LucideIcon Name="upload" Size="14" />
+            Import
+        </Button>
+        <Button Variant="ButtonVariant.Outline" OnClick="OpenAddAgent" data-testid="add-agent">
+            <LucideIcon Name="plus" Size="14" />
+            Add an agent
+        </Button>
+    </div>
+
+    <Alert Variant="AlertVariant.Default" data-testid="agents-are-rows">
+        <AlertIcon><LucideIcon Name="triangle-alert" Size="16" /></AlertIcon>
+        <AlertDescription>
+            Agents are rows in Chatur's own database, seeded fresh with each build — not files on disk. A library specialist, such as a TrBlazeUI or a TechieRag agent, is added here rather than built into Chatur.
+        </AlertDescription>
+    </Alert>
+
+    <AddAgentDialog @bind-Open="objAddOpen" OnAdded="AgentAddedAsync" />
+
+    @if (objShowImportPicker)
+    {
+        <Card data-testid="import-picker">
+            <CardHeader>
+                <CardTitle>Import agents</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <FileUpload Files="objImportFiles" FilesChanged="HandleImportFilesAsync" Accept=".json" Multiple="false" data-testid="import-dropzone" />
+            </CardContent>
+        </Card>
+    }
+
+    @if (objRoles is null)
+    {
+        <Empty Title="Roles not read yet" Description="The Analyst, Architect, Flow master and Verifier are seeded in the database." Size="EmptySize.Small" data-testid="agents-layout" />
+    }
+    else
+    {
+        <div class="flex flex-wrap items-start gap-4" data-testid="agents-layout">
+            <Card Class="w-64 flex-none" data-testid="agent-list">
+                <CardHeader>
+                    <CardTitle>Agents<span class="ml-2"><Badge Variant="BadgeVariant.Secondary" data-testid="agent-count">@objRoles.Count</Badge></span></CardTitle>
+                </CardHeader>
+                <CardContent Class="flex flex-col gap-1 p-2">
+                    @foreach (var vRole in objRoles)
+                    {
+                        var vMock = MockupId(vRole.Code);
+                        <div data-testid="@WrapperTestId(vRole.Code)">
+                            <Button Variant="ButtonVariant.Ghost"
+                                    Class="@($"h-auto w-full flex-col items-stretch justify-start gap-1 p-2 text-left whitespace-normal {(vRole.RoleId == objSelectedRoleId ? "bg-accent" : "")}")"
+                                    OnClick="() => SelectAsync(vRole.RoleId)"
+                                    data-testid="@($"agent-{vRole.Code}")">
+                                <span class="flex w-full items-center">
+                                    <b class="font-semibold">@vRole.Name</b>
+                                    <span class="flex-1"></span>
+                                    <span class="text-xs text-muted-foreground" data-testid="@($"{vMock}-version")">v@(VersionOf(vRole.RoleId))</span>
+                                </span>
+                                <span class="flex flex-wrap items-center gap-1">
+                                    @foreach (var vPill in PillsOf(vRole.RoleId))
+                                    {
+                                        <Badge Variant="BadgeVariant.Secondary" Class="text-xs" data-testid="@PillTestId(vMock, vPill)">@vPill</Badge>
+                                    }
+                                    <span class="text-xs text-muted-foreground" data-testid="@($"{vRole.Code}-tier")">Tier @vRole.Tier</span>
+                                </span>
+                            </Button>
+                        </div>
+                    }
+                </CardContent>
+            </Card>
+
+            @* [fix 2026-09-23] `flex-1` alone has a 0% flex-basis, so the flex-wrap on `agents-layout`
+               above never triggered — the browser shrank this column to fit beside `agent-list`
+               instead of wrapping it below, squeezing every word onto its own line at 390px. A real
+               min-width gives the wrap something to trigger on. *@
+            <div class="flex min-w-72 flex-1 flex-col gap-4" data-testid="agent-detail">
+                @if (objDetail is null)
+                {
+                    <Empty Title="Choose an agent" Size="EmptySize.Small" />
+                }
+                else
+                {
+                    <Card data-testid="agent-detail-head">
+                        <CardHeader>
+                            <div class="flex items-center gap-2">
+                                <CardTitle>@objDetail.Summary.Name</CardTitle>
+                                <span class="flex-1"></span>
+                                <Badge Variant="BadgeVariant.Secondary" data-testid="detail-version">v@(VersionOf(objDetail.Summary.RoleId))</Badge>
+                            </div>
+                        </CardHeader>
+                        <CardContent Class="flex flex-col gap-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div class="min-w-44 flex-1 text-sm text-muted-foreground">@SavedLine()</div>
+                                <Button Variant="ButtonVariant.Outline" OnClick="DiscardAsync" data-testid="discard-agent">Discard</Button>
+                                <Button OnClick="SaveAsync" Disabled="objIsSaving" data-testid="save-agent">
+                                    <LucideIcon Name="check" Size="14" />
+                                    Save
+                                </Button>
+                            </div>
+                            <div class="flex flex-wrap items-start gap-2" data-testid="agent-subtabs">
+                                <span class="w-16 pt-1.5 text-sm text-muted-foreground">Showing</span>
+                                <Collapsible @bind-Open="objSubtabOpen" Class="flex flex-col gap-1" data-testid="subtab-pick">
+                                    <CollapsibleTrigger AsChild>
+                                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="subtab-button">
+                                            @SubtabLabel(objShow)
+                                            <LucideIcon Name="chevron-down" Size="14" />
+                                        </Button>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent Class="flex w-44 flex-col rounded-md border bg-popover p-1 text-popover-foreground" data-testid="subtab-pop">
+                                        @foreach (var vSubtab in Subtabs)
+                                        {
+                                            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="justify-start" OnClick="() => ChooseSubtab(vSubtab)" aria-hidden="@(objSubtabOpen ? null : "true")" data-testid="@($"subtab-{vSubtab}")">
+                                                <span class="inline-block w-4">
+                                                    @if (objShow == vSubtab)
+                                                    {
+                                                        <LucideIcon Name="check" Size="14" />
+                                                    }
+                                                </span>
+                                                @SubtabLabel(vSubtab)
+                                            </Button>
+                                        }
+                                    </CollapsibleContent>
+                                </Collapsible>
+                                <span class="pt-1.5 text-xs text-muted-foreground">Wording, Rights and History are always shown below; pick Commands or Rules to add them.</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card data-testid="wording-panel">
+                        <CardHeader>
+                            <CardTitle>Wording</CardTitle>
+                        </CardHeader>
+                        <CardContent Class="flex flex-col gap-3">
+                            <Textarea @bind-Value="objWordingDraft" Class="h-40" aria-label="Wording" data-testid="wording-text" />
+                            <div class="flex flex-wrap items-start gap-2" data-testid="wording-tier-row">
+                                <span class="w-16 pt-1.5 text-sm text-muted-foreground">Tier</span>
+                                <Collapsible @bind-Open="objTierOpen" Class="flex flex-col gap-1" data-testid="wording-tier">
+                                    <CollapsibleTrigger AsChild>
+                                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="wording-tier-button">
+                                            @TierLabel(int.Parse(objTierDraft))
+                                            <LucideIcon Name="chevron-down" Size="14" />
+                                        </Button>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent Class="flex w-64 flex-col rounded-md border bg-popover p-1 text-popover-foreground" data-testid="wording-tier-pop">
+                                        @foreach (var vTier in new[] { 1, 2, 3 })
+                                        {
+                                            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="justify-start" OnClick="() => ChooseTier(vTier)" aria-hidden="@(objTierOpen ? null : "true")" data-testid="@($"wording-tier-{vTier}")">
+                                                <span class="inline-block w-4">
+                                                    @if (objTierDraft == vTier.ToString())
+                                                    {
+                                                        <LucideIcon Name="check" Size="14" />
+                                                    }
+                                                </span>
+                                                @TierLabel(vTier)
+                                            </Button>
+                                        }
+                                    </CollapsibleContent>
+                                </Collapsible>
+                                <span class="pt-1.5 text-xs text-muted-foreground">@FirstInChain()</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card data-testid="rights-panel">
+                        <CardHeader>
+                            <CardTitle>Rights</CardTitle>
+                        </CardHeader>
+                        <CardContent Class="flex flex-col gap-3">
+                            @foreach (var vAction in KnownActions)
+                            {
+                                var vAllowed = objDetail.Rights.Contains(vAction.Action);
+                                <div class="flex flex-col gap-1" data-testid="@(vAction.Mock is null ? null : $"right-{vAction.Mock}")">
+                                    <div class="flex items-center gap-3" data-testid="@($"right-{vAction.Action}")">
+                                        <Switch Checked="vAllowed" Disabled="true" Outlined="true" AriaLabel="@vAction.Label" title="@RightTitle(vAction.Action)" data-testid="@($"switch-{vAction.Mock ?? vAction.Action}")" />
+                                        <span class="text-sm">@vAction.Label</span>
+                                        <span class="flex-1"></span>
+                                        <span class="text-xs text-muted-foreground">@(vAllowed ? "on" : "off")</span>
+                                    </div>
+                                    @if (vAction.Action == "edit-file")
+                                    {
+                                        <div class="pl-12 text-xs text-muted-foreground" data-testid="changes-code-note">@ChangesCodeNote(vAllowed)</div>
+                                    }
+                                </div>
+                            }
+                        </CardContent>
+                    </Card>
+
+                    @if (objShow == "commands")
+                    {
+                        <Card data-testid="commands-panel">
+                            <CardHeader>
+                                <CardTitle>Commands</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Field>
+                                    <FieldLabel>Commands — one per line</FieldLabel>
+                                    <FieldContent>
+                                        <Textarea @bind-Value="objCommandsDraft" Class="h-28 font-mono text-xs" data-testid="commands-text" />
+                                    </FieldContent>
+                                </Field>
+                            </CardContent>
+                        </Card>
+                    }
+
+                    @if (objShow == "rules")
+                    {
+                        <Card data-testid="rules-panel">
+                            <CardHeader>
+                                <CardTitle>Rules</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Field>
+                                    <FieldLabel>Rules — one per line</FieldLabel>
+                                    <FieldContent>
+                                        <Textarea @bind-Value="objRulesDraft" Class="h-28" data-testid="rules-text" />
+                                    </FieldContent>
+                                </Field>
+                            </CardContent>
+                        </Card>
+                    }
+
+                    <Card data-testid="history-panel">
+                        <CardHeader>
+                            <CardTitle>History<span class="ml-2"><Badge Variant="BadgeVariant.Secondary" data-testid="history-count">@objDetail.History.Count version(s)</Badge></span></CardTitle>
+                        </CardHeader>
+                        <CardContent Class="flex flex-col gap-2">
+                            @foreach (var vVersion in objDetail.History)
+                            {
+                                <div class="flex flex-wrap items-center gap-3 rounded-md border p-2" data-testid="@($"history-v{vVersion.Version}")">
+                                    <Badge Variant="BadgeVariant.Secondary" data-testid="@($"history-v{vVersion.Version}-pill")">v@(vVersion.Version)</Badge>
+                                    <span class="min-w-40 flex-1 text-sm">@vVersion.WhatChanged</span>
+                                    <span class="text-xs text-muted-foreground">@vVersion.ValidFromUtc.ToLocalTime().ToString("d MMM yyyy")</span>
+                                    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(vVersion.Version == VersionOf(objDetail.Summary.RoleId) || objIsSaving)" OnClick="() => RestoreAsync(vVersion)" title="@RestoreTitle(vVersion)" data-testid="@($"restore-v{vVersion.Version}")">
+                                        <LucideIcon Name="undo-2" Size="14" />
+                                        Restore
+                                    </Button>
+                                </div>
+                            }
+                        </CardContent>
+                    </Card>
+                }
+            </div>
+        </div>
+    }
+</div>

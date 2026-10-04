@@ -1,0 +1,56 @@
+@inject IRoleActions RoleActions
+
+@* The "Add an agent" dialog on Settings ▸ Agents (mockups/settings-agents.html, button
+   data-testid="add-agent"): a name, some wording and the rights it is given. *@
+<Dialog Open="Open" OpenChanged="HandleOpenChangedAsync">
+    <DialogContent Class="max-w-xl" data-testid="add-agent-dialog">
+        <DialogHeader>
+            <DialogTitle>Add an agent</DialogTitle>
+            <DialogDescription>A library specialist, such as a TrBlazeUI or a TechieRag agent, is added here. Nothing is saved until you press Add.</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-4">
+            <Field>
+                <FieldLabel For="agent-name">Name</FieldLabel>
+                <FieldContent>
+                    <Input Id="agent-name" @bind-Value="AgentName" Placeholder="A name you will recognise" data-testid="new-agent-name" />
+                </FieldContent>
+            </Field>
+            <Field>
+                <FieldLabel For="agent-wording">Wording</FieldLabel>
+                <FieldContent>
+                    <Textarea Id="agent-wording" @bind-Value="Wording" Class="h-32" data-testid="new-agent-wording" />
+                    <FieldDescription>What the agent is and how it works — at least 40 characters.</FieldDescription>
+                </FieldContent>
+            </Field>
+            <div class="flex flex-col gap-3" data-testid="new-agent-rights">
+                <div class="flex items-center gap-3">
+                    <Switch Checked="true" Disabled="true" AriaLabel="Reads code" />
+                    <span class="text-sm">Reads code</span>
+                    <span class="flex-1"></span>
+                    <span class="text-xs text-muted-foreground">always on</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <Switch @bind-Checked="objChangesCode" AriaLabel="Changes code" data-testid="new-agent-changes-code" />
+                    <span class="text-sm">Changes code</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <Switch @bind-Checked="objRunsCommands" AriaLabel="Runs commands" data-testid="new-agent-runs-commands" />
+                    <span class="text-sm">Runs commands</span>
+                </div>
+            </div>
+            @if (objErrorMessage is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="new-agent-error">
+                    <AlertDescription>@objErrorMessage</AlertDescription>
+                </Alert>
+            }
+        </DialogBody>
+        <DialogFooter data-testid="new-agent-actions">
+            <Button Variant="ButtonVariant.Outline" OnClick="CloseAsync" data-testid="new-agent-cancel">Cancel</Button>
+            <Button Disabled="objIsBusy" OnClick="AddAsync" data-testid="new-agent-add">
+                <LucideIcon Name="plus" Size="14" />
+                Add
+            </Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

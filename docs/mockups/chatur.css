@@ -6,7 +6,8 @@
    a block of OKLCH variables, and its stock block is pure grey (chroma 0). These
    are four such blocks, written the same way, so whichever you choose drops
    straight into the real application's theme file.
-   Indigo is the default. Set html[data-theme="teal" | "amber" | "slate"].
+   Amber is the default, dark (UIDesign "Theme", amended 2026-10-02): every mockup
+   sets html data-theme="amber" class="dark". Set html[data-theme="indigo" | "teal" | "slate"] for the others.
    --------------------------------------------------------------------------- */
 :root,html[data-theme="indigo"]{                       /* INDIGO — light */
  --h:275;

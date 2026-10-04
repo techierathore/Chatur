@@ -1,0 +1,155 @@
+@page "/prerequisites"
+@layout Layouts.SecondaryLayout
+@inject IPrerequisiteActions PrerequisiteActions
+@inject AppState State
+
+@* UI Design "Screen: Prerequisites" — mockups/prerequisites.html. The real probes behind
+   ProbeAsync/NewerBuildAsync (REQ-FN-011 through REQ-FN-013) are cluster I's; this whole page shell,
+   the ready-to-copy fix command (REQ-UI-017) and the "This Chatur" version/commit card (REQ-UI-018)
+   are cluster J's. Every call below falls back to an honest empty state instead of crashing while a
+   cluster I method still throws NotImplementedException. *@
+<div class="flex flex-col gap-4">
+    <div class="flex items-center justify-between" data-testid="page-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Project prerequisites</h1>
+            <p class="text-sm text-muted-foreground">@Subtitle</p>
+        </div>
+        <Button Variant="ButtonVariant.Outline" OnClick="CheckAgainAsync" Disabled="objIsLoading" data-testid="check-again">
+            <LucideIcon Name="refresh-cw" Size="14" />
+            Check again
+        </Button>
+    </div>
+
+    @if (objTools is { Count: > 0 })
+    {
+        <StatGroup Columns="4" data-testid="req-tiles">
+            <StatTile Value="@objTools.Count.ToString()" Label="Needed" />
+            <StatTile Value="@ReadyCount.ToString()" Label="Ready" />
+            <StatTile Value="@AttentionCount.ToString()" Label="Needs attention" />
+            <StatTile Value="@objCheckedAt" Label="Checked" />
+        </StatGroup>
+    }
+
+    <Card data-testid="tools-panel">
+        <CardHeader>
+            <CardTitle>Tools</CardTitle>
+        </CardHeader>
+        <CardContent>
+            @if (objIsLoading)
+            {
+                <Empty Title="Checking…" Description="Probing the tools this machine needs." Size="EmptySize.Small" />
+            }
+            else if (objTools is null)
+            {
+                @if (State.SelectedProject is null)
+                {
+                    <Empty Title="No project open" Description="Open a project to probe the tools it needs." Size="EmptySize.Small" />
+                }
+                else
+                {
+                    <Empty Title="Not available yet" Description="The probe for this project's tools is not wired up yet." Size="EmptySize.Small" />
+                }
+            }
+            else if (objTools.Count == 0)
+            {
+                <Empty Title="Nothing to check" Description="Chatur names no tools to probe here." Size="EmptySize.Small" />
+            }
+            else
+            {
+                <DataTable TData="ToolCheck" Data="@objTools" ShowPagination="false" MinWidth="640px" data-testid="tools-table"
+                           RowAttributes="@(aTool => new Dictionary<string, object> { ["class"] = "border-t" })">
+                    <Columns>
+                        <DataTableColumn TData="ToolCheck" TValue="string" Property="@(aTool => aTool.ToolName)"
+                                         Header="Tool" CellClass="whitespace-nowrap font-medium" HeaderClass="whitespace-nowrap" />
+                        <DataTableColumn TData="ToolCheck" TValue="string" Property="@(aTool => aTool.NeededVersion)" Header="Needed">
+                            <CellTemplate Context="vTool">
+                                <span class="text-muted-foreground">@(vTool.NeededVersion ?? "any")</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="ToolCheck" TValue="string" Property="@(aTool => aTool.FoundVersion)"
+                                         Header="Found" CellClass="whitespace-nowrap">
+                            <CellTemplate Context="vTool">
+                                <span class="font-mono @(vTool.FoundVersion is null ? "text-destructive" : null)">@(vTool.FoundVersion ?? "not found")</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="ToolCheck" TValue="string" Property="@(aTool => aTool.State.ToString())" Header="State">
+                            <CellTemplate Context="vTool">
+                                <Badge Variant="@StateVariant(vTool.State)" Class="@StateClass(vTool.State)">
+                                    @if (vTool.State == ToolCheckState.Ready)
+                                    {
+                                        <LucideIcon Name="check" Size="11" />
+                                    }
+                                    @StateLabel(vTool.State)
+                                </Badge>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="ToolCheck" TValue="string" Property="@(aTool => aTool.FixCommand)" Header="Fix" MinWidth="220px">
+                            <CellTemplate Context="vTool">
+                                @if (!string.IsNullOrWhiteSpace(vTool.FixCommand))
+                                {
+                                    <CodeBlock Code="@vTool.FixCommand" ShowCopyButton="true"
+                                               Class="rounded-md border-0 bg-transparent p-0 text-xs"
+                                               data-testid="@($"copy-fix-{Slug(vTool.ToolName)}")" />
+                                }
+                            </CellTemplate>
+                        </DataTableColumn>
+                    </Columns>
+                </DataTable>
+            }
+        </CardContent>
+    </Card>
+
+    <Card data-testid="this-chatur">
+        <CardHeader>
+            <CardTitle>This Chatur</CardTitle>
+        </CardHeader>
+        <CardContent>
+            @if (objBuildInfo is null)
+            {
+                <Empty Title="Version not read yet" Description="Chatur's own version and commit could not be read." Size="EmptySize.Small" />
+            }
+            else
+            {
+                <div class="flex flex-col gap-2 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="w-28 text-muted-foreground">Version</span>
+                        <span data-testid="chatur-version">@DisplayVersion(objBuildInfo.Version)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-28 text-muted-foreground">Built from</span>
+                        <span class="font-mono" data-testid="chatur-commit">@ShortCommit(objBuildInfo.Commit)</span>
+                        <span class="text-muted-foreground">@objBuildInfo.BuiltUtc.ToLocalTime().ToString("d MMMM")</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-28 text-muted-foreground">Machine</span>
+                        <span>@objMachine</span>
+                    </div>
+                </div>
+
+                @if (objNewerBuild is not null)
+                {
+                    <Alert Variant="AlertVariant.Info" Class="mt-3" data-testid="newer-build">
+                        <LucideIcon Name="download" Size="16" />
+                        <AlertTitle>A newer nightly is ready — @DisplayVersion(objNewerBuild.Version), commit @ShortCommit(objNewerBuild.Commit)</AlertTitle>
+                        <AlertDescription>
+                            Your settings, agents and measurements survive the update.
+                            @if (!string.IsNullOrWhiteSpace(objNewerBuild.DownloadUrl))
+                            {
+                                <div class="mt-2">
+                                    <Button Size="ButtonSize.Small" Href="@objNewerBuild.DownloadUrl" Target="_blank" data-testid="download-build">Download</Button>
+                                </div>
+                            }
+                        </AlertDescription>
+                    </Alert>
+                }
+            }
+        </CardContent>
+    </Card>
+
+    <Alert Variant="AlertVariant.Default" data-testid="path-note">
+        <LucideIcon Name="triangle-alert" Size="16" />
+        <AlertDescription>
+            Started from Finder, Chatur reads the same PATH as your shell, so a tool installed with Homebrew is found here too.
+        </AlertDescription>
+    </Alert>
+</div>

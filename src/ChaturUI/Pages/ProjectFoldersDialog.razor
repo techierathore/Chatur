@@ -1,0 +1,75 @@
+@* The Project folders dialog (REQ-UI-005, REQ-UI-009): names the folders Chatur searches for
+   projects, and removes one. Opened from Start, either from "Project folders…" in the header or
+   from the empty state's "Name a folder…" (REQ-UI-008). Owned by cluster E — no mockup shows this
+   dialog directly; mockups/start.html only says "Settings ▸ Account holds them", so its shape
+   follows the same Dialog + Item patterns every other list-management dialog in the app uses. *@
+<Dialog Open="Open" OpenChanged="OpenChanged">
+    <DialogContent Class="max-w-lg" data-testid="folders-dialog">
+        <DialogHeader>
+            <DialogTitle>Project folders</DialogTitle>
+            <DialogDescription>
+                Chatur looks one level into each of these folders for projects to list on Start.
+            </DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-4">
+            @if (objFolders.Count == 0)
+            {
+                <p class="text-sm text-muted-foreground" data-testid="folders-empty">No folders named yet.</p>
+            }
+            else
+            {
+                <ItemGroup data-testid="folders-list">
+                    @foreach (var vFolder in objFolders)
+                    {
+                        <Item data-testid="@($"folder-row-{vFolder.FolderId}")">
+                            <ItemContent>
+                                <ItemDescription Class="font-mono text-xs">@vFolder.Path</ItemDescription>
+                            </ItemContent>
+                            <ItemActions>
+                                <Button Variant="ButtonVariant.Ghost"
+                                        Size="ButtonSize.IconSmall"
+                                        Disabled="objIsBusy"
+                                        OnClick="() => RemoveAsync(vFolder.FolderId)"
+                                        AriaLabel="@($"Remove {vFolder.Path}")"
+                                        data-testid="@($"remove-folder-{vFolder.FolderId}")">
+                                    <LucideIcon Name="x" Size="14" />
+                                </Button>
+                            </ItemActions>
+                        </Item>
+                    }
+                </ItemGroup>
+            }
+
+            <Field>
+                <FieldLabel For="new-folder-path">Add a folder</FieldLabel>
+                <FieldContent>
+                    <div class="flex gap-2">
+                        <Input Id="new-folder-path"
+                               @bind-Value="objNewPath"
+                               Placeholder="The folder's full path"
+                               Class="flex-1"
+                               data-testid="new-folder-path" />
+                        <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="BrowseAsync" data-testid="browse-folder">
+                            <LucideIcon Name="folder-open" Size="14" />
+                            Browse…
+                        </Button>
+                    </div>
+                </FieldContent>
+            </Field>
+            @if (objErrorMessage is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="folders-error">
+                    <AlertDescription>@objErrorMessage</AlertDescription>
+                </Alert>
+            }
+        </DialogBody>
+        <DialogFooter>
+            <DialogClose AsChild>
+                <Button Variant="ButtonVariant.Outline" data-testid="folders-dialog-close">Close</Button>
+            </DialogClose>
+            <Button Disabled="@(objIsBusy || string.IsNullOrWhiteSpace(objNewPath))" OnClick="AddAsync" data-testid="add-folder">
+                Add folder
+            </Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

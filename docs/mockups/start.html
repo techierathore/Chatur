@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="dark" data-theme="amber">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chatur</title>
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="grow"></span>
   <div class="popwrap" data-testid="account">
    <button class="pick" style="height:26px;border:0" onclick="pop(this,event)"><span class="av">TR</span><span class="nm">Techie Rathore</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop right" data-testid="account-pop">
+   <div class="pop right" data-testid="account-pop" data-tf-state="popup-open">
     <div class="note">techierathore@gmail.com</div>
     <a href="settings-account.html">Account</a>
     <a href="licence.html">Licence</a>
@@ -49,9 +49,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    </div>
   </div>
   <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
-  <div class="popwrap" data-testid="palette">
+  <div class="popwrap" data-testid="palette" data-tf-state="mockup-only">
    <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one lives in Settings ▸ Appearance"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop right" id="palette-pop" data-testid="palette-pop">
+   <div class="pop right" id="palette-pop" data-testid="palette-pop" data-tf-state="popup-open">
     <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber</button>
     <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo</button>
     <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal</button>
@@ -71,22 +71,22 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    </div>
 
    <div class="recent" data-testid="recent-list">
-    <a href="main.html" data-testid="recent-tflens"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
+    <a href="main.html" data-testid="recent-tflens" data-tf-state="sample-data"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
      <span><span class="nm">TfLens</span><span class="pa mono">~/code/TfLens</span></span>
      <span class="pill">2 to push</span><span class="when">6 minutes ago</span></a>
-    <a href="main.html" data-testid="recent-astrolyfe"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
+    <a href="main.html" data-testid="recent-astrolyfe" data-tf-state="sample-data"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
      <span><span class="nm">AstroLyfe</span><span class="pa mono">~/code/AstroLyfe</span></span>
      <span class="when">yesterday</span></a>
-    <a href="main.html" data-testid="recent-appmanager"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
+    <a href="main.html" data-testid="recent-appmanager" data-tf-state="sample-data"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
      <span><span class="nm">AppManager</span><span class="pa mono">~/code/AppManager</span></span>
      <span class="when">3 weeks ago</span></a>
-    <a href="main.html" data-testid="recent-mydiary"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
+    <a href="main.html" data-testid="recent-mydiary" data-tf-state="sample-data"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
      <span><span class="nm">MyDiary</span><span class="pa mono">~/code/MyDiary</span></span>
      <span class="when">a month ago</span></a>
-    <a href="folder-only.html" data-testid="recent-scratch"><svg class="dim"><use href="#i-folder"/></svg>
+    <a href="folder-only.html" data-testid="recent-scratch" data-tf-state="sample-data"><svg class="dim"><use href="#i-folder"/></svg>
      <span><span class="nm">scratch</span><span class="pa mono">~/scratch</span></span>
      <span class="pill">empty folder</span><span class="when">last week</span></a>
-    <a href="main.html" data-testid="recent-techierag"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
+    <a href="main.html" data-testid="recent-techierag" data-tf-state="sample-data"><svg style="color:var(--accent)"><use href="#i-sln"/></svg>
      <span><span class="nm">TechieRag</span><span class="pa mono">~/code/TechieRag</span></span>
      <span class="when">2 months ago</span></a>
    </div>
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <span><b>New project</b><span>A solution from a template</span></span>
    </button>
 
-   <a class="bigaction" href="folder-only.html" data-testid="new-blank">
+   <a class="bigaction" href="folder-only.html" data-testid="new-blank" data-tf-state="no-phase-1-requirement">
     <span class="ic"><svg><use href="#i-blank"/></svg></span>
     <span><b>New empty folder</b><span>An empty folder and an agent — for thinking something through before there is any code</span></span>
    </a>

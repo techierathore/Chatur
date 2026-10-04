@@ -64,9 +64,11 @@
 
 **States:** empty: no error, no bars filled, the strength reads none of four met · loading: the button is busy and the fields are read-only · error: under the field that caused it, never one lump at the top
 
-### Screen: Start (`/start`)
+### Screen: Start (`/start?all=1`)
 
 **Mockup:** [mockups/start.html](mockups/start.html) · **Roles:** Owner · **BRD:** BRD-10 to BRD-15
+
+Reached on purpose at `/start?all=1` (the project switcher's "All projects…"). The bare `/start`, where Chatur lands after sign-in, forwards straight to the Workbench when a project is already chosen (BRD-13), so it shows this screen only when nothing is chosen yet (amended 2026-10-01).
 
 A window of its own, the one that opens first. It carries no menu bar, no file tree and no conversation, because nothing is open yet.
 
@@ -147,14 +149,15 @@ The window itself, and where the work happens.
 
 **Mockup:** [mockups/settings-providers.html](mockups/settings-providers.html) · **Roles:** Owner · **BRD:** BRD-32 to BRD-43, BRD-52 to BRD-60, BRD-70 to BRD-79, BRD-156, BRD-157
 
-Seven tabs, seven components. The strip is navigation, not a control.
+Seven tabs, seven components; the strip is navigation.
 
 | Region | Control | Shows or binds |
 |---|---|---|
 | `settings-tabs` | Tabs as links | [providers](mockups/settings-providers.html) · [routing](mockups/settings-routing.html) · [agents](mockups/settings-agents.html) · [corrections](mockups/settings-corrections.html) · [measurements](mockups/settings-measurements.html) · [appearance](mockups/settings-appearance.html) · [account](mockups/settings-account.html) |
 | `providers-table` | DataTable | per provider: connector, sign-in, address, models, state, Test, Remove |
-| `secrets-panel` | Card | the Keychain, Credential Manager, and that the database keeps only the name |
-| `tier-1` … `tier-3` | Card ×3 | each chain in order, with up, down, remove and add |
+| `secrets-panel` | Card | Keychain / Credential Manager; the database keeps only the name |
+| `signin-code-panel` | Field | the browser sign-in code, Copy |
+| `tier-1` … `tier-3` | Card ×3 | each chain in order: up, down, remove, add |
 | `agent-tiers-table` / `work-tiers-table` | DataTable + Select | the tier per agent and per kind of work; the work wins |
 | `agents-layout` | list + detail | the four agents; the chosen one's wording, rights, rules, history |
 | `corrections-table` | DataTable + diff | what Chatur changed about itself; Keep or Undo |

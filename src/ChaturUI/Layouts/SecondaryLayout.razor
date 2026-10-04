@@ -1,0 +1,89 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject IThemeActions ThemeActions
+@inject AppState State
+
+@* The theme-toggle/palette pair every mockup's title bar carries (sign-in.html through
+   settings-appearance.html) — REQ-UI-037's "every window changes at once" made real for the
+   secondary window, not only the Appearance page itself (cluster L). *@
+<div class="flex h-screen flex-col bg-background" data-testid="window">
+    <div class="flex h-11 flex-none items-center gap-2 border-b bg-card px-4" data-testid="subbar">
+        @* [fix 2026-09-23] Below 640px the fixed-width left nav (data-testid="subnav") clipped the
+           page content (BRD "a panel scrolls inside itself; no window scrolls sideways"). The nav
+           now collapses into this Sheet trigger at narrow widths; docs/mockups/settings-providers.html
+           defines no narrow-width behaviour of its own for the subnav, so the collapse is this fix's
+           own choice per the task's own suggestion (a TrBlazeUI Sheet). *@
+        <Sheet @bind-Open="objMobileNavOpen">
+            <SheetTrigger AsChild>
+                <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="sm:hidden" AriaLabel="Open navigation" data-testid="subnav-trigger">
+                    <LucideIcon Name="menu" Size="16" />
+                </Button>
+            </SheetTrigger>
+            <SheetContent Side="TrBlazeUI.Primitives.Sheet.SheetSide.Left" Class="w-64" data-testid="subnav-sheet">
+                <SheetHeader>
+                    <SheetTitle>Chatur</SheetTitle>
+                </SheetHeader>
+                <nav class="flex flex-col gap-1 py-2" data-testid="subnav-mobile">
+                    @foreach (var vItem in SecondaryNavigation.Items)
+                    {
+                        <a href="@vItem.Route"
+                           class="@ItemClass(vItem)"
+                           data-testid="@($"{vItem.TestId}-mobile")"
+                           @onclick="() => objMobileNavOpen = false">
+                            <LucideIcon Name="@vItem.Icon" Size="14" Class="flex-none" />
+                            @vItem.Label
+                        </a>
+                    }
+                </nav>
+            </SheetContent>
+        </Sheet>
+        <span class="flex h-5 w-5 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground" data-testid="logo">C</span>
+        <span class="text-sm font-semibold" data-testid="window-title">@CurrentTitle</span>
+        <Badge Variant="BadgeVariant.Secondary" Class="hidden rounded-full sm:inline-flex" data-testid="scope">@(State.SelectedProject?.Name ?? "Chatur")</Badge>
+        <span class="flex-1"></span>
+        <ThemeToggle />
+        <DropdownMenu>
+            <DropdownMenuTrigger AsChild>
+                <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" data-testid="palette">
+                    @State.ThemeName
+                    <LucideIcon Name="chevron-down" Size="14" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent data-testid="palette-pop">
+                @foreach (var vTheme in objThemeNames)
+                {
+                    <DropdownMenuItem OnClick="() => ChooseThemeAsync(vTheme)" data-testid="@($"palette-{vTheme}")">
+                        @if (vTheme == State.ThemeName)
+                        {
+                            <LucideIcon Name="check" Size="14" />
+                        }
+                        <span class="ml-2 capitalize">@vTheme</span>
+                    </DropdownMenuItem>
+                }
+            </DropdownMenuContent>
+        </DropdownMenu>
+        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="rounded-full" Href="/" data-testid="close-window">
+            <LucideIcon Name="x" Size="14" />
+            Close
+        </Button>
+    </div>
+    <AuthGate>
+        <div class="flex flex-1 overflow-hidden">
+            @* [fix 2026-09-23] hidden below 640px; the Sheet above stands in for it there. *@
+            <nav class="hidden w-56 flex-none flex-col gap-1 overflow-auto border-r bg-card p-2 sm:flex" data-testid="subnav">
+                @foreach (var vItem in SecondaryNavigation.Items)
+                {
+                    <a href="@vItem.Route"
+                       class="@DesktopItemClass(vItem)"
+                       data-testid="@vItem.TestId">
+                        <LucideIcon Name="@vItem.Icon" Size="14" Class="flex-none" />
+                        @vItem.Label
+                    </a>
+                }
+            </nav>
+            <div class="flex-1 overflow-auto p-6" data-testid="page">
+                @Body
+            </div>
+        </div>
+    </AuthGate>
+</div>

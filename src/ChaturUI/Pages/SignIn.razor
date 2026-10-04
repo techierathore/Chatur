@@ -1,0 +1,76 @@
+@page "/sign-in"
+@layout Layouts.BareLayout
+
+@* UI Design "Screen: Sign in" — mockups/sign-in.html. Real submit behaviour against
+   IAccountActions.SignInAsync and the server's own error text (REQ-UI-001, REQ-UI-002). *@
+<Card Class="max-h-full w-96 max-w-full flex-none overflow-auto" data-testid="signin-card">
+    <CardHeader data-testid="signin-heading">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold leading-8 text-primary-foreground">C</span>
+        <CardTitle>Sign in to Chatur</CardTitle>
+        <CardDescription data-testid="signin-subtitle">
+            This is your App Manager account — the same sign-in that carries your licence, your models and your projects.
+        </CardDescription>
+    </CardHeader>
+    <CardContent Class="flex flex-col gap-4">
+        <Alert Variant="AlertVariant.Danger" AccentBorder="true" hidden="@(objErrorMessage is null)" data-testid="signin-error">
+            <AlertIcon><LucideIcon Name="triangle-alert" Size="16" /></AlertIcon>
+            <AlertTitle>@(objErrorMessage ?? string.Empty)</AlertTitle>
+            <AlertDescription>
+                App Manager sent that line back word for word.
+                <div class="mt-2">
+                    <Badge Variant="BadgeVariant.Outline" aria-hidden="@(objErrorMessage is null ? "true" : "false")" data-testid="signin-error-source">from App Manager</Badge>
+                </div>
+            </AlertDescription>
+        </Alert>
+        <form class="flex flex-col gap-4" data-testid="signin-form" @onsubmit="HandleSignInAsync" @onsubmit:preventDefault="true">
+            <Field data-testid="field-email">
+                <FieldLabel For="email">Email</FieldLabel>
+                <FieldContent>
+                    <Input Id="email" Type="InputType.Email" @bind-Value="objEmail" Placeholder="you@example.com" Required="true" Disabled="objIsSigningIn" data-testid="input-email" />
+                </FieldContent>
+            </Field>
+            <Field data-testid="field-password">
+                <FieldLabel For="password">Password</FieldLabel>
+                <FieldContent>
+                    <Input Id="password" Type="InputType.Password" @bind-Value="objPassword" Placeholder="Your password" Required="true" Disabled="objIsSigningIn" data-testid="input-password" />
+                </FieldContent>
+            </Field>
+            <div class="flex items-center gap-2" data-testid="remember-row">
+                <span class="grow whitespace-nowrap text-sm">Remember this device</span>
+                <ToggleGroup TValue="bool" @bind-Value="objRemember" Joined="true" AllowDeselect="false"
+                             Variant="ToggleVariant.Default" Size="ToggleSize.Small" AriaLabel="Remember this device" OnVariant="ToggleOnVariant.Card"
+                             Class="shrink-0 rounded-full border bg-muted p-0.5" Disabled="objIsSigningIn" data-testid="remember">
+                    <ToggleGroupItem TValue="bool" Value="true" Class="h-6 rounded-full px-3 text-xs leading-5 whitespace-nowrap" data-testid="remember-yes">Remember</ToggleGroupItem>
+                    <ToggleGroupItem TValue="bool" Value="false" Class="h-6 rounded-full px-3 text-xs leading-5 whitespace-nowrap" data-testid="remember-no">Ask again</ToggleGroupItem>
+                </ToggleGroup>
+            </div>
+            <Button Type="ButtonType.Submit" Class="mt-4 w-full" Disabled="objIsSigningIn" data-testid="signin-submit">
+                @if (objIsSigningIn)
+                {
+                    <ButtonIcon><Spinner Size="SpinnerSize.Small" /></ButtonIcon>
+                    @:Signing in…
+                }
+                else
+                {
+                    <ButtonIcon><LucideIcon Name="send" Size="16" /></ButtonIcon>
+                    @:Sign in
+                }
+            </Button>
+            <Button Type="ButtonType.Button" Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7 self-center rounded-full border border-transparent bg-card leading-5" OnClick="HandleForgotPassword" data-testid="forgot-password">
+                Forgotten your password?
+            </Button>
+        </form>
+        <div class="text-center text-sm text-muted-foreground" data-testid="register-line">
+            No account yet? <a class="text-primary" href="/register" data-testid="register-link">Create one</a>
+        </div>
+        <div class="flex flex-col gap-1.5 rounded-lg border bg-background p-3" data-testid="device-note">
+            <span class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <LucideIcon Name="lock" Size="12" />
+                This machine — <span class="font-mono" data-testid="device-name">@objDeviceName</span>
+            </span>
+            <span class="text-xs text-muted-foreground">
+                Chatur keeps the sign-in tokens in the Keychain on a Mac and in Credential Manager on Windows. They never land in a file beside your project, and they never reach a model.
+            </span>
+        </div>
+    </CardContent>
+</Card>

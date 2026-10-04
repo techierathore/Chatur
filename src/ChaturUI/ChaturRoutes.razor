@@ -1,0 +1,25 @@
+@* The one root component every host renders: a MAUI window's BlazorWebView RootComponent, or the
+   web harness's own App.razor. Scans this assembly for every @page in Pages/ (Foundation brief
+   "Route guard"; Architecture §2 "ChaturUI"). Infrastructure, not a screen — no code-behind. *@
+<Router AppAssembly="@typeof(ChaturRoutes).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layouts.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="typeof(Layouts.MainLayout)">
+            <p>Sorry, there's nothing here.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+@* TrBlazeUI setup (.trblazeui/TrBlazeUI-AI-Reference.md §1 "App.razor / MainLayout.razor Setup"):
+   every dialog, popover, dropdown and menu portals through here, and every ToastService call
+   renders through here — one instance for the whole app, regardless of which layout is showing. *@
+<ToastProvider Position="ToastPosition.BottomRight" />
+<PortalHost />
+
+@* Applies the persisted theme and repaints on every change, regardless of which layout is showing
+   (REQ-UI-037, REQ-UI-038; cluster L). Renders nothing — see Shell/ThemeHost.razor.cs. *@
+<ThemeHost />

@@ -1,0 +1,172 @@
+@inject IProviderActions ProviderActions
+@inject ToastService Toast
+
+@* The "Add a provider" dialog on Settings ▸ Model providers (REQ-FN-014, REQ-FN-015, REQ-UI-019) —
+   mockups/settings-providers.html, panel data-testid="add-provider-dialog". *@
+<Dialog Open="Open" OpenChanged="HandleOpenChangedAsync">
+    <DialogContent Class="max-w-2xl" data-testid="add-provider-dialog">
+        <DialogHeader>
+            <DialogTitle>Add a provider</DialogTitle>
+            <DialogDescription>Connect a model service. Nothing is saved until you press Add.</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field>
+                    <FieldLabel For="field-name">Name</FieldLabel>
+                    <FieldContent>
+                        <Input Id="field-name" @bind-Value="ProviderName" Placeholder="A name you will recognise" data-testid="field-name" />
+                    </FieldContent>
+                </Field>
+
+                <Field>
+                    <FieldLabel>Connector</FieldLabel>
+                    <FieldContent>
+                        <Select TValue="string" @bind-Value="Connector" DisplayTextSelector="@(c => ConnectorLabel(c))" Class="w-full" data-testid="field-connector">
+                            <SelectTrigger Class="w-full" data-testid="field-connector-button">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent data-testid="field-connector-pop">
+                                <SelectItem Value="@("Anthropic")" Text="Anthropic" TValue="string" data-testid="connector-anthropic">Anthropic</SelectItem>
+                                <SelectItem Value="@("OpenAI")" Text="OpenAI" TValue="string" data-testid="connector-openai">OpenAI</SelectItem>
+                                <SelectItem Value="@("OpenAICompatible")" Text="OpenAI-compatible" TValue="string" data-testid="connector-compatible">OpenAI-compatible</SelectItem>
+                                <SelectItem Value="@("Google")" Text="Google" TValue="string" data-testid="connector-google">Google</SelectItem>
+                                <SelectItem Value="@("Ollama")" Text="Ollama" TValue="string" data-testid="connector-ollama">Ollama</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </FieldContent>
+                </Field>
+
+                <Field>
+                    <FieldLabel>Sign-in method</FieldLabel>
+                    <FieldContent>
+                        <Select TValue="string" @bind-Value="SignIn" DisplayTextSelector="@(s => SignInLabel(s))" Class="w-full" data-testid="field-signin">
+                            <SelectTrigger Class="w-full" data-testid="field-signin-button">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent data-testid="field-signin-pop">
+                                <SelectItem Value="@("key")" Text="Pasted key" TValue="string" data-testid="signin-key">Pasted key</SelectItem>
+                                <SelectItem Value="@("browser")" Text="Sign in with the browser" TValue="string" Disabled="@(Connector != "OpenAI")" data-testid="signin-browser">Sign in with the browser</SelectItem>
+                                <SelectItem Value="@("none")" Text="No sign-in" TValue="string" data-testid="signin-none">No sign-in</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </FieldContent>
+                </Field>
+
+                <Field>
+                    <FieldLabel For="field-address">Web address</FieldLabel>
+                    <FieldContent>
+                        <Input Id="field-address" @bind-Value="Address" Class="font-mono" data-testid="field-address" />
+                    </FieldContent>
+                </Field>
+            </div>
+
+            @if (SignIn == "key")
+            {
+                <Field>
+                    <FieldLabel For="field-key">Key</FieldLabel>
+                    <FieldContent>
+                        <Input Id="field-key" Type="InputType.Password" @bind-Value="PastedKey" Class="font-mono" data-testid="field-key" />
+                        <FieldDescription data-testid="field-key-note">Held in @SecretStoreName the moment you press Add. Chatur never writes it to a file.</FieldDescription>
+                    </FieldContent>
+                </Field>
+            }
+            else if (SignIn == "browser")
+            {
+                @if (objPrompt is null)
+                {
+                    <Field data-testid="signin-terms-panel">
+                        <FieldLabel>Before you sign in</FieldLabel>
+                        <FieldContent>
+                            @if (objTerms is not null)
+                            {
+                                <div class="rounded-md border p-3 text-sm" data-testid="signin-terms">
+                                    <p data-testid="signin-terms-text">@objTerms.Terms</p>
+                                    <p class="mt-2 text-xs text-muted-foreground" data-testid="signin-terms-meta">Applies to @objTerms.AppliesTo.TrimEnd('.'). Checked on @objTerms.CheckedOn.ToString("d MMMM yyyy").</p>
+                                    @if (!objTerms.Permitted)
+                                    {
+                                        <p class="mt-2 text-xs text-destructive" data-testid="signin-terms-blocked">The vendor does not permit this use, so it cannot be added.</p>
+                                    }
+                                </div>
+                            }
+                            @if (objIsStartingSignIn)
+                            {
+                                <FieldDescription data-testid="signin-starting">Asking OpenAI for a sign-in code…</FieldDescription>
+                            }
+                            else
+                            {
+                                <FieldDescription>Press Add to get a sign-in code. Nothing is saved until you have signed in.</FieldDescription>
+                            }
+                        </FieldContent>
+                    </Field>
+                }
+                else
+                {
+                    <Field data-testid="signin-code-panel">
+                        <FieldLabel>Sign-in code</FieldLabel>
+                        <FieldContent>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="inline-flex h-9 items-center rounded-md border px-3 font-mono font-semibold tracking-widest" data-testid="signin-code">@objPrompt.UserCode</span>
+                                <Button Variant="ButtonVariant.Outline" OnClick="CopyCodeAsync" data-testid="signin-code-copy">@(objCopied ? "Copied" : "Copy")</Button>
+                                <Button Variant="ButtonVariant.Outline" OnClick="OpenBrowserAsync" data-testid="signin-open-browser">Open the browser</Button>
+                            </div>
+                            <FieldDescription data-testid="signin-waiting">Enter this code on the page the browser opened at @PromptHost. Waiting for you to finish — the code expires in @MinutesLeft @(MinutesLeft == 1 ? "minute" : "minutes"). The session is kept in @SecretStoreName.</FieldDescription>
+                        </FieldContent>
+                    </Field>
+                }
+            }
+            @if (SignIn == "browser" && Connector != "OpenAI")
+            {
+                <Alert Variant="AlertVariant.Default" data-testid="signin-browser-note">
+                    <AlertDescription>Signing in with the browser is only offered for OpenAI (a ChatGPT subscription). Choose OpenAI as the connector, or a pasted key.</AlertDescription>
+                </Alert>
+            }
+
+            @if (objTestResult is not null)
+            {
+                <Alert Variant="@(objTestResult.Succeeded ? AlertVariant.Default : AlertVariant.Danger)" data-testid="dialog-test-result">
+                    <AlertDescription>
+                        @if (objTestResult.Succeeded)
+                        {
+                            <div>Answered — @objTestResult.Models.Count @(objTestResult.Models.Count == 1 ? "model" : "models")</div>
+                            @if (objTestResult.Models.Count > 0)
+                            {
+                                <div class="mt-1 font-mono text-xs" data-testid="dialog-test-models">@string.Join(", ", objTestResult.Models.Take(5))@(objTestResult.Models.Count > 5 ? ", …" : "")</div>
+                            }
+                        }
+                        else
+                        {
+                            <div>@(objTestResult.Message ?? "Nothing answered at that address.")</div>
+                        }
+                    </AlertDescription>
+                </Alert>
+            }
+
+            @if (objErrorMessage is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="dialog-error">
+                    <AlertDescription>@objErrorMessage</AlertDescription>
+                </Alert>
+            }
+        </DialogBody>
+        <DialogFooter Class="sm:justify-between" data-testid="dialog-actions">
+            <Button Variant="ButtonVariant.Outline" Disabled="@(objIsBusy || SignIn == "browser")" OnClick="TestAsync" data-testid="dialog-test">
+                @if (objIsTesting)
+                {
+                    <Spinner Size="SpinnerSize.Small" />
+                }
+                else
+                {
+                    <LucideIcon Name="refresh-cw" Size="14" />
+                }
+                Test
+            </Button>
+            <div class="flex gap-2">
+                <Button Variant="ButtonVariant.Outline" OnClick="CancelAsync" data-testid="dialog-cancel">Cancel</Button>
+                <Button Disabled="@(objIsBusy || !CanAdd)" OnClick="AddAsync" data-testid="dialog-add">
+                    <LucideIcon Name="plus" Size="14" />
+                    Add
+                </Button>
+            </div>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

@@ -1,0 +1,235 @@
+# Release pipeline (REQ-NFR-006, BRD-158; Architecture §6 decision rows 2026-09-21 / 2026-09-30).
+#
+#   push to main  -> a `macos` and a `windows` job build + zip the app, then `release` replaces the
+#                    rolling nightly pre-release with both zips.
+#   push of v*    -> the same two builds, then `release` publishes a named release with both zips.
+#
+# Version and commit stamping: Directory.Build.props (target ChaturStampBuildInfo) turns
+# -p:VersionPrefix / -p:ChaturReleaseBuild / -p:ChaturCommitSha into the assembly's
+# InformationalVersion and Chatur.CommitSha metadata. A -p: value is an MSBuild *global* property, so
+# the stamping target's own read of .git (which on a tag build is a detached HEAD) can never override
+# the ChaturCommitSha passed here; github.sha always wins.
+#
+# Asset names are chosen for Chatur.Core.Prerequisites.NightlyRelease.DownloadUrlForThisMachine,
+# which picks the first asset whose name contains "mac" (Mac) or "win" (anything else),
+# case-insensitively: Chatur-<version>-maccatalyst.zip and Chatur-<version>-win-x64.zip.
+#
+# The nightly tag is v<VersionPrefix>-nightly (not a bare "nightly"): GitHubReleaseClient reads the
+# version out of the release TAG (NightlyRelease.ParseVersion), and the bare tag "nightly" carries no
+# digits, so the app would never offer it. GitHubReleaseClient also needs target_commitish to be a
+# commit SHA, so the nightly release is created with --target <sha>.
+#
+# No code signing (Architecture §6: none before phase 4).
+name: release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*', '!v*-nightly']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: read
+
+# Never cancel a run mid-publish: a cancelled `release` job could leave the nightly deleted.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Feed source key in nuget.config. Auth: a PAT secret NUGET_GITHUB_TOKEN (read:packages) if set,
+  # else the built-in GITHUB_TOKEN. GITHUB_TOKEN can only read a package that grants this repository
+  # access, so if restore answers 401/403 for TrBlazeUI, add the secret (see the restore step).
+  NUGET_SOURCE_NAME: TrBlazeUI
+  NUGET_FEED_USER: techierathore
+
+jobs:
+  meta:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      nightly_tag: ${{ steps.v.outputs.nightly_tag }}
+      msbuild_props: ${{ steps.v.outputs.msbuild_props }}
+      is_tag: ${{ steps.v.outputs.is_tag }}
+      is_main: ${{ steps.v.outputs.is_main }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Default VersionPrefix as Directory.Build.props declares it (used for nightly names).
+          default_prefix="$(grep -oP '<VersionPrefix[^>]*>\K[0-9]+(\.[0-9]+){1,3}(?=</VersionPrefix>)' Directory.Build.props | head -n1)"
+          [ -n "$default_prefix" ] || { echo "Could not read VersionPrefix from Directory.Build.props" >&2; exit 1; }
+
+          is_tag=false; is_main=false
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            is_tag=true
+            tag="${GITHUB_REF#refs/tags/}"
+            ver="${tag#v}"                 # 0.2.0 or 0.2.0-beta.1
+            prefix="${ver%%-*}"
+            props="-p:ChaturReleaseBuild=true -p:VersionPrefix=${prefix}"
+            if [[ "$ver" == *-* ]]; then
+              props="$props -p:VersionSuffix=${ver#*-}"
+            fi
+            asset_version="$ver"
+          else
+            [[ "$GITHUB_REF" == "refs/heads/main" ]] && is_main=true
+            # Nightly: VersionSuffix defaults to "nightly" in Directory.Build.props.
+            props=""
+            asset_version="${default_prefix}-nightly"
+          fi
+
+          {
+            echo "version=${asset_version}"
+            echo "nightly_tag=v${default_prefix}-nightly"
+            echo "msbuild_props=${props} -p:ChaturCommitSha=${GITHUB_SHA} -p:SourceRevisionId=${GITHUB_SHA}"
+            echo "is_tag=${is_tag}"
+            echo "is_main=${is_main}"
+          } >> "$GITHUB_OUTPUT"
+          echo "version=${asset_version} props=${props}"
+
+  macos:
+    name: macOS (Mac Catalyst)
+    needs: meta
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # .NET 10 MAUI needs a current Xcode. Prefer the newest installed one; list what is there so a
+      # mismatch is visible in the log.
+      - name: Select Xcode
+        shell: bash
+        run: |
+          ls -d /Applications/Xcode*.app || true
+          newest="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -n1 || true)"
+          if [ -n "$newest" ]; then sudo xcode-select -s "$newest/Contents/Developer"; fi
+          xcodebuild -version
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui-maccatalyst
+
+      - name: Authenticate to the GitHub Packages feed
+        env:
+          FEED_TOKEN: ${{ secrets.NUGET_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: >
+          dotnet nuget update source "$NUGET_SOURCE_NAME" --configfile nuget.config
+          --username "$NUGET_FEED_USER" --password "$FEED_TOKEN" --store-password-in-clear-text
+
+      - name: Publish (Mac Catalyst, unsigned)
+        run: >
+          dotnet publish src/Chatur/Chatur.csproj -f net10.0-maccatalyst -c Release
+          -p:CreatePackage=false -p:EnableCodeSigning=false -p:_RequireCodeSigning=false
+          ${{ needs.meta.outputs.msbuild_props }}
+
+      - name: Zip the .app
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$(find src/Chatur/bin/Release -type d -name '*.app' -not -path '*/*.app/*' | head -n1)"
+          [ -n "$app" ] || { echo "No .app found under src/Chatur/bin/Release" >&2; find src/Chatur/bin/Release -maxdepth 4 >&2; exit 1; }
+          echo "Zipping $app"
+          mkdir -p dist
+          # ditto keeps symlinks, permissions and resource forks that plain zip mangles in a .app.
+          ditto -c -k --sequesterRsrc --keepParent "$app" "dist/Chatur-${{ needs.meta.outputs.version }}-maccatalyst.zip"
+          ls -l dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chatur-maccatalyst
+          path: dist/*.zip
+          if-no-files-found: error
+
+  windows:
+    name: Windows (win-x64)
+    needs: meta
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Authenticate to the GitHub Packages feed
+        shell: bash
+        env:
+          FEED_TOKEN: ${{ secrets.NUGET_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: >
+          dotnet nuget update source "$NUGET_SOURCE_NAME" --configfile nuget.config
+          --username "$NUGET_FEED_USER" --password "$FEED_TOKEN" --store-password-in-clear-text
+
+      - name: Publish (unpackaged, self-contained)
+        run: >
+          dotnet publish src/Chatur/Chatur.csproj -f net10.0-windows10.0.19041.0 -c Release
+          -r win-x64 --self-contained -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true
+          -o publish-win ${{ needs.meta.outputs.msbuild_props }}
+
+      - name: Zip the publish folder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path publish-win/* -DestinationPath "dist/Chatur-${{ needs.meta.outputs.version }}-win-x64.zip"
+          Get-ChildItem dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chatur-win-x64
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: [meta, macos, windows]
+    # main pushes -> nightly; v* tag pushes -> named release. workflow_dispatch on any other ref only builds.
+    if: needs.meta.outputs.is_tag == 'true' || needs.meta.outputs.is_main == 'true'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: List assets
+        run: ls -l dist
+
+      - name: Named release (v* tag)
+        if: needs.meta.outputs.is_tag == 'true'
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          prerelease=""
+          [[ "$tag" == *-* ]] && prerelease="--prerelease"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/*.zip --clobber
+          else
+            gh release create "$tag" dist/*.zip --title "Chatur ${tag#v}" --generate-notes --verify-tag $prerelease
+          fi
+
+      - name: Replace the nightly pre-release (main)
+        if: needs.meta.outputs.is_main == 'true'
+        run: |
+          set -euo pipefail
+          # Drop every previous nightly (the tag name tracks VersionPrefix, so an older one may linger),
+          # and its tag, then recreate at this commit: target_commitish becomes the full SHA.
+          for old in $(gh release list --limit 100 --json tagName --jq '.[] | select(.tagName | endswith("-nightly")) | .tagName'); do
+            gh release delete "$old" --cleanup-tag --yes
+          done
+          gh release create "${{ needs.meta.outputs.nightly_tag }}" dist/*.zip \
+            --target "${GITHUB_SHA}" --prerelease \
+            --title "Chatur nightly (${GITHUB_SHA::7})" \
+            --notes "Rolling build of main at ${GITHUB_SHA}. Replaced on every push to main."

@@ -1,0 +1,189 @@
+@page "/settings/appearance"
+@layout Layouts.SecondaryLayout
+@inject IThemeActions ThemeActions
+@inject AppState State
+@inject ToastService Toast
+@inject ChaturUI.Services.FileDownloadInterop FileDownload
+
+@* UI Design "Screen: Settings" ▸ Appearance — mockups/settings-appearance.html. Cluster L wires
+   IThemeActions and AppState/ThemeInterop (via Shell/ThemeHost) so choosing a card actually swaps
+   the theme everywhere at once (REQ-UI-037, REQ-UI-038). The swatches on each card are that theme's
+   own stored values, so a theme added from a file shows its own colours. *@
+<div class="flex flex-col gap-4">
+    <div class="flex items-center justify-between" data-testid="appearance-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Appearance</h1>
+            <p class="text-sm text-muted-foreground">How Chatur looks. A theme is a named set of colour values, so more can be added.</p>
+        </div>
+        <Button Variant="ButtonVariant.Outline" OnClick="ResetAsync" data-testid="reset-appearance">
+            <LucideIcon Name="undo-2" Size="14" />
+            Reset
+        </Button>
+    </div>
+
+    <div class="flex items-start gap-2 rounded-md border p-3 text-muted-foreground" data-testid="palette-note">
+        <LucideIcon Name="palette" Size="16" Class="mt-0.5 flex-none" />
+        <span class="text-sm">The Palette button in every mockup's title bar stands in for this page — here is where the theme is really chosen, and choosing one below repaints the window at once.</span>
+    </div>
+
+    @if (objThemes is null)
+    {
+        <Empty Title="Reading themes…" Size="EmptySize.Small" />
+    }
+    else
+    {
+        <Card data-testid="theme-panel">
+            <CardHeader>
+                <CardTitle>Theme<span class="ml-2"><Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="theme-count">@objThemes.Count themes</Badge></span></CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="theme-cards">
+                    @foreach (var vTheme in objThemes)
+                    {
+                        var vIsCurrent = vTheme.Name == State.ThemeName;
+                        <Button Variant="ButtonVariant.Outline"
+                                Class="@($"h-auto w-full flex-col items-start gap-2 p-3 text-left whitespace-normal {(vIsCurrent ? "border-primary bg-accent" : "")}")"
+                                OnClick="() => ChooseAsync(vTheme.Name)"
+                                data-testid="@($"theme-{vTheme.Name}")">
+                            <span class="flex w-full items-center gap-2">
+                                <b class="font-semibold capitalize">@vTheme.Name</b>
+                                @if (vTheme.Source == "build" && vTheme.Name == "amber")
+                                {
+                                    <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="@($"theme-{vTheme.Name}-default")">default</Badge>
+                                }
+                                <span class="flex-1"></span>
+                                <LucideIcon Name="check" Size="16" Class="@(vIsCurrent ? "text-primary" : "text-primary opacity-0")" data-testid="@($"theme-{vTheme.Name}-tick")" />
+                            </span>
+                            <span class="text-xs text-muted-foreground">@DescriptionOf(vTheme)</span>
+                            <span class="flex gap-1" data-testid="@($"theme-{vTheme.Name}-swatches")">
+                                @foreach (var (vLabel, vColour) in SwatchColours(vTheme))
+                                {
+                                    @* The colour is the theme's own stored value, so it can only be applied as data; the label names it for a screen reader. *@
+                                    <span class="size-4 rounded border" style="background:@vColour"><span class="sr-only">@vLabel</span></span>
+                                }
+                            </span>
+                        </Button>
+                    }
+                </div>
+            </CardContent>
+        </Card>
+    }
+
+    <Card data-testid="mode-panel">
+        <CardHeader>
+            <CardTitle>Light or dark</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Select Value="@(State.IsDark ? "dark" : "light")" ValueChanged="OnModeChangedAsync" TValue="string" Class="w-64" data-testid="mode-choices">
+                <SelectTrigger data-testid="mode-button">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent data-testid="mode-pop">
+                    <SelectItem Value="@("light")" Text="Light" TValue="string" data-testid="mode-light">Light</SelectItem>
+                    <SelectItem Value="@("dark")" Text="Dark" TValue="string" data-testid="mode-dark">Dark</SelectItem>
+                </SelectContent>
+            </Select>
+            <p class="mt-2 text-xs text-muted-foreground">The theme chosen above carries both a light set of values and a dark one, so this choice never changes the theme.</p>
+        </CardContent>
+    </Card>
+
+    <Card data-testid="theme-source-panel">
+        <CardHeader>
+            <CardTitle>Where themes come from</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <p class="text-sm" data-testid="theme-source-line-1">A theme is a named set of colour values, written in the same shape TrBlazeUI already reads — a background, a card, text, lines, one accent, and the few colours used for good news, a warning and a failure.</p>
+            <p class="text-sm text-muted-foreground" data-testid="theme-source-line-2">Chatur ships four of them. Nothing about a theme is compiled in: a fifth can be added from a file, and it appears above beside the others without a line of code changing.</p>
+            <div class="flex flex-wrap items-center gap-2" data-testid="theme-source-actions">
+                <Dialog Open="objAddDialogOpen" OpenChanged="@((bool v) => objAddDialogOpen = v)">
+                    <DialogTrigger AsChild>
+                        <Button Variant="ButtonVariant.Outline" data-testid="add-theme">
+                            <LucideIcon Name="upload" Size="14" />
+                            Add a theme from a file…
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent data-testid="add-theme-dialog">
+                        <DialogHeader>
+                            <DialogTitle>Add a theme from a file</DialogTitle>
+                            <DialogDescription>
+                                A JSON file named for the theme, holding a "light" and a "dark" set of the same named colour values Chatur's four built-in themes use.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogBody Class="flex flex-col gap-3">
+                            <Field>
+                                <FieldLabel For="theme-file-path">File path</FieldLabel>
+                                <FieldContent>
+                                    <Input Id="theme-file-path" @bind-Value="objNewThemePath" Placeholder="/path/to/sunset.json" Class="font-mono" data-testid="theme-file-path" />
+                                </FieldContent>
+                            </Field>
+                            @if (objAddError is not null)
+                            {
+                                <Alert Variant="AlertVariant.Danger" data-testid="theme-add-error">
+                                    <AlertDescription>@objAddError</AlertDescription>
+                                </Alert>
+                            }
+                        </DialogBody>
+                        <DialogFooter>
+                            <DialogClose AsChild>
+                                <Button Variant="ButtonVariant.Outline">Cancel</Button>
+                            </DialogClose>
+                            <Button OnClick="AddThemeAsync" Disabled="@(objIsAdding || string.IsNullOrWhiteSpace(objNewThemePath))" data-testid="theme-add-confirm">Add</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+                <Button Variant="ButtonVariant.Outline" OnClick="ExportAsync" Disabled="@(CurrentTheme is null)" data-testid="export-theme">
+                    <LucideIcon Name="download" Size="14" />
+                    Export this theme
+                </Button>
+            </div>
+        </CardContent>
+    </Card>
+
+    <Card data-testid="preview-panel">
+        <CardHeader>
+            <CardTitle>Preview<span class="ml-2"><Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent capitalize" data-testid="preview-theme">@State.ThemeName · @(State.IsDark ? "dark" : "light")</Badge></span></CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <div class="flex items-center gap-2" data-testid="preview-controls">
+                @* The tint is drawn by the span around the badge: a Success badge paints its own tint too faintly for the pill to read as good news. *@
+                <span class="inline-flex rounded-full bg-alert-success-bg">
+                    <Badge Variant="BadgeVariant.Success" Class="gap-1 rounded-full border-transparent bg-transparent text-alert-success" data-testid="preview-pill">
+                        <LucideIcon Name="check" Size="11" />
+                        verified
+                    </Badge>
+                </span>
+                <Badge Variant="BadgeVariant.Warning" Class="rounded-full border-transparent">2 to push</Badge>
+                <span class="flex-1"></span>
+                <Button data-testid="preview-button">
+                    <LucideIcon Name="play" Size="14" />
+                    Run
+                </Button>
+            </div>
+
+            <div class="flex flex-col gap-1 rounded-md border" data-testid="preview-code">
+                <div class="flex items-center gap-2 border-b px-3 py-2 text-sm">
+                    <LucideIcon Name="file" Size="14" />
+                    <span class="font-mono">Query.cs</span>
+                </div>
+                <CodeBlock Language="csharp" Code="public IReadOnlyList<Row> Take(int count) => &quot;rows&quot;;" />
+            </div>
+
+            <div class="flex items-start gap-3" data-testid="preview-message">
+                <Badge Variant="BadgeVariant.Secondary" Class="size-7 flex-none justify-center rounded-full border-transparent bg-accent p-0 text-accent-foreground">
+                    <LucideIcon Name="sparkles" Size="14" Class="text-primary" />
+                </Badge>
+                <div class="flex flex-col gap-2">
+                    <span class="flex items-center gap-2 text-xs font-semibold">
+                        Flow master
+                        <span class="font-normal text-muted-foreground">Claude Sonnet 5</span>
+                    </span>
+                    <span class="text-sm">This is how a message reads in the chosen theme. The accent, the quiet text and the code colours all come from the theme's own values.</span>
+                    <Badge As="div" Variant="BadgeVariant.Secondary" Class="h-6 w-fit gap-2 rounded-md border-transparent font-normal text-muted-foreground">
+                        <LucideIcon Name="check" Size="13" Class="text-alert-success" />
+                        a step, in the same theme
+                    </Badge>
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+</div>

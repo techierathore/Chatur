@@ -1,0 +1,93 @@
+@* The main window's menu bar: File, Edit, View, Project, Tools, Help, with the signed-in user at
+   the right (UI Design "Screen: Workbench", region `menubar`). Cluster H wires the real commands;
+   this is the empty-state shell every one of them hangs off. *@
+<div class="flex h-9 flex-none items-center gap-1 border-b bg-card px-2" data-testid="menubar">
+    <span class="flex h-5 w-5 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground" data-testid="logo">C</span>
+    <span class="mx-2 text-sm font-semibold" data-testid="wordmark">Chatur</span>
+
+    @* The project switcher (REQ-UI-010): picking another project here updates AppState, which every
+       other region and every other screen already reads — no navigation happens. *@
+    <DropdownMenu>
+        <DropdownMenuTrigger AsChild>
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7 gap-1" @onclick="EnsureProjectsLoadedAsync" data-testid="project-switch">
+                <LucideIcon Name="folder" Size="14" />
+                <span data-testid="project-switch-name">@(AppStateService.SelectedProject?.Name ?? "No project")</span>
+                <LucideIcon Name="chevron-down" Size="14" />
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent Class="w-64" data-testid="project-switch-pop">
+            <DropdownMenuLabel>Switch project</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            @if (objOtherProjects.Count == 0)
+            {
+                <DropdownMenuItem Disabled="true">No other projects found</DropdownMenuItem>
+            }
+            else
+            {
+                @foreach (var vProject in objOtherProjects)
+                {
+                    var vIsCurrent = vProject.ProjectId == AppStateService.SelectedProject?.ProjectId;
+                    <DropdownMenuItem OnClick="() => SwitchToAsync(vProject.ProjectId)" data-testid="@($"project-switch-{vProject.ProjectId}")">
+                        @if (vIsCurrent)
+                        {
+                            <LucideIcon Name="check" Size="14" />
+                        }
+                        <span>@vProject.Name</span>
+                    </DropdownMenuItem>
+                }
+            }
+            <DropdownMenuSeparator />
+            <DropdownMenuItem Href="/start?all=1">All projects…</DropdownMenuItem>
+        </DropdownMenuContent>
+    </DropdownMenu>
+
+    <Menubar Class="h-7 border-0 bg-transparent p-0">
+        <MenubarMenu>
+            <MenubarTrigger data-testid="menu-file">File</MenubarTrigger>
+            <MenubarContent data-testid="menu-file-items">
+                <MenubarItem Disabled="true">Nothing to do yet</MenubarItem>
+            </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+            <MenubarTrigger data-testid="menu-edit">Edit</MenubarTrigger>
+            <MenubarContent data-testid="menu-edit-items">
+                <MenubarItem Disabled="true">Nothing to do yet</MenubarItem>
+            </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+            <MenubarTrigger data-testid="menu-view">View</MenubarTrigger>
+            <MenubarContent data-testid="menu-view-items">
+                <MenubarItem Disabled="true">Nothing to do yet</MenubarItem>
+            </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+            <MenubarTrigger data-testid="menu-project">Project</MenubarTrigger>
+            <MenubarContent data-testid="menu-project-items">
+                <MenubarItem Href="/prerequisites">Prerequisites…</MenubarItem>
+                <MenubarItem Href="/repository">Repository…</MenubarItem>
+            </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+            <MenubarTrigger data-testid="menu-tools">Tools</MenubarTrigger>
+            <MenubarContent data-testid="menu-tools-items">
+                <MenubarItem Href="/settings/providers">Settings…</MenubarItem>
+            </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+            <MenubarTrigger data-testid="menu-help">Help</MenubarTrigger>
+            <MenubarContent data-testid="menu-help-items">
+                <MenubarItem Disabled="true">About Chatur</MenubarItem>
+            </MenubarContent>
+        </MenubarMenu>
+    </Menubar>
+
+    <span class="flex-1"></span>
+
+    <div class="flex items-center gap-2" data-testid="signed-in">
+        @* Sign out (REQ-FN-009): clears the persisted token and sends every window back to sign-in. *@
+        <AccountMenu />
+    </div>
+
+    @* The light/dark switch sits last, as in mockups/main.html (its mockup-only palette picker is not drawn). *@
+    <ThemeToggle />
+</div>

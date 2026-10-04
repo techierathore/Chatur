@@ -1,0 +1,7 @@
+@* The light/dark switch every window's title bar carries (mockups/start.html through
+   settings-appearance.html, `theme-toggle`). One component so the start window and the secondary
+   window cannot drift apart: it changes AppState through IThemeActions, and every window repaints
+   at once (REQ-UI-037). *@
+<Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" OnClick="ToggleModeAsync" AriaLabel="Light or dark" data-testid="theme-toggle">
+    <LucideIcon Name="@(AppStateService.IsDark ? "sun" : "moon")" Size="16" />
+</Button>

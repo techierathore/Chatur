@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Business Requirements</h1>
-    <div class="sub">Last rendered: 2026-09-22</div>
+    <div class="sub">Last rendered: 2026-10-03</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#summary">1. Summary</a></li>
@@ -141,7 +141,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Business Requirements</h1>
-    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-10-03 &middot; source <code>Chatur-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -240,6 +240,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </li>
 <li>Signed installers before phase 4.
 </li>
+<li>Choosing text size and line spacing on the appearance page. The mockup draws it as a later-phase panel (decided 2026-10-03).
+</li>
 </ul>
 <h2 id="users-and-roles">3. Users and roles<a class="anchor-link" href="#users-and-roles">#</a></h2>
 <table>
@@ -258,7 +260,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tbody>
 <tr><td>Sign in</td><td><code>/sign-in</code></td><td>Visitor</td><td><a href="mockups/sign-in.html">mockup</a></td><td>email, password, remember this device</td></tr>
 <tr><td>Register</td><td><code>/register</code></td><td>Visitor</td><td><a href="mockups/register.html">mockup</a></td><td>first name, last name, email, password, confirm password</td></tr>
-<tr><td>Start</td><td><code>/start</code></td><td>Owner</td><td><a href="mockups/start.html">mockup</a></td><td>recent projects, search, clone, open a solution, open a folder, new project, new empty folder</td></tr>
+<tr><td>Start</td><td><code>/start?all=1</code></td><td>Owner</td><td><a href="mockups/start.html">mockup</a></td><td>recent projects, search, clone, open a solution, open a folder, new project, new empty folder</td></tr>
 <tr><td>Workbench</td><td><code>/</code></td><td>Owner</td><td><a href="mockups/main.html">mockup</a></td><td>files, tabs, file text, conversation, message, model, agent, mode, run target, output</td></tr>
 <tr><td>Prerequisites</td><td><code>/prerequisites</code></td><td>Owner</td><td><a href="mockups/prerequisites.html">mockup</a></td><td>tool, needed, found, fix, Chatur version, commit</td></tr>
 <tr><td>Settings</td><td><code>/settings/{page}</code></td><td>Owner</td><td><a href="mockups/settings-providers.html">mockup</a></td><td>the page chosen in the list, and its own fields</td></tr>
@@ -515,7 +517,9 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </li>
 <li><strong>BRD-34</strong> — Sign in to a ChatGPT subscription. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
 <ul>
-<li><em>Acceptance:</em> When the owner chooses subscription sign-in, then the browser opens, and after he signs in the provider is listed as connected.
+<li><em>Acceptance:</em> When the owner chooses subscription sign-in, then the browser opens, Chatur shows the sign-in code, and after he enters it the provider is listed as connected.
+</li>
+<li><em>Built on (amended 2026-09-30):</em> TechieRag 1.0.8's <code>UseChatGptSubscriptionLlm</code>, a device-code sign-in. Chatur supplies the callback that opens the browser and shows the code, and a session store over the operating system's secret store.
 </li>
 </ul>
 </li>
@@ -602,6 +606,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li><strong>BRD-47</strong> — The reply arrives as it is written. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
 <ul>
 <li><em>Acceptance:</em> When a reply is being produced on Workbench, then its text grows in the conversation before the reply is finished.
+</li>
+<li><em>Built on (amended 2026-09-30):</em> TechieRag 1.0.8's <code>ChatStreamEventsAsync</code>, which streams text and tool calls in the same turn, so every tool call still passes the guards. The earlier workaround that handed out a finished reply in pieces (<code>PaceReplyAsync</code>) is removed.
 </li>
 </ul>
 </li>
@@ -921,22 +927,23 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>BRD-93</td><td>Data</td><td>A database change that has shipped in a nightly build is never edited; a new one is added, and an update keeps the owner's data</td><td>When the owner makes data on the previous nightly and installs the new one, then every row is still there</td></tr>
 <tr><td>BRD-94</td><td>Portability</td><td>Every requirement works on Mac Catalyst and on Windows, verified on the Mac first</td><td>When a requirement is verified, then its verdict on the checklist names both the Mac and Windows</td></tr>
 <tr><td>BRD-95</td><td>Guards</td><td>Every guard class has unit tests covering what it allows and what it refuses</td><td>When the tests run, then the test project holds a test per guard for what it allows and what it refuses</td></tr>
+<tr><td>BRD-158</td><td>Release</td><td>A GitHub Actions workflow has a macOS job that builds the Mac Catalyst <code>.app</code> and zips it, and a Windows job that builds the unpackaged, self-contained Windows app (<code>WindowsPackageType</code> None) and zips it. Every push to main publishes a <code>nightly</code> pre-release with both downloads; a <code>v*</code> tag publishes a named release. Version and commit are stamped into the build, so Prerequisites shows them (BRD-29) and the newer-build check finds the release (BRD-31). No code signing (added 2026-09-30)</td><td>When a commit is pushed to main, then the <code>nightly</code> pre-release holds a Mac zip and a Windows zip built from that commit, and Prerequisites in that build shows the same version and commit</td></tr>
 </tbody>
 </table>
 <h2 id="development-status">7. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-09-22.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-10-03.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>Sign in</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
-<tr><td>Register</td><td>4</td><td>0</td><td>4</td><td>Planned</td></tr>
-<tr><td>Start</td><td>6</td><td>0</td><td>6</td><td>Planned</td></tr>
-<tr><td>Workbench</td><td>34</td><td>0</td><td>34</td><td>Planned</td></tr>
-<tr><td>Prerequisites</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
-<tr><td>Settings</td><td>33</td><td>0</td><td>33</td><td>Planned</td></tr>
-<tr><td>Repository</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
-<tr><td>Non-functional</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
+<tr><td>Sign in</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
+<tr><td>Register</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
+<tr><td>Start</td><td>6</td><td>6</td><td>0</td><td>Done</td></tr>
+<tr><td>Workbench</td><td>34</td><td>34</td><td>0</td><td>Done</td></tr>
+<tr><td>Prerequisites</td><td>5</td><td>4</td><td>1</td><td>Partial</td></tr>
+<tr><td>Settings</td><td>33</td><td>33</td><td>0</td><td>Done</td></tr>
+<tr><td>Repository</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
+<tr><td>Non-functional</td><td>6</td><td>5</td><td>1</td><td>Partial</td></tr>
 </tbody>
 </table>
 <h2 id="context-diagram">8. Context diagram<a class="anchor-link" href="#context-diagram">#</a></h2>
@@ -963,6 +970,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <h2 id="constraints-and-assumptions">9. Constraints and assumptions<a class="anchor-link" href="#constraints-and-assumptions">#</a></h2>
 <ul>
 <li>The technical decisions are already taken and are in <code>docs/Chatur-Technical-Decisions.md</code>. Day one records them and does not reopen them.
+</li>
+<li>Chatur uses TechieRag 1.0.8, which brings the subscription sign-in and streaming with tool calls (amended 2026-09-30).
 </li>
 <li>Anything TechieRag lacks — sign-in other than a key, the OpenAI Responses style, live streaming of tool calls, a fallback chain of any length, pause and resume for approval — is added in the TechieRag repository before the step that needs it, never worked around in Chatur.
 </li>

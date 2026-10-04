@@ -1,0 +1,117 @@
+@page "/settings/providers"
+@layout Layouts.SecondaryLayout
+@inject IProviderActions ProviderActions
+@inject ToastService Toast
+
+@* UI Design "Screen: Settings" ▸ Model providers — mockups/settings-providers.html. Cluster K wires
+   IProviderActions; cluster L (this page) wires the table, test/remove buttons and the
+   Add-a-provider dialog (REQ-FN-014 through REQ-FN-017, REQ-UI-019, REQ-UI-020). *@
+<div class="flex flex-col gap-4">
+    <div class="flex items-center justify-between" data-testid="providers-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Model providers</h1>
+            <p class="text-sm text-muted-foreground">Where Chatur's models come from, and how each one signs in.</p>
+        </div>
+        <Button Variant="ButtonVariant.Outline" OnClick="OpenAddDialog" data-testid="add-provider">
+            <LucideIcon Name="plus" Size="14" />
+            Add a provider
+        </Button>
+    </div>
+
+    @if (objProviders is null)
+    {
+        <Card data-testid="providers-panel">
+            <CardContent data-testid="providers-table">
+                <Empty Title="No providers yet" Description="Add a provider to connect a model." Size="EmptySize.Small" />
+            </CardContent>
+        </Card>
+    }
+    else
+    {
+        <Card data-testid="providers-panel">
+            <CardHeader>
+                <CardTitle>Providers<span class="ml-2"><Badge Variant="BadgeVariant.Secondary" data-testid="providers-count">@objProviders.Count</Badge></span></CardTitle>
+            </CardHeader>
+            <CardContent>
+                <DataTable TData="ModelProvider" Data="@objProviders" ShowPagination="false" MinWidth="800px" data-testid="providers-table"
+                           RowAttributes="@(p => new Dictionary<string, object> { ["data-testid"] = $"provider-{Key(p)}", ["class"] = "border-t" })">
+                    <Columns>
+                        <DataTableColumn TData="ModelProvider" TValue="string" Property="@(p => p.Name)" Header="Provider" CellClass="font-medium whitespace-nowrap" />
+                        <DataTableColumn TData="ModelProvider" TValue="string" Property="@(p => p.Connector)" Header="Connector" />
+                        <DataTableColumn TData="ModelProvider" TValue="string" Property="@(p => p.SignInMethod)" Header="Sign-in" />
+                        <DataTableColumn TData="ModelProvider" TValue="string" Property="@(p => p.BaseUrl)" Header="Web address" CellClass="font-mono text-xs break-all" />
+                        <DataTableColumn TData="ModelProvider" TValue="string" Property="@(p => p.Name)" Header="Models">
+                            <CellTemplate Context="provider">
+                                @{
+                                    var vModels = ModelsOf(provider);
+                                }
+                                <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="@($"{Key(provider)}-models")">@(vModels.Count == 0 ? "—" : vModels.Count.ToString())</Badge>
+                                <div class="mt-1 max-w-40 truncate text-xs text-muted-foreground" title="@string.Join(", ", vModels.Select(m => m.Identifier))" data-testid="@($"{Key(provider)}-model-names")">
+                                    @NamesOf(vModels)
+                                </div>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="ModelProvider" TValue="string" Property="@(p => p.State.ToString())" Header="State" Width="150px">
+                            <CellTemplate Context="provider">
+                                @if (testingIds.Contains(provider.ProviderId))
+                                {
+                                    <Spinner Size="SpinnerSize.Small" data-testid="@($"testing-{provider.ProviderId}")" />
+                                }
+                                else
+                                {
+                                    <Badge Variant="@StateVariant(provider.State)" Class="gap-1 rounded-full border-transparent" data-testid="@($"{Key(provider)}-state")">
+                                        @if (provider.State == ProviderState.Connected)
+                                        {
+                                            <LucideIcon Name="check" Size="11" />
+                                        }
+                                        @StateLabel(provider.State)
+                                    </Badge>
+                                }
+                                @if (objTestResults.TryGetValue(provider.ProviderId, out var vResult) && vResult is { Succeeded: false })
+                                {
+                                    <div class="text-xs text-destructive mt-1" data-testid="@($"{Key(provider)}-error")">@vResult.Message</div>
+                                }
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="ModelProvider" TValue="string" Property="@(p => p.ProviderId.ToString())" Header="" Width="100px">
+                            <CellTemplate Context="provider">
+                                <div class="flex gap-1">
+                                    <Button Size="ButtonSize.IconSmall" Variant="ButtonVariant.Ghost" OnClick="() => TestAsync(provider)" AriaLabel="@($"Test {provider.Name}")" data-testid="@($"test-{Key(provider)}")">
+                                        <LucideIcon Name="refresh-cw" Size="14" />
+                                    </Button>
+                                    <Button Size="ButtonSize.IconSmall" Variant="ButtonVariant.Ghost" OnClick="() => RemoveAsync(provider)" AriaLabel="@($"Remove {provider.Name}")" data-testid="@($"remove-{Key(provider)}")">
+                                        <LucideIcon Name="trash-2" Size="14" />
+                                    </Button>
+                                </div>
+                            </CellTemplate>
+                        </DataTableColumn>
+                    </Columns>
+                </DataTable>
+            </CardContent>
+        </Card>
+    }
+
+    <AddProviderDialog @bind-Open="objAddOpen" OnAdded="LoadAsync" />
+
+    <Card data-testid="secrets-panel">
+        <CardHeader>
+            <CardTitle>Where secrets are kept</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-2 text-sm text-muted-foreground">
+            <div class="flex items-center gap-2" data-testid="secret-mac">
+                <LucideIcon Name="key" Size="16" />
+                <span class="w-24 flex-none">On the Mac</span>
+                <span class="text-foreground">the Keychain</span>
+            </div>
+            <div class="flex items-center gap-2" data-testid="secret-windows">
+                <LucideIcon Name="key" Size="16" />
+                <span class="w-24 flex-none">On Windows</span>
+                <span class="text-foreground">Credential Manager</span>
+            </div>
+            <div class="flex items-start gap-2 rounded-md bg-accent p-3 text-accent-foreground" data-testid="secret-note">
+                <LucideIcon Name="triangle-alert" Size="16" Class="mt-0.5 flex-none" />
+                <span>Chatur's own database holds only the name a secret is stored under — never the secret. A copied database is useless without the machine it came from.</span>
+            </div>
+        </CardContent>
+    </Card>
+</div>

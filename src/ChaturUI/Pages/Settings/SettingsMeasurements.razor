@@ -1,0 +1,150 @@
+@page "/settings/measurements"
+@layout Layouts.SecondaryLayout
+@inject IMeasurementActions MeasurementActions
+@inject AppState State
+@inject BrowserInterop Browser
+@inject ToastService Toast
+
+@* UI Design "Screen: Settings" ▸ Measurements — mockups/settings-measurements.html. Cluster K wires
+   IMeasurementActions.AppendAsync (REQ-FN-040 through REQ-FN-043); cluster L (this page) wires the
+   stream tiles and the refused-write banner (REQ-UI-035, REQ-UI-036). *@
+<div class="flex flex-col gap-4">
+    <div class="flex items-center justify-between" data-testid="measurements-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Measurements</h1>
+            <p class="text-sm text-muted-foreground">The five files Chatur writes as it works, and what is in each one.</p>
+        </div>
+        <Button Variant="ButtonVariant.Outline" OnClick="LoadAsync" Disabled="objIsLoading" data-testid="recount">
+            <LucideIcon Name="refresh-cw" Size="14" />
+            Count again
+        </Button>
+    </div>
+
+    @if (State.SelectedProject is null)
+    {
+        <Empty Title="No project selected" Description="Open a project to see what it has measured." Size="EmptySize.Small" data-testid="no-project" />
+    }
+    else if (objStreams is null)
+    {
+        <Empty Title="Reading the streams…" Size="EmptySize.Small" />
+    }
+    else
+    {
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5" data-testid="stream-tiles">
+            @foreach (var vStream in objStreams)
+            {
+                <Card Class="px-3 py-3" data-testid="@($"tile-{StreamKey(vStream.Name)}")">
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-xs text-muted-foreground">@Label(vStream.Name)</span>
+                        <span class="@TileCountClass(vStream)" data-testid="@($"tile-{StreamKey(vStream.Name)}-count")">@vStream.RecordCount</span>
+                        <span class="text-xs text-muted-foreground">@(vStream.NewestUtc is null ? "no records yet" : $"newest {vStream.NewestUtc:HH:mm}")</span>
+                    </div>
+                </Card>
+            }
+        </div>
+
+        <Card data-testid="streams-panel">
+            <CardHeader>
+                <CardTitle>The five streams</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <DataTable TData="MeasurementStream" Data="@objStreams" ShowPagination="false" MinWidth="620px" RowAttributes="@RowHooks" data-testid="streams-table">
+                    <Columns>
+                        <DataTableColumn TData="MeasurementStream" TValue="string" Property="@(s => Label(s.Name))" Header="Stream" CellClass="whitespace-nowrap" />
+                        <DataTableColumn TData="MeasurementStream" TValue="string" Property="@(s => s.Name)" Header="File" CellClass="font-mono text-xs whitespace-nowrap" />
+                        <DataTableColumn TData="MeasurementStream" TValue="int" Property="@(s => s.RecordCount)" Header="Records" Align="DataTableColumnAlign.End">
+                            <CellTemplate Context="stream">
+                                <span data-testid="@($"{StreamKey(stream.Name)}-records")">@stream.RecordCount</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="MeasurementStream" TValue="string" Property="@(s => s.NewestUtc.HasValue ? s.NewestUtc.Value.ToLocalTime().ToString("d MMM HH:mm") : "—")" Header="Newest" CellClass="whitespace-nowrap text-xs text-muted-foreground" />
+                        <DataTableColumn TData="MeasurementStream" TValue="int" Property="@(s => s.FieldsEmpty)" Header="Fields empty" Align="DataTableColumnAlign.End">
+                            <CellTemplate Context="stream">
+                                <span class="text-muted-foreground" data-testid="@($"{StreamKey(stream.Name)}-empty")">@stream.FieldsEmpty</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="MeasurementStream" TValue="int" Property="@(s => s.Refused)" Header="Refused" Align="DataTableColumnAlign.End">
+                            <CellTemplate Context="stream">
+                                <span class="@(stream.Refused > 0 ? "text-alert-warning" : "text-muted-foreground")" data-testid="@($"{StreamKey(stream.Name)}-refused")">@stream.Refused</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="MeasurementStream" TValue="string" Property="@(s => s.LastWriteFailed ? "failed" : "ok")" Header="Last write" Width="110px">
+                            <CellTemplate Context="stream">
+                                @if (stream.LastWriteFailed)
+                                {
+                                    <Badge Variant="BadgeVariant.Warning" data-testid="@($"{StreamKey(stream.Name)}-failed")">failed</Badge>
+                                }
+                                else
+                                {
+                                    <Badge Variant="BadgeVariant.Success">ok</Badge>
+                                }
+                            </CellTemplate>
+                        </DataTableColumn>
+                    </Columns>
+                </DataTable>
+            </CardContent>
+        </Card>
+
+        @if (objFolder is not null)
+        {
+            <Card data-testid="folder-panel">
+                <CardHeader>
+                    <CardTitle>Where they are written</CardTitle>
+                </CardHeader>
+                <CardContent Class="flex flex-col gap-3">
+                    <div class="flex flex-wrap items-center gap-2" data-testid="folder-row">
+                        <LucideIcon Name="folder" Size="16" Class="text-muted-foreground" />
+                        <code class="font-mono text-sm break-all" data-testid="folder-path">@objFolder.FolderPath</code>
+                        <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Copy the folder" OnClick="CopyFolderAsync" data-testid="copy-folder">
+                            <LucideIcon Name="copy" Size="14" />
+                        </Button>
+                        <span class="grow"></span>
+                        <span class="text-xs text-muted-foreground">one file per stream, one record per line</span>
+                    </div>
+
+                    <div class="flex flex-col gap-1 rounded-md border" data-testid="runs-record">
+                        <div class="flex items-center gap-2 border-b px-3 py-1.5">
+                            <LucideIcon Name="file" Size="14" Class="text-muted-foreground" />
+                            <span class="font-mono text-sm">runs.jsonl</span>
+                            <span class="text-xs text-muted-foreground">the newest record</span>
+                            <span class="grow"></span>
+                            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Copy the record" Disabled="@(objFolder.NewestRunRecord is null)" OnClick="CopyRecordAsync" data-testid="copy-record">
+                                <LucideIcon Name="copy" Size="14" />
+                            </Button>
+                        </div>
+                        @if (objFolder.NewestRunRecord is null)
+                        {
+                            <p class="px-3 py-2 text-sm text-muted-foreground" data-testid="runs-record-empty">runs.jsonl has no records yet.</p>
+                        }
+                        else
+                        {
+                            <CodeBlock Language="json" Code="@objFolder.NewestRunRecord" ShowCopyButton="false" Class="rounded-none border-0 text-xs" />
+                        }
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-start gap-2" data-testid="rule-empty">
+                            <LucideIcon Name="check" Size="16" Class="mt-0.5 text-muted-foreground" />
+                            <span class="text-sm">A number that was not measured is left empty. It is never guessed and never filled in later from something else.</span>
+                        </div>
+                        <div class="flex items-start gap-2" data-testid="rule-unknown">
+                            <LucideIcon Name="ban" Size="16" Class="mt-0.5 text-muted-foreground" />
+                            <span class="text-sm">A record carrying a field the stream does not know is refused whole, and the reason is written to the log.</span>
+                        </div>
+                        <div class="flex items-start gap-2" data-testid="rule-money">
+                            <LucideIcon Name="bar-chart-3" Size="16" Class="mt-0.5 text-muted-foreground" />
+                            <span class="text-sm">Money is worked out when a report is made, from the tokens and the price of the day. It is never stored in the record.</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        }
+
+        var vFailed = objStreams.Any(s => s.LastWriteFailed);
+        @* The mockup draws the failed write as a bordered note with warning-coloured text, not a tinted alert; the calm state is the same note in the neutral colour. *@
+        <div class="@($"flex items-start gap-2 rounded-md border px-3 py-2.5 {(vFailed ? "text-alert-warning" : "text-muted-foreground")}")" role="@(vFailed ? "alert" : null)" data-testid="write-failed">
+            <LucideIcon Name="@(vFailed ? "triangle-alert" : "check")" Size="16" Class="mt-0.5" />
+            <span class="text-sm">@(vFailed ? $"One write failed — {FailedStreamsText()}. The record was dropped, the failure was logged, and the session carried on." : "No write has failed. If one does, the record is dropped, the failure is logged, and the session carries on.")</span>
+        </div>
+    }
+</div>
