@@ -122,8 +122,10 @@ jobs:
         run: dotnet workload install maui-maccatalyst --version "$MACCATALYST_WORKLOAD_SET"
 
       # The Mac Catalyst SDK refuses any Xcode whose major.minor differs from the one it was built for
-      # (target _ValidateXcodeVersion, error E0191). The runner image also carries newer Mac Catalyst packs,
-      # so the version is read from the PINNED workload set, never from the newest pack folder. The exact
+      # (target _ValidateXcodeVersion, error E0191). That Xcode is the pack's own _RecommendedXcodeVersion
+      # (targets/Microsoft.MacCatalyst.Sdk.Versions.props) — NOT the "26.5" in the pack's name, which is the
+      # platform version (pack 26.5.10315 wants Xcode 26.6). It is read from the exact pack version the
+      # PINNED workload set installed, never from the newest pack on the runner. The exact
       # Xcode is selected when the runner has it; otherwise the newest Xcode of the same major version is
       # selected and the strict check is turned off (ValidateXcodeVersion=false, the SDK's own switch),
       # with a warning. Every fact is written as an annotation, so a failure can be read without the log.
@@ -135,7 +137,11 @@ jobs:
           case "$sdk" in 10.0.3*) ;; *) echo "::error::The SDK in use is $sdk, not 10.0.3xx; the global.json hold did not take."; exit 1 ;; esac
           manifest="$(dotnet workload search version "$MACCATALYST_WORKLOAD_SET" --format json \
             | python3 -c 'import sys,json; print(json.load(sys.stdin)["manifestVersions"]["microsoft.net.sdk.maccatalyst"].split("/")[0])')"
-          want="$(echo "$manifest" | cut -d. -f1-2)"
+          root="${DOTNET_ROOT:-$(dirname "$(command -v dotnet)")}"
+          props="$(ls "$root"/packs/Microsoft.MacCatalyst.Sdk.*/"$manifest"/targets/Microsoft.MacCatalyst.Sdk.Versions.props 2>/dev/null | head -n1 || true)"
+          [ -n "$props" ] || { echo "::error::Mac Catalyst pack $manifest is not installed under $root/packs."; exit 1; }
+          want="$(sed -n 's:.*<_RecommendedXcodeVersion>\([0-9.]*\)</_RecommendedXcodeVersion>.*:\1:p' "$props" | head -n1 | cut -d. -f1-2)"
+          [ -n "$want" ] || { echo "::error::No _RecommendedXcodeVersion in $props."; exit 1; }
           installed="$(ls -d /Applications/Xcode_*.app 2>/dev/null | xargs -n1 basename | sort -V | tr '\n' ' ')"
           echo "::notice::SDK $sdk, workload set $MACCATALYST_WORKLOAD_SET, Mac Catalyst $manifest wants Xcode $want. Installed: $installed"
           chosen="$(ls -d /Applications/Xcode_"$want".app /Applications/Xcode_"$want".*.app 2>/dev/null | sort -V | tail -n1 || true)"

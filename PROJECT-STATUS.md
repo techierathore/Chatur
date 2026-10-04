@@ -40,7 +40,7 @@ Why: 1 rows carry a defect (⚠ in Remarks) that a fix must clear before a verif
 ## Known blockers
 
 - REQ-FN-012 needs Chatur started from Finder on a Mac; no Mac is registered for automatic checks (`.tfcore/core-config.yaml`).
-- REQ-NFR-006: the first push to main failed on the Mac job (the newest .NET Mac workload needs Xcode 27; the runner has 26.6). The Mac job now selects Xcode 26.5 correctly (seen in run 37193762096). The next failure was the Mac app itself: it referenced the ChaturDb console project, which a self-contained Mac app may not (NETSDK1150). Fixed in src/Chatur/Chatur.csproj. Run 37198832079 still failed in the Mac-only publish steps, which cannot run on this machine; the Mac publish now keeps warnings as warnings and writes every error line as an annotation (2026-10-04). It needs the owner's next push.
+- REQ-NFR-006: the first push to main failed on the Mac job (the newest .NET Mac workload needs Xcode 27; the runner has 26.6). The Mac job now selects Xcode 26.5 correctly (seen in run 37193762096). The next failure was the Mac app itself: it referenced the ChaturDb console project, which a self-contained Mac app may not (NETSDK1150). Fixed in src/Chatur/Chatur.csproj. Run 37208102047's error, read from its annotations: Mac Catalyst 26.5.10315 requires Xcode 26.6. The job now reads the Xcode version from the pack's own Versions.props and selects Xcode 26.6 (2026-10-04). It needs the owner's next push.
 
 ## Verification log
 
