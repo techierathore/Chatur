@@ -155,17 +155,22 @@ jobs:
           dotnet nuget update source "$NUGET_SOURCE_NAME" --configfile nuget.config
           --username "$NUGET_FEED_USER" --password "$FEED_TOKEN" --store-password-in-clear-text
 
-      # Each build error is also written as an annotation, so a failure can be read without the log.
+      # Only the Mac steps (trimming, native link, app bundle) run here and nowhere else, and their
+      # warnings would fail the build under TreatWarningsAsErrors; normal builds keep that rule.
+      # On a failure every line that mentions an error, in any format, and the end of the output are
+      # written as annotations, so the cause can be read from the run page without the log.
       - name: Publish (Mac Catalyst, unsigned)
         shell: bash
         run: |
           set -o pipefail
           dotnet publish src/Chatur/Chatur.csproj -f net10.0-maccatalyst -c Release \
             -p:CreatePackage=false -p:EnableCodeSigning=false -p:_RequireCodeSigning=false \
+            -p:TreatWarningsAsErrors=false \
             ${{ needs.meta.outputs.msbuild_props }} ${{ env.XCODE_CHECK }} 2>&1 | tee publish.log || {
-            grep -E ': error [A-Z]*[0-9]+' publish.log | sort -u | head -20 | while IFS= read -r line; do
+            grep -i -E 'error' publish.log | grep -v -i -E '0 error|error\(s\)' | sort -u | head -25 | while IFS= read -r line; do
               echo "::error::${line}"
             done
+            echo "::notice::Last lines of the publish output: $(tail -n 25 publish.log | tr '\n' ' ' | cut -c1-3500)"
             exit 1
           }
 
