@@ -45,7 +45,10 @@ public static class ServiceCollectionExtensions
         // App Manager (Architecture §1 Q4, §5 "Identity"): one HttpClient for every sign-in,
         // registration, refresh and sign-out call, configured from AppManager:BaseUrl / ApiKey /
         // ApiSecret (docs/AppManager-api-usage-guide.md §1 "Option A: API Key Headers"). Cluster C's
-        // Register reuses this same client rather than opening a second one.
+        // Register reuses this same client rather than opening a second one. A downloaded Chatur
+        // carries an installed-app key with no secret (§2.1.1), so every call also sends this
+        // installation's X-Device-Id (AppManagerDeviceIdHandler).
+        aServices.AddTransient<AppManagerDeviceIdHandler>();
         aServices.AddHttpClient<IAppManagerClient, AppManagerClient>((aProvider, aClient) =>
         {
             var vConfiguration = aProvider.GetRequiredService<IConfiguration>();
@@ -74,7 +77,8 @@ public static class ServiceCollectionExtensions
             // normally — this never relaxes trust for a real deployment.
             ServerCertificateCustomValidationCallback = (aRequest, aCertificate, aChain, aErrors) =>
                 aErrors == System.Net.Security.SslPolicyErrors.None || IsLocalDevelopmentHost(aRequest?.RequestUri)
-        });
+        })
+        .AddHttpMessageHandler<AppManagerDeviceIdHandler>();
 
         // Prerequisites (Architecture §7 "Doctor"; REQ-FN-011..013): a typed client for read-only,
         // unauthenticated calls to the public GitHub API, checking the Chatur repository's own

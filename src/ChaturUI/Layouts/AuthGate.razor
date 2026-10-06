@@ -1,9 +1,26 @@
 @* Wraps every window's content except Sign in and Register. Reads IAccountActions.CurrentUserAsync
-   and redirects to /sign-in when nobody is signed in (Foundation brief "Auth gating"). *@
+   and redirects to /sign-in when nobody is signed in (Foundation brief "Auth gating"). When the check
+   itself fails — no App Manager address in this build, or the server cannot be reached — it shows the
+   reason instead of leaving the window blank (REQ-NFR-006, 2026-10-06). *@
 @inject IAccountActions Accounts
 @inject NavigationManager Nav
 
 @if (objIsSignedIn)
 {
     @ChildContent
+}
+else if (objCheckError is not null)
+{
+    <div class="flex min-h-screen items-center justify-center bg-background p-6" data-testid="auth-error-page">
+        <Alert Variant="AlertVariant.Danger" Class="max-w-lg" data-testid="auth-error">
+            <AlertTitle>Chatur could not check your sign-in</AlertTitle>
+            <AlertDescription>
+                <p data-testid="auth-error-reason">@objCheckError</p>
+                <div class="mt-3 flex gap-2">
+                    <Button Size="ButtonSize.Small" Disabled="objIsChecking" OnClick="CheckAsync" data-testid="auth-error-retry">Try again</Button>
+                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="SignInAgain" data-testid="auth-error-sign-in">Sign in again</Button>
+                </div>
+            </AlertDescription>
+        </Alert>
+    </div>
 }

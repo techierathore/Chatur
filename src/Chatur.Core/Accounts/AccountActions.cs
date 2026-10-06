@@ -239,26 +239,8 @@ public sealed class AccountActions : IAccountActions
     /// with a new GUID and kept forever afterwards (REQ-FN-002): read first, and only created when no
     /// row exists yet.
     /// </remarks>
-    public async Task<string> DeviceIdAsync(CancellationToken aCt = default)
-    {
-        using var vConnection = objDb.OpenConnection();
-
-        var vExisting = await vConnection.QueryFirstOrDefaultAsync<string>(
-            new CommandDefinition("SELECT DeviceId FROM Installation ORDER BY InstallationId LIMIT 1", cancellationToken: aCt)).ConfigureAwait(false);
-        if (vExisting is not null)
-        {
-            return vExisting;
-        }
-
-        var vDeviceId = Guid.NewGuid().ToString("N");
-        await vConnection.ExecuteAsync(
-            new CommandDefinition(
-                "INSERT INTO Installation (DeviceId, CreatedUtc) VALUES (@DeviceId, @CreatedUtc)",
-                new { DeviceId = vDeviceId, CreatedUtc = objClock.UtcNow.ToString("O") },
-                cancellationToken: aCt)).ConfigureAwait(false);
-
-        return vDeviceId;
-    }
+    public Task<string> DeviceIdAsync(CancellationToken aCt = default) =>
+        InstallationId.GetOrCreateAsync(objDb, objClock, aCt);
 
     /// <summary>Writes the signed-in session to <see cref="ISecretStore"/> (REQ-FN-003), or clears any session already on file when the owner did not ask to be remembered.</summary>
     private async Task PersistSessionAsync(AppManagerAuthResult aResult, bool aRemember, CancellationToken aCt)

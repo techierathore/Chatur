@@ -68,7 +68,7 @@ public static class NightlyRelease
         var vIsSameVersionNewerCommit =
             vCandidateVersion is not null && vOwnVersion is not null && vCandidateVersion == vOwnVersion
             && !string.IsNullOrEmpty(vCandidateCommit)
-            && !string.Equals(vCandidateCommit, aOwn.Commit, StringComparison.OrdinalIgnoreCase)
+            && !IsSameCommit(vCandidateCommit, aOwn.Commit)
             && aCandidate.PublishedUtc is not null && aCandidate.PublishedUtc > aOwn.BuiltUtc;
 
         if (!vIsNewerVersion && !vIsSameVersionNewerCommit)
@@ -82,4 +82,14 @@ public static class NightlyRelease
             aCandidate.PublishedUtc ?? DateTime.UtcNow,
             DownloadUrlForThisMachine(aCandidate.Assets, aIsMacOs));
     }
+
+    /// <summary>
+    /// Whether two commit ids name the same commit. The release carries a short id and this build the
+    /// full one, so one being a prefix of the other is the same commit.
+    /// </summary>
+    /// <param name="aOne">A commit id, short or full.</param>
+    /// <param name="aOther">Another commit id, short or full.</param>
+    public static bool IsSameCommit(string aOne, string aOther) =>
+        !string.IsNullOrEmpty(aOne) && !string.IsNullOrEmpty(aOther)
+        && (aOne.StartsWith(aOther, StringComparison.OrdinalIgnoreCase) || aOther.StartsWith(aOne, StringComparison.OrdinalIgnoreCase));
 }

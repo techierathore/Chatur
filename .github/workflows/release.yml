@@ -176,6 +176,34 @@ jobs:
           dotnet nuget update source "$NUGET_SOURCE_NAME" --configfile nuget.config
           --username "$NUGET_FEED_USER" --password "$FEED_TOKEN" --store-password-in-clear-text
 
+      # A downloaded Chatur signs in to the owner's App Manager (decision 2026-10-06, option A). A
+      # downloadable app uses an installed-app key (pk_live_…, no secret; AppManager API usage guide
+      # §2.1.1): the app sends X-Api-Key plus its own X-Device-Id, never a secret. The address and the key
+      # come from repository secrets and are written into the settings file the build embeds, on the
+      # runner only, never committed. A missing secret, or a server key (ak_live_…, which needs a secret
+      # and must never ship inside a download), stops the job.
+      - name: Write the App Manager address into the build's settings
+        shell: pwsh
+        env:
+          APPMANAGER_URL: ${{ secrets.CHATUR_APPMANAGER_URL }}
+          APPMANAGER_KEY: ${{ secrets.CHATUR_APPMANAGER_KEY }}
+        run: |
+          $missing = @('APPMANAGER_URL','APPMANAGER_KEY') | Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) }
+          if ($missing) {
+            Write-Output "::error::Set the repository secrets CHATUR_APPMANAGER_URL and CHATUR_APPMANAGER_KEY. Missing: $($missing -replace 'APPMANAGER_','CHATUR_APPMANAGER_' -join ', ')"
+            exit 1
+          }
+          if (-not $env:APPMANAGER_KEY.StartsWith('pk_')) {
+            Write-Output "::error::CHATUR_APPMANAGER_KEY must be an installed-app key (it starts pk_live_), made in App Manager with 'Generate New Key -> Installed app (no secret)'. A website key (ak_live_) needs a secret and must not ship inside a download."
+            exit 1
+          }
+          $path = 'src/Chatur/appsettings.json'
+          $settings = Get-Content $path -Raw | ConvertFrom-Json
+          $settings.AppManager | Add-Member -NotePropertyName BaseUrl -NotePropertyValue $env:APPMANAGER_URL -Force
+          $settings.AppManager | Add-Member -NotePropertyName ApiKey -NotePropertyValue $env:APPMANAGER_KEY -Force
+          $settings | ConvertTo-Json -Depth 10 | Set-Content $path -Encoding utf8
+          Write-Output "::notice::App Manager address written into the build's settings: $($env:APPMANAGER_URL)"
+
       # Only the Mac steps (trimming, native link, app bundle) run here and nowhere else, and their
       # warnings would fail the build under TreatWarningsAsErrors; normal builds keep that rule.
       # On a failure every line that mentions an error, in any format, and the end of the output are
@@ -234,6 +262,34 @@ jobs:
         run: >
           dotnet nuget update source "$NUGET_SOURCE_NAME" --configfile nuget.config
           --username "$NUGET_FEED_USER" --password "$FEED_TOKEN" --store-password-in-clear-text
+
+      # A downloaded Chatur signs in to the owner's App Manager (decision 2026-10-06, option A). A
+      # downloadable app uses an installed-app key (pk_live_…, no secret; AppManager API usage guide
+      # §2.1.1): the app sends X-Api-Key plus its own X-Device-Id, never a secret. The address and the key
+      # come from repository secrets and are written into the settings file the build embeds, on the
+      # runner only, never committed. A missing secret, or a server key (ak_live_…, which needs a secret
+      # and must never ship inside a download), stops the job.
+      - name: Write the App Manager address into the build's settings
+        shell: pwsh
+        env:
+          APPMANAGER_URL: ${{ secrets.CHATUR_APPMANAGER_URL }}
+          APPMANAGER_KEY: ${{ secrets.CHATUR_APPMANAGER_KEY }}
+        run: |
+          $missing = @('APPMANAGER_URL','APPMANAGER_KEY') | Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) }
+          if ($missing) {
+            Write-Output "::error::Set the repository secrets CHATUR_APPMANAGER_URL and CHATUR_APPMANAGER_KEY. Missing: $($missing -replace 'APPMANAGER_','CHATUR_APPMANAGER_' -join ', ')"
+            exit 1
+          }
+          if (-not $env:APPMANAGER_KEY.StartsWith('pk_')) {
+            Write-Output "::error::CHATUR_APPMANAGER_KEY must be an installed-app key (it starts pk_live_), made in App Manager with 'Generate New Key -> Installed app (no secret)'. A website key (ak_live_) needs a secret and must not ship inside a download."
+            exit 1
+          }
+          $path = 'src/Chatur/appsettings.json'
+          $settings = Get-Content $path -Raw | ConvertFrom-Json
+          $settings.AppManager | Add-Member -NotePropertyName BaseUrl -NotePropertyValue $env:APPMANAGER_URL -Force
+          $settings.AppManager | Add-Member -NotePropertyName ApiKey -NotePropertyValue $env:APPMANAGER_KEY -Force
+          $settings | ConvertTo-Json -Depth 10 | Set-Content $path -Encoding utf8
+          Write-Output "::notice::App Manager address written into the build's settings: $($env:APPMANAGER_URL)"
 
       - name: Publish (unpackaged, self-contained)
         run: >

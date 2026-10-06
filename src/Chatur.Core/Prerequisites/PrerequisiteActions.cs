@@ -216,7 +216,10 @@ public sealed class PrerequisiteActions : IPrerequisiteActions
     /// </summary>
     private static ChaturBuildInfo ReadOwnBuildInfo()
     {
-        var vAssembly = Assembly.GetEntryAssembly() ?? typeof(PrerequisiteActions).Assembly;
+        // Chatur.Core, never the entry assembly: the MAUI head's own informational version is its
+        // ApplicationDisplayVersion ("0.1"), while every Chatur assembly built from Directory.Build.props
+        // carries the stamped "0.1.0-nightly+<commit>" and the commit metadata (REQ-UI-018, 2026-10-06).
+        var vAssembly = typeof(PrerequisiteActions).Assembly;
 
         var vInformationalVersion = vAssembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?

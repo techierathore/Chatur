@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Status</h1>
-    <div class="sub">Last rendered: 2026-10-04</div>
+    <div class="sub">Last rendered: 2026-10-06</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#where-i-am">Where I am</a></li>
@@ -121,18 +121,18 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Status</h1>
-    <div class="subtitle">Rendered 2026-10-04 &middot; source <code>PROJECT-STATUS.md</code></div>
+    <div class="subtitle">Rendered 2026-10-06 &middot; source <code>PROJECT-STATUS.md</code></div>
     <div class="cta-next" style="padding:20px; background:var(--cta-bg); border:2px solid var(--accent); border-radius:10px; margin:20px 0;">
       <div style="font-size:11px; color:var(--muted); letter-spacing:.5px;">NEXT COMMAND TO RUN</div>
-      <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:flow-master *build-phase Chatur</div>
+      <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:verifier *verify functional Chatur</div>
     </div>
 <table>
 <tbody>
 <tr><th>project</th><td>Chatur</td></tr>
-<tr><th>last_updated</th><td>2026-10-04</td></tr>
-<tr><th>current_phase</th><td>Phase 1 of 4 (Workbench) · Build — 1 not built, 96 of 98 verified</td></tr>
+<tr><th>last_updated</th><td>2026-10-06</td></tr>
+<tr><th>current_phase</th><td>Phase 1 of 4 (Workbench) · Verify — 1 to verify, 96 of 98 verified</td></tr>
 <tr><th>last_verified_build</th><td>PASS</td></tr>
-<tr><th>last_verified_date</th><td>2026-10-04</td></tr>
+<tr><th>last_verified_date</th><td>2026-10-06</td></tr>
 </tbody>
 </table>
     <div class="toc-inline">
@@ -149,34 +149,33 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
       </ol>
     </div>
 <h2 id="where-i-am">Where I am<a class="anchor-link" href="#where-i-am">#</a></h2>
-<p>Phase 1 of 4 (Workbench), build nearly done. 96 of 98 rows are Verified. The release pipeline now builds both downloads and publishes <code>v0.1.0-nightly</code> from the pushed commit, but the downloaded Windows build never leaves "Loading Chatur…": it has no App Manager address. One decision is waiting for you: which App Manager released builds sign in to (docs/Chatur-Decision-Request.md).</p>
+<p>Phase 1 of 4 (Workbench), verifying. 96 of 98 rows are Verified. The pipeline now writes the App Manager address and the installed-app key into both downloads, every App Manager call sends the installation's device id, and a failed sign-in check shows its reason instead of hanging. REQ-NFR-006 waits on the next nightly signing in with the owner's installed-app key.</p>
 <h2 id="next-command-to-run">Next command to run<a class="anchor-link" href="#next-command-to-run">#</a></h2>
 <p>Claude Code:</p>
-<pre><code>/TechieFlow:agents:flow-master *build-phase Chatur</code></pre>
+<pre><code>/TechieFlow:agents:verifier *verify functional Chatur</code></pre>
 <p>OpenCode:</p>
-<pre><code>/flow-master *build-phase Chatur</code></pre>
-<p>Why: 1 rows are not built yet: REQ-NFR-006; working docs/Chatur-Checklist.md.</p>
+<pre><code>/flow-verifier *verify functional Chatur</code></pre>
+<p>Why: 1 rows are built and not verified: REQ-NFR-006; 1 more could not be measured (every test skipped) and need the owner: REQ-FN-012; working docs/Chatur-Checklist.md.</p>
 <h2 id="open-requirements">Open requirements<a class="anchor-link" href="#open-requirements">#</a></h2>
 <table>
 <thead><tr><th>Status</th><th>Count</th></tr></thead>
 <tbody>
 <tr><td>Not Started</td><td>0</td></tr>
 <tr><td>In Progress</td><td>0</td></tr>
-<tr><td>Implemented</td><td>0</td></tr>
+<tr><td>Implemented</td><td>1</td></tr>
 <tr><td>Needs re-verify</td><td>1</td></tr>
 <tr><td>Blocked</td><td>0</td></tr>
-<tr><td>FAIL</td><td>1</td></tr>
 </tbody>
 </table>
 <ul>
-<li>[ ] REQ-NFR-006 — The release workflow builds and publishes the Mac and Windows zips (FAIL)
+<li>[ ] REQ-NFR-006 — The release workflow builds and publishes the Mac and Windows zips (Implemented)
 </li>
 <li>[ ] REQ-FN-012 — Homebrew tools are found on a Mac (Needs re-verify)
 </li>
 </ul>
 <h2 id="known-blockers">Known blockers<a class="anchor-link" href="#known-blockers">#</a></h2>
 <ul>
-<li>REQ-NFR-006: the nightly release holds both zips built from the pushed commit, and the build carries version 0.1.0-nightly and that commit, but the downloaded app hangs on its loading screen because no App Manager address is configured for released builds. Waiting on the owner's decision; the hang itself is a fault to fix either way.
+<li>REQ-NFR-006: the owner's key must be an installed-app key from App Manager (no secret); after the next push the downloaded nightly is signed in and checked. Sign-in with an installed-app key has not been run on this machine, whose development App Manager has no such key for Chatur.
 </li>
 <li>REQ-FN-012 needs Chatur started from Finder on a Mac; no Mac is registered for automatic checks.
 </li>
@@ -186,11 +185,11 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <table>
 <thead><tr><th>Date</th><th>Phase</th><th>Result</th><th>Status table</th></tr></thead>
 <tbody>
-<tr><td>2026-10-03</td><td>verify-phase</td><td>25/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-03</td><td>verify-phase</td><td>34/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-03</td><td>verify-phase</td><td>77/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-03</td><td>build-phase</td><td>96/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-04</td><td>verify-phase</td><td>96/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-06</td><td>build-phase</td><td>96/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
 </tbody>
 </table>
 <h2 id="library-feedback-summary">Library feedback summary<a class="anchor-link" href="#library-feedback-summary">#</a></h2>
@@ -204,13 +203,11 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 <h2 id="standards-compliance">Standards compliance<a class="anchor-link" href="#standards-compliance">#</a></h2>
 <ul>
-<li>Last check 2026-10-04: no standards script exists yet; nothing measured.
+<li>Last check 2026-10-06: no standards script exists yet; nothing measured.
 </li>
 </ul>
 <h2 id="deferred-future"><a id="deferred--future"></a>Deferred / future<a class="anchor-link" href="#deferred-future">#</a></h2>
 <ul>
-<li>Production hosting and secrets: the App Manager address for released builds is now needed (decision request).
-</li>
 <li>The logo is a placeholder; the owner supplies the real one.
 </li>
 <li>No BRD row yet: the Settings account page controls, Start's other ways in, hiding the output strip, merging a process branch.
@@ -218,6 +215,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li>Start's "Get started" buttons are disabled; the mockup draws them active.
 </li>
 <li>Text size and line spacing on the appearance page (deferred 2026-10-03).
+</li>
+<li>The top bar reads "Signed in" while the sign-in check has failed.
 </li>
 </ul>
   </main>

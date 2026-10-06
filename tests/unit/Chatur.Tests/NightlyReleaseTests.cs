@@ -92,6 +92,45 @@ public sealed class NightlyReleaseTests
     }
 
     /// <summary>
+    /// When the release is the nightly this Chatur was built from — its tag carries the same version and
+    /// its target is the same commit, which the build holds as the full id — then nothing is offered
+    /// (REQ-FN-013, 2026-10-06: the downloaded nightly offered itself as newer).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-013 the nightly this build came from is not offered as newer")]
+    public void EvaluateOfferOffersNothingForTheNightlyThisBuildCameFrom()
+    {
+        const string vSha = "f87f765b64d82f855c0a98b4cfc8f889dfce64bd";
+        var vCandidate = new GitHubRelease("v0.1.0-nightly", vSha, DateTime.UtcNow, Array.Empty<GitHubReleaseAsset>());
+        var vOwn = new ChaturBuildInfo("0.1.0-nightly", vSha, DateTime.UtcNow.AddHours(-1));
+
+        var vOffer = NightlyRelease.EvaluateOffer(vCandidate, vOwn, aIsMacOs: false);
+
+        Assert.Null(vOffer);
+    }
+
+    /// <summary>When a release is a later nightly of the same version from another commit, then it is offered.</summary>
+    [Fact(DisplayName = "REQ-FN-013 a later nightly from another commit is offered")]
+    public void EvaluateOfferOffersALaterNightlyFromAnotherCommit()
+    {
+        var vCandidate = new GitHubRelease("v0.1.0-nightly", "b6f7e8ad60ead74833a3622a5d2f4596e7e4d85e", DateTime.UtcNow, Array.Empty<GitHubReleaseAsset>());
+        var vOwn = new ChaturBuildInfo("0.1.0-nightly", "f87f765b64d82f855c0a98b4cfc8f889dfce64bd", DateTime.UtcNow.AddHours(-1));
+
+        var vOffer = NightlyRelease.EvaluateOffer(vCandidate, vOwn, aIsMacOs: false);
+
+        Assert.NotNull(vOffer);
+        Assert.Equal("b6f7e8a", vOffer!.Commit);
+    }
+
+    /// <summary>When a short and a full id name the same commit, then they are the same commit.</summary>
+    [Fact]
+    public void IsSameCommitMatchesAShortIdAgainstTheFullOne()
+    {
+        Assert.True(NightlyRelease.IsSameCommit("f87f765", "f87f765b64d82f855c0a98b4cfc8f889dfce64bd"));
+        Assert.False(NightlyRelease.IsSameCommit("b6f7e8a", "f87f765b64d82f855c0a98b4cfc8f889dfce64bd"));
+        Assert.False(NightlyRelease.IsSameCommit("", "f87f765"));
+    }
+
+    /// <summary>
     /// When the release matches the running build's own version and commit, then nothing is offered —
     /// this Chatur already is that build.
     /// </summary>
