@@ -14,6 +14,7 @@ public partial class SecondaryWindowPage : ContentPage
     {
         InitializeComponent();
         blazorWebView.StartPath = aRoute;
+        blazorWebView.BlazorWebViewInitialized += (sender, args) => BlazorZoom.Attach(args.WebView);
     }
 
     /// <summary>

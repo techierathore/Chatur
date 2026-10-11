@@ -183,6 +183,9 @@ You read the code to understand it. You never change it. When something in the r
          <button class="sw" data-state="state-changes-code" onclick="toggleSwitch(this,event)" title="Turning this on would let the Analyst edit files." data-testid="switch-changes-code"></button>
          <span class="sm">Changes code</span><span class="grow"></span><span class="xs faint" id="state-changes-code">off</span></div>
         <div class="xs dim" style="padding-left:42px" data-testid="changes-code-note">The Analyst reads code to understand it, but cannot change it. A requirement it writes is carried out by the Flow master.</div></div>
+       <div class="row" data-testid="right-writes-docs">
+        <button class="sw on" data-state="state-writes-docs" onclick="toggleSwitch(this,event)" title="The Analyst may write files under docs/ only." data-testid="switch-writes-docs"></button>
+        <span class="sm">Writes documents</span><span class="grow"></span><span class="xs faint" id="state-writes-docs">on</span></div>
        <div class="row" data-testid="right-runs-commands">
         <button class="sw" data-state="state-runs-commands" onclick="toggleSwitch(this,event)" title="Turning this on would let the Analyst run builds and tests." data-testid="switch-runs-commands"></button>
         <span class="sm">Runs commands</span><span class="grow"></span><span class="xs faint" id="state-runs-commands">off</span></div>

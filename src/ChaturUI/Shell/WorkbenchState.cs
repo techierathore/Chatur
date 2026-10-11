@@ -10,6 +10,7 @@ namespace ChaturUI.Shell;
 public sealed class WorkbenchState
 {
     private readonly List<OpenFile> objOpenFiles = [];
+    private readonly List<ToolTab> objToolTabs = [];
     private readonly HashSet<string> objPendingChangePaths = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Raised after the open files, the active file, or a file's own text changes.</summary>
@@ -77,11 +78,132 @@ public sealed class WorkbenchState
     /// <summary>Every file open in a tab, in the order they were opened.</summary>
     public IReadOnlyList<OpenFile> OpenFiles => objOpenFiles;
 
-    /// <summary>The relative path identifying the active tab, or <see langword="null"/> when none is open.</summary>
+    /// <summary>
+    /// Every phase-2 screen open as a tab beside the files — Processes, Board, a Process run, the Agent
+    /// workspace — in the order they were opened (UI Design phase 2: "Each of these opens as a tab in the
+    /// one window, with the conversation still pinned to its right").
+    /// </summary>
+    public IReadOnlyList<ToolTab> ToolTabs => objToolTabs;
+
+    /// <summary>The identity of the active tab (a file's relative path or a tool tab's id), or <see langword="null"/> when none is open.</summary>
     public string? ActiveId { get; private set; }
 
-    /// <summary>The active tab's own file, or <see langword="null"/> when none is open.</summary>
+    /// <summary>The active tab's own file, or <see langword="null"/> when none is open or the active tab is a screen.</summary>
     public OpenFile? ActiveFile => objOpenFiles.FirstOrDefault(f => f.Id == ActiveId);
+
+    /// <summary>The active tab's screen, or <see langword="null"/> when the active tab is a file or none is open.</summary>
+    public ToolTab? ActiveTool => objToolTabs.FirstOrDefault(t => t.Id == ActiveId);
+
+    /// <summary>How many tabs are open, files and screens together.</summary>
+    public int TabCount => objOpenFiles.Count + objToolTabs.Count;
+
+    /// <summary>Raised when something asks the conversation to open a session and, optionally, send a first message in it.</summary>
+    public event Action<ConversationStart>? ConversationStartRequested;
+
+    /// <summary>
+    /// Asks the pinned conversation to open a session and send the first message there, so the reply
+    /// streams into the conversation (REQ-UI-053, REQ-FN-059).
+    /// </summary>
+    /// <param name="aStart">The session to open and what to send first.</param>
+    public void RequestConversation(ConversationStart aStart) => ConversationStartRequested?.Invoke(aStart);
+
+    /// <summary>The session a process run handed a step to, while the conversation shows it (REQ-UI-071); <see langword="null"/> otherwise.</summary>
+    public HandedSession? Handed { get; private set; }
+
+    /// <summary>Raised when the conversation should start, or stop, showing a handed step's session.</summary>
+    public event Action? HandedSessionChanged;
+
+    /// <summary>Asks the conversation to show the agent session a run handed a step to, as it works (REQ-UI-071).</summary>
+    /// <param name="aHanded">The session, the agent and the step it works on.</param>
+    public void ShowHandedSession(HandedSession aHanded)
+    {
+        if (Handed == aHanded)
+        {
+            return;
+        }
+
+        Handed = aHanded;
+        HandedSessionChanged?.Invoke();
+    }
+
+    /// <summary>Tells the conversation the handed step has ended; it keeps what was said and stops following the session.</summary>
+    /// <param name="aSessionId">The session that ended.</param>
+    public void EndHandedSession(int aSessionId)
+    {
+        if (Handed is null || Handed.SessionId != aSessionId)
+        {
+            return;
+        }
+
+        Handed = null;
+        HandedSessionChanged?.Invoke();
+    }
+
+    /// <summary>Opens the Processes screen in a tab, or brings it to the front.</summary>
+    /// <param name="aProcessCode">The process to open its steps for; <see langword="null"/> leaves the screen as it is.</param>
+    public void OpenProcesses(string? aProcessCode = null)
+    {
+        if (aProcessCode is not null && objToolTabs.FirstOrDefault(t => t.Kind == ToolKind.Processes) is { } vTab)
+        {
+            vTab.ProcessCode = aProcessCode;
+        }
+
+        OpenTool(new ToolTab("tool:processes", ToolKind.Processes, "Processes") { ProcessCode = aProcessCode });
+    }
+
+    /// <summary>Opens the Requirements board in a tab, or brings it to the front.</summary>
+    public void OpenBoard() => OpenTool(new ToolTab("tool:board", ToolKind.Board, "Board"));
+
+    /// <summary>Opens one process run in a tab named after the process and the run, or brings it to the front.</summary>
+    /// <param name="aRunId">The run's identity.</param>
+    /// <param name="aProcessCode">The process the run belongs to, for the tab's label.</param>
+    public void OpenProcessRun(int aRunId, string aProcessCode) =>
+        OpenTool(new ToolTab($"tool:run:{aRunId}", ToolKind.ProcessRun, $"{aProcessCode} · run {aRunId}") { RunId = aRunId });
+
+    /// <summary>Opens the End-to-end run in a tab, or brings it to the front (phase 3).</summary>
+    public void OpenAutoRun() => OpenTool(new ToolTab("tool:auto", ToolKind.AutoRun, "Auto run"));
+
+    /// <summary>Opens the Run queue in a tab, or brings it to the front (phase 3).</summary>
+    public void OpenRunQueue() => OpenTool(new ToolTab("tool:auto-queue", ToolKind.RunQueue, "Run queue"));
+
+    /// <summary>Opens the Run report in a tab, or brings it to the front (phase 3).</summary>
+    public void OpenRunReport() => OpenTool(new ToolTab("tool:auto-report", ToolKind.RunReport, "Run record"));
+
+    /// <summary>Opens the Agent workspace in a tab, or brings it to the front.</summary>
+    /// <param name="aAgentCode">The agent to show; <see langword="null"/> lets the workspace fall back to the first agent.</param>
+    public void OpenAgentWorkspace(string? aAgentCode = null)
+    {
+        OpenTool(new ToolTab("tool:agents", ToolKind.AgentWorkspace, "Agents") { AgentCode = aAgentCode });
+        if (aAgentCode is not null)
+        {
+            SetWorkspaceAgent(aAgentCode);
+        }
+    }
+
+    /// <summary>Points the Agent workspace tab at another agent; the agent's open sessions are not touched (REQ-FN-060).</summary>
+    /// <param name="aAgentCode">The agent's code.</param>
+    public void SetWorkspaceAgent(string aAgentCode)
+    {
+        if (objToolTabs.FirstOrDefault(t => t.Kind == ToolKind.AgentWorkspace) is { } vTab && vTab.AgentCode != aAgentCode)
+        {
+            vTab.AgentCode = aAgentCode;
+            RaiseChanged();
+        }
+    }
+
+    private void OpenTool(ToolTab aTab)
+    {
+        if (!objToolTabs.Any(t => t.Id == aTab.Id))
+        {
+            objToolTabs.Add(aTab);
+        }
+
+        ActiveId = aTab.Id;
+        FileViewVisible = true;
+        RaiseChanged();
+    }
+
+    private List<string> TabIds() => objOpenFiles.Select(f => f.Id).Concat(objToolTabs.Select(t => t.Id)).ToList();
 
     /// <summary>
     /// Opens a file into a tab, or brings its existing tab to the front (REQ-UI-040).
@@ -167,16 +289,18 @@ public sealed class WorkbenchState
     /// <param name="aId">The tab to close.</param>
     public void Close(string aId)
     {
-        var vIndex = objOpenFiles.FindIndex(f => f.Id == aId);
+        var vIndex = TabIds().IndexOf(aId);
         if (vIndex < 0)
         {
             return;
         }
 
-        objOpenFiles.RemoveAt(vIndex);
+        objOpenFiles.RemoveAll(f => f.Id == aId);
+        objToolTabs.RemoveAll(t => t.Id == aId);
         if (ActiveId == aId)
         {
-            ActiveId = objOpenFiles.Count == 0 ? null : objOpenFiles[Math.Min(vIndex, objOpenFiles.Count - 1)].Id;
+            var vLeft = TabIds();
+            ActiveId = vLeft.Count == 0 ? null : vLeft[Math.Min(vIndex, vLeft.Count - 1)];
         }
 
         RaiseChanged();
@@ -186,6 +310,7 @@ public sealed class WorkbenchState
     public void Reset()
     {
         objOpenFiles.Clear();
+        objToolTabs.Clear();
         ActiveId = null;
         FileViewVisible = true;
         RaiseChanged();
@@ -194,7 +319,78 @@ public sealed class WorkbenchState
     private void RaiseChanged() => Changed?.Invoke();
 }
 
-/// <summary>One open tab: a file's path, the text on disk when it was opened, and the editor's current text.</summary>
+/// <summary>The phase-2 screens that open as a tab in the main window.</summary>
+public enum ToolKind
+{
+    /// <summary>The twelve processes and their steps.</summary>
+    Processes,
+
+    /// <summary>The requirements board.</summary>
+    Board,
+
+    /// <summary>One run of one process.</summary>
+    ProcessRun,
+
+    /// <summary>One agent's workspace.</summary>
+    AgentWorkspace,
+
+    /// <summary>The end-to-end run: one brief, the whole chain (phase 3).</summary>
+    AutoRun,
+
+    /// <summary>The queue of runs, one at a time (phase 3).</summary>
+    RunQueue,
+
+    /// <summary>The record of a finished run (phase 3).</summary>
+    RunReport
+}
+
+/// <summary>One screen open as a tab beside the files.</summary>
+public sealed class ToolTab
+{
+    /// <summary>Creates the tab.</summary>
+    /// <param name="aId">The tab's identity; opening the same screen again brings this tab forward.</param>
+    /// <param name="aKind">Which screen the tab shows.</param>
+    /// <param name="aTitle">The tab's label.</param>
+    public ToolTab(string aId, ToolKind aKind, string aTitle)
+    {
+        Id = aId;
+        Kind = aKind;
+        Title = aTitle;
+    }
+
+    /// <summary>The tab's identity.</summary>
+    public string Id { get; }
+
+    /// <summary>Which screen the tab shows.</summary>
+    public ToolKind Kind { get; }
+
+    /// <summary>The tab's label.</summary>
+    public string Title { get; }
+
+    /// <summary>For a process run: the run it shows.</summary>
+    public int RunId { get; init; }
+
+    /// <summary>For Processes: the process whose steps the screen opens (a deep link), or <see langword="null"/> for the default.</summary>
+    public string? ProcessCode { get; set; }
+
+    /// <summary>For the Agent workspace: the agent it shows now.</summary>
+    public string? AgentCode { get; set; }
+}
+
+/// <summary>A request that the conversation open a session and, when <see cref="Message"/> is set, send it first.</summary>
+/// <param name="SessionId">The session to open.</param>
+/// <param name="RoleId">The agent the session runs as, or <see langword="null"/> to keep the session's own.</param>
+/// <param name="Message">What to send first, or <see langword="null"/> to only open the session.</param>
+public sealed record ConversationStart(int SessionId, int? RoleId, string? Message);
+
+/// <summary>An agent session a process run handed a step to (REQ-UI-071).</summary>
+/// <param name="SessionId">The agent's session.</param>
+/// <param name="AgentName">The agent, shown as the speaker's name.</param>
+/// <param name="ModelName">The model the session uses, when known.</param>
+/// <param name="StepLabel">Which step it works on, e.g. <c>build-phase run 43, step 4</c>.</param>
+public sealed record HandedSession(int SessionId, string AgentName, string? ModelName, string StepLabel);
+
+/// <summary>One open tab: a file's path,the text on disk when it was opened, and the editor's current text.</summary>
 public sealed class OpenFile
 {
     /// <summary>

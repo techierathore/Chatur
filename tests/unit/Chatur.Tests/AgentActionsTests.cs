@@ -325,6 +325,108 @@ public sealed class AgentActionsTests : IDisposable
     }
 
     /// <summary>
+    /// REQ-FN-071: when automatic routing picks a model for a turn, then that model answers, even though the role's own
+    /// tier would have used another; REQ-FN-072: when it picks none (routing off, or the small model failed), then the
+    /// role's tier decides as before; and a model the owner chose in the composer is never overridden.
+    /// </summary>
+    [Fact]
+    public async Task SendAsyncUsesTheAutoRoutedModelElseTheTierModel()
+    {
+        var vProjectId = InsertProject("/tmp/chatur-tests/proj-auto");
+        var vRoleId = GetRoleId("flow-master");
+        var vTierModelId = InsertConnectedModel(1, "tier-model", "Tier Provider");
+        var vRoutedModelId = InsertConnectedModel(3, "routed-model", "Routed Provider");
+        var vFactory = new RoutingFakeLlmProviderFactory(new Dictionary<int, ILlmProvider>
+        {
+            [vTierModelId] = new FakeLlmProvider(new LlmResponse { Content = "From the tier.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } }, new LlmResponse { Content = "From the tier.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } }) { ModelNameOverride = "tier-model" },
+            [vRoutedModelId] = new FakeLlmProvider(new LlmResponse { Content = "From the router.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } }) { ModelNameOverride = "routed-model" },
+        });
+        var vRouter = new FakeAutoRouter(new ConnectedModel(vRoutedModelId, 0, "Routed Provider", "Fake", "http://localhost", null, "routed-model"));
+        var vSut = new AgentActions(objDb, new AgentSessionRegistry(), objGuards, vFactory, objFiles, objProcessLauncher, objCorrections, objMeasurements, new SystemClock(), new RoutingActions(objDb), vRouter);
+
+        async Task<string?> AnswerAsync(int? aModelId)
+        {
+            var vSessionId = InsertSession(vProjectId, vRoleId, SessionMode.GoAhead);
+            var vChunks = new List<AgentReplyChunk>();
+            await foreach (var vChunk in vSut.SendAsync(vSessionId, "Hi", null, aModelId, SessionMode.GoAhead))
+            {
+                vChunks.Add(vChunk);
+            }
+
+            return vChunks[^1].ModelName;
+        }
+
+        Assert.Equal("routed-model", await AnswerAsync(null));
+        Assert.Equal("tier-model", await AnswerAsync(vTierModelId));
+        Assert.Equal(1, vRouter.Calls);
+
+        vRouter.Pick = null;
+        Assert.Equal("tier-model", await AnswerAsync(null));
+        Assert.Equal(2, vRouter.Calls);
+    }
+
+    /// <summary>
+    /// When a model call made for an unattended run is rate-limited and no model in the chain can take it, then the
+    /// call raises the usage limit with the provider's retry-after for the run to wait out; the same limit shown to an
+    /// owner is a note in the reply, not an exception (REQ-FN-064).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-064 a usage limit on a model call made for a run is raised with the provider's retry-after")]
+    public async Task UsageLimitOnARunsModelCallIsRaisedWithRetryAfter()
+    {
+        var vProjectId = InsertProject("/tmp/chatur-tests/proj-limit");
+        var vRoleId = GetRoleId("flow-master");
+        InsertConnectedModel(1);
+        var vRouting = new RoutingActions(objDb);
+        var vLimit = new LlmRateLimitException("Usage limit reached", HttpStatusCode.TooManyRequests, TimeSpan.FromMinutes(7));
+        AgentActions NewSut() => new(objDb, new AgentSessionRegistry(), objGuards, new FakeLlmProviderFactory(new FakeLlmProvider(vLimit)), objFiles, objProcessLauncher, objCorrections, objMeasurements, new SystemClock(), vRouting);
+
+        var vForRunSession = InsertSession(vProjectId, vRoleId, SessionMode.GoAhead);
+        Chatur.Core.ProcessRuns.ModelUsageLimitException? vRaised = null;
+        using (Chatur.Core.ProcessRuns.ModelCallScope.ForRun())
+        {
+            try
+            {
+                await foreach (var vChunk in NewSut().SendAsync(vForRunSession, "Hi", null, null, SessionMode.GoAhead))
+                {
+                    Assert.NotNull(vChunk);
+                }
+            }
+            catch (Chatur.Core.ProcessRuns.ModelUsageLimitException vException)
+            {
+                vRaised = vException;
+            }
+        }
+
+        var vOwnerSession = InsertSession(vProjectId, vRoleId, SessionMode.GoAhead);
+        var vShown = new List<AgentReplyChunk>();
+        await foreach (var vChunk in NewSut().SendAsync(vOwnerSession, "Hi", null, null, SessionMode.GoAhead))
+        {
+            vShown.Add(vChunk);
+        }
+
+        Assert.NotNull(vRaised);
+        Assert.Equal(TimeSpan.FromMinutes(7), vRaised!.RetryAfter);
+        Assert.Contains("Usage limit reached", vRaised.Message, StringComparison.Ordinal);
+        Assert.False(Chatur.Core.ProcessRuns.ModelCallScope.IsForRun);
+        Assert.Contains("Usage limit reached", string.Concat(vShown.Select(aChunk => aChunk.TextDelta)), StringComparison.Ordinal);
+    }
+
+    /// <summary>A rate limit TechieRag raises, a bare 429 and a wrapped one are usage limits; anything else is not (REQ-FN-064).</summary>
+    [Fact(DisplayName = "REQ-FN-064 a rate limit from a provider is recognised as a usage limit and anything else is not")]
+    public void RateLimitsAreRecognisedAsUsageLimits()
+    {
+        var vRate = Chatur.Core.ProcessRuns.ModelUsageLimit.Recognise(new LlmRateLimitException("slow down", HttpStatusCode.ServiceUnavailable, TimeSpan.FromSeconds(30)));
+        var vBare = Chatur.Core.ProcessRuns.ModelUsageLimit.Recognise(new HttpRequestException("too many", null, HttpStatusCode.TooManyRequests));
+        var vWrapped = Chatur.Core.ProcessRuns.ModelUsageLimit.Recognise(new InvalidOperationException("outer", new LlmRateLimitException("inner", HttpStatusCode.TooManyRequests, null)));
+
+        Assert.Equal(TimeSpan.FromSeconds(30), vRate!.RetryAfter);
+        Assert.Null(vBare!.RetryAfter);
+        Assert.Equal("inner", vWrapped!.Message);
+        Assert.Null(Chatur.Core.ProcessRuns.ModelUsageLimit.Recognise(new HttpRequestException("down", null, HttpStatusCode.InternalServerError)));
+        Assert.Null(Chatur.Core.ProcessRuns.ModelUsageLimit.Recognise(new InvalidOperationException("no")));
+    }
+
+    /// <summary>
     /// When the project's build fails, for the same session, the set number of times in a row right
     /// after an approved change — the honest reading of "the same fix failing" this fix chose (see
     /// this row's checklist Remark) — then the second failure reaches the threshold and
@@ -688,6 +790,50 @@ public sealed class AgentActionsTests : IDisposable
     }
 
     /// <summary>
+    /// When a project's newest session is one a process step started for its agent, then the owner's conversation
+    /// opens on the owner's own newest session, the step's session is not in the owner's history, and the
+    /// suggestion does not name the step's agent (REQ-FN-084; the panel follows the step only from Process run, REQ-UI-071).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-084 a session a step started is never the owner's conversation")]
+    public async Task StepSessionIsNeverTheOwnersConversation()
+    {
+        var vProjectId = InsertProject("/tmp/chatur-tests/proj-step-session");
+        var vAnalyst = GetRoleId("analyst");
+        var vVerifier = GetRoleId("verifier");
+        var vSut = CreateSut(new FakeLlmProvider(new LlmResponse { Content = "Hi.", Usage = new TokenUsage() }));
+        var vOwners = InsertSession(vProjectId, vAnalyst, SessionMode.AskFirst);
+        await Task.Delay(20);
+        var vStep = InsertSession(vProjectId, vVerifier, SessionMode.GoAhead);
+        InsertStepWork(vProjectId, vStep);
+
+        var vOpened = await vSut.EnsureActiveSessionAsync(vProjectId);
+        var vSessions = await vSut.SessionsAsync(vProjectId);
+        var vSuggestion = await vSut.SuggestAgentAsync(vProjectId);
+
+        Assert.Equal(vOwners, vOpened.SessionId);
+        Assert.Equal(vOwners, Assert.Single(vSessions).SessionId);
+        Assert.Equal(vAnalyst, vSuggestion.RoleId);
+    }
+
+    /// <summary>
+    /// When a project has only a session a process step started, then the owner gets a conversation of their own
+    /// rather than the step's (REQ-FN-084).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-084 a project with only a step session still gets the owner a conversation of their own")]
+    public async Task OnlyAStepSessionStartsTheOwnersOwn()
+    {
+        var vProjectId = InsertProject("/tmp/chatur-tests/proj-step-only");
+        var vVerifier = GetRoleId("verifier");
+        var vSut = CreateSut(new FakeLlmProvider(new LlmResponse { Content = "Hi.", Usage = new TokenUsage() }));
+        var vStep = InsertSession(vProjectId, vVerifier, SessionMode.GoAhead);
+        InsertStepWork(vProjectId, vStep);
+
+        var vOpened = await vSut.EnsureActiveSessionAsync(vProjectId);
+
+        Assert.NotEqual(vStep, vOpened.SessionId);
+    }
+
+    /// <summary>
     /// When a session is continued, then its own summary and every event it recorded come back in
     /// order — the same record <see cref="AgentActions.SendAsync"/> wrote as the turn ran, so a
     /// restart shows exactly what happened (REQ-FN-031, REQ-FN-032).
@@ -975,6 +1121,17 @@ public sealed class AgentActionsTests : IDisposable
         return (int)vId;
     }
 
+    private void InsertStepWork(int aProjectId, int aSessionId)
+    {
+        using var vConnection = objDb.OpenConnection();
+        var vRunId = vConnection.ExecuteScalar<long>(
+            "INSERT INTO ProcessRun (ProjectId, ProcessCode, State, CurrentStep, StartedUtc) VALUES (@aProjectId, 'verify-phase', 'running', 4, @vNow); SELECT last_insert_rowid();",
+            new { aProjectId, vNow = DateTime.UtcNow.ToString("O") });
+        vConnection.Execute(
+            "INSERT INTO ProcessRunStepWork (RunId, Position, SessionId, AgentName, Tier, State, Task, StartedUtc) VALUES (@vRunId, 4, @aSessionId, 'Verifier', 1, 'working', 'task', @vNow);",
+            new { vRunId, aSessionId, vNow = DateTime.UtcNow.ToString("O") });
+    }
+
     private int InsertSession(int aProjectId, int aRoleId, SessionMode aMode)
     {
         using var vConnection = objDb.OpenConnection();
@@ -1074,6 +1231,21 @@ public sealed class AgentActionsTests : IDisposable
         {
             aOnOutputLine("build output");
             return Task.FromResult(ExitCode);
+        }
+    }
+
+    private sealed class FakeAutoRouter : IAutoRouter
+    {
+        public FakeAutoRouter(ConnectedModel? aPick) => Pick = aPick;
+
+        public ConnectedModel? Pick { get; set; }
+
+        public int Calls { get; private set; }
+
+        public Task<ConnectedModel?> ChooseAsync(string aRequest, int aSessionId, int aRoleId, CancellationToken aCt = default)
+        {
+            Calls++;
+            return Task.FromResult(Pick);
         }
     }
 

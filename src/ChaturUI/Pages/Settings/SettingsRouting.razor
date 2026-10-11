@@ -188,18 +188,15 @@
     <Card data-testid="auto-routing-panel">
         <CardHeader>
             <CardTitle>
-                <span class="flex items-center justify-between">
-                    <span>Automatic routing</span>
-                    <Badge Variant="BadgeVariant.Secondary" data-testid="auto-routing-later">later</Badge>
-                </span>
+                <span>Automatic routing</span>
             </CardTitle>
         </CardHeader>
         <CardContent Class="flex flex-col gap-3">
             <div class="flex items-center gap-3" data-testid="auto-routing-switch-row">
-                <Switch Checked="false" Disabled="true" Outlined="true" AriaLabel="Let Chatur choose the model" data-testid="auto-routing-switch" />
+                <Switch Checked="objAutoRouting" CheckedChanged="SetAutoRoutingAsync" Outlined="true" AriaLabel="Let Chatur choose the model" data-testid="auto-routing-switch" />
                 <span class="text-sm">Let Chatur choose the model</span>
                 <span class="flex-1"></span>
-                <span class="text-xs text-muted-foreground" data-testid="auto-routing-state">off</span>
+                <span class="text-xs text-muted-foreground" data-testid="auto-routing-state">@(objAutoRouting ? "on" : "off")</span>
             </div>
             <p class="text-sm text-muted-foreground" data-testid="auto-routing-line-1">A small model inside TechieRag reads the request and chooses the tier, so a one-line question never reaches Claude Opus 5.</p>
             <p class="text-sm text-muted-foreground" data-testid="auto-routing-line-2">Turning it off restores these tiers exactly as they are above — nothing here is lost while it is on.</p>

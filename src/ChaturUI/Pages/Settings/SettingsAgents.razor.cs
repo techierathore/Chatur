@@ -19,10 +19,17 @@ public partial class SettingsAgents
     [
         ("read-file", "Reads code", "reads-code"),
         ("edit-file", "Changes code", "changes-code"),
+        ("write-docs", "Writes documents", "writes-docs"),
         ("run-build", "Runs commands", "runs-commands"),
         ("run-source-control", "Runs source control", null),
         ("mark-verified", "Marks work verified", "marks-verified"),
-        ("correct-wording", "Corrects its own wording", null)
+        ("correct-wording", "Corrects its own wording", null),
+        // Phase 2 (0043-P2H-AgentWorkspace.sql) adds these; the Rights panel shows every stored right.
+        ("run-tests", "Runs the tests", null),
+        ("drive-screens", "Drives the screens", null),
+        ("open-feedback", "Opens a feedback file", null),
+        ("log-miss", "Logs a miss", null),
+        ("close-phase", "Closes a phase", null)
     ];
 
     /// <summary>The views the "Showing" picker offers, in the mockup's order.</summary>
@@ -297,9 +304,15 @@ public partial class SettingsAgents
         {
             "read-file" => "may read every file in the project.",
             "edit-file" => "may edit files only if this is on.",
+            "write-docs" => "may write files under docs/ only.",
             "run-build" => "may run builds and tests only if this is on.",
             "run-source-control" => "never runs source control on its own.",
             "mark-verified" => "may write a verdict only if this is on — only the Verifier may.",
+            "run-tests" => "may run the tests only if this is on.",
+            "drive-screens" => "may drive the screens only if this is on.",
+            "open-feedback" => "may open a feedback file only if this is on.",
+            "log-miss" => "may log a miss only if this is on.",
+            "close-phase" => "may close a phase only if this is on — only the owner's handoff does.",
             _ => "may correct its own wording only if this is on."
         };
 

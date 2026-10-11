@@ -65,6 +65,14 @@
             <MenubarContent data-testid="menu-project-items">
                 <MenubarItem Href="/prerequisites">Prerequisites…</MenubarItem>
                 <MenubarItem Href="/repository">Repository…</MenubarItem>
+                @* Phase 2: each opens as a tab in this window, the conversation still on the right. *@
+                <MenubarItem OnClick="@(() => Workbench.OpenProcesses())" data-testid="menu-project-processes">Processes…</MenubarItem>
+                <MenubarItem OnClick="Workbench.OpenBoard" data-testid="menu-project-board">Board…</MenubarItem>
+                <MenubarItem OnClick="OpenAgentWorkspace" data-testid="menu-project-agents">Agent workspace…</MenubarItem>
+                @* Phase 3: the end-to-end run, its queue and its record, each a tab in this window. *@
+                <MenubarItem OnClick="Workbench.OpenAutoRun" data-testid="menu-project-auto">End-to-end run…</MenubarItem>
+                <MenubarItem OnClick="Workbench.OpenRunQueue" data-testid="menu-project-queue">Run queue…</MenubarItem>
+                <MenubarItem OnClick="Workbench.OpenRunReport" data-testid="menu-project-report">Run record…</MenubarItem>
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>

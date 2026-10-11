@@ -13,12 +13,14 @@ Chatur signs in through App Manager, so a test user is a real App Manager accoun
 
 | # | User | Password source | Role | Exists |
 |---|---|---|---|---|
-| 1 | chatur-owner@techierathore.com | user secrets key `Chatur:TestUsers:Owner` | User (the owner's own account shape) | yes (2026-09-22) |
+| 1 | chatur-owner@techierathore.com | user secrets key `Chatur:TestUsers:Owner` | User (the owner's own account shape) | yes (2026-09-22); also on the live App Manager (2026-10-06) |
 | 2 | chatur-second@techierathore.com | user secrets key `Chatur:TestUsers:Second` | User (a second machine on the same account) | yes (2026-09-22) |
 | 3 | chatur-yolo-tester@techierathore.com | user secrets key `Chatur:TestUsers:Yolo` | User (unattended runs) | yes (2026-09-22) |
 | 4 | chatur-yolo-register-202609222248@techierathore.com | user secrets key `Chatur:TestUsers:Register` | User (created by cluster C's REQ-FN-004 Register smoke) | yes (2026-09-22) |
 
 The accounts live in the local development App Manager at https://localhost:32769/ (application "Chatur", id 291, database in the `WinPostgre` docker container), started with `docker start WinPostgre` and then `%LOCALAPPDATA%\AppManagerLocal\start-api.cmd` (admin site: `start-web.cmd`, http://localhost:5041). Also reachable WSL-side at the same `https://localhost:32769` (and `http://localhost:5100`) once the WSL API is started — it is the same database and the same accounts; restart it with `setsid nohup ~/appmanager-local/start-api-wsl.sh > ~/appmanager-local/api.log 2>&1 < /dev/null & disown`. Its RSA key is ephemeral per run — never cache `/AuthSvc/public-key` across process restarts.
+
+A downloaded Chatur (the GitHub nightly) signs in to the live App Manager at https://appmgrapi.techierathore.com instead, with an installed-app key. Only user 1 exists there: it was registered on 2026-10-06 through the nightly's own Register screen, with the same password (owner decision). Users 2 to 4 exist only on the development App Manager.
 
 ## Execution guide
 

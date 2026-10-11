@@ -7,6 +7,7 @@ using Chatur.Core.Actions;
 using Chatur.Core.Data;
 using Chatur.Core.Guards;
 using Chatur.Core.Platform;
+using Chatur.Core.ProcessRuns;
 using Dapper;
 using TechieRag.Abstractions;
 using TechieRag.Llm;
@@ -39,6 +40,7 @@ public sealed class AgentActions : IAgentActions
     private readonly IMeasurementActions objMeasurements;
     private readonly IClock objClock;
     private readonly IRoutingActions objRouting;
+    private readonly Routing.IAutoRouter? objAutoRouter;
 
     /// <summary>
     /// Creates the action set.
@@ -53,6 +55,7 @@ public sealed class AgentActions : IAgentActions
     /// <param name="aMeasurements">Appends the session and build records to the project's <c>docs/metrics</c> streams (REQ-FN-040).</param>
     /// <param name="aClock">Timestamps a session event as it is recorded.</param>
     /// <param name="aRouting">Reads a tier's fallback chain so a limited or unavailable model steps aside for the next one (REQ-FN-021).</param>
+    /// <param name="aAutoRouter">When automatic routing is on, a small model chooses the model for a turn (REQ-FN-071); <see langword="null"/> never consults it, so the tiers and chains always decide.</param>
     public AgentActions(
         IDbConnectionFactory aDb,
         AgentSessionRegistry aRegistry,
@@ -63,8 +66,10 @@ public sealed class AgentActions : IAgentActions
         ICorrectionActions aCorrections,
         IMeasurementActions aMeasurements,
         IClock aClock,
-        IRoutingActions aRouting)
+        IRoutingActions aRouting,
+        Routing.IAutoRouter? aAutoRouter = null)
     {
+        objAutoRouter = aAutoRouter;
         objDb = aDb;
         objRegistry = aRegistry;
         objGuards = aGuards;
@@ -79,6 +84,7 @@ public sealed class AgentActions : IAgentActions
 
     /// <inheritdoc />
     /// <remarks>
+    /// A session a process run handed a step to is the agent's, not the owner's, so it is never the "last session" here (REQ-FN-084).
     /// Picks the role whose own work best suits the project's state (REQ-FN-024, Architecture §6
     /// "Chatur pre-selects the agent that suits the project's state and says why"): the Analyst when
     /// the project has never had a session, the same role as the busiest open thread when a change is
@@ -96,8 +102,8 @@ public sealed class AgentActions : IAgentActions
                 @"SELECT s.SessionId AS SessionId, s.RoleId AS RoleId, r.Name AS RoleName
                   FROM Session s
                   JOIN Role r ON r.RoleId = s.RoleId
-                  WHERE s.ProjectId = @aProjectId
-                  ORDER BY s.StartedUtc DESC
+                  WHERE s.ProjectId = @aProjectId AND s.SessionId NOT IN (SELECT SessionId FROM ProcessRunStepWork)
+                  ORDER BY s.StartedUtc DESC, s.SessionId DESC
                   LIMIT 1;",
                 new { aProjectId },
                 cancellationToken: aCt)).ConfigureAwait(false);
@@ -128,7 +134,7 @@ public sealed class AgentActions : IAgentActions
 
     /// <inheritdoc />
     /// <remarks>
-    /// Reads the project's own most recent session and returns it when one is still open
+    /// Reads the owner's own most recent session (never one a process step started, REQ-FN-084) and returns it when one is still open
     /// (<c>State != 'Stopped'</c>); otherwise starts a new one with <see cref="SuggestAgentAsync"/>'s
     /// own choice of role, defaulting to "ask me first" (REQ-FN-024) — the safer default for a
     /// session nobody has set a mode on yet — so the Workbench always has a conversation to open on
@@ -144,8 +150,8 @@ public sealed class AgentActions : IAgentActions
                          s.Mode AS Mode, s.StartedUtc AS StartedUtc, s.State AS State
                   FROM Session s
                   JOIN Role r ON r.RoleId = s.RoleId
-                  WHERE s.ProjectId = @aProjectId AND s.State != 'Stopped'
-                  ORDER BY s.StartedUtc DESC
+                  WHERE s.ProjectId = @aProjectId AND s.State != 'Stopped' AND s.SessionId NOT IN (SELECT SessionId FROM ProcessRunStepWork)
+                  ORDER BY s.StartedUtc DESC, s.SessionId DESC
                   LIMIT 1;",
                 new { aProjectId },
                 cancellationToken: aCt)).ConfigureAwait(false);
@@ -237,7 +243,13 @@ public sealed class AgentActions : IAgentActions
         var vHistory = await BuildHistoryAsync(aSessionId, vRoleId, vCt).ConfigureAwait(false);
         vHistory.Add(ChatMessage.User(aMessage));
 
-        var vModel = await ResolveModelAsync(aModelId, vRoleId, vCt).ConfigureAwait(false);
+        // REQ-FN-071: with automatic routing on, the small model picks the model for this piece of
+        // work — unless the owner picked one in the composer, which always wins. It answers null when
+        // routing is off (REQ-FN-072) or the small model failed; the tiers and chains then decide.
+        var vRouted = aModelId is null && objAutoRouter is not null
+            ? await objAutoRouter.ChooseAsync(aMessage, aSessionId, vRoleId, vCt).ConfigureAwait(false)
+            : null;
+        var vModel = vRouted ?? await ResolveModelAsync(aModelId, vRoleId, vCt).ConfigureAwait(false);
         if (vModel is null)
         {
             const string vText = "No model provider is configured yet. Add one under Settings ▸ Providers.";
@@ -376,6 +388,20 @@ public sealed class AgentActions : IAgentActions
                 var vSteppingAsideModel = vChain[vChainIndex];
                 if (vDeltaShown || !IsModelUnavailable(vFailure) || vChainIndex + 1 >= vChain.Count)
                 {
+                    // A model call made for an unattended run that ends on a usage limit is the run's to wait out (REQ-FN-064).
+                    if (ModelCallScope.IsForRun && ModelUsageLimit.Recognise(vFailure) is { } vUsageLimit)
+                    {
+                        await AppendEventAsync(
+                            aSessionId,
+                            vSeq++,
+                            "tool",
+                            $"{vSteppingAsideModel.ProviderName} reported a usage limit ({vUsageLimit.Message}); the run waits and tries again.",
+                            null,
+                            null,
+                            vCt).ConfigureAwait(false);
+                        throw vUsageLimit;
+                    }
+
                     // A subscription that needs a fresh sign-in says so plainly (TechieRag 1.0.9's
                     // CodeSignInRequired, TR-RAG-005 closed) rather than as a generic failure.
                     var vNote = vFailure is SubscriptionSignInException { Code: SubscriptionSignInException.CodeSignInRequired }
@@ -522,6 +548,7 @@ public sealed class AgentActions : IAgentActions
     private const string StoppedEventText = "Stopped by the owner.";
 
     /// <inheritdoc />
+    /// <remarks>The owner's sessions only: a session a process run handed a step to belongs to the agent and is followed from Process run (REQ-FN-084, REQ-UI-071).</remarks>
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(int aProjectId, CancellationToken aCt = default)
     {
         using var vConnection = objDb.OpenConnection();
@@ -531,8 +558,8 @@ public sealed class AgentActions : IAgentActions
                          s.Mode AS Mode, s.StartedUtc AS StartedUtc, s.State AS State
                   FROM Session s
                   JOIN Role r ON r.RoleId = s.RoleId
-                  WHERE s.ProjectId = @aProjectId
-                  ORDER BY s.StartedUtc DESC",
+                  WHERE s.ProjectId = @aProjectId AND s.SessionId NOT IN (SELECT SessionId FROM ProcessRunStepWork)
+                  ORDER BY s.StartedUtc DESC, s.SessionId DESC",
                 new { aProjectId },
                 cancellationToken: aCt)).ConfigureAwait(false);
 

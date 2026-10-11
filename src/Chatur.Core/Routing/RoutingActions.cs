@@ -22,6 +22,9 @@ public sealed class RoutingActions : IRoutingActions
     /// <summary>The setting that records the tiers have been filled once, so an emptied chain is not refilled.</summary>
     private const string TiersInitialisedKey = "TiersInitialised";
 
+    /// <summary>The setting that holds whether automatic routing is on (REQ-FN-071).</summary>
+    private const string AutoRoutingKey = "AutoRouting";
+
     private readonly IDbConnectionFactory objDb;
 
     /// <summary>Creates the action implementation.</summary>
@@ -187,6 +190,30 @@ public sealed class RoutingActions : IRoutingActions
 
         await WriteShippedChainsAsync(vConnection, aCt).ConfigureAwait(false);
         await MarkTiersInitialisedAsync(vConnection, aCt).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> AutoRoutingAsync(CancellationToken aCt = default)
+    {
+        using var vConnection = objDb.OpenConnection();
+        var vValue = await vConnection.QuerySingleOrDefaultAsync<string?>(new CommandDefinition(
+            "SELECT Value FROM RoutingSetting WHERE Key = @AutoRoutingKey;",
+            new { AutoRoutingKey },
+            cancellationToken: aCt)).ConfigureAwait(false);
+        return vValue == "1";
+    }
+
+    /// <inheritdoc />
+    public async Task SetAutoRoutingAsync(bool aOn, CancellationToken aCt = default)
+    {
+        using var vConnection = objDb.OpenConnection();
+        await vConnection.ExecuteAsync(new CommandDefinition(
+            """
+            INSERT INTO RoutingSetting (Key, Value) VALUES (@AutoRoutingKey, @vValue)
+            ON CONFLICT (Key) DO UPDATE SET Value = excluded.Value;
+            """,
+            new { AutoRoutingKey, vValue = aOn ? "1" : "0" },
+            cancellationToken: aCt)).ConfigureAwait(false);
     }
 
     private static async Task WriteShippedChainsAsync(System.Data.IDbConnection aConnection, CancellationToken aCt)

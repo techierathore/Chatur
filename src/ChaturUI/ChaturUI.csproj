@@ -12,10 +12,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.*" />
-    <!-- Architecture §1 Q8: every view is built from TrBlazeUI 2.1.2, from the owner's GitHub
+    <!-- Architecture §1 Q8: every view is built from TrBlazeUI 2.1.6, from the owner's GitHub
          Packages feed named in nuget.config. -->
-    <PackageReference Include="TrBlazeUI.Components" Version="2.1.2" />
-    <PackageReference Include="TrBlazeUI.Icons.Lucide" Version="2.1.2" />
+    <PackageReference Include="TrBlazeUI.Components" Version="2.1.6" />
+    <PackageReference Include="TrBlazeUI.Icons.Lucide" Version="2.1.6" />
   </ItemGroup>
 
   <ItemGroup>

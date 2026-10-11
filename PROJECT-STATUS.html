@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Status</h1>
-    <div class="sub">Last rendered: 2026-10-06</div>
+    <div class="sub">Last rendered: 2026-10-11</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#where-i-am">Where I am</a></li>
@@ -121,18 +121,18 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Status</h1>
-    <div class="subtitle">Rendered 2026-10-06 &middot; source <code>PROJECT-STATUS.md</code></div>
+    <div class="subtitle">Rendered 2026-10-11 &middot; source <code>PROJECT-STATUS.md</code></div>
     <div class="cta-next" style="padding:20px; background:var(--cta-bg); border:2px solid var(--accent); border-radius:10px; margin:20px 0;">
       <div style="font-size:11px; color:var(--muted); letter-spacing:.5px;">NEXT COMMAND TO RUN</div>
-      <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:verifier *verify functional Chatur</div>
+      <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:flow-master *handoff-phase Chatur</div>
     </div>
 <table>
 <tbody>
 <tr><th>project</th><td>Chatur</td></tr>
-<tr><th>last_updated</th><td>2026-10-06</td></tr>
-<tr><th>current_phase</th><td>Phase 1 of 4 (Workbench) · Verify — 1 to verify, 96 of 98 verified</td></tr>
+<tr><th>last_updated</th><td>2026-10-11</td></tr>
+<tr><th>current_phase</th><td>Phase 3 of 4 (End to end and unattended) · Handoff — 44 of 44 verified</td></tr>
 <tr><th>last_verified_build</th><td>PASS</td></tr>
-<tr><th>last_verified_date</th><td>2026-10-06</td></tr>
+<tr><th>last_verified_date</th><td>2026-10-11</td></tr>
 </tbody>
 </table>
     <div class="toc-inline">
@@ -149,35 +149,37 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
       </ol>
     </div>
 <h2 id="where-i-am">Where I am<a class="anchor-link" href="#where-i-am">#</a></h2>
-<p>Phase 1 of 4 (Workbench), verifying. 96 of 98 rows are Verified. The pipeline now writes the App Manager address and the installed-app key into both downloads, every App Manager call sends the installation's device id, and a failed sign-in check shows its reason instead of hanging. REQ-NFR-006 waits on the next nightly signing in with the owner's installed-app key.</p>
+<p>Phase 3 of 4 is verified: 44 of 44 rows, on TechieRag 1.1.5 and TrBlazeUI 2.1.6. Phase 1 was re-verified on 2026-10-11: 41 of its 54 functional rows pass outright. The six Settings › Routing rows fail only because the routing mockup still draws automatic routing as "later", which phase 3 made work. Every window zooms with the system keys.</p>
 <h2 id="next-command-to-run">Next command to run<a class="anchor-link" href="#next-command-to-run">#</a></h2>
 <p>Claude Code:</p>
-<pre><code>/TechieFlow:agents:verifier *verify functional Chatur</code></pre>
+<pre><code>/TechieFlow:agents:flow-master *handoff-phase Chatur</code></pre>
 <p>OpenCode:</p>
-<pre><code>/flow-verifier *verify functional Chatur</code></pre>
-<p>Why: 1 rows are built and not verified: REQ-NFR-006; 1 more could not be measured (every test skipped) and need the owner: REQ-FN-012; working docs/Chatur-Checklist.md.</p>
+<pre><code>/flow-master *handoff-phase Chatur</code></pre>
+<p>Why: every row in this phase's scope is terminal and handoff has not run yet; working docs/Chatur-P3-Checklist.md.</p>
 <h2 id="open-requirements">Open requirements<a class="anchor-link" href="#open-requirements">#</a></h2>
 <table>
 <thead><tr><th>Status</th><th>Count</th></tr></thead>
 <tbody>
 <tr><td>Not Started</td><td>0</td></tr>
 <tr><td>In Progress</td><td>0</td></tr>
-<tr><td>Implemented</td><td>1</td></tr>
-<tr><td>Needs re-verify</td><td>1</td></tr>
+<tr><td>Implemented</td><td>0</td></tr>
+<tr><td>Needs re-verify</td><td>0</td></tr>
 <tr><td>Blocked</td><td>0</td></tr>
 </tbody>
 </table>
 <ul>
-<li>[ ] REQ-NFR-006 — The release workflow builds and publishes the Mac and Windows zips (Implemented)
-</li>
-<li>[ ] REQ-FN-012 — Homebrew tools are found on a Mac (Needs re-verify)
+<li>None
 </li>
 </ul>
 <h2 id="known-blockers">Known blockers<a class="anchor-link" href="#known-blockers">#</a></h2>
 <ul>
-<li>REQ-NFR-006: the owner's key must be an installed-app key from App Manager (no secret); after the next push the downloaded nightly is signed in and checked. Sign-in with an installed-app key has not been run on this machine, whose development App Manager has no such key for Chatur.
+<li>Phase 1: REQ-FN-018 to REQ-FN-023 are Needs re-verify; the routing mockup still anchors <code>auto-routing-later</code>. Fix with <code>*amend-docs</code>, then <code>*verify functional Chatur --phase 1</code>.
 </li>
-<li>REQ-FN-012 needs Chatur started from Finder on a Mac; no Mac is registered for automatic checks.
+<li>REQ-FN-012 (phase 1) needs Chatur started from Finder on a Mac.
+</li>
+<li>TR-RAG-006 live check waits for a local or cheap small model; not blocking.
+</li>
+<li>Mac zoom checked by reading code only; TF-010: Mac zoom reaches only the last window opened.
 </li>
 </ul>
 <h2 id="verification-log">Verification log<a class="anchor-link" href="#verification-log">#</a></h2>
@@ -185,38 +187,44 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <table>
 <thead><tr><th>Date</th><th>Phase</th><th>Result</th><th>Status table</th></tr></thead>
 <tbody>
-<tr><td>2026-10-03</td><td>verify-phase</td><td>34/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-03</td><td>verify-phase</td><td>77/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-03</td><td>build-phase</td><td>96/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-04</td><td>verify-phase</td><td>96/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-06</td><td>build-phase</td><td>96/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-09</td><td>amend-docs</td><td>24/44 Verified (4 rows added, documents right)</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-09</td><td>build-phase</td><td>24/44 Verified (documents right built)</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-09</td><td>verify-phase</td><td>42/44 Verified (phase 3)</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-11</td><td>build-phase</td><td>44/44 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-11</td><td>verify-phase</td><td>44/44 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 </tbody>
 </table>
 <h2 id="library-feedback-summary">Library feedback summary<a class="anchor-link" href="#library-feedback-summary">#</a></h2>
 <ul>
-<li>TechieFlow: 0 open · 7 closed — docs/Chatur-TechieFlow-Feedback.md
+<li>TechieFlow: 1 open · 1 fixed upstream, not yet re-checked (TF-008) · 8 closed — docs/Chatur-TechieFlow-Feedback.md
 </li>
-<li>TechieRag: 0 open · 5 closed — docs/Chatur-TechieRag-Feedback.md
+<li>TechieRag: 0 open · 1 fixed upstream, not yet re-checked (TR-RAG-006) · 5 closed — docs/Chatur-TechieRag-Feedback.md
 </li>
-<li>TrBlazeUI: 0 open · 14 closed — docs/Chatur-TrBlazeUI-Feedback.md
+<li>TrBlazeUI: 0 open · 19 closed — docs/Chatur-TrBlazeUI-Feedback.md
 </li>
 </ul>
 <h2 id="standards-compliance">Standards compliance<a class="anchor-link" href="#standards-compliance">#</a></h2>
 <ul>
-<li>Last check 2026-10-06: no standards script exists yet; nothing measured.
+<li>Last check 2026-10-11: no standards script exists yet; nothing measured.
 </li>
 </ul>
 <h2 id="deferred-future"><a id="deferred--future"></a>Deferred / future<a class="anchor-link" href="#deferred-future">#</a></h2>
 <ul>
 <li>The logo is a placeholder; the owner supplies the real one.
 </li>
-<li>No BRD row yet: the Settings account page controls, Start's other ways in, hiding the output strip, merging a process branch.
+<li>No BRD row: account controls, Start's other ways in, hiding output, merging a process branch.
 </li>
 <li>Start's "Get started" buttons are disabled; the mockup draws them active.
 </li>
-<li>Text size and line spacing on the appearance page (deferred 2026-10-03).
+<li>Text size and line spacing on the appearance page.
 </li>
-<li>The top bar reads "Signed in" while the sign-in check has failed.
+<li>Top bar says "Signed in" after a failed sign-in check.
+</li>
+<li>Builder-written step wording for 11 processes needs owner review.
+</li>
+<li>Processes has no field for a change or evidence to work from.
+</li>
+<li>Routing's small model is unnamed in the BRD (MISS-Chatur-20261011-01).
 </li>
 </ul>
   </main>

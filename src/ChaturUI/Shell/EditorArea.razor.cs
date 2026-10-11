@@ -31,7 +31,32 @@ public partial class EditorArea : IDisposable
     }
 
     private IReadOnlyList<EditorTabItem> TabItems =>
-        Workbench.OpenFiles.Select(f => new EditorTabItem(f.Id, f.Name, f.IsDirty)).ToList();
+        Workbench.OpenFiles.Select(f => new EditorTabItem(f.Id, f.Name, f.IsDirty))
+            .Concat(Workbench.ToolTabs.Select(t => new EditorTabItem(t.Id, t.Title)))
+            .ToList();
+
+    /// <summary>
+    /// Gives each tab the id the mockups draw: <c>tab-processes</c>, <c>tab-board</c>, <c>tab-process-run</c>,
+    /// <c>tab-agent-workspace</c>, and for a file <c>tab-</c> plus its name without the extension, in lower case
+    /// (<c>Query.cs</c> is <c>tab-query</c>).
+    /// </summary>
+    private IReadOnlyDictionary<string, object>? TabAttributesOf(EditorTabItem aItem)
+    {
+        var vTool = Workbench.ToolTabs.FirstOrDefault(t => t.Id == aItem.Id);
+        var vSuffix = vTool is null
+            ? System.IO.Path.GetFileNameWithoutExtension(aItem.Label).ToLowerInvariant()
+            : vTool.Kind switch
+            {
+                ToolKind.Processes => "processes",
+                ToolKind.Board => "board",
+                ToolKind.ProcessRun => "process-run",
+                ToolKind.AutoRun => "auto-run",
+                ToolKind.RunQueue => "run-queue",
+                ToolKind.RunReport => "run-report",
+                _ => "agent-workspace"
+            };
+        return new Dictionary<string, object> { ["data-testid"] = $"tab-{vSuffix}" };
+    }
 
     private void OnActiveIdChanged(string? aId)
     {
@@ -72,6 +97,8 @@ public partial class EditorArea : IDisposable
         var vFile = Workbench.OpenFiles.FirstOrDefault(f => f.Id == aItem.Id);
         if (vFile is null)
         {
+            // A screen's tab has nothing unsaved; a run carries on without its tab.
+            Workbench.Close(aItem.Id);
             return;
         }
 

@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="wordmark" data-testid="wordmark">Chatur</span>
 
   <div class="menu" data-testid="menu-file"><button onclick="menu(this,event)">File</button>
-   <div class="drop" data-testid="menu-file-items">
+   <div class="drop" data-testid="menu-file-items" data-tf-state="popup-open">
     <button onclick="say('Starts a new project here.')">New project…<span class="sub">⇧⌘N</span></button>
     <button onclick="say('Opens a .sln and reads its projects.')">Open a solution…<span class="sub">⌘O</span></button>
     <button onclick="say('Opens any folder as a project.')">Open a folder…<span class="sub">⇧⌘O</span></button>
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-edit"><button onclick="menu(this,event)">Edit</button>
-   <div class="drop" data-testid="menu-edit-items">
+   <div class="drop" data-testid="menu-edit-items" data-tf-state="popup-open">
     <button onclick="say('Undoes the last change in the open file.')">Undo<span class="sub">⌘Z</span></button>
     <button disabled onclick="say('Nothing to redo.')" title="Nothing to redo">Redo<span class="sub">⇧⌘Z</span></button>
     <hr>
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-view"><button onclick="menu(this,event)">View</button>
-   <div class="drop" data-testid="menu-view-items">
+   <div class="drop" data-testid="menu-view-items" data-tf-state="popup-open">
     <button onclick="say('Hides or shows the files panel.')"><span class="tick">✓</span>Files</button>
     <button onclick="say('Hides or shows the conversation. Hidden, the file view takes the window.')"><span class="tick">✓</span>Chat</button>
     <button onclick="say('Hides or shows the output strip.')"><span class="tick">✓</span>Output</button>
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-project"><button onclick="menu(this,event)">Project</button>
-   <div class="drop" data-testid="menu-project-items">
+   <div class="drop" data-testid="menu-project-items" data-tf-state="popup-open">
     <button onclick="say('Builds TfLens.')">Build<span class="sub">⌘B</span></button>
     <button onclick="say('Runs the chosen target.')">Run<span class="sub">⌘R</span></button>
     <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-tools"><button onclick="menu(this,event)">Tools</button>
-   <div class="drop" data-testid="menu-tools-items">
+   <div class="drop" data-testid="menu-tools-items" data-tf-state="popup-open">
     <a href="settings-providers.html">Settings…<span class="sub">⌘,</span></a>
     <hr>
     <div class="grouplbl">Go straight to</div>
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-help"><button onclick="menu(this,event)">Help</button>
-   <div class="drop" data-testid="menu-help-items">
+   <div class="drop" data-testid="menu-help-items" data-tf-state="popup-open">
     <button onclick="say('Chatur 0.1.0, built from a91f3c2.')">About Chatur</button>
     <a href="feedback.html">Send feedback…</a>
     <a href="prerequisites.html">Check for updates</a>
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="whoami" data-testid="signed-in">
    <div class="popwrap" data-testid="account">
     <button class="pick" style="height:26px;border:0" onclick="pop(this,event)"><span class="av">TR</span><span class="nm">Techie Rathore</span><svg><use href="#i-chevron"/></svg></button>
-    <div class="pop right" data-testid="account-pop">
+    <div class="pop right" data-testid="account-pop" data-tf-state="popup-open">
      <div class="note">techierathore@gmail.com</div>
      <a href="settings-account.html">Account</a>
      <a href="licence.html">Licence</a>
@@ -154,9 +154,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     </div>
    </div>
    <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
-   <div class="popwrap" data-testid="palette">
+   <div class="popwrap" data-testid="palette" data-tf-state="mockup-only">
     <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one lives in Settings ▸ Appearance"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
-    <div class="pop right" id="palette-pop" data-testid="palette-pop">
+    <div class="pop right" id="palette-pop" data-testid="palette-pop" data-tf-state="popup-open">
      <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber<span class="swatchrow"><i style="background:oklch(0.795 0.135 70)"></i><i style="background:oklch(0.222 0.012 65)"></i></span></button>
      <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo<span class="swatchrow"><i style="background:oklch(0.675 0.165 275)"></i><i style="background:oklch(0.218 0.016 275)"></i></span></button>
      <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal<span class="swatchrow"><i style="background:oklch(0.755 0.115 195)"></i><i style="background:oklch(0.216 0.019 195)"></i></span></button>
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="sep"></span>
   <div class="popwrap" data-testid="target">
    <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop" data-testid="target-pop">
+   <div class="pop" data-testid="target-pop" data-tf-state="popup-open">
     <button onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
     <button onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
     <button onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="sep"></span>
   <div class="popwrap" data-testid="branch-pick">
    <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop" data-testid="branch-pop">
+   <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
     <button onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
     <button onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
     <button onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
@@ -201,16 +201,16 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="panel files" data-testid="files-panel">
    <div class="ph" data-testid="files-head">Files</div>
    <div class="tree" data-testid="file-tree">
-    <a href="main.html"><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
-    <a href="main.html" class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
-    <a href="main.html" class="d2"><svg><use href="#i-folder-open"/></svg>TfLens</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Program.cs</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Query.cs</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Coverage.razor</a>
-    <a href="main.html" class="d2"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
-    <a href="main.html" class="d1"><svg><use href="#i-folder"/></svg>docs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d2"><svg><use href="#i-folder-open"/></svg>TfLens</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Program.cs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Query.cs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Coverage.razor</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d2"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder"/></svg>docs</a>
    </div>
-   <a class="branch" href="repository.html" data-testid="branch"><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
+   <a class="branch" href="repository.html" data-testid="branch" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
   </div>
 
   <div class="split">
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    <div class="panel half" data-testid="tool-area">
     <div class="tabs" data-testid="tabs">
      <span class="tab on" data-testid="tab-processes">Processes<button class="x" onclick="say('Closes this tab.')">×</button></span>
-     <a class="tab" href="main.html" data-testid="tab-query">Query.cs</a>
+     <a class="tab" href="main.html" data-testid="tab-query" data-tf-state="sample-data" data-tf-sample>Query.cs</a>
      <button class="closepane" title="Close the file view" onclick="say('Closes this pane. The chat takes the whole window.')" data-testid="close-file-view">×</button>
     </div>
 
@@ -243,18 +243,18 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
         <th style="padding:8px 7px;font-weight:500">Agent and last run</th>
         <th style="padding:8px 7px;font-weight:500"></th></tr></thead>
        <tbody>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-day1-greenfield"><td class="mono" style="padding:9px 7px;white-space:nowrap">day1-greenfield</td><td class="dim" style="padding:9px 7px">Idea to brief, BRD and checklist</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-day1-greenfield">9 · 4 · 3</td><td style="padding:9px 7px">Analyst<div class="xs dim" data-testid="last-day1-greenfield">12 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-day1-greenfield"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-split-brd"><td class="mono" style="padding:9px 7px;white-space:nowrap">split-brd</td><td class="dim" style="padding:9px 7px">Cuts one BRD into a phase each</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-split-brd">6 · 3 · 1</td><td style="padding:9px 7px">Architect<div class="xs dim" data-testid="last-split-brd">14 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-split-brd"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-build-phase"><td class="mono" style="padding:9px 7px;white-space:nowrap">build-phase</td><td class="dim" style="padding:9px 7px">Builds a phase from its checklist</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-build-phase">11 · 6 · 2</td><td style="padding:9px 7px">Flow master<div class="xs dim" data-testid="last-build-phase">21 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-build-phase"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-verify-phase"><td class="mono" style="padding:9px 7px;white-space:nowrap">verify-phase</td><td class="dim" style="padding:9px 7px">Checks the phase against every requirement</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-verify-phase">7 · 4 · 1</td><td style="padding:9px 7px">Verifier<div style="margin-top:4px"><span class="pill warn" data-testid="state-verify-phase">running now</span></div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-verify-phase"><svg><use href="#i-play"/></svg>Watch</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-fix-issues"><td class="mono" style="padding:9px 7px;white-space:nowrap">fix-issues</td><td class="dim" style="padding:9px 7px">Works through what verification raised</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-fix-issues">8 · 5 · 1</td><td style="padding:9px 7px">Flow master<div class="xs dim" data-testid="last-fix-issues">20 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-fix-issues"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-handoff-phase"><td class="mono" style="padding:9px 7px;white-space:nowrap">handoff-phase</td><td class="dim" style="padding:9px 7px">Closes a phase, opens the next</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-handoff-phase">5 · 2 · 2</td><td style="padding:9px 7px">Flow master<div class="xs dim" data-testid="last-handoff-phase">14 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-handoff-phase"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-refresh-status"><td class="mono" style="padding:9px 7px;white-space:nowrap">refresh-status</td><td class="dim" style="padding:9px 7px">Rewrites the status from the checklists</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-refresh-status">4 · 2 · 0</td><td style="padding:9px 7px">Flow master<div class="xs dim" data-testid="last-refresh-status">22 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-refresh-status"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-deploy-checklist"><td class="mono" style="padding:9px 7px;white-space:nowrap">deploy-checklist</td><td class="dim" style="padding:9px 7px">Lists what a release needs</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-deploy-checklist">6 · 3 · 1</td><td style="padding:9px 7px">Architect<div class="xs dim" data-testid="last-deploy-checklist">18 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-deploy-checklist"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-mockups"><td class="mono" style="padding:9px 7px;white-space:nowrap">mockups</td><td class="dim" style="padding:9px 7px">Draws the screens a phase needs</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-mockups">5 · 2 · 1</td><td style="padding:9px 7px">Architect<div class="xs dim" data-testid="last-mockups">22 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-mockups"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-amend-docs"><td class="mono" style="padding:9px 7px;white-space:nowrap">amend-docs</td><td class="dim" style="padding:9px 7px">Puts a late change through every document</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-amend-docs">6 · 3 · 2</td><td style="padding:9px 7px">Analyst<div class="xs dim" data-testid="last-amend-docs">19 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-amend-docs"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-triage-issues"><td class="mono" style="padding:9px 7px;white-space:nowrap">triage-issues</td><td class="dim" style="padding:9px 7px">Sorts reports into the right checklist</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-triage-issues">5 · 3 · 1</td><td style="padding:9px 7px">Verifier<div class="xs dim" data-testid="last-triage-issues">17 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-triage-issues"><svg><use href="#i-play"/></svg>Start</a></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="row-metrics-report"><td class="mono" style="padding:9px 7px;white-space:nowrap">metrics-report</td><td class="dim" style="padding:9px 7px">Reads the run records and reports</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-metrics-report">4 · 1 · 0</td><td style="padding:9px 7px">Verifier<div class="xs dim" data-testid="last-metrics-report">22 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-metrics-report"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-day1-greenfield" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">day1-greenfield</td><td class="dim" style="padding:9px 7px">Idea to brief, BRD and checklist</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-day1-greenfield">9 · 4 · 3</td><td style="padding:9px 7px">Analyst<div class="xs dim" data-testid="last-day1-greenfield">12 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-day1-greenfield"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-split-brd" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">split-brd</td><td class="dim" style="padding:9px 7px">Cuts one BRD into a phase each</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-split-brd">6 · 3 · 1</td><td style="padding:9px 7px">Architect<div class="xs dim" data-testid="last-split-brd">14 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-split-brd"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-build-phase" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">build-phase</td><td class="dim" style="padding:9px 7px">Builds a phase from its checklist</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-build-phase">11 · 6 · 2</td><td style="padding:9px 7px">Flow master<div class="xs dim" data-testid="last-build-phase">21 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-build-phase"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-verify-phase" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">verify-phase</td><td class="dim" style="padding:9px 7px">Checks the phase against every requirement</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-verify-phase">7 · 4 · 1</td><td style="padding:9px 7px">Verifier<div style="margin-top:4px"><span class="pill warn" data-testid="state-verify-phase">running now</span></div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-verify-phase"><svg><use href="#i-play"/></svg>Watch</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-fix-issues" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">fix-issues</td><td class="dim" style="padding:9px 7px">Works through what verification raised</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-fix-issues">8 · 5 · 1</td><td style="padding:9px 7px">Flow master<div class="xs dim" data-testid="last-fix-issues">20 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-fix-issues"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-handoff-phase" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">handoff-phase</td><td class="dim" style="padding:9px 7px">Closes a phase, opens the next</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-handoff-phase">5 · 2 · 2</td><td style="padding:9px 7px">Flow master<div class="xs dim" data-testid="last-handoff-phase">14 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-handoff-phase"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-refresh-status" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">refresh-status</td><td class="dim" style="padding:9px 7px">Rewrites the status from the checklists</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-refresh-status">4 · 2 · 0</td><td style="padding:9px 7px">Flow master<div class="xs dim" data-testid="last-refresh-status">22 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-refresh-status"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-deploy-checklist" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">deploy-checklist</td><td class="dim" style="padding:9px 7px">Lists what a release needs</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-deploy-checklist">6 · 3 · 1</td><td style="padding:9px 7px">Architect<div class="xs dim" data-testid="last-deploy-checklist">18 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-deploy-checklist"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-mockups" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">mockups</td><td class="dim" style="padding:9px 7px">Draws the screens a phase needs</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-mockups">5 · 2 · 1</td><td style="padding:9px 7px">Architect<div class="xs dim" data-testid="last-mockups">22 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-mockups"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-amend-docs" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">amend-docs</td><td class="dim" style="padding:9px 7px">Puts a late change through every document</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-amend-docs">6 · 3 · 2</td><td style="padding:9px 7px">Analyst<div class="xs dim" data-testid="last-amend-docs">19 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-amend-docs"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-triage-issues" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">triage-issues</td><td class="dim" style="padding:9px 7px">Sorts reports into the right checklist</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-triage-issues">5 · 3 · 1</td><td style="padding:9px 7px">Verifier<div class="xs dim" data-testid="last-triage-issues">17 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-triage-issues"><svg><use href="#i-play"/></svg>Start</a></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="row-metrics-report" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">metrics-report</td><td class="dim" style="padding:9px 7px">Reads the run records and reports</td><td class="mono" style="padding:9px 7px;white-space:nowrap" data-testid="shape-metrics-report">4 · 1 · 0</td><td style="padding:9px 7px">Verifier<div class="xs dim" data-testid="last-metrics-report">22 Sep</div></td><td style="padding:9px 7px"><a class="pick" href="process-run.html" data-testid="start-metrics-report"><svg><use href="#i-play"/></svg>Start</a></td></tr>
        </tbody>
       </table>
       </div>
@@ -269,13 +269,13 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
         <th style="padding:8px 7px;font-weight:500">Step</th>
         <th style="padding:8px 7px;font-weight:500">Kind</th></tr></thead>
        <tbody>
-        <tr style="border-top:1px solid var(--line2)" data-testid="step-1"><td class="dim" style="padding:9px 7px">1</td><td style="padding:9px 7px">Read the phase checklist and collect every requirement</td><td style="padding:9px 7px"><span class="pill" data-testid="kind-1">step</span></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="step-2"><td class="dim" style="padding:9px 7px">2</td><td style="padding:9px 7px">Build the solution</td><td style="padding:9px 7px"><span class="pill" data-testid="kind-2">step</span></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="step-3"><td class="dim" style="padding:9px 7px">3</td><td style="padding:9px 7px">The build succeeded and left no warning behind</td><td style="padding:9px 7px"><span class="pill ok" data-testid="kind-3"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>check</span></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="step-4"><td class="dim" style="padding:9px 7px">4</td><td style="padding:9px 7px">Run the tests and the screen checks</td><td style="padding:9px 7px"><span class="pill" data-testid="kind-4">step</span></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="step-5"><td class="dim" style="padding:9px 7px">5</td><td style="padding:9px 7px">Every requirement in the phase carries a verdict</td><td style="padding:9px 7px"><span class="pill ok" data-testid="kind-5"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>check</span></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="step-6"><td class="dim" style="padding:9px 7px">6</td><td style="padding:9px 7px">Approve the verdicts before they are written down</td><td style="padding:9px 7px"><span class="pill warn" data-testid="kind-6"><svg style="width:11px;height:11px"><use href="#i-pause"/></svg>owner stops</span></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="step-7"><td class="dim" style="padding:9px 7px">7</td><td style="padding:9px 7px">Write the verdicts into the phase checklist</td><td style="padding:9px 7px"><span class="pill" data-testid="kind-7">step</span></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="step-1" data-tf-state="sample-data" data-tf-sample><td class="dim" style="padding:9px 7px">1</td><td style="padding:9px 7px">Read the phase checklist and collect every requirement</td><td style="padding:9px 7px"><span class="pill" data-testid="kind-1">step</span></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="step-2" data-tf-state="sample-data" data-tf-sample><td class="dim" style="padding:9px 7px">2</td><td style="padding:9px 7px">Build the solution</td><td style="padding:9px 7px"><span class="pill" data-testid="kind-2">step</span></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="step-3" data-tf-state="sample-data" data-tf-sample><td class="dim" style="padding:9px 7px">3</td><td style="padding:9px 7px">The build succeeded and left no warning behind</td><td style="padding:9px 7px"><span class="pill ok" data-testid="kind-3"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>check</span></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="step-4" data-tf-state="sample-data" data-tf-sample><td class="dim" style="padding:9px 7px">4</td><td style="padding:9px 7px">Run the tests and the screen checks</td><td style="padding:9px 7px"><span class="pill" data-testid="kind-4">step</span></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="step-5" data-tf-state="sample-data" data-tf-sample><td class="dim" style="padding:9px 7px">5</td><td style="padding:9px 7px">Every requirement in the phase carries a verdict</td><td style="padding:9px 7px"><span class="pill ok" data-testid="kind-5"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>check</span></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="step-6" data-tf-state="sample-data" data-tf-sample><td class="dim" style="padding:9px 7px">6</td><td style="padding:9px 7px">Approve the verdicts before they are written down</td><td style="padding:9px 7px"><span class="pill warn" data-testid="kind-6"><svg style="width:11px;height:11px"><use href="#i-pause"/></svg>owner stops</span></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="step-7" data-tf-state="sample-data" data-tf-sample><td class="dim" style="padding:9px 7px">7</td><td style="padding:9px 7px">Write the verdicts into the phase checklist</td><td style="padding:9px 7px"><span class="pill" data-testid="kind-7">step</span></td></tr>
        </tbody>
       </table>
       </div>
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       <button class="iconbtn" onclick="say('Starts a new conversation.')" data-testid="new-chat"><svg><use href="#i-plus"/></svg></button>
       <div class="popwrap" data-testid="history">
        <button class="iconbtn" onclick="pop(this,event)" title="Earlier conversations"><svg><use href="#i-list"/></svg></button>
-       <div class="pop right" data-testid="history-pop">
+       <div class="pop right" data-testid="history-pop" data-tf-state="popup-open">
         <div class="note">Earlier on TfLens</div>
         <button onclick="say('Opens that conversation where it stopped.')">Which processes stop and ask · today</button>
         <button onclick="say('Opens that conversation where it stopped.')">verify-phase, step by step · yesterday</button>
@@ -315,10 +315,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      </span>
     </div>
     <div class="talk" data-testid="conversation">
-     <div class="msg me" data-testid="msg-1"><span class="who">TR</span>
+     <div class="msg me" data-testid="msg-1" data-tf-state="sample-data" data-tf-sample><span class="who">TR</span>
       <div class="body"><span class="name">You<span class="model">14:06</span></span>
        <div class="said">Which of these will stop and ask me something?</div></div></div>
-     <div class="msg agent" data-testid="msg-2"><span class="who"><svg><use href="#i-sparkle"/></svg></span>
+     <div class="msg agent" data-testid="msg-2" data-tf-state="sample-data" data-tf-sample><span class="who"><svg><use href="#i-sparkle"/></svg></span>
       <div class="body"><span class="name">Flow master<span class="model">Claude Opus 5 · 980 tokens</span></span>
        <div class="said">Nine of the twelve. Only refresh-status and metrics-report run straight through. verify-phase stops once, at step 6, to have the verdicts approved.</div>
        <div class="step"><svg class="ok"><use href="#i-check"/></svg>read 12 process definitions</div>
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       <div class="tools">
        <div class="popwrap" data-testid="model-pick">
         <button class="pick" onclick="pop(this,event)"><svg><use href="#i-sparkle"/></svg><span data-value>Claude Opus 5</span><svg><use href="#i-chevron"/></svg></button>
-        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop">
+        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop" data-tf-state="popup-open">
          <button onclick="choose(this,'Claude Opus 5',event)"><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
          <button onclick="choose(this,'Claude Sonnet 5',event)"><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
          <button onclick="choose(this,'Claude Haiku 4.5',event)"><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        </div>
        <div class="popwrap" data-testid="agent-pick">
         <button class="pick" onclick="pop(this,event)"><span data-value>Flow master</span><svg><use href="#i-chevron"/></svg></button>
-        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="agent-pop">
+        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="agent-pop" data-tf-state="popup-open">
          <button onclick="choose(this,'No agent',event)"><span class="tick"></span>No agent — the model itself</button>
          <hr>
          <button onclick="choose(this,'Analyst',event)"><span class="tick"></span>Analyst</button>

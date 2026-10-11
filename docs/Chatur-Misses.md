@@ -3,26 +3,93 @@
 | | |
 |---|---|
 | App | Chatur |
-| Count | 198 logged: 5 open, 193 fixed, 0 will not fix |
+| Count | 266 logged: 71 open, 195 fixed, 0 will not fix |
 | Source | `docs/metrics/misses.jsonl`, one row per miss record. Rewritten by `tf-misses-md.sh` on every new record. Never edit it: a wrong row is corrected by a new record. |
-| Updated | 2026-10-06 |
+| Updated | 2026-10-11 |
 
 **Whose gap** answers the four questions of the miss protocol: **the app's spec** did not say it, so the checklist line is fixed; **the framework never said it**, so one requirement line and a check are added; **the check was too weak** (a review, or a script that did not fire), so the check is fixed; **said and ignored**, so the rule becomes a hook or is deleted. **not sorted** means the record predates the sort or nobody has answered yet; `bash .tfcore/utils/tf-emit.sh --amend <miss> sort <spec|unsaid|weak-check|ignored>` completes it.
 
-## Open (5)
+## Open (71)
 
 | Miss | Found | Whose gap | What went wrong |
 |---|---|---|---|
+| MISS-Chatur-20261011-08 (REQ-FN-023) | 2026-10-11 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261011-07 (REQ-FN-022) | 2026-10-11 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261011-06 (REQ-FN-021) | 2026-10-11 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261011-05 (REQ-FN-020) | 2026-10-11 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261011-04 (REQ-FN-019) | 2026-10-11 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261011-03 (REQ-FN-018) | 2026-10-11 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261011-02 (REQ-FN-072) | 2026-10-11 by agent-review | the app's spec | The routing mockup still draws automatic routing as a disabled switch marked later, while REQ-FN-071 and REQ-FN-072 need it working. |
+| MISS-Chatur-20261011-01 (REQ-FN-071) | 2026-10-11 by agent-review | the app's spec | The BRD and the routing mockup never say which model is the small model that picks, so the builder used the first model of the lowest tier. |
+| MISS-Chatur-20261008-24 (REQ-UI-071) | 2026-10-08 by gate | the app's spec | The conversation reopened an agent's step session as the owner's own, showing the step task as You and clipping its long text at 390. |
+| MISS-Chatur-20261008-23 (REQ-FN-091) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-22 (REQ-FN-089) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-20 (REQ-FN-084) | 2026-10-08 by agent-review | not sorted | The BRD does not define which documents count as touched for amend-docs' check. |
+| MISS-Chatur-20261008-19 (REQ-FN-084) | 2026-10-08 by agent-review | not sorted | The BRD does not define tokens and failures for metrics-report's recomputed totals. |
+| MISS-Chatur-20261008-18 (REQ-FN-084) | 2026-10-08 by agent-review | not sorted | The BRD does not say which files the per-process checks read for issue reports (docs/issues/ was taken as the reports folder) for triage-issues. |
+| MISS-Chatur-20261008-17 (REQ-UI-061) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-16 (REQ-UI-060) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-15 (REQ-UI-059) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-14 (REQ-UI-058) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-13 (REQ-FN-070) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-12 (REQ-FN-069) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-11 (REQ-FN-068) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-10 (REQ-UI-057) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-09 (REQ-FN-067) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-08 (REQ-FN-066) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-07 (REQ-FN-065) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-06 (REQ-FN-064) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-05 (REQ-FN-063) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-04 (REQ-UI-056) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-03 (REQ-FN-062) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-02 (REQ-UI-055) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261008-01 (REQ-FN-061) | 2026-10-08 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261007-12 (REQ-UI-060) | 2026-10-08 by agent-review | the framework never said it | The BRD never said how a run's time is measured when it waits out a usage limit, so the report counts the run's time from start to end less the waits, and shows tokens only from runs.jsonl records inside its window. |
+| MISS-Chatur-20261007-11 (REQ-UI-061) | 2026-10-08 by agent-review | the framework never said it | The BRD never said which runs the Run report lists once Chatur carries out its own end-to-end runs, so it lists the project's end-to-end runs newest first and, beside them, runs recorded as auto in runs.jsonl. |
+| MISS-Chatur-20261007-10 (REQ-FN-061) | 2026-10-07 by agent-review | the framework never said it | The auto-run mockup names create-project-brief and devguide in its chain, which are not among Chatur's twelve processes, so the chain uses day1-greenfield and mockups in their places. |
+| MISS-Chatur-20261007-09 (REQ-FN-061) | 2026-10-07 by agent-review | the framework never said it | The BRD never said what an owner stop inside the chain does in an unattended run, so the run answers it yes itself and writes that into its record; only the acceptance test is left to the owner. |
+| MISS-Chatur-20261007-08 (REQ-UI-060) | 2026-10-07 by agent-review | the framework never said it | The BRD never said where a run's models, calls, requirement verdicts and waiting time are recorded, so the report reads the project's runs, gates and misses streams and shows a dash where a figure is not there. |
+| MISS-Chatur-20261007-07 (REQ-FN-070) | 2026-10-07 by self-smoke | not sorted | The BRD does not say what a paused run does when another run is going at resume, or how Implemented and In Progress rank beside blocked, partial and untouched. |
+| MISS-Chatur-20261007-06 (REQ-UI-047) | 2026-10-07 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261007-05 (REQ-UI-047) | 2026-10-07 by agent-review | not sorted | The Process run mockup put the owner stop at step 5 and drew step 4 still running while it waited; the Processes mockup puts the stop at step 6. |
+| MISS-Chatur-20261007-04 (REQ-UI-048) | 2026-10-07 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261007-03 (REQ-FN-052) | 2026-10-07 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261007-02 (REQ-FN-052) | 2026-10-07 by self-smoke | the app's spec | The BRD gives the eleven processes other than verify-phase no real step work, so once the always-passing executor was removed their steps can only say they are not automated yet. |
+| MISS-Chatur-20261007-01 (REQ-UI-048) | 2026-10-07 by self-smoke | the app's spec | The BRD does not say what percentage a Needs re-verify verdict carries, or whether a skipped test, a flaky test or a test command that could not run may still verify a requirement. |
+| MISS-Chatur-20261006-27 (REQ-UI-026) | 2026-10-06 by agent-review | not sorted | Phase 2 added five agent rights to the database, and Settings Agents still shows only the original four, so a role's full rights are no longer visible. |
+| MISS-Chatur-20261006-26 (REQ-FN-060) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-25 (REQ-FN-059) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-24 (REQ-UI-054) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-23 (REQ-FN-058) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-22 (REQ-UI-053) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-21 (REQ-FN-057) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-20 (REQ-UI-052) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-19 (REQ-UI-051) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-18 (REQ-FN-056) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-17 (REQ-UI-050) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-16 (REQ-UI-049) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-15 (REQ-FN-055) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-14 (REQ-UI-048) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-13 (REQ-FN-054) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-12 (REQ-UI-047) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-11 (REQ-FN-053) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-10 (REQ-FN-052) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-09 (REQ-FN-051) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-08 (REQ-FN-050) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-07 (REQ-UI-046) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-06 (REQ-UI-045) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-05 (REQ-FN-049) | 2026-10-06 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261006-04 (REQ-UI-048) | 2026-10-06 by agent-review | not sorted | BRD-105 says each requirement's verdict lands in the checklist but not where a verdict comes from, so a run grades every Implemented requirement without a recorded defect on its checks and the owner's approval. |
 | MISS-Chatur-20261004-06 (REQ-NFR-006) | 2026-10-04 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261002-03 | 2026-10-02 by agent-review | not sorted | The Settings account page is missing controls its mockup draws, and no verify ever drove Settings to notice it. |
 | MISS-Chatur-20261002-02 | 2026-10-02 by agent-review | not sorted | The Start mockup draws four active Get started buttons, but the app keeps them disabled and no row says which is right. |
 | MISS-Chatur-20260930-36 (REQ-FN-012) | 2026-09-30 by gate | not sorted | no sentence recorded (partial-implementation, src) |
-| MISS-Chatur-20260930-01 (REQ-NFR-006) | 2026-09-30 by owner | the app's spec | BRD §2 Scope and Technical-Decisions 'Release' promised a nightly download from every push to main, but no BRD requirement carried the release pipeline, so no checklist row built or verified it (added as BRD-158 / REQ-NFR-006 on 2026-09-30). |
 
-## Fixed (193)
+## Fixed (195)
 
 | Miss | Found | Closed | Whose gap | What went wrong |
 |---|---|---|---|---|
+| MISS-Chatur-20261008-21 (REQ-FN-084) | 2026-10-08 by agent-review | 2026-10-09 by amend-docs | not sorted | Phase 1 rights give the Analyst and the Verifier no file-writing right, so the processes they own in phase 3 (day1-greenfield, amend-docs, triage-issues, metrics-report) cannot write their documents when handed to them. |
 | MISS-Chatur-20261006-03 (REQ-NFR-006) | 2026-10-06 by owner | 2026-10-06 by fix-issues | not sorted | I told the owner to add an App Manager secret, but a downloadable app must use an installed-app key with no secret and send its device id on every call, as the updated App Manager guide says. |
 | MISS-Chatur-20261006-02 (REQ-NFR-006) | 2026-10-06 by agent-review | 2026-10-06 by build-phase | not sorted | The downloaded nightly hung on Loading Chatur because it had no App Manager address and the sign-in check swallowed the error. |
 | MISS-Chatur-20261006-01 (REQ-UI-018) | 2026-10-06 by agent-review | 2026-10-06 by build-phase | not sorted | A released build showed its version as 0.1 and offered itself as a newer nightly, because it read the version from the app's own file and compared a short commit with a full one. |
@@ -216,3 +283,4 @@
 | MISS-Chatur-20260930-04 (REQ-UI-034) | 2026-09-30 by gate | 2026-10-01 by build-phase | the check was too weak | No part of Chatur ever records a correction: there is no agent tool that changes a role, rule or step wording and logs it, so the Corrections page can only ever be empty. |
 | MISS-Chatur-20260930-03 (REQ-FN-020) | 2026-09-30 by gate | 2026-10-01 by build-phase | the check was too weak | Routing rows (role tiers, work tiers, chain order, remembered) were marked Implemented at 100% while the Routing page had no controls at all, only three empty tier cards. |
 | MISS-Chatur-20260930-02 (REQ-FN-014) | 2026-09-30 by agent-review | 2026-10-01 by build-phase | the check was too weak | Connecting a provider was marked Implemented and live-smoked, but the Add a provider button was disabled, the dialog was never built, and the OpenAI-compatible connector was refused, so the owner could not connect any model. |
+| MISS-Chatur-20260930-01 (REQ-NFR-006) | 2026-09-30 by owner | 2026-10-06 by fix-issues | the app's spec | BRD §2 Scope and Technical-Decisions 'Release' promised a nightly download from every push to main, but no BRD requirement carried the release pipeline, so no checklist row built or verified it (added as BRD-158 / REQ-NFR-006 on 2026-09-30). |

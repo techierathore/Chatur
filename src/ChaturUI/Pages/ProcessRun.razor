@@ -1,0 +1,305 @@
+@implements IDisposable
+@inject IProcessRunActions Runs
+@inject IProjectActions ProjectActions
+@inject NavigationManager Nav
+@inject WorkbenchState WorkbenchTabs
+@inject Chatur.Core.Platform.IClock Clock
+@inject ToastService ToastService
+@inject BrowserInterop Browser
+
+@* UI Design "Screen: Process run" — mockups/process-run.html, a tab in the main window. REQ-UI-047 (a failed check stops the run
+   and the page says which check and why) and REQ-UI-048 (the verdicts reach the checklist). The run's
+   own behaviour (REQ-FN-052 to REQ-FN-055) is Chatur.Core's; this page only shows it and carries it on. *@
+<div class="flex flex-col gap-4" data-testid="process-run">
+
+    @if (objIsLoading)
+    {
+        <div class="flex items-center gap-2 text-sm text-muted-foreground" data-testid="run-loading">
+            <Spinner />
+            <span>Starting the run…</span>
+        </div>
+    }
+    else if (objRun is null)
+    {
+        <Empty Title="No such run" Description="This run is not in Chatur's database. Start the process again from Processes." Size="EmptySize.Small" data-testid="run-missing" />
+        <div>
+            <Button Variant="ButtonVariant.Outline" OnClick="BackToProcesses" data-testid="back-to-processes">All processes</Button>
+        </div>
+    }
+    else
+    {
+        <div class="flex flex-wrap items-start gap-3" data-testid="run-heading">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-base font-semibold" data-testid="run-process">@objRun.ProcessCode</span>
+                    <Badge Variant="@StateVariant" Class="gap-1 rounded-full border-transparent" data-testid="run-state">
+                        <LucideIcon Name="@StateIcon" Size="11" />
+                        @StateText
+                    </Badge>
+                </div>
+                <div class="text-sm text-muted-foreground">
+                    <span data-testid="run-project">@(objProjectName ?? "Project")</span>
+                    · started <span data-testid="run-started">@FormatStarted(objRun.StartedUtc)</span>
+                    · @(objRun.EndedUtc is null ? "running for" : "ran for") <span data-testid="run-elapsed">@Elapsed</span>
+                </div>
+            </div>
+            <span class="flex-1"></span>
+            <Button Variant="ButtonVariant.Outline" OnClick="BackToProcesses" data-testid="back-to-processes">
+                <LucideIcon Name="chevron-left" Size="14" />
+                All processes
+            </Button>
+            @if (objRun.State == ProcessRunState.Stopped)
+            {
+                <Button Variant="ButtonVariant.Outline" OnClick="BackToProcesses" data-testid="pause-run">Back to Processes</Button>
+            }
+            else
+            {
+                @* Chatur.Core has no pause: a run holds only at an owner stop. The control is shown, switched off. *@
+                <Button Variant="ButtonVariant.Outline" Disabled="true" data-testid="pause-run">
+                    <LucideIcon Name="pause" Size="14" />
+                    Pause
+                </Button>
+            }
+            <Button Variant="ButtonVariant.Outline" Disabled="@(objRun.State is ProcessRunState.Stopped or ProcessRunState.Finished || objIsBusy)"
+                    OnClick="AskToStop" data-testid="stop-run">
+                <LucideIcon Name="square" Size="14" />
+                Stop
+            </Button>
+        </div>
+
+        <Card data-testid="run-steps-panel">
+            <CardHeader>
+                <div class="flex items-center gap-2">
+                    <CardTitle>@NumberWord(objRun.Steps.Count) steps</CardTitle>
+                    <span class="flex-1"></span>
+                    <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="run-progress-count">@ProgressCount</Badge>
+                </div>
+            </CardHeader>
+            <CardContent Class="px-3 pb-3">
+                <Stepper Current="@(objRun.CurrentPosition ?? objRun.Steps.Count)" Orientation="StepperOrientation.Vertical" AriaLabel="Steps of this run">
+                    @foreach (var vStep in objRun.Steps)
+                    {
+                        <StepperItem Title="@($"{vStep.Position} · {vStep.Wording}")" Status="@StatusOf(vStep)" data-testid="@($"run-step-{vStep.Position}")">
+                            <Icon>
+                                <LucideIcon Name="@StepIcon(vStep)" Class="@(vStep.State == ProcessStepState.Running ? "animate-spin" : null)" />
+                            </Icon>
+                            <Trailing>
+                                <Badge Variant="@StepVariant(vStep)" Class="rounded-full border-transparent" data-testid="@($"run-step-{vStep.Position}-state")">@StepStateText(vStep)</Badge>
+                            </Trailing>
+                            <ChildContent>
+                                <div class="whitespace-pre-wrap break-words text-xs text-muted-foreground" data-testid="@($"run-step-{vStep.Position}-result")">@ResultOf(vStep)</div>
+                            </ChildContent>
+                        </StepperItem>
+                    }
+                </Stepper>
+            </CardContent>
+        </Card>
+
+        @if (objHandedStep is { Work: { } vWork } vHandedStep)
+        {
+            @* REQ-UI-070: the step handed to an agent, what it uses and what it has done so far. The mockup's `handed-step` panel. *@
+            <Card data-testid="handed-step">
+                <CardHeader>
+                    <div class="flex items-center gap-2">
+                        <CardTitle>Step @vHandedStep.Position @(vWork.State == ProcessStepWorkState.Working ? "is" : "was") with the @vWork.AgentName</CardTitle>
+                        <span class="flex-1"></span>
+                        <Badge Variant="@HandedVariant(vWork)" Class="gap-1 rounded-full border-transparent" data-testid="handed-step-state">
+                            @if (vWork.State == ProcessStepWorkState.Working)
+                            {
+                                <Typing Size="TypingSize.Small" Label="The agent is working" />
+                            }
+                            @HandedStateText(vWork)
+                        </Badge>
+                    </div>
+                </CardHeader>
+                <CardContent Class="flex flex-col gap-2">
+                    <div class="flex flex-wrap items-baseline gap-x-3">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Agent</span>
+                        <span data-testid="handed-step-agent">@vWork.AgentName</span>
+                        <span class="text-sm text-muted-foreground" data-testid="handed-step-model">@(vWork.ModelName is null ? "No model connected" : $"{vWork.ModelName} · tier {vWork.Tier}")</span>
+                    </div>
+                    <div class="flex flex-wrap items-baseline gap-x-3">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Task</span>
+                        <span class="min-w-0 flex-1 break-words text-sm" data-testid="handed-step-task">@vWork.Task</span>
+                    </div>
+                    <div class="flex flex-wrap items-baseline gap-x-3" data-testid="handed-step-files">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Files written</span>
+                        <span class="min-w-0 flex-1 break-words font-mono text-sm">@ListOrNothing(vWork.FilesWritten)</span>
+                    </div>
+                    @if (vWork.FilesProposed.Count > 0)
+                    {
+                        <div class="flex flex-wrap items-baseline gap-x-3" data-testid="handed-step-proposed">
+                            <span class="w-28 flex-none text-sm text-muted-foreground">Waiting for you</span>
+                            <span class="min-w-0 flex-1 break-words font-mono text-sm">@string.Join(" · ", vWork.FilesProposed)</span>
+                        </div>
+                    }
+                    <div class="flex flex-wrap items-baseline gap-x-3" data-testid="handed-step-commands">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Commands run</span>
+                        <span class="min-w-0 flex-1 break-words font-mono text-sm">@ListOrNothing(vWork.CommandsRun)</span>
+                    </div>
+                    @foreach (var vRefusal in vWork.Refusals)
+                    {
+                        <Alert Variant="AlertVariant.Warning" data-testid="handed-step-refusal">
+                            <LucideIcon Name="triangle-alert" Size="16" />
+                            <AlertDescription>Refused: @vRefusal</AlertDescription>
+                        </Alert>
+                    }
+                    <div class="whitespace-pre-wrap break-words text-sm text-muted-foreground" data-testid="handed-step-final">@HandedFinalText(vWork)</div>
+                    @if (vWork.State == ProcessStepWorkState.Working)
+                    {
+                        <div class="flex flex-wrap gap-2">
+                            <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy && objIsStopDialogOpen" OnClick="AskToStop" data-testid="handed-step-stop">
+                                <LucideIcon Name="square" Size="14" />
+                                Stop
+                            </Button>
+                        </div>
+                    }
+                </CardContent>
+            </Card>
+        }
+
+        @if (objWaiting is not null)
+        {
+            <Card data-testid="question-panel">
+                <CardHeader>
+                    <div class="flex items-center gap-2">
+                        <CardTitle>The run is asking you something</CardTitle>
+                        <span class="flex-1"></span>
+                        <Badge Variant="BadgeVariant.Warning" Class="rounded-full border-transparent" data-testid="question-step">step @objWaiting.Position</Badge>
+                    </div>
+                </CardHeader>
+                <CardContent Class="flex flex-col gap-3">
+                    <div class="text-sm" data-testid="question-text">@objWaiting.Wording</div>
+                    <div class="flex flex-wrap items-center gap-2" data-testid="question-actions">
+                        <Button OnClick="@(() => AnswerAsync(ProcessAnswer.Yes))" Disabled="objIsBusy" data-testid="answer-yes">
+                            <LucideIcon Name="check" Size="16" />
+                            Yes
+                        </Button>
+                        <Button Variant="ButtonVariant.Outline" OnClick="@(() => AnswerAsync(ProcessAnswer.No))" Disabled="objIsBusy" data-testid="answer-no">
+                            <LucideIcon Name="x" Size="16" />
+                            No
+                        </Button>
+                        <Button Variant="ButtonVariant.Outline" OnClick="@(() => AnswerAsync(ProcessAnswer.Later))" Disabled="objIsBusy" data-testid="answer-later">
+                            <LucideIcon Name="clock" Size="16" />
+                            Answer later
+                        </Button>
+                    </div>
+                    <div class="flex items-start gap-2 rounded-md bg-muted p-3 text-sm text-muted-foreground" data-testid="question-note">
+                        <LucideIcon Name="triangle-alert" Size="16" Class="mt-0.5 flex-none" />
+                        <span>Nothing further runs until this is answered. Close Chatur and open it again and the run is still here, at step @objWaiting.Position, with the same question.</span>
+                    </div>
+                </CardContent>
+            </Card>
+        }
+
+        @if (objFailedStep is not null)
+        {
+            @* REQ-UI-047: this run stopped on a check; say which and why. *@
+            <Alert Variant="AlertVariant.Danger" data-testid="failed-check">
+                <LucideIcon Name="triangle-alert" Size="16" />
+                <AlertTitle>A check failed and the run stopped on step @objFailedStep.Position</AlertTitle>
+                <AlertDescription>
+                    <span data-testid="failed-check-detail">Step @objFailedStep.Position, <b data-testid="failed-check-name">@objFailedStep.Wording</b>. <span data-testid="failed-check-why">@(objFailedStep.Result ?? "No reason was recorded.")</span> The run stopped there and wrote nothing further.</span>
+                </AlertDescription>
+            </Alert>
+        }
+        else if (objEarlierFailure is not null)
+        {
+            <Alert Variant="AlertVariant.Danger" data-testid="failed-check">
+                <LucideIcon Name="triangle-alert" Size="16" />
+                <AlertTitle>A check failed on the run before this one</AlertTitle>
+                <AlertDescription>
+                    <span data-testid="failed-check-detail">Run @objEarlierRunId, @FormatStarted(objEarlierStartedUtc) — step @objEarlierFailure.Position, <b>@objEarlierFailure.Wording</b>. @objEarlierFailure.Result</span>
+                    <div class="mt-2">
+                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="OpenEarlierRun" data-testid="@($"open-run-{objEarlierRunId}")">Open run @objEarlierRunId</Button>
+                    </div>
+                </AlertDescription>
+            </Alert>
+        }
+
+        <Card data-testid="run-output">
+            <CardHeader>
+                <div class="flex items-center gap-2">
+                    <LucideIcon Name="terminal" Size="16" Class="text-muted-foreground" />
+                    <CardTitle>Output — @OutputStepText</CardTitle>
+                    <Badge Variant="@OutputVariant" Class="rounded-full border-transparent" data-testid="output-state">@OutputStateText</Badge>
+                    <span class="flex-1"></span>
+                    <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Copy the whole output of this run" OnClick="CopyOutputAsync" data-testid="copy-output">
+                        <LucideIcon Name="copy" Size="14" />
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div data-testid="output-text">
+                    <CodeBlock Language="text" Code="@OutputText" ShowCopyButton="false" />
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card data-testid="what-this-run-wrote">
+            <CardHeader>
+                <CardTitle>What this run wrote</CardTitle>
+            </CardHeader>
+            <CardContent Class="flex flex-col gap-3">
+                <div class="flex items-start gap-3" data-testid="wrote-runs">
+                    <Badge Variant="BadgeVariant.Secondary" Class="w-24 justify-center rounded-full border-transparent">runs</Badge>
+                    <span class="text-sm">@RunsText</span>
+                </div>
+                <div class="flex items-start gap-3" data-testid="wrote-gates">
+                    <Badge Variant="BadgeVariant.Secondary" Class="w-24 justify-center rounded-full border-transparent">gates</Badge>
+                    <span class="text-sm">@GatesText</span>
+                </div>
+                <div class="flex items-start gap-3" data-testid="wrote-misses">
+                    <Badge Variant="BadgeVariant.Secondary" Class="w-24 justify-center rounded-full border-transparent">misses</Badge>
+                    <span class="text-sm">@MissesText</span>
+                </div>
+                <div class="flex items-start gap-3" data-testid="wrote-verdicts">
+                    <Badge Variant="BadgeVariant.Secondary" Class="w-24 justify-center rounded-full border-transparent">verdicts</Badge>
+                    <div class="flex min-w-0 flex-1 flex-col gap-2">
+                        <span class="text-sm">@VerdictsText</span>
+                        @if (objVerdicts.Count > 0)
+                        {
+                            <ul class="flex flex-col gap-1.5" data-testid="verdict-list">
+                                @foreach (var vVerdict in objVerdicts)
+                                {
+                                    <li class="flex items-start gap-2 text-sm" data-testid="@($"verdict-{vVerdict.RequirementId}")">
+                                        <span class="w-28 flex-none font-mono">@vVerdict.RequirementId</span>
+                                        <Badge Variant="@VerdictVariant(vVerdict.Status)" Class="flex-none rounded-full border-transparent" data-testid="@($"verdict-{vVerdict.RequirementId}-status")">@vVerdict.Status</Badge>
+                                        <div class="flex min-w-0 flex-col gap-1">
+                                            <span class="whitespace-pre-wrap break-words text-muted-foreground" data-testid="@($"verdict-{vVerdict.RequirementId}-remark")">@vVerdict.Remark</span>
+                                            @if (vVerdict.Evidence is { } vEvidence)
+                                            {
+                                                <span class="text-xs text-muted-foreground" data-testid="@($"verdict-{vVerdict.RequirementId}-tests")">@EvidenceText(vEvidence)</span>
+                                                @foreach (var vTest in vEvidence.Tests)
+                                                {
+                                                    <span class="whitespace-pre-wrap break-words text-xs text-muted-foreground" data-testid="@($"verdict-{vVerdict.RequirementId}-test")">@vTest.Outcome.ToString().ToLowerInvariant() · @vTest.Name@(string.IsNullOrEmpty(vTest.Message) ? "" : " — " + vTest.Message)</span>
+                                                }
+                                            }
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <Button Variant="ButtonVariant.Outline" OnClick="OpenMeasurements" data-testid="open-measurements">See every record Chatur keeps</Button>
+                </div>
+            </CardContent>
+        </Card>
+    }
+
+    <AlertDialog Open="objIsStopDialogOpen" OpenChanged="OnStopDialogOpenChanged">
+        <AlertDialogContent data-testid="stop-run-dialog">
+            <AlertDialogHeader>
+                <AlertDialogTitle>Stop this run?</AlertDialogTitle>
+                <AlertDialogDescription>What has already been written stays written; the rest is not done.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <Button Variant="ButtonVariant.Outline" OnClick="CancelStop" data-testid="stop-run-cancel">Keep it going</Button>
+                <Button Variant="ButtonVariant.Destructive" OnClick="ConfirmStopAsync" data-testid="stop-run-confirm">Stop the run</Button>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
+</div>

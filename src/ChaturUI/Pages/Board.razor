@@ -1,0 +1,217 @@
+@inject IRequirementBoardActions BoardActions
+@inject WorkbenchState WorkbenchTabs
+@inject BrowserInterop Browser
+@inject ToastService Toast
+
+@* UI Design "Screen: Requirements board" — mockups/board.html, a tab in the main window. REQ-UI-049 (every requirement with
+   its status), REQ-UI-050 (the owning agent), REQ-UI-051 (read one properly), REQ-UI-052 (the
+   checklist file is the truth: every open reads it again). The filter's behaviour is REQ-FN-056
+   and the status write is REQ-FN-057, both in IRequirementBoardActions. *@
+<div class="flex flex-col gap-4" data-testid="board">
+
+    <div class="flex flex-wrap items-center justify-between gap-3" data-testid="board-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Board</h1>
+            <p class="text-sm text-muted-foreground">
+                @(objBoard is { HasProject: true } ? $"Every requirement of {objBoard.ProjectName} and where it stands, read from the phase checklists." : "Every requirement of the open project and where it stands, read from the phase checklists.")
+            </p>
+        </div>
+        <Button Variant="ButtonVariant.Outline" OnClick="ReloadAsync" Disabled="objIsLoading" data-testid="reload-board">
+            <LucideIcon Name="refresh-cw" Size="14" />
+            Reload
+        </Button>
+    </div>
+
+    @if (objBoard is null)
+    {
+        <Empty Title="Reading the checklists…" Size="EmptySize.Small" data-testid="board-loading" />
+    }
+    else if (!objBoard.HasProject)
+    {
+        <Empty Title="No project is open" Description="Open a project to see its requirements." Size="EmptySize.Small" data-testid="no-project" />
+    }
+    else if (objBoard.Counts.All == 0)
+    {
+        <Empty Title="No requirements found" Description="The project has no checklist file with a Requirements Status table yet." Size="EmptySize.Small" data-testid="board-empty" />
+    }
+    else
+    {
+        <div class="flex flex-wrap items-center gap-2" data-testid="board-filters">
+            <div data-testid="filter-phase">
+                <Select TValue="string" Value="@PhaseFilter" ValueChanged="OnPhaseChangedAsync" DisplayTextSelector="@(v => PhaseLabel(v))" Class="w-40">
+                    <SelectTrigger AriaLabel="Phase" data-testid="filter-phase-button"><SelectValue /></SelectTrigger>
+                    <SelectContent data-testid="filter-phase-pop">
+                        <SelectItem TValue="string" Value="@AllValue" Text="Every phase">Every phase</SelectItem>
+                        @foreach (var vPhase in objBoard.Phases)
+                        {
+                            <SelectItem TValue="string" Value="@vPhase.ToString()" Text="@($"Phase {vPhase}")">Phase @vPhase</SelectItem>
+                        }
+                    </SelectContent>
+                </Select>
+            </div>
+            <div data-testid="filter-status">
+                <Select TValue="string" Value="@StatusFilter" ValueChanged="OnStatusChangedAsync" DisplayTextSelector="@(v => v == AllValue ? "Every status" : v)" Class="w-40">
+                    <SelectTrigger AriaLabel="Status" data-testid="filter-status-button"><SelectValue /></SelectTrigger>
+                    <SelectContent data-testid="filter-status-pop">
+                        <SelectItem TValue="string" Value="@AllValue" Text="Every status">Every status</SelectItem>
+                        @foreach (var vStatus in BoardStatuses.All)
+                        {
+                            <SelectItem TValue="string" Value="@vStatus" Text="@vStatus">@vStatus</SelectItem>
+                        }
+                    </SelectContent>
+                </Select>
+            </div>
+            <div data-testid="filter-agent">
+                <Select TValue="string" Value="@AgentFilter" ValueChanged="OnAgentChangedAsync" DisplayTextSelector="@(v => AgentLabel(v))" Class="w-44">
+                    <SelectTrigger AriaLabel="Agent" data-testid="filter-agent-button"><SelectValue /></SelectTrigger>
+                    <SelectContent data-testid="filter-agent-pop">
+                        <SelectItem TValue="string" Value="@AllValue" Text="Every agent">Every agent</SelectItem>
+                        @foreach (var vAgent in BoardActions.Agents)
+                        {
+                            <SelectItem TValue="string" Value="@vAgent.Code" Text="@vAgent.Name">@vAgent.Name</SelectItem>
+                        }
+                    </SelectContent>
+                </Select>
+            </div>
+            <Input Value="@Search" ValueChanged="OnSearchChangedAsync" Placeholder="Search id or title…" MaxLength="@RequirementFilter.MaxSearchLength" AriaLabel="Search requirements" Class="min-w-44 flex-1" data-testid="filter-search" />
+            <Button Variant="ButtonVariant.Outline" OnClick="ResetAsync" data-testid="filter-reset">
+                <LucideIcon Name="refresh-cw" Size="14" />
+                Reset
+            </Button>
+        </div>
+        @if (Search.Length > 0 && !RequirementFilter.IsValidSearch(Search))
+        {
+            <p class="text-xs text-muted-foreground" data-testid="filter-search-hint">Two letters or more — an id such as REQ-UI-007, or words from a title.</p>
+        }
+
+        <div class="flex flex-wrap items-center gap-2" data-testid="status-counts">
+            <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="count-all">All <b class="ml-1 font-semibold">@objBoard.Counts.All</b></Badge>
+            <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="count-planned">Planned <b class="ml-1 font-semibold">@objBoard.Counts.Planned</b></Badge>
+            <Badge Variant="BadgeVariant.Warning" Class="rounded-full border-transparent" data-testid="count-in-progress">In progress <b class="ml-1 font-semibold">@objBoard.Counts.InProgress</b></Badge>
+            <Badge Variant="BadgeVariant.Success" Class="rounded-full border-transparent" data-testid="count-verified">Verified <b class="ml-1 font-semibold">@objBoard.Counts.Verified</b></Badge>
+            <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent text-destructive" data-testid="count-blocked">Blocked <b class="ml-1 font-semibold">@objBoard.Counts.Blocked</b></Badge>
+        </div>
+
+        <Card data-testid="board-table-panel">
+            <CardHeader>
+                <div class="flex items-center gap-2">
+                    <CardTitle>Requirements</CardTitle>
+                    <span class="grow"></span>
+                    <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="showing-count">showing @objBoard.Items.Count of @objBoard.Counts.All</Badge>
+                </div>
+            </CardHeader>
+            <CardContent>
+                @if (objBoard.Items.Count == 0)
+                {
+                    <Empty Title="Nothing matches" Description="No requirement passes the filter. Reset it to see everything." Size="EmptySize.Small" data-testid="board-no-match" />
+                }
+                else
+                {
+                    <DataTable TData="RequirementItem" Data="@objBoard.Items" ShowPagination="false" MinWidth="720px" RowAttributes="@RowHooks" data-testid="board-table">
+                        <Columns>
+                            <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.Id)" Header="Id and type" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="req">
+                                    <div class="flex flex-col items-start gap-1">
+                                        <Button Variant="ButtonVariant.Link" Class="h-auto p-0 font-mono text-sm" OnClick="@(() => Open(req))" data-testid="@($"open-{req.Id}")">@req.Id</Button>
+                                        <Badge Variant="BadgeVariant.Outline" Class="rounded-full" data-testid="@($"type-{req.Id}")">@req.Type</Badge>
+                                    </div>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.Title)" Header="Title" />
+                            <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.AgentName)" Header="Agent · phase" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="req">
+                                    <div class="flex flex-col">
+                                        <span data-testid="@($"agent-{req.Id}")">@req.AgentName</span>
+                                        <span class="text-xs text-muted-foreground" data-testid="@($"phase-{req.Id}")">Phase @req.Phase</span>
+                                    </div>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.BoardStatus)" Header="Status" Width="150px">
+                                <CellTemplate Context="req">
+                                    <div data-testid="@($"status-{req.Id}")">
+                                        <Select TValue="string" Value="@req.BoardStatus" ValueChanged="@((string v) => SetStatusAsync(req, v))" DisplayTextSelector="@(v => v)" Class="w-36">
+                                            <SelectTrigger AriaLabel="@($"Status of {req.Id}")" data-testid="@($"status-{req.Id}-button")"><SelectValue /></SelectTrigger>
+                                            <SelectContent data-testid="@($"status-{req.Id}-pop")">
+                                                @foreach (var vStatus in StatusChoices(req))
+                                                {
+                                                    <SelectItem TValue="string" Value="@vStatus" Text="@vStatus" Disabled="@(!BoardStatuses.All.Contains(vStatus))">@vStatus</SelectItem>
+                                                }
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.Remarks)" Header="Remark" CellClass="max-w-64 text-xs text-muted-foreground">
+                                <CellTemplate Context="req">
+                                    <span class="line-clamp-2" title="@req.Remarks" data-testid="@($"remark-{req.Id}")">@req.Remarks</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                        </Columns>
+                    </DataTable>
+                }
+            </CardContent>
+        </Card>
+
+        @if (CurrentDetail is { } vDetail)
+        {
+            <Card data-testid="req-detail">
+                <CardHeader>
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-sm" data-testid="detail-id">@vDetail.Id</span>
+                        <span class="grow"></span>
+                        <Badge Variant="@StatusVariant(vDetail.BoardStatus)" Class="rounded-full" data-testid="detail-verdict">@vDetail.BoardStatus</Badge>
+                        <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Copy the id and its acceptance line" OnClick="@(() => CopyAsync(vDetail))" data-testid="copy-req">
+                            <LucideIcon Name="copy" Size="14" />
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent Class="flex flex-col gap-3">
+                    <div class="text-sm font-semibold" data-testid="detail-title">@vDetail.Title</div>
+                    <div class="flex items-start gap-2" data-testid="detail-acceptance">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Accepted when</span>
+                        <span class="text-sm">@(string.IsNullOrWhiteSpace(vDetail.Acceptance) ? "No acceptance line is written for this requirement." : vDetail.Acceptance)</span>
+                    </div>
+                    <div class="flex items-start gap-2" data-testid="detail-remarks">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Remarks</span>
+                        <span class="text-sm">@(string.IsNullOrWhiteSpace(vDetail.Remarks) ? "—" : vDetail.Remarks)</span>
+                    </div>
+                    <div class="flex items-center gap-2" data-testid="detail-screen">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Screen</span>
+                        @if (!string.IsNullOrWhiteSpace(vDetail.ScreenName))
+                        {
+                            @if (vDetail.ScreenRoute is { } vRoute && IsTabScreen(vRoute))
+                            {
+                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => OpenScreen(vRoute))" data-testid="detail-screen-link">@vDetail.ScreenName</Button>
+                            }
+                            else if (vDetail.ScreenRoute is { } vWindowRoute)
+                            {
+                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="@vWindowRoute" data-testid="detail-screen-link">@vDetail.ScreenName</Button>
+                            }
+                            else
+                            {
+                                <span class="text-sm" data-testid="detail-screen-name">@vDetail.ScreenName</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-sm">—</span>
+                        }
+                    </div>
+                    <div class="flex items-center gap-2" data-testid="detail-agent">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Agent</span>
+                        <span class="text-sm">@vDetail.AgentName</span>
+                    </div>
+                    <div class="flex items-center gap-2" data-testid="detail-file">
+                        <span class="w-28 flex-none text-sm text-muted-foreground">Checklist</span>
+                        <span class="font-mono text-xs break-all">@vDetail.ChecklistFile</span>
+                    </div>
+                </CardContent>
+            </Card>
+        }
+
+        <div class="flex items-start gap-2 rounded-md border px-3 py-2.5 text-muted-foreground" data-testid="board-source-note">
+            <LucideIcon Name="triangle-alert" Size="16" Class="mt-0.5" />
+            <span class="text-sm">The board reads and writes the project's own checklist files — <span class="font-mono">@(string.Join(", ", objBoard.ChecklistFiles))</span>. Change a status here and the file changes. Change the file outside Chatur and the change shows here the next time the board is opened.</span>
+        </div>
+    }
+</div>

@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="wordmark" data-testid="wordmark">Chatur</span>
 
   <div class="menu" data-testid="menu-file"><button onclick="menu(this,event)">File</button>
-   <div class="drop" data-testid="menu-file-items">
+   <div class="drop" data-testid="menu-file-items" data-tf-state="popup-open">
     <button onclick="say('Starts a new project here.')">New project…<span class="sub">⇧⌘N</span></button>
     <button onclick="say('Opens a .sln and reads its projects.')">Open a solution…<span class="sub">⌘O</span></button>
     <button onclick="say('Opens any folder as a project.')">Open a folder…<span class="sub">⇧⌘O</span></button>
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-edit"><button onclick="menu(this,event)">Edit</button>
-   <div class="drop" data-testid="menu-edit-items">
+   <div class="drop" data-testid="menu-edit-items" data-tf-state="popup-open">
     <button onclick="say('Undoes the last change in the open file.')">Undo<span class="sub">⌘Z</span></button>
     <button disabled onclick="say('Nothing to redo.')" title="Nothing to redo">Redo<span class="sub">⇧⌘Z</span></button>
     <hr>
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-view"><button onclick="menu(this,event)">View</button>
-   <div class="drop" data-testid="menu-view-items">
+   <div class="drop" data-testid="menu-view-items" data-tf-state="popup-open">
     <button onclick="say('Hides or shows the files panel.')"><span class="tick">✓</span>Files</button>
     <button onclick="say('Hides or shows the conversation. Hidden, the file view takes the window.')"><span class="tick">✓</span>Chat</button>
     <button onclick="say('Hides or shows the output strip.')"><span class="tick">✓</span>Output</button>
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-project"><button onclick="menu(this,event)">Project</button>
-   <div class="drop" data-testid="menu-project-items">
+   <div class="drop" data-testid="menu-project-items" data-tf-state="popup-open">
     <button onclick="say('Builds TfLens.')">Build<span class="sub">⌘B</span></button>
     <button onclick="say('Runs the chosen target.')">Run<span class="sub">⌘R</span></button>
     <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-tools"><button onclick="menu(this,event)">Tools</button>
-   <div class="drop" data-testid="menu-tools-items">
+   <div class="drop" data-testid="menu-tools-items" data-tf-state="popup-open">
     <a href="settings-providers.html">Settings…<span class="sub">⌘,</span></a>
     <hr>
     <div class="grouplbl">Go straight to</div>
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-help"><button onclick="menu(this,event)">Help</button>
-   <div class="drop" data-testid="menu-help-items">
+   <div class="drop" data-testid="menu-help-items" data-tf-state="popup-open">
     <button onclick="say('Chatur 0.1.0, built from a91f3c2.')">About Chatur</button>
     <a href="feedback.html">Send feedback…</a>
     <a href="prerequisites.html">Check for updates</a>
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="whoami" data-testid="signed-in">
    <div class="popwrap" data-testid="account">
     <button class="pick" style="height:26px;border:0" onclick="pop(this,event)"><span class="av">TR</span><span class="nm">Techie Rathore</span><svg><use href="#i-chevron"/></svg></button>
-    <div class="pop right" data-testid="account-pop">
+    <div class="pop right" data-testid="account-pop" data-tf-state="popup-open">
      <div class="note">techierathore@gmail.com</div>
      <a href="settings-account.html">Account</a>
      <a href="licence.html">Licence</a>
@@ -154,9 +154,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     </div>
    </div>
    <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
-   <div class="popwrap" data-testid="palette">
+   <div class="popwrap" data-testid="palette" data-tf-state="mockup-only">
     <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one lives in Settings ▸ Appearance"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
-    <div class="pop right" id="palette-pop" data-testid="palette-pop">
+    <div class="pop right" id="palette-pop" data-testid="palette-pop" data-tf-state="popup-open">
      <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber<span class="swatchrow"><i style="background:oklch(0.795 0.135 70)"></i><i style="background:oklch(0.222 0.012 65)"></i></span></button>
      <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo<span class="swatchrow"><i style="background:oklch(0.675 0.165 275)"></i><i style="background:oklch(0.218 0.016 275)"></i></span></button>
      <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal<span class="swatchrow"><i style="background:oklch(0.755 0.115 195)"></i><i style="background:oklch(0.216 0.019 195)"></i></span></button>
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="sep"></span>
   <div class="popwrap" data-testid="target">
    <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop" data-testid="target-pop">
+   <div class="pop" data-testid="target-pop" data-tf-state="popup-open">
     <button onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
     <button onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
     <button onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="sep"></span>
   <div class="popwrap" data-testid="branch-pick">
    <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop" data-testid="branch-pop">
+   <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
     <button onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
     <button onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
     <button onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
@@ -201,16 +201,16 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="panel files" data-testid="files-panel">
    <div class="ph" data-testid="files-head">Files</div>
    <div class="tree" data-testid="file-tree">
-    <a href="main.html"><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
-    <a href="main.html" class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
-    <a href="main.html" class="d2"><svg><use href="#i-folder-open"/></svg>TfLens</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Program.cs</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Query.cs</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Coverage.razor</a>
-    <a href="main.html" class="d2"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
-    <a href="main.html" class="d1"><svg><use href="#i-folder"/></svg>docs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d2"><svg><use href="#i-folder-open"/></svg>TfLens</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Program.cs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Query.cs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Coverage.razor</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d2"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder"/></svg>docs</a>
    </div>
-   <a class="branch" href="repository.html" data-testid="branch"><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
+   <a class="branch" href="repository.html" data-testid="branch" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
   </div>
 
   <div class="split">
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    <div class="panel half" data-testid="tool-area">
     <div class="tabs" data-testid="tabs">
      <span class="tab on" data-testid="tab-agent-workspace">Agents<button class="x" onclick="say('Closes this tab.')">×</button></span>
-     <a class="tab" href="main.html" data-testid="tab-query">Query.cs</a>
+     <a class="tab" href="main.html" data-testid="tab-query" data-tf-state="sample-data" data-tf-sample>Query.cs</a>
      <button class="closepane" title="Close the file view" onclick="say('Closes this pane. The chat takes the whole window.')" data-testid="close-file-view">×</button>
     </div>
 
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      <div class="row" style="flex-wrap:wrap;gap:8px" data-testid="agent-picker-row">
       <div class="popwrap" data-testid="agent-picker">
        <button class="pick" onclick="pop(this,event)"><span class="lbl">Agent</span><span data-value>Verifier</span><svg><use href="#i-chevron"/></svg></button>
-       <div class="pop" data-testid="agent-picker-pop">
+       <div class="pop" data-testid="agent-picker-pop" data-tf-state="popup-open">
         <button data-testid="agent-analyst" onclick="choose(this,'Analyst',event)"><span class="tick"></span>Analyst<span class="sub">6 open</span></button>
         <button data-testid="agent-architect" onclick="choose(this,'Architect',event)"><span class="tick"></span>Architect<span class="sub">3 open</span></button>
         <button data-testid="agent-flow-master" onclick="choose(this,'Flow master',event)"><span class="tick"></span>Flow master<span class="sub">11 open</span></button>
@@ -256,6 +256,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
         <span class="pill ok" data-testid="right-tests"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>run the tests</span>
         <span class="pill ok" data-testid="right-screens"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>drive the screens</span>
         <span class="pill ok" data-testid="right-verdicts"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>write verdicts to the checklist</span>
+        <span class="pill ok" data-testid="right-docs"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>write a document under docs/</span>
         <span class="pill ok" data-testid="right-feedback"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>open a feedback file</span>
         <span class="pill ok" data-testid="right-miss"><svg style="width:11px;height:11px"><use href="#i-check"/></svg>log a miss</span>
        </div>
@@ -281,12 +282,12 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
         <th style="padding:8px 7px;font-weight:500">Status</th>
         <th style="padding:8px 7px;font-weight:500"></th></tr></thead>
        <tbody>
-        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-FN-034"><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-FN-034</td><td style="padding:9px 7px">Only one run of a process at a time</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill" style="color:var(--bad)" data-testid="work-status-REQ-FN-034">blocked</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-FN-034 with the Verifier and starts reading the code.')" data-testid="start-REQ-FN-034"><svg><use href="#i-play"/></svg>Start</button></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-UI-019"><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-UI-019</td><td style="padding:9px 7px">Every panel still reads at 820 pixels</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill warn" data-testid="work-status-REQ-UI-019">in progress</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-UI-019 with the Verifier and drives the three screens left.')" data-testid="start-REQ-UI-019"><svg><use href="#i-play"/></svg>Start</button></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-NFR-012"><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-NFR-012</td><td style="padding:9px 7px">The window opens in under two seconds</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill warn" data-testid="work-status-REQ-NFR-012">re-check</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-NFR-012 with the Verifier and times a cold start.')" data-testid="start-REQ-NFR-012"><svg><use href="#i-play"/></svg>Start</button></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-UI-007"><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-UI-007</td><td style="padding:9px 7px">The settings form keeps what you typed</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill warn" data-testid="work-status-REQ-UI-007">re-check</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-UI-007 with the Verifier — the tab strip changed since it was verified.')" data-testid="start-REQ-UI-007"><svg><use href="#i-play"/></svg>Start</button></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-RAG-009"><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-RAG-009</td><td style="padding:9px 7px">An answer names the file it came from</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill warn" data-testid="work-status-REQ-RAG-009">in progress</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-RAG-009 with the Verifier.')" data-testid="start-REQ-RAG-009"><svg><use href="#i-play"/></svg>Start</button></td></tr>
-        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-FN-041"><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-FN-041</td><td style="padding:9px 7px">The checklist is the only place a verdict is kept</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill" data-testid="work-status-REQ-FN-041">planned</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-FN-041 with the Verifier. Nothing is built yet, so this only reads.')" data-testid="start-REQ-FN-041"><svg><use href="#i-play"/></svg>Start</button></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-FN-034" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-FN-034</td><td style="padding:9px 7px">Only one run of a process at a time</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill" style="color:var(--bad)" data-testid="work-status-REQ-FN-034">blocked</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-FN-034 with the Verifier and starts reading the code.')" data-testid="start-REQ-FN-034"><svg><use href="#i-play"/></svg>Start</button></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-UI-019" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-UI-019</td><td style="padding:9px 7px">Every panel still reads at 820 pixels</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill warn" data-testid="work-status-REQ-UI-019">in progress</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-UI-019 with the Verifier and drives the three screens left.')" data-testid="start-REQ-UI-019"><svg><use href="#i-play"/></svg>Start</button></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-NFR-012" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-NFR-012</td><td style="padding:9px 7px">The window opens in under two seconds</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill warn" data-testid="work-status-REQ-NFR-012">re-check</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-NFR-012 with the Verifier and times a cold start.')" data-testid="start-REQ-NFR-012"><svg><use href="#i-play"/></svg>Start</button></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-UI-007" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-UI-007</td><td style="padding:9px 7px">The settings form keeps what you typed</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill warn" data-testid="work-status-REQ-UI-007">re-check</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-UI-007 with the Verifier — the tab strip changed since it was verified.')" data-testid="start-REQ-UI-007"><svg><use href="#i-play"/></svg>Start</button></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-RAG-009" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-RAG-009</td><td style="padding:9px 7px">An answer names the file it came from</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill warn" data-testid="work-status-REQ-RAG-009">in progress</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-RAG-009 with the Verifier.')" data-testid="start-REQ-RAG-009"><svg><use href="#i-play"/></svg>Start</button></td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="work-REQ-FN-041" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 7px;white-space:nowrap">REQ-FN-041</td><td style="padding:9px 7px">The checklist is the only place a verdict is kept</td><td style="padding:9px 7px;white-space:nowrap"><span class="pill" data-testid="work-status-REQ-FN-041">planned</span></td><td style="padding:9px 7px"><button class="pick" onclick="say('Opens REQ-FN-041 with the Verifier. Nothing is built yet, so this only reads.')" data-testid="start-REQ-FN-041"><svg><use href="#i-play"/></svg>Start</button></td></tr>
        </tbody>
       </table>
       </div>
@@ -295,16 +296,16 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      <div class="panel" data-testid="commands-panel">
       <div class="ph">Its commands</div>
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
-       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-verify-phase">
+       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-verify-phase" data-tf-state="sample-data" data-tf-sample>
         <button class="pick" style="width:150px;justify-content:center" onclick="say('Runs verify-phase on phase 2 of TfLens.')" data-testid="run-verify-phase"><svg><use href="#i-play"/></svg><span class="mono">verify-phase</span></button>
         <span class="sm dim">Checks the built phase against every requirement and writes the verdicts.</span></div>
-       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-triage-issues">
+       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-triage-issues" data-tf-state="sample-data" data-tf-sample>
         <button class="pick" style="width:150px;justify-content:center" onclick="say('Runs triage-issues on the open issues of TfLens.')" data-testid="run-triage-issues"><svg><use href="#i-play"/></svg><span class="mono">triage-issues</span></button>
         <span class="sm dim">Sorts what has been reported into the checklist it belongs to.</span></div>
-       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-metrics-report">
+       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-metrics-report" data-tf-state="sample-data" data-tf-sample>
         <button class="pick" style="width:150px;justify-content:center" onclick="say('Runs metrics-report over every run Chatur has recorded.')" data-testid="run-metrics-report"><svg><use href="#i-play"/></svg><span class="mono">metrics-report</span></button>
         <span class="sm dim">Reads the run records and says what they add up to.</span></div>
-       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-log-miss">
+       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-log-miss" data-tf-state="sample-data" data-tf-sample>
         <button class="pick" style="width:150px;justify-content:center" onclick="say('Records one miss against TfLens, with what was expected and what happened.')" data-testid="run-log-miss"><svg><use href="#i-alert"/></svg><span class="mono">log-miss</span></button>
         <span class="sm dim">Records one thing that went wrong, so the next run can be measured against it.</span></div>
       </div>
@@ -313,13 +314,13 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      <div class="panel" data-testid="sessions-panel">
       <div class="ph"><span>Sessions still open</span><span class="grow"></span><span class="pill" data-testid="sessions-count">2</span></div>
       <div style="padding:6px 0">
-       <a class="row" href="main.html" style="gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="session-1">
+       <a class="row" href="main.html" style="gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="session-1" data-tf-state="sample-data" data-tf-sample>
         <svg style="color:var(--dim)"><use href="#i-terminal"/></svg>
         <div class="grow"><b class="sm">REQ-UI-019 · reading Coverage.razor at 820 pixels</b>
          <div class="sm dim">Opened 22 Sep, 11:20 · 14 messages · 38,410 tokens</div></div>
         <span class="pill warn" data-testid="session-1-state">held</span>
        </a>
-       <a class="row" href="main.html" style="gap:10px;padding:10px 14px" data-testid="session-2">
+       <a class="row" href="main.html" style="gap:10px;padding:10px 14px" data-testid="session-2" data-tf-state="sample-data" data-tf-sample>
         <svg style="color:var(--dim)"><use href="#i-terminal"/></svg>
         <div class="grow"><b class="sm">REQ-NFR-012 · timing a cold start</b>
          <div class="sm dim">Opened 21 Sep, 16:44 · 6 messages · 9,120 tokens</div></div>
@@ -338,7 +339,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       <button class="iconbtn" onclick="say('Starts a new conversation with the Verifier.')" data-testid="new-chat"><svg><use href="#i-plus"/></svg></button>
       <div class="popwrap" data-testid="history">
        <button class="iconbtn" onclick="pop(this,event)" title="Earlier conversations"><svg><use href="#i-list"/></svg></button>
-       <div class="pop right" data-testid="history-pop">
+       <div class="pop right" data-testid="history-pop" data-tf-state="popup-open">
         <div class="note">Earlier on TfLens</div>
         <button onclick="say('Opens that conversation where it stopped.')">REQ-UI-019 at 820 pixels · today</button>
         <button onclick="say('Opens that conversation where it stopped.')">Timing a cold start · yesterday</button>
@@ -348,10 +349,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      </span>
     </div>
     <div class="talk" data-testid="conversation">
-     <div class="msg me" data-testid="msg-1"><span class="who">TR</span>
+     <div class="msg me" data-testid="msg-1" data-tf-state="sample-data" data-tf-sample><span class="who">TR</span>
       <div class="body"><span class="name">You<span class="model">14:18</span></span>
        <div class="said">Can you just fix REQ-UI-019 yourself?</div></div></div>
-     <div class="msg agent" data-testid="msg-2"><span class="who"><svg><use href="#i-sparkle"/></svg></span>
+     <div class="msg agent" data-testid="msg-2" data-tf-state="sample-data" data-tf-sample><span class="who"><svg><use href="#i-sparkle"/></svg></span>
       <div class="body"><span class="name">Verifier<span class="model">Claude Opus 5 · 720 tokens</span></span>
        <div class="said">Not from here — I may read a source file but not write one. I can tell you the three screens that break and hand them to the Flow master.</div>
        <div class="step"><svg class="bad"><use href="#i-block"/></svg>writing source is not mine to do</div>
@@ -364,7 +365,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       <div class="tools">
        <div class="popwrap" data-testid="model-pick">
         <button class="pick" onclick="pop(this,event)"><svg><use href="#i-sparkle"/></svg><span data-value>Claude Opus 5</span><svg><use href="#i-chevron"/></svg></button>
-        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop">
+        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop" data-tf-state="popup-open">
          <button onclick="choose(this,'Claude Opus 5',event)"><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
          <button onclick="choose(this,'Claude Sonnet 5',event)"><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
          <button onclick="choose(this,'Claude Haiku 4.5',event)"><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
@@ -376,7 +377,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        </div>
        <div class="popwrap" data-testid="agent-pick">
         <button class="pick" onclick="pop(this,event)"><span data-value>Verifier</span><svg><use href="#i-chevron"/></svg></button>
-        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="agent-pop">
+        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="agent-pop" data-tf-state="popup-open">
          <button onclick="choose(this,'No agent',event)"><span class="tick"></span>No agent — the model itself</button>
          <hr>
          <button onclick="choose(this,'Analyst',event)"><span class="tick"></span>Analyst</button>

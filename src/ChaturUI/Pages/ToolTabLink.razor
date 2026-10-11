@@ -1,0 +1,12 @@
+@page "/processes"
+@page "/processes/{Id:int}/run"
+@page "/board"
+@page "/auto"
+@page "/auto/queue"
+@page "/auto/report"
+@page "/workspace/{Agent}"
+@layout Layouts.MainLayout
+
+@* A deep link to a phase-2 screen. The screens are tabs in the main window, not pages of their own
+   (docs/Chatur-P2-UIDesign.md): this route opens the tab and carries on to the main window, so a
+   link by address and the Project menu end in the same place. Nothing is drawn here. *@

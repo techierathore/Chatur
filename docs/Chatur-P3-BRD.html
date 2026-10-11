@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Business Requirements — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-P3-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-10-11 &middot; source <code>Chatur-P3-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -118,6 +118,9 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#run-queue">Run queue</a></li>
         <li class="h3"><a href="#run-report">Run report</a></li>
         <li class="h3"><a href="#settings">Settings</a></li>
+        <li class="h3"><a href="#step-work">Step work</a></li>
+        <li class="h3"><a href="#what-done-means-for-each-process">What done means for each process</a></li>
+        <li class="h3"><a href="#document-rights">Document rights</a></li>
         <li><a href="#development-status">4. Development status</a></li>
         <li><a href="#where-the-rest-lives">5. Where the rest lives</a></li>
       </ol>
@@ -133,9 +136,9 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Date</td><td>2026-09-21</td></tr>
 </tbody>
 </table>
-<h2 id="summary">1. Summary<a class="anchor-link" href="#summary">#</a></h2>
-<p>Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way — this is the extra command, not the replacement. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off.</p>
-<h2 id="screens-and-flow">2. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
+<h2 id="summary"><a id="1-summary"></a>1. Summary<a class="anchor-link" href="#summary">#</a></h2>
+<p>Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way — this is the extra command, not the replacement. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off. Since 2026-10-08 every work step goes to the agent owning its process, and its checks judge the result on disk (BRD-159 to BRD-179). Since 2026-10-09 a "writes documents" right covers <code>docs/</code> only (BRD-180 to BRD-183).</p>
+<h2 id="screens-and-flow"><a id="2-screens-and-flow"></a>2. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
 <p>One row per routed page this phase adds; dialogs are written exactly as in the phase-1 BRD.</p>
 <table>
 <thead><tr><th>Screen</th><th>Route</th><th>Role</th><th>Mockup</th><th>Fields</th></tr></thead>
@@ -158,7 +161,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li>The owner reads the report afterwards: every requirement, every miss, and what it cost.
 </li>
 </ol>
-<h2 id="requirements">3. Requirements<a class="anchor-link" href="#requirements">#</a></h2>
+<h2 id="requirements"><a id="3-requirements"></a>3. Requirements<a class="anchor-link" href="#requirements">#</a></h2>
 <h3 id="end-to-end-run">End-to-end run<a class="anchor-link" href="#end-to-end-run">#</a></h3>
 <p>One command, a brief in, work ready for the owner's acceptance test out.</p>
 <ul>
@@ -289,27 +292,208 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h2 id="development-status">4. Development status<a class="anchor-link" href="#development-status">#</a></h2>
+<h3 id="step-work">Step work<a class="anchor-link" href="#step-work">#</a></h3>
+<p>Added 2026-10-08 on the owner's decision (option A, archived at <code>docs/OldDocs/Chatur-Decision-Request-2026-10-08-process-step-work.md</code>). A <em>work step</em> is a step that is not a check or an owner stop; it is handed to the agent that owns its process (the Agent column of the process catalogue), and the process's checks judge what that agent left on disk. The agent works under its role's rights and its routed tier, or automatic routing's choice when that is on. The Process run screen is phase 2's; this phase adds what it shows for a handed step. A run started from Processes keeps the owner's session mode; an end-to-end run does not stop for per-change approval, as its owner stops are already answered by the run.</p>
+<ul>
+<li><strong>BRD-159</strong> — A step is handed to its agent. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a run reaches a work step on Process run, then a session starts with the process's agent, given the step's wording, the run and the project.
+</li>
+</ul>
+</li>
+<li><strong>BRD-160</strong> — The agent keeps to its rights. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a handed step's agent asks for a tool its rights withhold on Process run, then the tool is refused and the refusal is recorded on the step.
+</li>
+</ul>
+</li>
+<li><strong>BRD-161</strong> — The agent works on its own tier. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a handed step starts on Process run, then its agent's session uses the model routed to that agent's tier, and the step names that model.
+</li>
+</ul>
+</li>
+<li><strong>BRD-162</strong> — The step waits for the agent and records what it did. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a handed step's agent finishes on Process run, then the step ends only then, recording the files written, the commands run and the agent's final message.
+</li>
+</ul>
+</li>
+<li><strong>BRD-163</strong> — The checks judge what is on disk. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a check follows a handed step on Process run, then it judges the project's files on disk, and if it fails the run stops there with the reason.
+</li>
+</ul>
+</li>
+<li><strong>BRD-164</strong> — A real usage limit is waited out. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a handed step's model reports a usage limit on End-to-end run, then the run waits, resumes that step by itself, and records the wait against it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-165</strong> — Stop ends the agent's work. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner presses Stop during a handed step on Process run or End-to-end run, then the agent's session ends and the step reads stopped by the owner.
+</li>
+</ul>
+</li>
+<li><strong>BRD-166</strong> — An unattended step does not wait on approvals. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a handed step runs on End-to-end run, then the agent's changes are written without waiting for approval, while its rights and the source-control refusal still apply.
+</li>
+</ul>
+</li>
+<li><strong>BRD-167</strong> — Process run shows the agent at work. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Process run opens on a handed step, then it shows the agent, its model, and the files written, commands run and refusals so far.
+</li>
+</ul>
+</li>
+<li><strong>BRD-168</strong> — The agent's output in the conversation. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a handed step is being worked on Process run, then the agent's messages and tool calls appear in the conversation panel as they happen, under that agent's name.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="what-done-means-for-each-process">What done means for each process<a class="anchor-link" href="#what-done-means-for-each-process">#</a></h3>
+<p>One requirement per process: what its checks verify on disk before the run may go past them. verify-phase is not here; its build and test steps are already real. The table gives what each check reads; the rows are the process catalogue's (<code>ProcessCatalogue.cs</code>) and the outputs are those of the TechieFlow command of the same name. A check marked <em>added</em> is one the catalogue lacks and must gain, because without it "done" cannot be judged.</p>
+<table>
+<thead><tr><th>BRD</th><th>Process</th><th>Check rows</th><th>What the checks verify on disk</th></tr></thead>
+<tbody>
+<tr><td>BRD-169</td><td>day1-greenfield</td><td>3–4, 5, 8</td><td>Brief names an audience, a problem and a measure of success; BRD, Architecture, UI design, a mockup per screen and the checklist exist; every BRD item has an acceptance line and a checklist row, every UI row a mockup that exists, no id twice</td></tr>
+<tr><td>BRD-170</td><td>split-brd</td><td>2–3, 5</td><td>Phases file gives every phase a BRD range; each phase's BRD and checklist exist; every BRD id in exactly one phase; the phase files together hold every id. A one-phase project passes on its one BRD and checklist</td></tr>
+<tr><td>BRD-171</td><td>build-phase</td><td>2–3, 4–5, 7–8</td><td>The cluster is every open row of the phase; Chatur runs the build itself (no error, no warning) and the tests itself (all pass); every open row is Implemented and a test carries its id (<em>added</em> after row 10)</td></tr>
+<tr><td>BRD-172</td><td>fix-issues</td><td>3–4, 5–6, 7</td><td>Every row verification left FAIL or Needs re-verify, not only the first; Chatur's own build has no warning; those rows' tests pass; each row is Implemented again</td></tr>
+<tr><td>BRD-173</td><td>handoff-phase</td><td>1–2</td><td>No row of the phase is open (only Verified, Done (pre-existing), N/A, or Blocked with a reason); PROJECT-STATUS carries a hand-off entry dated that day and the phases file marks the phase done (<em>added</em> after row 4)</td></tr>
+<tr><td>BRD-174</td><td>refresh-status</td><td>2–3</td><td>PROJECT-STATUS was written during the run and its count per status equals the checklists', adding up to their total (<em>added</em> after row 4: the catalogue checks the counts before they are written)</td></tr>
+<tr><td>BRD-175</td><td>deploy-checklist</td><td>2–3, 5</td><td>The deployment checklist was written during the run, with before, deploy, after, rollback, secrets and proven sections; every item a checkbox naming who does it; pipeline, secrets and versions covered</td></tr>
+<tr><td>BRD-176</td><td>mockups</td><td>2–3</td><td>Every screen of the phase has a mockup file with <code>data-testid</code> anchors and a UI design section with its regions and empty, loading and error states; every UI row names a mockup that exists (<em>added</em> after row 4)</td></tr>
+<tr><td>BRD-177</td><td>amend-docs</td><td>2–3, 5</td><td>Every document named as touched changed during the run; no BRD id renumbered or deleted (removed ones struck through); every new BRD item has a checklist row with an acceptance line</td></tr>
+<tr><td>BRD-178</td><td>triage-issues</td><td>2–3, 4</td><td>Every report read is a reopened row or a new Not Started row with an acceptance line; nothing under <code>src/</code> or <code>tests/</code> changed during the run</td></tr>
+<tr><td>BRD-179</td><td>metrics-report</td><td>2–3</td><td>The metrics report was written during the run and its totals of runs, tokens and failures equal those added up again from <code>docs/metrics/*.jsonl</code> (<em>added</em> after row 4)</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>BRD-169</strong> — day1-greenfield is done when its documents are. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When day1-greenfield's checks run on Process run, then they pass only when the brief, BRD, Architecture, UI design, mockups and checklist exist and pass the document rules.
+</li>
+</ul>
+</li>
+<li><strong>BRD-170</strong> — split-brd is done when every requirement is in one phase. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When split-brd's checks run on Process run, then they pass only when every BRD id lands in exactly one phase and each phase has its BRD and checklist.
+</li>
+</ul>
+</li>
+<li><strong>BRD-171</strong> — build-phase is done when the open rows are built. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When build-phase's checks run on Process run, then they pass only when Chatur's own build has no warning, the tests pass and every open row is Implemented.
+</li>
+</ul>
+</li>
+<li><strong>BRD-172</strong> — fix-issues is done when every issue is fixed. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When fix-issues's checks run on Process run, then they pass only when Chatur's own build has no warning, the failed rows' tests pass and each is Implemented again.
+</li>
+</ul>
+</li>
+<li><strong>BRD-173</strong> — handoff-phase is done when the phase is closed in the documents. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When handoff-phase's checks run on Process run, then they pass only when no row of the phase is open and the status and phases files record the hand-off.
+</li>
+</ul>
+</li>
+<li><strong>BRD-174</strong> — refresh-status is done when the status matches the checklists. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When refresh-status's checks run on Process run, then they pass only when the status document written in the run counts each status as the checklists do.
+</li>
+</ul>
+</li>
+<li><strong>BRD-175</strong> — deploy-checklist is done when the release list is whole. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When deploy-checklist's checks run on Process run, then they pass only when the deployment checklist written in the run has every section, and every item names who does it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-176</strong> — mockups is done when every screen is drawn and linked. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When mockups's checks run on Process run, then they pass only when every screen has an anchored mockup and a UI design section, and every UI row's mockup exists.
+</li>
+</ul>
+</li>
+<li><strong>BRD-177</strong> — amend-docs is done when the documents agree. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When amend-docs's checks run on Process run, then they pass only when touched documents changed, no BRD id was renumbered or deleted, and each new item has a checklist row.
+</li>
+</ul>
+</li>
+<li><strong>BRD-178</strong> — triage-issues is done when every report has a row. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When triage-issues's checks run on Process run, then they pass only when every report is a reopened or new checklist row and nothing under src or tests changed.
+</li>
+</ul>
+</li>
+<li><strong>BRD-179</strong> — metrics-report is done when the report matches the records. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When metrics-report's checks run on Process run, then they pass only when the report written in the run has totals equal to those recomputed from the run records.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="document-rights">Document rights<a class="anchor-link" href="#document-rights">#</a></h3>
+<p>Added 2026-10-09 on the owner's decision (option A, archived at <code>docs/OldDocs/Chatur-Decision-Request-2026-10-09-document-rights.md</code>). Phase 1's rights know one kind of writing, "write to a source file", which the Analyst never had and phase 2 took from the Verifier, so the processes they own (day1-greenfield, amend-docs, triage-issues, metrics-report) could not write their documents. A new right, "writes documents", covers files under the project's <code>docs/</code> folder and nothing else. A path counts as a document only once it is resolved: one that leaves <code>docs/</code> through <code>..</code>, a link or an absolute path is not a document. Writing anywhere else still needs "write to a source file"; holding that right also covers <code>docs/</code>, so either right lets an agent write a document. The Settings screen is phase 1's and Agent workspace is phase 2's; this phase adds one right to what both list.</p>
+<ul>
+<li><strong>BRD-180</strong> — A right to write documents. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When an agent with only "writes documents" writes a path that resolves outside docs/, even through "..", on Process run, then the write is refused with the reason.
+</li>
+</ul>
+</li>
+<li><strong>BRD-181</strong> — The Analyst, the Architect and the Verifier hold it. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens each role on Settings, then the Analyst, Architect and Verifier hold "writes documents", the Flow master does not, and every source-file right is as before.
+</li>
+</ul>
+</li>
+<li><strong>BRD-182</strong> — The right is shown where rights are listed. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-agents.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens a role on Settings or its Agent workspace, then "writes documents" is listed with the other rights, held or withheld.
+</li>
+</ul>
+</li>
+<li><strong>BRD-183</strong> — A handed step writes its documents but not source. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When an agent with only "writes documents" works a handed step on Process run, then its docs/ writes succeed and a source write is refused and recorded on the step.
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="development-status"><a id="4-development-status"></a>4. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-09-22.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-10-11.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>End-to-end run</td><td>8</td><td>0</td><td>8</td><td>Planned</td></tr>
-<tr><td>Run queue</td><td>5</td><td>0</td><td>5</td><td>Planned</td></tr>
-<tr><td>Run report</td><td>4</td><td>0</td><td>4</td><td>Planned</td></tr>
-<tr><td>Settings</td><td>2</td><td>0</td><td>2</td><td>Planned</td></tr>
+<tr><td>End-to-end run</td><td>10</td><td>10</td><td>0</td><td>Done</td></tr>
+<tr><td>Run queue</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
+<tr><td>Run report</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
+<tr><td>Settings</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
+<tr><td>Process run</td><td>20</td><td>20</td><td>0</td><td>Done</td></tr>
 </tbody>
 </table>
-<h2 id="where-the-rest-lives">5. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
+<h2 id="where-the-rest-lives"><a id="5-where-the-rest-lives"></a>5. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
 <table>
 <thead><tr><th>What</th><th>Where</th></tr></thead>
 <tbody>
-<tr><td>Scope, users and roles, the context diagram</td><td><a href="Chatur-BRD.md">phase 1 BRD</a></td></tr>
-<tr><td>Non-functional requirements for the whole application</td><td><a href="Chatur-BRD.md">phase 1 BRD</a></td></tr>
-<tr><td>Constraints, assumptions and risks</td><td><a href="Chatur-BRD.md">phase 1 BRD</a></td></tr>
-<tr><td>The Settings screen whose routing tab this phase adds to</td><td><a href="Chatur-BRD.md">phase 1 BRD</a></td></tr>
-<tr><td>Every phase, its screens and its BRD range</td><td><a href="Chatur-Phases.md">Chatur-Phases.md</a></td></tr>
+<tr><td>Scope, users and roles, the context diagram</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
+<tr><td>Non-functional requirements for the whole application</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
+<tr><td>Constraints, assumptions and risks</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
+<tr><td>The Settings screen whose routing tab this phase adds to</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
+<tr><td>The Process run screen whose handed steps this phase adds to</td><td><a href="Chatur-P2-BRD.html">phase 2 BRD</a></td></tr>
+<tr><td>The rights on Settings ▸ Agents (BRD-53, BRD-59) and on Agent workspace (BRD-114) that BRD-180 to BRD-183 add to</td><td><a href="Chatur-BRD.html">phase 1 BRD</a>, <a href="Chatur-P2-BRD.html">phase 2 BRD</a></td></tr>
+<tr><td>Every phase, its screens and its BRD range</td><td><a href="Chatur-Phases.html">Chatur-Phases.md</a></td></tr>
 <tr><td>This phase's work list</td><td><a href="Chatur-P3-Checklist.md">Chatur-P3-Checklist.md</a></td></tr>
 </tbody>
 </table>

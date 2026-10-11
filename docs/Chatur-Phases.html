@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Phases</h1>
-    <div class="subtitle">Rendered 2026-09-30 &middot; source <code>Chatur-Phases.md</code></div>
+    <div class="subtitle">Rendered 2026-10-09 &middot; source <code>Chatur-Phases.md</code></div>
 
 <table>
 <thead><tr><th></th><th></th></tr></thead>
@@ -123,12 +123,16 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <table>
 <thead><tr><th>Phase</th><th>Name</th><th>Screens</th><th>BRD range</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>1</td><td>Workbench</td><td>Sign in, Register, Start, Workbench, Prerequisites, Settings, Repository</td><td>BRD-1 to BRD-95, BRD-156 to BRD-158</td><td>planned</td></tr>
-<tr><td>2</td><td>Project workflow</td><td>Processes, Process run, Requirements board, Agent workspace</td><td>BRD-96 to BRD-117</td><td>planned</td></tr>
-<tr><td>3</td><td>End to end and unattended</td><td>End-to-end run, Run queue, Run report</td><td>BRD-118 to BRD-136</td><td>planned</td></tr>
+<tr><td>1</td><td>Workbench</td><td>Sign in, Register, Start, Workbench, Prerequisites, Settings, Repository</td><td>BRD-1 to BRD-95, BRD-156 to BRD-158</td><td>done</td></tr>
+<tr><td>2</td><td>Project workflow</td><td>Processes, Process run, Requirements board, Agent workspace</td><td>BRD-96 to BRD-117</td><td>done</td></tr>
+<tr><td>3</td><td>End to end and unattended</td><td>End-to-end run, Run queue, Run report</td><td>BRD-118 to BRD-136, BRD-159 to BRD-183</td><td>done</td></tr>
 <tr><td>4</td><td>More users</td><td>Feedback and issues, Licence, All projects, Worktrees, Integrations</td><td>BRD-137 to BRD-155</td><td>planned</td></tr>
 </tbody>
 </table>
+<p>Phase 1 closed on 2026-10-06 with 97 of 98 rows Verified, the nightly download included. REQ-FN-012 (Homebrew tools found when Chatur starts from Finder on a Mac) stays open in the phase 1 checklist until a Mac can test it; the owner chose to move on to phase 2 rather than mark it N/A.</p>
+<p>Phase 2 closed on 2026-10-07 with 22 of 22 rows Verified, on TrBlazeUI 2.1.4. Chatur's own verify process writes Verified only when a test carrying the requirement's id passed (owner decision 1, option A).</p>
+<p>Phase 3 carries two ranges. On 2026-10-08 the owner chose to have every process step handed to the agent that owns it (decision 1, option A, archived in <code>docs/OldDocs/</code>), so BRD-159 to BRD-179 were added to phase 3: the hand-over itself, rights, tier, waiting, stopping, what Process run shows, and what "done" means for each of the eleven processes other than verify-phase. On 2026-10-09 the owner added a "writes documents" right for files under <code>docs/</code>, held by the Analyst, the Architect and the Verifier (decision 1, option A, archived in <code>docs/OldDocs/</code>), so BRD-180 to BRD-183 extend that range. BRD-137 to BRD-155 stay with phase 4.</p>
+<p>Phase 3 closed on 2026-10-09 with 42 of 44 rows Verified, every process step handed to the agent that owns it. Automatic routing (REQ-FN-071, REQ-FN-072) stays Blocked until TechieRag publishes its small-model router (TR-RAG-006).</p>
   </main>
 </div>
 

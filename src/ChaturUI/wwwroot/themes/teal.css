@@ -33,6 +33,13 @@ html[data-theme="teal"] {
   --alert-info: oklch(0.51 0.11 195);
   --alert-warning: oklch(0.58 0.13 75);
   --alert-danger: oklch(0.55 0.20 25);
+  /* Semantic tints as the mockups draw a pill: the hue at 16-18% over whatever sits behind, text in the hue itself (docs/mockups/chatur.css .pill). */
+  --alert-success-bg: color-mix(in oklch, var(--alert-success) 16%, transparent);
+  --alert-success-foreground: var(--alert-success);
+  --alert-warning-bg: color-mix(in oklch, var(--alert-warning) 18%, transparent);
+  --alert-warning-foreground: var(--alert-warning);
+  --alert-danger-bg: color-mix(in oklch, var(--alert-danger) 16%, transparent);
+  --alert-danger-foreground: var(--alert-danger);
 
   --chart-1: oklch(0.51 0.11 195);
   --chart-2: oklch(0.52 0.15 150);
@@ -74,6 +81,13 @@ html.dark[data-theme="teal"] {
   --alert-info: oklch(0.755 0.115 195);
   --alert-warning: oklch(0.80 0.14 75);
   --alert-danger: oklch(0.70 0.17 25);
+  /* Semantic tints as the mockups draw a pill: the hue at 16-18% over whatever sits behind, text in the hue itself (docs/mockups/chatur.css .pill). */
+  --alert-success-bg: color-mix(in oklch, var(--alert-success) 16%, transparent);
+  --alert-success-foreground: var(--alert-success);
+  --alert-warning-bg: color-mix(in oklch, var(--alert-warning) 18%, transparent);
+  --alert-warning-foreground: var(--alert-warning);
+  --alert-danger-bg: color-mix(in oklch, var(--alert-danger) 16%, transparent);
+  --alert-danger-foreground: var(--alert-danger);
 
   --chart-1: oklch(0.755 0.115 195);
   --chart-2: oklch(0.76 0.16 150);

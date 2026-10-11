@@ -1,0 +1,178 @@
+@inject ToastService Toast
+
+@* UI Design "Screen: Agent workspace" — mockups/agent-workspace.html, a tab in the main window
+   (Project ▸ Agent workspace…), the conversation pinned to its right. The agent picker is a Collapsible
+   whose list stays mounted (a Select or DropdownMenu unmounts its list while closed, so the mockup's
+   agent-* anchors would never be on the page — the same choice Settings ▸ Agents makes). Start and
+   the command buttons open the session in the conversation and send the first message there. *@
+        <div class="flex min-h-0 flex-1 flex-col gap-4" data-testid="agent-workspace">
+            @if (ProjectId is null)
+            {
+                <Empty Title="No project is open" Description="Open a project and its agents' workspaces show here." Size="EmptySize.Small" data-testid="no-project" />
+            }
+            else if (objError is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="workspace-error">
+                    <AlertIcon><LucideIcon Name="triangle-alert" Size="16" /></AlertIcon>
+                    <AlertDescription>@objError</AlertDescription>
+                </Alert>
+            }
+            else if (objView is null)
+            {
+                <Skeleton Class="h-24 w-full" data-testid="workspace-loading" />
+            }
+            else
+            {
+                <div class="flex flex-wrap items-center gap-3" data-testid="workspace-heading">
+                    <div>
+                        <h1 class="text-base font-semibold">The @objView.Agent.Name's view of @ProjectName</h1>
+                        <p class="text-sm text-muted-foreground">One agent at a time. This is the whole of what it sees and what it may do.</p>
+                    </div>
+                    <span class="flex-1"></span>
+                    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/settings/agents" Class="h-7 shrink-0 whitespace-nowrap rounded-full leading-6" data-testid="edit-agents">Change the agents</Button>
+                </div>
+
+                <div class="flex flex-wrap items-start gap-3" data-testid="agent-picker-row">
+                    <Collapsible @bind-Open="objPickerOpen" Class="flex flex-col gap-1" data-testid="agent-picker">
+                        <CollapsibleTrigger AsChild>
+                            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="agent-picker-button">
+                                <span class="text-muted-foreground">Agent</span>
+                                @objView.Agent.Name
+                                <LucideIcon Name="chevron-down" Size="14" />
+                            </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent Class="flex w-64 flex-col rounded-md border bg-popover p-1 text-popover-foreground" data-testid="agent-picker-pop">
+                            @foreach (var vAgent in objView.Agents)
+                            {
+                                <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="justify-start" OnClick="() => ChooseAgent(vAgent)" aria-hidden="@(objPickerOpen ? null : "true")" data-testid="@($"agent-{vAgent.Code}")">
+                                    <span class="inline-block w-4">
+                                        @if (vAgent.Code == objView.Agent.Code)
+                                        {
+                                            <LucideIcon Name="check" Size="14" />
+                                        }
+                                    </span>
+                                    @vAgent.Name
+                                    <span class="flex-1"></span>
+                                    <span class="text-xs text-muted-foreground">@vAgent.OpenSessions open</span>
+                                </Button>
+                            }
+                            <div class="px-2 py-1 text-xs text-muted-foreground">Moving to another agent leaves the @objView.Agent.Name’s sessions open.</div>
+                        </CollapsibleContent>
+                    </Collapsible>
+                    <span class="pt-1.5 text-xs text-muted-foreground">One agent at a time — the @objView.Agents.Count Chatur knows on @ProjectName.</span>
+                </div>
+
+                <Card data-testid="rights-panel">
+                    <CardHeader Class="px-4">
+                        <CardTitle Class="text-base">What the @objView.Agent.Name may do</CardTitle>
+                    </CardHeader>
+                    <CardContent Class="flex flex-col gap-3 px-4">
+                        <div class="flex flex-wrap gap-2" data-testid="rights-allowed">
+                            @foreach (var vRight in objView.Allowed)
+                            {
+                                <Badge Variant="BadgeVariant.Success" Class="gap-1 rounded-full border-transparent" data-testid="@($"right-{RightAnchor(vRight.Action)}")">
+                                    <LucideIcon Name="check" Size="11" />
+                                    @vRight.Label
+                                </Badge>
+                            }
+                        </div>
+                        <div class="flex flex-col gap-2" data-testid="rights-denied">
+                            @foreach (var vDenied in objView.Denied)
+                            {
+                                <div class="flex items-center gap-2 text-muted-foreground" data-testid="@($"denied-{RightAnchor(vDenied.Action)}")">
+                                    <LucideIcon Name="ban" Size="14" />
+                                    <span class="text-xs">@vDenied.Label</span>
+                                </div>
+                            }
+                        </div>
+                        <Alert Variant="AlertVariant.Default" Class="border-transparent bg-muted text-muted-foreground" data-testid="rights-note">
+                            <AlertIcon><LucideIcon Name="triangle-alert" Size="16" /></AlertIcon>
+                            <AlertDescription>
+                                An action the @objView.Agent.Name has no right to is not offered on this screen at all — what it may not do is shown once, here, so you know where it went. There is no button to press and be refused.
+                            </AlertDescription>
+                        </Alert>
+                    </CardContent>
+                </Card>
+
+                <Card data-testid="open-work-panel">
+                    <CardHeader>
+                        <div class="flex items-center gap-2">
+                            <CardTitle Class="text-base">Open work for the @objView.Agent.Name</CardTitle>
+                            <span class="flex-1"></span>
+                            <Badge Variant="BadgeVariant.Secondary" data-testid="open-work-count">@OpenLine(objOpenWork.Count)</Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        @if (objOpenWork.Count == 0)
+                        {
+                            <Empty Title="Nothing open for this agent" Description="Every requirement it owns is verified." Size="EmptySize.Small" data-testid="open-work-empty" />
+                        }
+                        else
+                        {
+                            <DataTable TData="RequirementItem" Data="@objOpenWork" Density="DataTableDensity.Compact" ShowPagination="false"
+                                       RowAttributes="WorkRow" data-testid="open-work-table">
+                                <Columns>
+                                    <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.Id)" Header="Id" CellClass="whitespace-nowrap font-mono text-xs" />
+                                    <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.Title)" Header="Title" />
+                                    <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.BoardStatus)" Header="Status" CellClass="whitespace-nowrap">
+                                        <CellTemplate Context="item">
+                                            <Badge Variant="@StatusVariant(item)" data-testid="@($"work-status-{item.Id}")">@StatusText(item)</Badge>
+                                        </CellTemplate>
+                                    </DataTableColumn>
+                                    <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.Id)" Header="">
+                                        <CellTemplate Context="item">
+                                            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(objBusyKey is not null)" OnClick="() => StartRequirementAsync(item)" data-testid="@($"start-{item.Id}")">
+                                                <LucideIcon Name="play" Size="14" />
+                                                Start
+                                            </Button>
+                                        </CellTemplate>
+                                    </DataTableColumn>
+                                </Columns>
+                            </DataTable>
+                        }
+                    </CardContent>
+                </Card>
+
+                <Card data-testid="commands-panel">
+                    <CardHeader Class="px-4">
+                        <CardTitle Class="text-base">Its commands</CardTitle>
+                    </CardHeader>
+                    <CardContent Class="flex flex-col gap-3 px-4">
+                        @foreach (var vCommand in objView.Commands)
+                        {
+                            <div class="flex flex-wrap items-start gap-3" data-testid="@($"command-{vCommand.Command}")">
+                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="w-40 justify-center" Disabled="@(objBusyKey is not null)" OnClick="() => StartCommandAsync(vCommand)" data-testid="@($"run-{vCommand.Command}")">
+                                    <LucideIcon Name="play" Size="14" />
+                                    <span class="font-mono">@vCommand.Command</span>
+                                </Button>
+                                <span class="min-w-48 flex-1 pt-1 text-xs text-muted-foreground">@vCommand.Description</span>
+                            </div>
+                        }
+                    </CardContent>
+                </Card>
+
+                <Card data-testid="sessions-panel">
+                    <CardHeader Class="px-4">
+                        <div class="flex items-center gap-2">
+                            <CardTitle Class="text-base">Sessions still open</CardTitle>
+                            <span class="flex-1"></span>
+                            <Badge Variant="BadgeVariant.Secondary" data-testid="sessions-count">@objView.Sessions.Count</Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent Class="flex flex-col gap-2 px-4">
+                        @foreach (var vSession in objView.Sessions)
+                        {
+                            <a class="flex flex-wrap items-center gap-3 rounded-md border p-2" href="#" @onclick="() => OpenSession(vSession)" @onclick:preventDefault data-testid="@($"session-{vSession.SessionId}")">
+                                <LucideIcon Name="terminal" Size="16" />
+                                <div class="min-w-40 flex-1">
+                                    <b class="text-sm">@vSession.Title</b>
+                                    <div class="text-xs text-muted-foreground">Opened @vSession.StartedUtc.ToLocalTime().ToString("d MMM, HH:mm") · @vSession.MessageCount messages · @vSession.TokensUsed.ToString("N0") tokens</div>
+                                </div>
+                                <Badge Variant="BadgeVariant.Warning" Class="rounded-full border-transparent" data-testid="@($"session-{vSession.SessionId}-state")">@vSession.State.ToLowerInvariant()</Badge>
+                            </a>
+                        }
+                        <div class="text-xs text-muted-foreground" data-testid="sessions-note">Moving to another agent leaves these open. They keep their messages and their place, and are here when you come back to the @objView.Agent.Name.</div>
+                    </CardContent>
+                </Card>
+            }
+        </div>

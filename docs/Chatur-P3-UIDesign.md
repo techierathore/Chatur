@@ -11,6 +11,24 @@
 
 Each of these opens as a tab in the one window, with the conversation still pinned to its right.
 
+**Added to Process run, a phase 2 screen (2026-10-08, BRD-159 to BRD-179).** Mockup: [mockups/process-run.html](mockups/process-run.html). A work step (not a check or an owner stop) is handed to the agent that owns the process. Process run gains one region for it, and the conversation panel carries the agent's work; nothing else on the screen changes. End-to-end run needs no new control: `running-now` already names the agent and its model, and its Stop now also ends the handed agent's session.
+
+| Region | Control | Shows or binds |
+|---|---|---|
+| `handed-step` | Card + Badge + Alert (warning) + Button | the agent working the step, its model and tier, the task it was given (run, step, wording, project), the files written and commands run so far, any refused tool, its final message when it finishes, and Stop, which ends the agent's session and the run |
+| `msg-handed-step` | conversation message | the handed session's messages and tool calls, live, under the agent's name with the run and step |
+
+States of `handed-step`: empty — a step that is not handed (a check, an owner stop, verify-phase's own steps) shows no region · loading — the agent is being started: the state reads "starting", the lists are empty and Stop is live · error — the agent's session ends in an error or stalls: the region turns to the warning colour with the reason, and the stall-and-retry rule (BRD-124) applies.
+
+**Added to Settings ▸ Agents, a phase 1 screen, and Agent workspace, a phase 2 screen (2026-10-09, BRD-180 to BRD-183).** Mockups: [mockups/settings-agents.html](mockups/settings-agents.html), [mockups/agent-workspace.html](mockups/agent-workspace.html). One new right, "writes documents" (files under `docs/` only). Nothing else on either screen changes.
+
+| Region | Control | Shows or binds |
+|---|---|---|
+| `rights-panel` › `right-writes-docs` (Settings ▸ Agents) | Switch + label + state | one more line in the Rights panel, "Writes documents", drawn like the others; on for the Analyst, the Architect and the Verifier, off for the Flow master |
+| `rights-panel` › `right-docs` (Agent workspace) | Pill (held) or blocked line (withheld) | "write a document under docs/" among the rights held, or among the withheld lines for an agent without it |
+
+States: unchanged — the Rights panel's own empty, loading and error states apply to the new line.
+
 ### Screen: End-to-end run (`/auto`)
 
 **Mockup:** [mockups/auto-run.html](mockups/auto-run.html) · **Roles:** Owner · **BRD:** BRD-118 to BRD-125

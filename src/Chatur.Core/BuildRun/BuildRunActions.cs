@@ -277,7 +277,7 @@ public sealed class BuildRunActions : IBuildRunActions
         string? vMultiTfmProject = null;
         string[] vTfms = [];
 
-        foreach (var vCsproj in SafeEnumerateFiles(aProjectPath, "*.csproj"))
+        foreach (var vCsproj in ProjectToolchain.EnumerateFiles(aProjectPath, "*.csproj"))
         {
             string vText;
             try
@@ -320,7 +320,7 @@ public sealed class BuildRunActions : IBuildRunActions
         }
         else
         {
-            var vSln = SafeEnumerateFiles(aProjectPath, "*.sln").FirstOrDefault();
+            var vSln = ProjectToolchain.EnumerateFiles(aProjectPath, "*.sln").FirstOrDefault();
             if (vSln is not null)
             {
                 foreach (var vConfig in BuildConfigurations)
@@ -418,39 +418,6 @@ public sealed class BuildRunActions : IBuildRunActions
 
         var vLine = int.Parse(vMatch.Groups["line"].Value);
         return new BuildError(vFile.Replace('\\', '/'), vLine, vMatch.Groups["message"].Value.Trim());
-    }
-
-    private static IEnumerable<string> SafeEnumerateFiles(string aRoot, string aPattern)
-    {
-        var vExcluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "bin", "obj", ".git", "node_modules", ".vs", ".idea" };
-        var vStack = new Stack<string>();
-        vStack.Push(aRoot);
-
-        while (vStack.Count > 0)
-        {
-            var vDirectory = vStack.Pop();
-            IEnumerable<string> vFiles;
-            IEnumerable<string> vSubdirectories;
-            try
-            {
-                vFiles = Directory.EnumerateFiles(vDirectory, aPattern);
-                vSubdirectories = Directory.EnumerateDirectories(vDirectory).Where(d => !vExcluded.Contains(Path.GetFileName(d)));
-            }
-            catch (UnauthorizedAccessException)
-            {
-                continue;
-            }
-
-            foreach (var vFile in vFiles)
-            {
-                yield return vFile;
-            }
-
-            foreach (var vSubdirectory in vSubdirectories)
-            {
-                vStack.Push(vSubdirectory);
-            }
-        }
     }
 
     /// <summary>A run target's command, serialised into the <c>RunTarget.Command</c> column.</summary>

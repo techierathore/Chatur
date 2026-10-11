@@ -5,7 +5,7 @@ namespace ChaturUI.Pages.Settings;
 /// <summary>
 /// Settings ▸ Routing (mockups/settings-routing.html). Orders each tier's fallback chain
 /// (REQ-FN-020), sets a tier for each role (REQ-FN-018) and for each kind of work (REQ-FN-019), and
-/// sets how many failed fixes move work up a tier (REQ-FN-022). Every change is written straight
+/// sets how many failed fixes move work up a tier (REQ-FN-022), and turns automatic routing on or off (REQ-FN-071, REQ-FN-072). Every change is written straight
 /// to the database, so routing is as it was left after reopening Settings (REQ-FN-023). The role
 /// tier is the same <c>Role.Tier</c> column the Agents page edits.
 /// </summary>
@@ -28,6 +28,7 @@ public partial class SettingsRouting
     private IReadOnlyList<AgentRow>? objAgents;
     private IReadOnlyList<WorkRow> objWork = [];
     private int objThreshold = 3;
+    private bool objAutoRouting;
 
     /// <summary>A role's row in "A tier for each agent".</summary>
     /// <param name="RoleId">The role.</param>
@@ -67,6 +68,7 @@ public partial class SettingsRouting
         var vRoles = await RoleActions.RolesAsync();
         var vWorkTiers = await RoutingActions.WorkTiersAsync();
         objThreshold = await RoutingActions.EscalationThresholdAsync();
+        objAutoRouting = await RoutingActions.AutoRoutingAsync();
 
         objAgents = vRoles
             .Select(aRole => new AgentRow(aRole.RoleId, aRole.Code.Replace("-", string.Empty), aRole.Name, aRole.Tier, FirstModelOf(aRole.Tier)))
@@ -170,6 +172,19 @@ public partial class SettingsRouting
 
         await RoutingActions.SetEscalationThresholdAsync(vThreshold);
         objThreshold = vThreshold;
+    }
+
+    /// <summary>
+    /// Turns automatic routing on or off (REQ-FN-071, REQ-FN-072). Only the switch is written: the tiers
+    /// and chains above stay exactly as they are, so turning it off puts them back in charge.
+    /// </summary>
+    private async Task SetAutoRoutingAsync(bool aOn)
+    {
+        await RoutingActions.SetAutoRoutingAsync(aOn);
+        objAutoRouting = aOn;
+        Toast.Success(aOn
+            ? "Automatic routing is on. A small model now chooses the model for each piece of work."
+            : "Automatic routing is off. Your tiers and chains are in charge again.");
     }
 
     private static string CountText(int aCount) => aCount == 1 ? "1 model" : $"{aCount} models";

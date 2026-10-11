@@ -65,11 +65,19 @@
                     var vMessage = objMessages[vIndex];
                     var vIsMe = vMessage.Role == "user";
                     var vIsLastAgent = !vIsMe && vIndex == objMessages.FindLastIndex(m => m.Role != "user");
+                    @* A step handed to an agent (REQ-UI-071): its last line is the mockup's `msg-handed-step`, named for the step. *@
+                    @* The task the run gave the agent is the step's, not the owner's: it is shown as the step's task, never as "You". *@
+                    var vIsTask = vIsMe && objFollowed is { } vTaskOf && vTaskOf.SessionId == objCurrentSession?.SessionId;
+                    var vIsHanded = vIsLastAgent && objFollowed is { } vFollowed && vFollowed.SessionId == objCurrentSession?.SessionId;
                     @* The mockup's `.msg`: a round avatar (the owner's initials, or the agent's sparkle), then a body with the
                        name line (model and tokens) and what was said; the agent's steps and proposed change sit under the last reply. *@
-                    <div class="msg @(vIsMe ? "me" : "agent") flex gap-3 text-sm" data-testid="@($"msg-{vIndex + 1}")">
-                        <span class="who flex size-7 flex-none items-center justify-center rounded-full text-xs font-semibold @(vIsMe ? "border bg-muted text-muted-foreground" : "bg-primary/15 text-primary")">
-                            @if (vIsMe)
+                    <div class="msg @(vIsMe && !vIsTask ? "me" : "agent") flex min-w-0 gap-3 text-sm" data-testid="@(vIsHanded ? "msg-handed-step" : $"msg-{vIndex + 1}")">
+                        <span class="who flex size-7 flex-none items-center justify-center rounded-full text-xs font-semibold @(vIsMe && !vIsTask ? "border bg-muted text-muted-foreground" : "bg-primary/15 text-primary")">
+                            @if (vIsTask)
+                            {
+                                <LucideIcon Name="list-checks" Size="13" />
+                            }
+                            else if (vIsMe)
                             {
                                 @OwnerInitials
                             }
@@ -80,10 +88,18 @@
                         </span>
                         <div class="body flex min-w-0 flex-1 flex-col gap-2">
                             <span class="name flex items-center gap-2 text-xs font-semibold">
-                                @(vIsMe ? "You" : objCurrentSession!.RoleName)
-                                @if (vIsMe && vMessage.At is { } vAt)
+                                @(vIsTask ? $"Task for {objCurrentSession!.RoleName}" : vIsMe ? "You" : objCurrentSession!.RoleName)
+                                @if (vIsTask)
+                                {
+                                    <span class="model text-xs font-normal text-muted-foreground">@objFollowed!.StepLabel</span>
+                                }
+                                else if (vIsMe && vMessage.At is { } vAt)
                                 {
                                     <span class="model text-xs font-normal text-muted-foreground">@vAt.ToString("HH:mm")</span>
+                                }
+                                else if (vIsHanded)
+                                {
+                                    <span class="model text-xs font-normal text-muted-foreground">@(vMessage.ModelName ?? objFollowed!.ModelName ?? "model not named") · @objFollowed!.StepLabel</span>
                                 }
                                 else if (vMessage.ModelName is not null)
                                 {
@@ -94,7 +110,7 @@
                                     <LucideIcon Name="loader-circle" Size="12" Class="animate-spin" />
                                 }
                             </span>
-                            <div class="said whitespace-pre-wrap leading-relaxed @(vIsMe ? "inline-block self-start rounded-lg bg-muted px-3 py-2" : "")">@vMessage.Text</div>
+                            <div class="said min-w-0 whitespace-pre-wrap leading-relaxed [overflow-wrap:anywhere] @(vIsMe && !vIsTask ? "inline-block self-start rounded-lg bg-muted px-3 py-2" : "")" data-testid="@(vIsTask ? "step-task" : null)">@vMessage.Text</div>
                             @if (vIsLastAgent)
                             {
                                 <ConversationActivity Events="objActivity" Changes="objProposedChanges" OnOpen="OpenChangeAsync" OnApprove="ApproveAsync" OnReject="RejectAsync" />

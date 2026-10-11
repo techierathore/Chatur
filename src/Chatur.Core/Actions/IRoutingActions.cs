@@ -74,4 +74,16 @@ public interface IRoutingActions
     /// </summary>
     /// <param name="aCt">A token that cancels the write.</param>
     Task EnsureShippedTiersAsync(CancellationToken aCt = default);
+
+    /// <summary>Whether automatic routing is on: a small model chooses the model for each piece of work (REQ-FN-071). Off until the owner turns it on.</summary>
+    /// <param name="aCt">A token that cancels the read.</param>
+    Task<bool> AutoRoutingAsync(CancellationToken aCt = default);
+
+    /// <summary>
+    /// Turns automatic routing on or off (REQ-FN-071, REQ-FN-072). Nothing about the tiers or chains is
+    /// touched either way, so turning it off puts the owner's tiers and chains back in charge exactly as they were.
+    /// </summary>
+    /// <param name="aOn"><see langword="true"/> to let the small model choose, <see langword="false"/> to use the tiers and chains.</param>
+    /// <param name="aCt">A token that cancels the write.</param>
+    Task SetAutoRoutingAsync(bool aOn, CancellationToken aCt = default);
 }

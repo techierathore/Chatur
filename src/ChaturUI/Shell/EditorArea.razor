@@ -1,17 +1,24 @@
-@* The open-file tabs and the editor (UI Design "Screen: Workbench", regions `tabs` and `editor`).
+@* The open tabs and what the active one shows (UI Design "Screen: Workbench", regions `tabs` and `editor`;
+   UI Design phase 2: Processes, Board, a Process run and the Agent workspace open as tabs in this same
+   strip, the conversation still pinned to the right, `tool-area` in the mockups).
    EditorTabs marks an unsaved tab and asks before it closes (REQ-UI-041); opening a file from the
    tree shows its text here in a tab named after it (REQ-UI-040). *@
 @if (Workbench.FileViewVisible)
 {
-<Card Class="flex min-w-0 flex-1 flex-col overflow-hidden" data-testid="files-area">
+<Card Class="flex min-w-0 flex-1 flex-col overflow-hidden" data-testid="@(Workbench.ActiveTool is null ? "files-area" : "tool-area")">
     <div class="flex h-9 flex-none items-center justify-between border-b" data-testid="tabs">
-        @if (Workbench.OpenFiles.Count == 0)
+        @if (Workbench.TabCount == 0)
         {
             <span class="px-3 text-xs text-muted-foreground">No files open</span>
         }
         else
         {
-            <EditorTabs Items="@TabItems" ActiveId="@Workbench.ActiveId" ActiveIdChanged="OnActiveIdChanged" OnClose="RequestClose" />
+            @* The mockups draw a tab's close mark as a text ×, not the library's svg (TR-018, TrBlazeUI 2.1.4). *@
+            <EditorTabs Items="@TabItems" ActiveId="@Workbench.ActiveId" ActiveIdChanged="OnActiveIdChanged" OnClose="RequestClose" TabAttributes="TabAttributesOf">
+                <CloseContent>×</CloseContent>
+            </EditorTabs>
+            @if (Workbench.ActiveTool is null)
+            {
             <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" Disabled="@(Workbench.ActiveFile is null)" OnClick="OpenInEditorAsync" title="Open in your own editor" data-testid="open-in-editor">
                 <LucideIcon Name="external-link" Size="14" />
             </Button>
@@ -22,6 +29,7 @@
                 <LucideIcon Name="save" Size="14" />
                 Save
             </Button>
+            }
         }
         @* Gives the conversation the whole window; clicking a file in the tree, or Open on a proposed change, brings the file view back (UI Design "Screen: Workbench", `tabs`). *@
         <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="mr-1 h-7 w-7" OnClick="Workbench.CloseFileView"
@@ -29,6 +37,37 @@
             ×
         </Button>
     </div>
+    @if (Workbench.ActiveTool is { } vTool)
+    {
+        <div class="flex min-h-0 flex-1 flex-col overflow-auto p-4" data-testid="tool-content">
+            @switch (vTool.Kind)
+            {
+                case ToolKind.Processes:
+                    <ChaturUI.Pages.Processes @key="vTool.Id" Process="@vTool.ProcessCode" />
+                    break;
+                case ToolKind.Board:
+                    <ChaturUI.Pages.Board @key="vTool.Id" />
+                    break;
+                case ToolKind.ProcessRun:
+                    <ChaturUI.Pages.ProcessRun @key="vTool.Id" Id="@vTool.RunId" />
+                    break;
+                case ToolKind.AgentWorkspace:
+                    <ChaturUI.Pages.AgentWorkspace @key="vTool.Id" Agent="@vTool.AgentCode" />
+                    break;
+                case ToolKind.AutoRun:
+                    <ChaturUI.Pages.AutoRun @key="vTool.Id" />
+                    break;
+                case ToolKind.RunQueue:
+                    <ChaturUI.Pages.RunQueue @key="vTool.Id" />
+                    break;
+                case ToolKind.RunReport:
+                    <ChaturUI.Pages.RunReport @key="vTool.Id" />
+                    break;
+            }
+        </div>
+    }
+    else
+    {
     <div class="min-h-0 flex-1 overflow-auto" data-testid="editor">
         @if (Workbench.ActiveFile is { } vFile)
         {
@@ -46,6 +85,7 @@
             <Empty Title="Nothing open" Description="Open a file from the files panel to start editing." Size="EmptySize.Small" />
         }
     </div>
+    }
 </Card>
 }
 

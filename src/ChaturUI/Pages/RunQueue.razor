@@ -1,0 +1,178 @@
+@implements IDisposable
+@inject IRunQueueActions RunQueueActions
+@inject WorkbenchState WorkbenchTabs
+@inject ToastService ToastService
+
+@* UI Design "Screen: Run queue" — mockups/run-queue.html. Opens as a tab in the main window (Project ▸ Run queue).
+   The rows come from IRunQueueActions.ListAsync, which starts the next waiting run only when none is going
+   (REQ-UI-057); the page asks again every few seconds so a run that ends hands over to the next one on screen. *@
+<div class="flex flex-col gap-4" data-testid="run-queue">
+
+    <div class="flex flex-wrap items-center gap-3" data-testid="queue-heading">
+        <div>
+            <div class="text-[15px] font-semibold">Runs waiting their turn</div>
+            <div class="text-xs text-muted-foreground">Chatur takes them one at a time, from the top.</div>
+        </div>
+        <span class="flex-1"></span>
+        <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="queue-count">@CountText</Badge>
+        <Button Variant="ButtonVariant.Outline" OnClick="OpenAutoRun" data-testid="go-auto-run">Running now</Button>
+        <Button OnClick="OpenQueueDialog" data-testid="queue-a-run">
+            <LucideIcon Name="plus" Size="14" />
+            Queue a run
+        </Button>
+    </div>
+
+    @if (objError is not null)
+    {
+        <Alert Variant="AlertVariant.Warning" data-testid="queue-error">
+            <AlertTitle>The queue could not be read</AlertTitle>
+            <AlertDescription>
+                @objError
+                These are the last runs Chatur saw.
+                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="ml-2" OnClick="ReloadAsync" data-testid="queue-check-again">Check again</Button>
+            </AlertDescription>
+        </Alert>
+    }
+
+    <Card data-testid="queue-panel">
+        <CardHeader Class="px-3 py-2">
+            <div class="flex items-center justify-between gap-2">
+                <CardTitle Class="text-sm">The queue</CardTitle>
+                <span class="text-xs text-muted-foreground" data-testid="queue-total">@(objItems.Count == 1 ? "1 run" : $"{objItems.Count} runs")</span>
+            </div>
+        </CardHeader>
+        <CardContent Class="px-0 pb-0">
+            @if (objIsLoading && objItems.Count == 0)
+            {
+                <div class="flex justify-center p-6" data-testid="queue-loading">
+                    <Spinner />
+                </div>
+            }
+            else if (objItems.Count == 0)
+            {
+                <Empty Title="Nothing queued" Description="Queue a run to give Chatur its first one." Size="EmptySize.Small" data-testid="queue-empty" />
+            }
+            else
+            {
+                <DataTable TData="RunQueueItem" Data="@objItems" MinWidth="320px" ShowPagination="false" Class="text-xs"
+                           HeaderRowAttributes="QueueHeadAttributes"
+                           RowAttributes="@(aRow => new Dictionary<string, object> { ["data-testid"] = $"queue-row-{RowNumber(aRow)}", ["class"] = RowClass(aRow) })"
+                           data-testid="queue-table">
+                    <Columns>
+                        <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.QueueItemId.ToString())" Header="#" CellClass="whitespace-nowrap px-1 py-2" HeaderClass="px-1">
+                            <CellTemplate Context="row">
+                                <span class="text-muted-foreground" data-testid="@($"queue-position-{RowNumber(row)}")">@(row.Position?.ToString() ?? "—")</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.ProjectName)" Header="Project" CellClass="max-w-16 whitespace-nowrap px-1 py-2" HeaderClass="whitespace-nowrap px-1">
+                            <CellTemplate Context="row">
+                                <span class="block truncate" title="@row.ProjectName" data-testid="@($"queue-project-{RowNumber(row)}")">@row.ProjectName</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.BriefShort)" Header="Brief" CellClass="max-w-16 px-1 py-2" HeaderClass="px-1">
+                            <CellTemplate Context="row">
+                                <span class="block truncate" title="@row.Brief" data-testid="@($"queue-brief-{RowNumber(row)}")">@row.BriefShort</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.State.ToString())" Header="State" CellClass="whitespace-nowrap px-1 py-2" HeaderClass="px-1">
+                            <CellTemplate Context="row">
+                                <Badge Variant="@StateVariant(row.State)" Class="@StateClass(row.State)" data-testid="@($"queue-state-{RowNumber(row)}")">
+                                    @if (row.State == RunQueueState.Finished)
+                                    {
+                                        <LucideIcon Name="check" Size="11" />
+                                    }
+                                    @StateWord(row.State)
+                                </Badge>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.StartedUtc.ToString())" Header="Started" CellClass="whitespace-nowrap px-1 py-2 text-muted-foreground" HeaderClass="px-1" HideBelow="DataTableBreakpoint.Sm">
+                            <CellTemplate Context="row">
+                                <span data-testid="@($"queue-started-{RowNumber(row)}")">@(row.StartedUtc is { } vStarted ? vStarted.ToLocalTime().ToString("HH:mm") : "—")</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.Elapsed.ToString())" Header="Time" CellClass="whitespace-nowrap px-1 py-2 font-mono" HeaderClass="px-1" HideBelow="DataTableBreakpoint.Sm">
+                            <CellTemplate Context="row">
+                                <span data-testid="@($"queue-time-{RowNumber(row)}")">@ElapsedText(row.Elapsed)</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.QueueItemId.ToString())" Header="Do" CellClass="whitespace-nowrap px-1 py-2" HeaderClass="px-1">
+                            <CellTemplate Context="row">
+                                <div class="flex items-center">
+                                    <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" Disabled="@(!row.CanPause || objIsBusy)" title="@PauseTitle(row)"
+                                            OnClick="@(() => PauseAsync(row))" data-testid="@($"pause-{RowNumber(row)}")">
+                                        <LucideIcon Name="pause" Size="14" />
+                                    </Button>
+                                    <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" Disabled="@(!row.CanResume || objIsBusy)" title="@ResumeTitle(row)"
+                                            OnClick="@(() => ResumeAsync(row))" data-testid="@($"resume-{RowNumber(row)}")">
+                                        <LucideIcon Name="play" Size="14" />
+                                    </Button>
+                                    <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" Disabled="@(!row.CanRemove || objIsBusy)" title="@RemoveTitle(row)"
+                                            OnClick="@(() => AskRemove(row))" data-testid="@($"remove-{RowNumber(row)}")">
+                                        <LucideIcon Name="trash-2" Size="14" />
+                                    </Button>
+                                </div>
+                            </CellTemplate>
+                        </DataTableColumn>
+                    </Columns>
+                </DataTable>
+            }
+        </CardContent>
+        <div class="flex flex-wrap items-center gap-3 border-t px-3 py-2 text-xs text-muted-foreground" data-testid="queue-legend">
+            <span class="flex items-center gap-1"><LucideIcon Name="pause" Size="12" />Pause</span>
+            <span class="flex items-center gap-1"><LucideIcon Name="play" Size="12" />Resume</span>
+            <span class="flex items-center gap-1"><LucideIcon Name="trash-2" Size="12" />Remove</span>
+            <span class="opacity-70">Greyed out where it cannot apply to that run.</span>
+        </div>
+    </Card>
+
+    <Card data-testid="how-queue-behaves">
+        <CardHeader>
+            <CardTitle Class="text-xs">How the queue behaves</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3 px-3.5 py-3">
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="list" Size="16" Class="mt-0.5 shrink-0 text-muted-foreground" />
+                <div>
+                    <b class="block text-xs">One run at a time.</b>
+                    <div class="text-xs text-muted-foreground">The next one starts the moment the one above it finishes, is stopped or is removed. Nothing runs in parallel, so two runs never touch the same file at once.</div>
+                </div>
+            </div>
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="pause" Size="16" Class="mt-0.5 shrink-0 text-muted-foreground" />
+                <div>
+                    <b class="block text-xs">A paused run carries on from the step it stopped on.</b>
+                    <div class="text-xs text-muted-foreground">When it resumes it re-reads the checklist and picks that step back up — it does not begin again at step 1.</div>
+                </div>
+            </div>
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="refresh-cw" Size="16" Class="mt-0.5 shrink-0 text-muted-foreground" />
+                <div>
+                    <b class="block text-xs">A resumed run continues from the open requirement furthest from verified.</b>
+                    <div class="text-xs text-muted-foreground">Blocked first, then partial, then untouched — so the hardest thing left is the next thing attempted, not the easiest.</div>
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+
+    <Alert data-testid="removed-note">
+        <LucideIcon Name="triangle-alert" Size="16" />
+        <AlertDescription>
+            A removed run is never started. Whatever it already did stays where it is — the files it wrote, the requirements it closed and the tokens it spent are all in its run record.
+        </AlertDescription>
+    </Alert>
+
+    <QueueRunDialog Open="objIsQueueDialogOpen" OpenChanged="OnQueueDialogOpenChanged" OnQueued="OnQueuedAsync" />
+
+    <AlertDialog Open="objRemoving is not null" OpenChanged="OnRemoveDialogOpenChanged">
+        <AlertDialogContent data-testid="remove-dialog">
+            <AlertDialogHeader>
+                <AlertDialogTitle>Remove @(objRemoving?.ProjectName) from the queue?</AlertDialogTitle>
+                <AlertDialogDescription>It is never started. Whatever it already did stays in its run record. This cannot be undone.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <Button Variant="ButtonVariant.Outline" OnClick="CancelRemove" data-testid="remove-cancel">Keep it</Button>
+                <Button Variant="ButtonVariant.Destructive" OnClick="ConfirmRemoveAsync" data-testid="remove-confirm">Remove</Button>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+</div>

@@ -1,0 +1,226 @@
+@implements IDisposable
+@inject IRunReportActions Reports
+@inject IProjectActions ProjectActions
+@inject IFileActions Files
+@inject WorkbenchState WorkbenchTabs
+@inject ToastService Toast
+
+@* UI Design "Screen: Run report" — mockups/run-report.html, a tab in the main window. REQ-UI-058 (every requirement
+   and its verdict), REQ-UI-059 (every miss and whose gap it was), REQ-UI-060 (what it cost), REQ-UI-061 (read an
+   earlier run). What a run recorded is read by IRunReportActions; this page only shows it. *@
+<div class="flex flex-col gap-4" data-testid="run-report">
+
+    <div class="flex flex-wrap items-center gap-3" data-testid="report-heading">
+        <div class="min-w-0">
+            <div class="text-base font-semibold">What this run did, and what it cost</div>
+            <div class="text-sm text-muted-foreground" data-testid="report-subtitle">@Subtitle</div>
+        </div>
+        <span class="flex-1"></span>
+        <Button Variant="ButtonVariant.Outline" OnClick="OpenQueue" data-testid="go-queue">Queue</Button>
+    </div>
+
+    <Card data-testid="run-picker">
+        <CardContent Class="flex flex-wrap items-center gap-3 p-3">
+            <span class="text-sm text-muted-foreground">Run</span>
+            <div class="min-w-56 flex-1" data-testid="run-select">
+                <Select TValue="string" Value="@objSelectedKey" ValueChanged="OnPickedAsync" DisplayTextSelector="@(v => LabelOf(v))"
+                        Disabled="@(objIsLoading || objRuns.Count == 0)" Class="w-full">
+                    <SelectTrigger AriaLabel="Run" data-testid="run-select-button"><SelectValue Placeholder="@(objRuns.Count == 0 ? "No run on record" : "Pick a run")" /></SelectTrigger>
+                    <SelectContent data-testid="run-select-pop">
+                        @foreach (var vRun in objRuns)
+                        {
+                            <SelectItem TValue="string" Value="@vRun.Key" Text="@LabelOf(vRun)">@LabelOf(vRun)</SelectItem>
+                        }
+                    </SelectContent>
+                </Select>
+            </div>
+            <Button Variant="ButtonVariant.Outline" OnClick="OpenPickedAsync" Disabled="@(objIsLoading || objSelectedKey.Length == 0)" data-testid="open-run">
+                <LucideIcon Name="refresh-cw" Size="14" />
+                Open this run
+            </Button>
+        </CardContent>
+    </Card>
+
+    @if (objFailed)
+    {
+        <Alert Variant="AlertVariant.Warning" data-testid="report-error">
+            <LucideIcon Name="triangle-alert" Size="16" />
+            <AlertTitle>The record could not be read</AlertTitle>
+            <AlertDescription>Chatur could not read this project's measurement files. Check again in a moment.</AlertDescription>
+        </Alert>
+    }
+    else if (objReport is { IsPartial: true })
+    {
+        <Alert Variant="AlertVariant.Warning" data-testid="report-partial">
+            <LucideIcon Name="triangle-alert" Size="16" />
+            <AlertTitle>This run was stopped before its record was closed</AlertTitle>
+            <AlertDescription>The cost table shows only what was recorded, and the total is partial.</AlertDescription>
+        </Alert>
+    }
+
+    @if (!objIsLoading && objRuns.Count == 0 && !objFailed)
+    {
+        <div class="flex flex-wrap items-center gap-2 rounded-md border p-3 text-sm text-muted-foreground" data-testid="report-empty">
+            <LucideIcon Name="clock" Size="16" />
+            <span>No run has finished on this project. Start one from End-to-end run and its report will be here.</span>
+            <span class="flex-1"></span>
+            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="OpenAutoRun" data-testid="go-auto">End-to-end run</Button>
+        </div>
+    }
+
+    <div class="flex flex-wrap gap-2.5" data-testid="report-tiles">
+        <Card Class="min-w-24 flex-1" data-testid="tile-touched">
+            <CardContent Class="flex flex-col gap-0.5 p-3">
+                <span class="text-xs text-muted-foreground">Requirements touched</span>
+                @if (objIsLoading) { <Skeleton Class="h-6 w-12" /> } else { <b class="text-xl" data-testid="tile-touched-value">@Tile(objReport?.Requirements.Count)</b> }
+            </CardContent>
+        </Card>
+        <Card Class="min-w-24 flex-1" data-testid="tile-verified">
+            <CardContent Class="flex flex-col gap-0.5 p-3">
+                <span class="text-xs text-muted-foreground">Verified</span>
+                @if (objIsLoading) { <Skeleton Class="h-6 w-12" /> } else { <b class="text-xl text-green-600" data-testid="tile-verified-value">@Tile(objReport?.Requirements.Count(r => r.Verdict == "Verified"))</b> }
+            </CardContent>
+        </Card>
+        <Card Class="min-w-24 flex-1" data-testid="tile-misses">
+            <CardContent Class="flex flex-col gap-0.5 p-3">
+                <span class="text-xs text-muted-foreground">Misses</span>
+                @if (objIsLoading) { <Skeleton Class="h-6 w-12" /> } else { <b class="text-xl text-amber-600" data-testid="tile-misses-value">@Tile(objReport?.Misses.Count)</b> }
+            </CardContent>
+        </Card>
+        <Card Class="min-w-24 flex-1" data-testid="tile-tokens">
+            <CardContent Class="flex flex-col gap-0.5 p-3">
+                <span class="text-xs text-muted-foreground">Tokens</span>
+                @if (objIsLoading) { <Skeleton Class="h-6 w-16" /> } else { <b class="@FigureClass(TokensText(objReport?.TotalTokens), "whitespace-nowrap text-lg")" data-testid="tile-tokens-value">@TokensText(objReport?.TotalTokens)</b> }
+            </CardContent>
+        </Card>
+        <Card Class="min-w-24 flex-1" data-testid="tile-time">
+            <CardContent Class="flex flex-col gap-0.5 p-3">
+                <span class="text-xs text-muted-foreground">Time</span>
+                @if (objIsLoading) { <Skeleton Class="h-6 w-16" /> } else { <b class="@FigureClass(DurationText(objReport?.DurationSeconds), "whitespace-nowrap text-base")" data-testid="tile-time-value">@DurationText(objReport?.DurationSeconds)</b> }
+            </CardContent>
+        </Card>
+    </div>
+
+    <Card data-testid="requirements-panel">
+        <CardHeader>
+            <div class="flex items-center gap-2">
+                <CardTitle Class="text-sm">Every requirement and how it was left</CardTitle>
+                <span class="flex-1"></span>
+                <span class="text-xs text-muted-foreground" data-testid="requirements-shown">@RequirementsShown</span>
+            </div>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-2 px-0 pb-0">
+            <DataTable TData="RequirementRow" Data="@objRequirementRows" ShowPagination="false" Class="text-xs" RowAttributes="@RequirementHooks" data-testid="requirements-table">
+                <Columns>
+                    <DataTableColumn TData="RequirementRow" TValue="string" Property="@(r => r.Item.Id)" Header="Id" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap font-mono px-1.5 py-2 text-xs" />
+                    <DataTableColumn TData="RequirementRow" TValue="string" Property="@(r => r.Item.Title)" Header="Title" HeaderClass="px-1.5 py-2 text-xs" CellClass="px-1.5 py-2 text-xs">
+                        <CellTemplate Context="row"><span data-testid="@($"req-title-{row.Number}")">@(row.Item.Title.Length == 0 ? "—" : row.Item.Title)</span></CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="RequirementRow" TValue="string" Property="@(r => r.Item.AgentName)" Header="Agent" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap text-muted-foreground px-1.5 py-2 text-xs" />
+                    <DataTableColumn TData="RequirementRow" TValue="string" Property="@(r => r.Item.Verdict)" Header="Verdict" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap px-1.5 py-2 text-xs">
+                        <CellTemplate Context="row">
+                            <Badge Variant="@VerdictVariant(row.Item.Verdict)" Class="@VerdictClass(row.Item.Verdict)" data-testid="@($"verdict-{row.Number}")">
+                                @if (row.Item.Verdict == "Verified") { <LucideIcon Name="check" Size="11" /> }
+                                else if (row.Item.Verdict is "Blocked" or "FAIL") { <LucideIcon Name="x" Size="11" /> }
+                                @VerdictText(row.Item.Verdict)
+                            </Badge>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="RequirementRow" TValue="string" Property="@(r => r.Item.Id)" Header="When" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap text-muted-foreground px-1.5 py-2 text-xs">
+                        <CellTemplate Context="row"><span data-testid="@($"req-when-{row.Number}")">@WhenText(row.Item.AtUtc)</span></CellTemplate>
+                    </DataTableColumn>
+                </Columns>
+            </DataTable>
+            @if (objRequirementRows.Count == 0 && !objIsLoading)
+            {
+                <p class="px-3 text-sm text-muted-foreground" data-testid="requirements-empty">@(objReport is null ? "No run is open." : "This run's record names no requirement.")</p>
+            }
+            <div class="flex flex-wrap items-center gap-2 border-t px-2 py-2">
+                <span class="text-xs text-muted-foreground" data-testid="verdict-counts">@VerdictCounts</span>
+                <span class="flex-1"></span>
+                <Button Variant="ButtonVariant.Link" Size="ButtonSize.Small" Class="h-auto p-0 text-xs" OnClick="OpenBoard" data-testid="see-board">See all @objRequirementRows.Count on the board</Button>
+            </div>
+        </CardContent>
+    </Card>
+
+    <Card data-testid="misses-panel">
+        <CardHeader><CardTitle Class="text-sm">Misses</CardTitle></CardHeader>
+        <CardContent Class="flex flex-col gap-2 px-0 pb-0">
+            <DataTable TData="MissRow" Data="@objMissRows" MinWidth="410px" ShowPagination="false" Class="text-xs" RowAttributes="@MissHooks" data-testid="misses-table">
+                <Columns>
+                    <DataTableColumn TData="MissRow" TValue="string" Property="@(r => r.Item.What)" Header="What it was" HeaderClass="px-1.5 py-2 text-xs" CellClass="px-1.5 py-2 text-xs">
+                        <CellTemplate Context="row">
+                            <div>
+                                <div data-testid="@($"miss-what-{row.Number}")">@row.Item.What</div>
+                                @if (row.Item.Note.Length > 0) { <div class="text-xs text-muted-foreground">@row.Item.Note</div> }
+                            </div>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="MissRow" TValue="string" Property="@(r => r.Item.MissId)" Header="Whose gap" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap px-1.5 py-2 text-xs">
+                        <CellTemplate Context="row">
+                            <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="@($"miss-owner-{row.Number}")">@OwnerText(row.Item.Owner)</Badge>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="MissRow" TValue="string" Property="@(r => r.Item.RequirementId)" Header="On" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap font-mono px-1.5 py-2 text-xs" />
+                    <DataTableColumn TData="MissRow" TValue="string" Property="@(r => r.Item.MissId)" Header="Fixed" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap px-1.5 py-2 text-xs">
+                        <CellTemplate Context="row">
+                            <Badge Variant="@(row.Item.IsFixed ? BadgeVariant.Success : BadgeVariant.Warning)" Class="gap-1 rounded-full border-transparent" data-testid="@($"miss-fixed-{row.Number}")">
+                                @if (row.Item.IsFixed) { <LucideIcon Name="check" Size="11" /> }
+                                @(row.Item.IsFixed ? "yes" : "no")
+                            </Badge>
+                        </CellTemplate>
+                    </DataTableColumn>
+                </Columns>
+            </DataTable>
+            @if (objMissRows.Count == 0 && !objIsLoading)
+            {
+                <p class="px-3 text-sm text-muted-foreground" data-testid="misses-empty">@(objReport is null ? "No run is open." : "This run recorded no misses.")</p>
+            }
+            <div class="flex flex-wrap items-center gap-2 border-t px-2 py-2">
+                <span class="text-xs text-muted-foreground">A library miss goes to that library's feedback file and is never quietly worked around.</span>
+                <span class="flex-1"></span>
+                <Button Variant="ButtonVariant.Link" Size="ButtonSize.Small" Class="h-auto p-0 text-xs" OnClick="OpenFeedbackAsync" data-testid="see-feedback">Open feedback</Button>
+            </div>
+        </CardContent>
+    </Card>
+
+    <Card data-testid="cost-panel">
+        <CardHeader>
+            <div class="flex items-center gap-2">
+                <LucideIcon Name="coins" Size="16" Class="text-muted-foreground" />
+                <CardTitle Class="text-sm">What it cost</CardTitle>
+            </div>
+        </CardHeader>
+        <CardContent Class="px-0 pb-0">
+            <DataTable TData="CostRow" Data="@objCostRows" ShowPagination="false" Class="text-xs" RowAttributes="@CostHooks" data-testid="cost-table">
+                <Columns>
+                    <DataTableColumn TData="CostRow" TValue="string" Property="@(r => r.Model)" Header="Model" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap px-1.5 py-2 text-xs">
+                        <CellTemplate Context="row">@if (row.IsTotal) { <b>@row.Model</b> } else { @row.Model }</CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="CostRow" TValue="string" Property="@(r => r.Tier)" Header="Tier" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap text-muted-foreground px-1.5 py-2 text-xs" />
+                    <DataTableColumn TData="CostRow" TValue="string" Property="@(r => r.Calls)" Header="Calls" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap font-mono px-1.5 py-2 text-xs" />
+                    <DataTableColumn TData="CostRow" TValue="string" Property="@(r => r.In)" Header="In" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap font-mono px-1.5 py-2 text-xs" />
+                    <DataTableColumn TData="CostRow" TValue="string" Property="@(r => r.Out)" Header="Out" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap font-mono px-1.5 py-2 text-xs" />
+                    <DataTableColumn TData="CostRow" TValue="string" Property="@(r => r.Time)" Header="Time" HeaderClass="px-1.5 py-2 text-xs" CellClass="whitespace-nowrap font-mono px-1.5 py-2 text-xs" />
+                </Columns>
+            </DataTable>
+            @if (objCostRows.Count == 0 && !objIsLoading)
+            {
+                <p class="p-2 text-sm text-muted-foreground" data-testid="cost-empty">@(objReport is null ? "No run is open." : "This run's record names no model.")</p>
+            }
+            @if (objReport is { IsPartial: true })
+            {
+                <p class="p-2 text-xs text-muted-foreground" data-testid="cost-partial">Partial: the run's record was never closed.</p>
+            }
+        </CardContent>
+    </Card>
+
+    @if (objReport?.WaitedSeconds is { } vWaited)
+    {
+        <div class="flex items-start gap-2 rounded-md border p-3 text-muted-foreground" data-testid="waiting-note">
+            <LucideIcon Name="clock" Size="16" Class="mt-0.5 flex-none" />
+            <span class="text-sm">The @WaitText(vWaited) this run spent waiting on a usage limit cost nothing. No call was made, no token was spent, and the wait is not counted in the @DurationText(objReport.DurationSeconds) above.</span>
+        </div>
+    }
+
+</div>

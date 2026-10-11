@@ -69,6 +69,9 @@ async function removeByName(aPage: Page, aName: string): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => {
+  // Several of these talk to a live provider and take 20-30 s each, so the default 30 s budget
+  // fails whichever one happens to be slowest; every assertion keeps its own wait.
+  test.setTimeout(90_000);
   await signIn(page, 'Owner');
 });
 
@@ -227,33 +230,50 @@ test('REQ-FN-019 the owner can set a kind of work to a tier on the Routing page'
 });
 
 test('REQ-FN-020 the owner can reorder the models in a tier on the Routing page', async ({ page }) => {
+  test.setTimeout(120_000);
   await ensureReal(page);
   await openRouting(page);
   await expect(page.getByTestId('tier-1-add')).toBeVisible({ timeout: 5_000 });
   await expect(page.getByTestId('tier-3-add')).toBeVisible({ timeout: 2_000 });
   await expect(page.getByTestId('reset-tiers')).toBeVisible();
+  // The model in a row, by its exact name: "1 deepseek-v4-flash OpenCode Go" -> "deepseek-v4-flash".
+  // (A substring test is not enough: one model's name can contain another's.)
+  const modelAt = async (aRow: number) =>
+    (await page.getByTestId(`tier-2-row-${aRow}`).innerText()).replace(/\s+/g, ' ').trim().split(' ')[1];
+  // The page draws its rows before the Blazor circuit attaches, and a click made in that window reaches
+  // no handler; each move is clicked again only while the order is not yet the one it should give.
+  const moveUntil = async (aButton: string, aDone: () => Promise<boolean>) =>
+    expect(async () => {
+      if (!(await aDone())) {
+        await page.getByTestId(aButton).click();
+        await page.waitForTimeout(1_000);
+      }
+      expect(await aDone()).toBe(true);
+    }).toPass({ timeout: 30_000 });
+
   // Start from the shipped tiers; the connected provider's models are all filed in Tier 2.
   await page.getByTestId('reset-tiers').click();
   await expect(page.getByTestId('tier-2-row-2')).toBeVisible({ timeout: 10_000 });
-  const vFirst = (await page.getByTestId('tier-2-row-1').innerText()).replace(/\s+/g, ' ').trim();
-  const vSecond = (await page.getByTestId('tier-2-row-2').innerText()).replace(/\s+/g, ' ').trim();
+  await page.waitForTimeout(1_000);
+  const vFirst = await modelAt(1);
+  const vSecond = await modelAt(2);
+  expect(vFirst).not.toBe(vSecond);
   await expect(page.getByTestId('tier-2-up-1')).toBeDisabled();
+
   // Moving the first model down makes it second; the new order is the order after reopening the page.
-  await page.getByTestId('tier-2-down-1').click();
-  await expect(page.getByTestId('tier-2-row-1')).toContainText(vSecond.replace(/^\d+ /, '').split(' ')[0]);
-  await page.reload({ waitUntil: 'networkidle' });
-  expect((await page.getByTestId('tier-2-row-2').innerText()).replace(/\s+/g, ' ').trim()).toBe(vFirst.replace(/^1 /, '2 '));
-  // Moving it back up, and then Reset the tiers, both give the shipped order again.
-  await page.getByTestId('tier-2-up-2').click();
+  await moveUntil('tier-2-down-1', async () => (await modelAt(1)) === vSecond);
   await expect(async () => {
-    expect((await page.getByTestId('tier-2-row-1').innerText()).replace(/\s+/g, ' ').trim()).toBe(vFirst);
-  }).toPass({ timeout: 10_000 });
-  await page.getByTestId('tier-2-down-1').click();
-  await expect(page.getByTestId('tier-2-up-2')).toBeEnabled();
-  await page.getByTestId('reset-tiers').click();
-  await expect(async () => {
-    expect((await page.getByTestId('tier-2-row-1').innerText()).replace(/\s+/g, ' ').trim()).toBe(vFirst);
-  }).toPass({ timeout: 10_000 });
+    await page.reload({ waitUntil: 'networkidle' });
+    expect(await modelAt(1)).toBe(vSecond);
+    expect(await modelAt(2)).toBe(vFirst);
+  }).toPass({ timeout: 30_000 });
+
+  // Moving it back up gives the shipped order again.
+  await moveUntil('tier-2-up-2', async () => (await modelAt(1)) === vFirst);
+
+  // Moving it down once more and then Reset the tiers also gives the shipped order again.
+  await moveUntil('tier-2-down-1', async () => (await modelAt(1)) === vSecond);
+  await moveUntil('reset-tiers', async () => (await modelAt(1)) === vFirst);
 });
 
 const FIXTURE_ROOT = resolve(__dirname, '../.artifacts/verify/fixtures/workbench-routing-root');
@@ -365,11 +385,19 @@ test('REQ-FN-023 routing settings are as they were left after reopening Settings
   await expect(vPicker, 'no work-kind tier picker on Routing, so no setting can be left and re-read').toBeVisible({ timeout: 5_000 });
   const vBefore = (await vPicker.innerText()).trim();
   const vTarget = vBefore.includes('3') ? '1' : '3';
-  await vPicker.click();
-  await page.getByTestId(`chat-tier-${vTarget}`).click();
+  // A click made before the Blazor circuit attaches opens nothing, so the picker is opened again
+  // until its list shows, and the choice is made again until the button reads it.
+  const pickTier = async (aTier: string) =>
+    expect(async () => {
+      if (!(await page.getByTestId(`chat-tier-${aTier}`).isVisible())) {
+        await page.getByTestId('chat-tier-button').click();
+      }
+      await page.getByTestId(`chat-tier-${aTier}`).click({ timeout: 3_000 });
+      await expect(page.getByTestId('chat-tier-button')).toContainText(aTier, { timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
+  await pickTier(vTarget);
   await page.reload({ waitUntil: 'networkidle' });
   await expect(page.getByTestId('chat-tier-button')).toContainText(vTarget);
   // restore
-  await page.getByTestId('chat-tier-button').click();
-  await page.getByTestId(`chat-tier-${vBefore.match(/[123]/)?.[0] ?? '2'}`).click();
+  await pickTier(vBefore.match(/[123]/)?.[0] ?? '2');
 });

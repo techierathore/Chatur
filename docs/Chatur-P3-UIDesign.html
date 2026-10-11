@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — UI Design — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-P3-UIDesign.md</code></div>
+    <div class="subtitle">Rendered 2026-10-09 &middot; source <code>Chatur-P3-UIDesign.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -129,6 +129,24 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </table>
 <h2 id="screens">Screens<a class="anchor-link" href="#screens">#</a></h2>
 <p>Each of these opens as a tab in the one window, with the conversation still pinned to its right.</p>
+<p><strong>Added to Process run, a phase 2 screen (2026-10-08, BRD-159 to BRD-179).</strong> Mockup: <a href="mockups/process-run.html">mockups/process-run.html</a>. A work step (not a check or an owner stop) is handed to the agent that owns the process. Process run gains one region for it, and the conversation panel carries the agent's work; nothing else on the screen changes. End-to-end run needs no new control: <code>running-now</code> already names the agent and its model, and its Stop now also ends the handed agent's session.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>handed-step</code></td><td>Card + Badge + Alert (warning) + Button</td><td>the agent working the step, its model and tier, the task it was given (run, step, wording, project), the files written and commands run so far, any refused tool, its final message when it finishes, and Stop, which ends the agent's session and the run</td></tr>
+<tr><td><code>msg-handed-step</code></td><td>conversation message</td><td>the handed session's messages and tool calls, live, under the agent's name with the run and step</td></tr>
+</tbody>
+</table>
+<p>States of <code>handed-step</code>: empty — a step that is not handed (a check, an owner stop, verify-phase's own steps) shows no region · loading — the agent is being started: the state reads "starting", the lists are empty and Stop is live · error — the agent's session ends in an error or stalls: the region turns to the warning colour with the reason, and the stall-and-retry rule (BRD-124) applies.</p>
+<p><strong>Added to Settings ▸ Agents, a phase 1 screen, and Agent workspace, a phase 2 screen (2026-10-09, BRD-180 to BRD-183).</strong> Mockups: <a href="mockups/settings-agents.html">mockups/settings-agents.html</a>, <a href="mockups/agent-workspace.html">mockups/agent-workspace.html</a>. One new right, "writes documents" (files under <code>docs/</code> only). Nothing else on either screen changes.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>rights-panel</code> › <code>right-writes-docs</code> (Settings ▸ Agents)</td><td>Switch + label + state</td><td>one more line in the Rights panel, "Writes documents", drawn like the others; on for the Analyst, the Architect and the Verifier, off for the Flow master</td></tr>
+<tr><td><code>rights-panel</code> › <code>right-docs</code> (Agent workspace)</td><td>Pill (held) or blocked line (withheld)</td><td>"write a document under docs/" among the rights held, or among the withheld lines for an agent without it</td></tr>
+</tbody>
+</table>
+<p>States: unchanged — the Rights panel's own empty, loading and error states apply to the new line.</p>
 <h3 id="screen-end-to-end-run-auto">Screen: End-to-end run (<code>/auto</code>)<a class="anchor-link" href="#screen-end-to-end-run-auto">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/auto-run.html">mockups/auto-run.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-118 to BRD-125</p>
 <table>
@@ -151,7 +169,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </table>
 <p><strong>Dialogs opened here:</strong> Stop this run — a confirmation</p>
 <p><strong>States:</strong> empty: nothing running — one line offering the brief above, the bar and the two buttons hidden, and the chain shown as eight still to come · loading: the state reads "starting", the bar sweeps, the step reads "reading the checklist", and Pause and Stop wait a few seconds · error: a process that throws turns the state to stopped, names the process, the step and the last command, and offers to retry from that step; the brief stays filled</p>
-<h3 id="screen-run-queue-auto-queue">Screen: Run queue (<code>/auto/queue</code>)<a class="anchor-link" href="#screen-run-queue-auto-queue">#</a></h3>
+<h3 id="screen-run-queue-auto-queue"><a id="screen-run-queue-autoqueue"></a>Screen: Run queue (<code>/auto/queue</code>)<a class="anchor-link" href="#screen-run-queue-auto-queue">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/run-queue.html">mockups/run-queue.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-126 to BRD-130</p>
 <table>
 <thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
@@ -171,7 +189,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </table>
 <p><strong>Dialogs opened here:</strong> Queue a run — the brief form · Remove — a confirmation, since it cannot be undone</p>
 <p><strong>States:</strong> empty: nothing queued — a blank panel offering Queue a run, and the count reading "nothing running" · loading: five placeholder rows, the count reading as dots, every action disabled · error: the queue cannot be read — a warning above the table saying these are the last runs Chatur saw, with Check again; one broken run instead shows as lost, with Remove still live</p>
-<h3 id="screen-run-report-auto-report">Screen: Run report (<code>/auto/report</code>)<a class="anchor-link" href="#screen-run-report-auto-report">#</a></h3>
+<h3 id="screen-run-report-auto-report"><a id="screen-run-report-autoreport"></a>Screen: Run report (<code>/auto/report</code>)<a class="anchor-link" href="#screen-run-report-auto-report">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/run-report.html">mockups/run-report.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-131 to BRD-134</p>
 <table>
 <thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
@@ -196,10 +214,10 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <table>
 <thead><tr><th>What</th><th>Where</th></tr></thead>
 <tbody>
-<tr><td>The window, the theme and the design system</td><td><a href="Chatur-UIDesign.md">phase 1 UI design</a></td></tr>
-<tr><td>The click-through flow across every phase</td><td><a href="Chatur-UIDesign.md">phase 1 UI design</a></td></tr>
-<tr><td>The Settings screen whose routing tab this phase adds to</td><td><a href="Chatur-UIDesign.md">phase 1 UI design</a></td></tr>
-<tr><td>This phase's requirements</td><td><a href="Chatur-P3-BRD.md">Chatur-P3-BRD.md</a></td></tr>
+<tr><td>The window, the theme and the design system</td><td><a href="Chatur-UIDesign.html">phase 1 UI design</a></td></tr>
+<tr><td>The click-through flow across every phase</td><td><a href="Chatur-UIDesign.html">phase 1 UI design</a></td></tr>
+<tr><td>The Settings screen whose routing tab this phase adds to</td><td><a href="Chatur-UIDesign.html">phase 1 UI design</a></td></tr>
+<tr><td>This phase's requirements</td><td><a href="Chatur-P3-BRD.html">Chatur-P3-BRD.md</a></td></tr>
 </tbody>
 </table>
   </main>

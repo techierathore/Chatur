@@ -5,10 +5,11 @@ namespace Chatur.Windows;
 /// </summary>
 public partial class MainWindowPage : ContentPage
 {
-    /// <summary>Creates the page and points the web view at the Workbench.</summary>
+    /// <summary>Creates the page, points the web view at the Workbench and gives it the OS zoom keys (§9b).</summary>
     public MainWindowPage()
     {
         InitializeComponent();
         blazorWebView.StartPath = "/";
+        blazorWebView.BlazorWebViewInitialized += (sender, args) => BlazorZoom.Attach(args.WebView);
     }
 }

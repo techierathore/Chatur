@@ -26,10 +26,16 @@ mkdirSync(SHOTS, { recursive: true });
 const RIGHTS: Record<string, string> = {
   'read-file': 'Reads code',
   'edit-file': 'Changes code',
+  'write-docs': 'Writes documents',
   'run-build': 'Runs commands',
   'run-source-control': 'Runs source control',
   'mark-verified': 'Marks work verified',
   'correct-wording': 'Corrects its own wording',
+  'run-tests': 'Runs the tests',
+  'drive-screens': 'Drives the screens',
+  'open-feedback': 'Opens a feedback file',
+  'log-miss': 'Logs a miss',
+  'close-phase': 'Closes a phase',
 };
 
 test.beforeEach(async ({ page }) => {

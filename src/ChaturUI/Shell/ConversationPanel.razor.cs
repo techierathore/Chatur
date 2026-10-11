@@ -40,6 +40,9 @@ public partial class ConversationPanel : IDisposable
     private string objMessageText = string.Empty;
     private CancellationTokenSource? objActivityCts;
     private int? objTotalTokens;
+    private HandedSession? objFollowed;
+    private SessionSummary? objResumeAfterFollow;
+    private CancellationTokenSource? objFollowCts;
 
     [Inject]
     private IAgentActions Agent { get; set; } = default!;
@@ -69,7 +72,161 @@ public partial class ConversationPanel : IDisposable
     protected override async Task OnInitializedAsync()
     {
         AppStateService.Changed += OnAppStateChanged;
+        Workbench.ConversationStartRequested += OnConversationStartRequested;
+        Workbench.HandedSessionChanged += OnHandedSessionChanged;
         await EnsureLoadedAsync();
+        if (Workbench.Handed is not null)
+        {
+            await ShowHandedAsync();
+        }
+    }
+
+    private void OnHandedSessionChanged() => _ = InvokeAsync(ShowHandedAsync);
+
+    /// <summary>
+    /// Follows the agent session a process run handed a step to (REQ-UI-071): the thread switches to that session
+    /// under the agent's name and re-reads it every second, so its messages and tool calls appear as they happen.
+    /// When the run ends the step, or the Process run view is left, the thread returns to the owner's own session.
+    /// </summary>
+    private async Task ShowHandedAsync()
+    {
+        var vHanded = Workbench.Handed;
+        if (vHanded is null)
+        {
+            objFollowCts?.Cancel();
+            if (objFollowed is not null)
+            {
+                await ReturnToOwnerSessionAsync();
+            }
+
+            return;
+        }
+
+        // The owner's own session is remembered so it is back when the view that showed the step ends.
+        if (objFollowed is null)
+        {
+            objResumeAfterFollow = objCurrentSession;
+        }
+
+        try
+        {
+            var vDetail = await Agent.ContinueSessionAsync(vHanded.SessionId);
+            objFollowed = vHanded;
+            objCurrentSession = vDetail.Summary;
+            objSelectedRoleId = objRoles.FirstOrDefault(r => r.Name == vDetail.Summary.RoleName)?.RoleId;
+            objHistoryOpen = false;
+            await LoadMessagesAsync(vHanded.SessionId);
+            await LoadProposedChangesAsync(vHanded.SessionId);
+            await LoadTotalTokensAsync(vHanded.SessionId);
+            WatchActivity(vHanded.SessionId);
+            objFollowCts?.Cancel();
+            objFollowCts = new CancellationTokenSource();
+            _ = FollowHandedAsync(vHanded.SessionId, objFollowCts.Token);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (InvalidOperationException)
+        {
+            // The session is not readable yet; the next change of the handed step announces it again.
+        }
+    }
+
+    /// <summary>Leaves the handed step's session and shows the session the owner had before it (or the newest of theirs).</summary>
+    private async Task ReturnToOwnerSessionAsync()
+    {
+        var vResume = objResumeAfterFollow;
+        objFollowed = null;
+        objResumeAfterFollow = null;
+        if (ProjectId is not { } vProjectId)
+        {
+            return;
+        }
+
+        if (vResume is not null && vResume.ProjectId == vProjectId)
+        {
+            objSessions = await Agent.SessionsAsync(vProjectId);
+            objCurrentSession = objSessions.FirstOrDefault(s => s.SessionId == vResume.SessionId) ?? vResume;
+            objSelectedRoleId = objRoles.FirstOrDefault(r => r.Name == objCurrentSession.RoleName)?.RoleId;
+            await LoadMessagesAsync(objCurrentSession.SessionId);
+            await LoadProposedChangesAsync(objCurrentSession.SessionId);
+            await LoadTotalTokensAsync(objCurrentSession.SessionId);
+            WatchActivity(objCurrentSession.SessionId);
+        }
+        else
+        {
+            await ReloadSessionsAsync(vProjectId);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task FollowHandedAsync(int aSessionId, CancellationToken aCt)
+    {
+        try
+        {
+            while (!aCt.IsCancellationRequested && objCurrentSession?.SessionId == aSessionId)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), aCt);
+                if (objSending)
+                {
+                    continue;
+                }
+
+                await LoadMessagesAsync(aSessionId);
+                await LoadTotalTokensAsync(aSessionId);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Following ended with the step, or the conversation moved to another session.
+        }
+        catch (InvalidOperationException)
+        {
+            // A read that races the agent's write is simply not repeated; the step's end reads once more.
+        }
+    }
+
+    private void OnConversationStartRequested(ConversationStart aStart) => _ = InvokeAsync(() => OpenAndSendAsync(aStart));
+
+    /// <summary>
+    /// Opens a session another screen asked for — the Agent workspace's Start, a command button or a
+    /// session it still has open — and, when it came with a first message, sends it here, so the reply
+    /// streams into this conversation (REQ-UI-053, REQ-UI-054, REQ-FN-059, REQ-FN-060).
+    /// </summary>
+    /// <param name="aStart">The session to open and what to send first.</param>
+    private async Task OpenAndSendAsync(ConversationStart aStart)
+    {
+        if (ProjectId is not { } vProjectId)
+        {
+            return;
+        }
+
+        objSessions = await Agent.SessionsAsync(vProjectId);
+        if (objSessions.FirstOrDefault(s => s.SessionId == aStart.SessionId) is not { } vSession)
+        {
+            return;
+        }
+
+        // A reply still streaming in the session on screen finishes first; the new message is not dropped.
+        for (var vWait = 0; objSending && aStart.Message is not null && vWait < 480; vWait++)
+        {
+            await Task.Delay(250);
+        }
+
+        objCurrentSession = vSession;
+        objHistoryOpen = false;
+        objSelectedRoleId = aStart.RoleId ?? objRoles.FirstOrDefault(r => r.Name == vSession.RoleName)?.RoleId;
+        await LoadMessagesAsync(vSession.SessionId);
+        await LoadProposedChangesAsync(vSession.SessionId);
+        await LoadTotalTokensAsync(vSession.SessionId);
+        WatchActivity(vSession.SessionId);
+        StateHasChanged();
+
+        if (aStart.Message is { } vMessage)
+        {
+            objMessageText = vMessage;
+            await SendMessageAsync();
+        }
     }
 
     /// <summary>The owner's initials for the message avatar, from the signed-in account's name (the mockup's "TR").</summary>
@@ -105,6 +262,8 @@ public partial class ConversationPanel : IDisposable
         objCurrentSession = null;
         objSessions = [];
         objSuggestion = null;
+        objFollowed = null;
+        objResumeAfterFollow = null;
         Workbench.SetPendingChanges([]);
 
         if (ProjectId is not { } vProjectId)
@@ -153,6 +312,12 @@ public partial class ConversationPanel : IDisposable
             .Where(e => e.Kind is "user" or "assistant")
             .Select(e => new DisplayMessage(e.Kind, e.Payload, e.Model, e.Tokens, true))
             .ToList();
+
+        // A handed step's agent is still writing while the run holds the step: its last line keeps the spinner.
+        if (Workbench.Handed?.SessionId == aSessionId && objMessages.FindLastIndex(m => m.Role != "user") is var vLast and >= 0)
+        {
+            objMessages[vLast] = objMessages[vLast] with { IsFinal = false };
+        }
     }
 
     /// <summary>
@@ -449,6 +614,9 @@ public partial class ConversationPanel : IDisposable
     public void Dispose()
     {
         AppStateService.Changed -= OnAppStateChanged;
+        Workbench.ConversationStartRequested -= OnConversationStartRequested;
+        Workbench.HandedSessionChanged -= OnHandedSessionChanged;
+        objFollowCts?.Cancel();
         objActivityCts?.Cancel();
     }
 }

@@ -8,11 +8,27 @@
 
 ## Summary
 
-5 entries: 0 blocking now, 0 open, 5 fixed upstream (2 in TechieRag 1.0.8, 3 in 1.0.9).
+6 entries: nothing is blocked. 0 open, 1 fixed upstream and not yet fully re-checked (TR-RAG-006 — in 1.1.5 and built on, live check waiting for a small model), 5 closed.
 
-Nothing is blocked. Chatur is on 1.0.9; OpenCode Go answers through Chatur (checked live 2026-10-01).
+Chatur is on 1.1.5 since 2026-10-11. REQ-FN-071 and REQ-FN-072 are built on `ModelChooser` and Verified (2026-10-11).
 
 ## Entries
+
+### TR-RAG-006 — No small-model router that chooses a model for a piece of work
+
+> ⏳ **Re-checked 2026-10-11, released in 1.1.5** — `TechieRag.dll`/`.xml` 1.1.5 carry `ModelChooser`, `IModelChooser`, `ModelCandidate`, `ModelChoice`, `ModelChoiceSource` and `ModelChooserOptions`. Chatur upgraded; REQ-FN-071 and REQ-FN-072 are built on it and Verified, with unit tests using a fake `IModelChooser`. The "Verify from here" live run (fast vs deep with a greeting) has not been done: no local or cheap small model is set up on this machine yet. Close this entry once it has.
+>
+> ⏳ **Re-checked 2026-10-09, not yet released** — TechieRag 1.1.3 (the release after 1.1.2 on the feed) carries no `ModelChooser`: neither its reference nor `TechieRag.dll` contains the name. Chatur stays on 1.0.9; REQ-FN-071 and REQ-FN-072 stay Blocked until a release carries it.
+
+- **Status:** fixed upstream 2026-10-09 (REQ-RAG-128, Verified: `ModelChooser`), ships in the next TechieRag release after 1.1.2 — re-check from Chatur, then close
+- **Severity:** blocker
+- **Blocks:** yes — REQ-FN-071 (automatic routing: "a model chosen by the small model inside TechieRag") cannot be built; REQ-FN-072 (turn it off, tiers and chains used again) has nothing to switch off until 071 exists.
+- **Repro:** `.techierag/TechieRag-AI-Reference.md` lists only `ModelRouter.Resolve/Require` (model NAME to connector, no choosing). The 1.0.9 and 1.1.2 packages' `TechieRag.xml` (net10.0) hold no router, classifier or selector type.
+- **Expected:** A call such as `Router.ChooseAsync(request, candidates)` that runs a small model (local or cheap) over the request and the candidate models (with tier, strengths, cost) and returns the chosen model, plus the reason, so the host can show and log it.
+- **Actual:** Nothing in the public API picks a model from the content of a request.
+- **Encountered in:** REQ-FN-071, REQ-FN-072
+- **Workaround:** None. Chatur does not imitate it (a keyword or length rule in Chatur is not "the small model inside TechieRag"); both rows stay Blocked and the routing page keeps its disabled "later" switch.
+- **Suggested fix:** A public `ModelChooser` (or `UseModelChooser(smallModel)`) in `TechieRag.Llm` taking the request text and a list of `{ModelId, Tier, Notes}` and returning `{ModelId, Reason}`.
 
 ### TR-RAG-003 — An OpenAI-compatible model cannot be sent extra request headers
 
@@ -112,3 +128,21 @@ unreachable through TechieRag. Everything else about Chatur's provider/routing/m
 ## Replies from TechieRag
 
 <!-- The upstream team's answers, newest block first. Left in full: this is the record. -->
+
+### 2026-10-09 — TR-RAG-006 fixed
+
+**TR-RAG-006 (small-model router), REQ-RAG-128.** New in `TechieRag.Llm`, shipping in the next TechieRag release after 1.1.2:
+- `new ModelChooser(smallModel, options?)` takes any `ILlmProvider` as the small model, local or cheap. It implements `IModelChooser`, so your tests can pass a fixed choice.
+- `ChooseAsync(request, candidates)` takes the request text and `ModelCandidate { ModelId, Tier?, Notes?, Cost? }` items. Write the text fields in Chatur's own words.
+- It returns a `ModelChoice` with `ModelId`, `Candidate`, `Reason` (one sentence to show and log), `Source` and the small model's `Usage`. `Source` is `ModelChoiceSource.SmallModel`, `OnlyCandidate` or `Fallback`.
+- The answer is always one of your candidates. If the reply is not JSON or names a model you did not offer, you get `ModelChooserOptions.FallbackModelId` (else the first candidate) with `Source = Fallback`.
+- If the small model itself fails (down, refused, cancelled), the exception is thrown. Catch it to use your tiers and chains. That also covers REQ-FN-072's "turned off" path.
+- `ModelChooserOptions.Guidance` adds your own rule. `MaxRequestCharacters` (default 4000) limits how much of the request the small model reads.
+
+```csharp
+var chooser = new ModelChooser(LlmProviderFactory.CreateForModel("ollama/llama3.2", null));
+var choice = await chooser.ChooseAsync(userText, candidates);   // candidates: List<ModelCandidate>
+routingLog.Write(choice.ModelId, choice.Source, choice.Reason);
+```
+
+**Verify from here:** once Chatur is on the new package, call `ChooseAsync` with two candidates, a "fast" and a "deep" one, and a one-line greeting. You should get the fast model with `Source = SmallModel` and a reason. TechieRag's tests `REQ-RAG-128 …` (6 of them) pass. A live run on 2026-10-09 with `qwen2.5-0.5b-instruct` as the small model sent a greeting to the fast model and a code review to the deep one.

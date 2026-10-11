@@ -1,0 +1,206 @@
+@inject IProjectActions ProjectActions
+@inject IProcessActions ProcessActionsService
+@inject IProcessRunActions ProcessRuns
+@inject WorkbenchState WorkbenchTabs
+@inject ToastService ToastService
+
+@* UI Design "Screen: Processes" — mockups/processes.html. Opens as a tab in the main window
+   (Project ▸ Processes…); Start and Watch open the Process run tab. The twelve rows and their start link come
+   from IProcessActions.ListAsync (REQ-FN-049, REQ-FN-050); the opened process's steps, checks and owner
+   stops (REQ-UI-045) are read from the database each time, so reworded steps show at once with no file
+   edited (REQ-UI-046). *@
+<div class="flex flex-col gap-4" data-testid="processes">
+
+    <div class="flex flex-wrap items-start justify-between gap-3" data-testid="processes-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Processes</h1>
+            <p class="text-sm text-muted-foreground">
+                Every TechieFlow command, as something Chatur runs on @(objProject?.Name ?? "the open project").
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <Button Variant="ButtonVariant.Outline" Disabled="objLastRun is null" OnClick="OpenLastRun" data-testid="open-last-run">
+                <LucideIcon Name="clock" Size="14" />
+                Last run
+            </Button>
+            <Button Variant="ButtonVariant.Outline" Disabled="objIsLoading" OnClick="ReloadAsync" data-testid="reload-processes">
+                <LucideIcon Name="refresh-cw" Size="14" />
+                Reload
+            </Button>
+        </div>
+    </div>
+
+    @if (objError is not null)
+    {
+        <Alert Variant="AlertVariant.Danger" data-testid="processes-error">
+            <AlertTitle>Processes could not be read</AlertTitle>
+            <AlertDescription>@objError</AlertDescription>
+        </Alert>
+    }
+    else
+    {
+        <Card data-testid="process-table-panel">
+            <CardHeader>
+                <CardTitle>@CountWord(objProcesses.Count) processes</CardTitle>
+            </CardHeader>
+            <CardContent>
+                @if (objIsLoading && objProcesses.Count == 0)
+                {
+                    <div class="flex justify-center p-6">
+                        <Spinner />
+                    </div>
+                }
+                else if (objProcesses.Count == 0)
+                {
+                    <Empty Title="No process registered" Description="Reload reads the process definitions again from Chatur's database." Size="EmptySize.Small" data-testid="processes-empty" />
+                }
+                else
+                {
+                    <DataTable TData="ProcessSummary" Data="@objProcesses" MinWidth="720px" ShowPagination="false"
+                               HeaderRowAttributes="ProcessHeadAttributes"
+                               RowAttributes="@(p => new Dictionary<string, object> { ["data-testid"] = $"row-{p.Code}", ["class"] = "border-t" })"
+                               data-testid="process-table">
+                        <Columns>
+                            <DataTableColumn TData="ProcessSummary" TValue="string" Property="@(p => p.Code)" Header="Process"
+                                             CellClass="whitespace-nowrap" HeaderClass="whitespace-nowrap">
+                                <CellTemplate Context="row">
+                                    <Button Variant="ButtonVariant.Link" Class="h-auto p-0 font-mono" OnClick="@(() => OpenProcessAsync(row.Code))"
+                                            data-testid="@($"open-{row.Code}")">
+                                        @row.Code
+                                    </Button>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProcessSummary" TValue="string" Property="@(p => p.Description)" Header="What it does">
+                                <CellTemplate Context="row">
+                                    <span class="text-muted-foreground" data-testid="@($"what-{row.Code}")">@row.Description</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProcessSummary" TValue="string" Property="@(p => p.Steps.ToString())" Header="Steps · checks · stops"
+                                             CellClass="whitespace-nowrap" HeaderClass="whitespace-nowrap">
+                                <CellTemplate Context="row">
+                                    <span class="font-mono" data-testid="@($"shape-{row.Code}")">@row.Steps · @row.Checks · @row.OwnerStops</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProcessSummary" TValue="string" Property="@(p => p.Agent)" Header="Agent and last run">
+                                <CellTemplate Context="row">
+                                    <div>@row.Agent</div>
+                                    @if (row.IsRunning)
+                                    {
+                                        <Badge Variant="BadgeVariant.Secondary" Class="mt-1 rounded-full border-transparent" data-testid="@($"state-{row.Code}")">running now</Badge>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-xs text-muted-foreground" data-testid="@($"last-{row.Code}")">@LastRunText(row)</div>
+                                    }
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProcessSummary" TValue="string" Property="@(p => p.Code)" Header="">
+                                <CellTemplate Context="row">
+                                    @if (row.IsRunning && row.RunningRunId is not null)
+                                    {
+                                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => WatchRun(row.RunningRunId.Value, row.Code))"
+                                                data-testid="@($"start-{row.Code}")">
+                                            <LucideIcon Name="play" Size="14" />
+                                            Watch
+                                        </Button>
+                                    }
+                                    else
+                                    {
+                                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(objProject is null || objIsBusy)"
+                                                OnClick="@(() => StartAsync(row.Code))" data-testid="@($"start-{row.Code}")">
+                                            <LucideIcon Name="play" Size="14" />
+                                            Start
+                                        </Button>
+                                    }
+                                </CellTemplate>
+                            </DataTableColumn>
+                        </Columns>
+                    </DataTable>
+                }
+            </CardContent>
+        </Card>
+
+        @if (objOpenCode is not null)
+        {
+            <Card data-testid="steps-panel">
+                <CardHeader>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <CardTitle>@objOpenCode, step by step</CardTitle>
+                        <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="steps-count">@StepsSummary</Badge>
+                    </div>
+                </CardHeader>
+                <CardContent Class="px-2 pb-3">
+                    @if (objSteps.Count == 0)
+                    {
+                        <Empty Title="No steps" Description="This process has no rows in the database." Size="EmptySize.Small" data-testid="steps-empty" />
+                    }
+                    else
+                    {
+                        <DataTable TData="ProcessStepInfo" Data="@objSteps" MinWidth="480px" ShowPagination="false"
+                                   HeaderRowAttributes="StepsHeadAttributes"
+                                   RowAttributes="@(s => new Dictionary<string, object> { ["data-testid"] = $"step-{s.Position}", ["class"] = "border-t" })"
+                                   data-testid="steps-table">
+                            <Columns>
+                                <DataTableColumn TData="ProcessStepInfo" TValue="int" Property="@(s => s.Position)" Header="#" CellClass="w-8 whitespace-nowrap px-2 py-2" HeaderClass="w-8 whitespace-nowrap px-2">
+                                    <CellTemplate Context="row">
+                                        <span class="text-muted-foreground">@row.Position</span>
+                                    </CellTemplate>
+                                </DataTableColumn>
+                                <DataTableColumn TData="ProcessStepInfo" TValue="string" Property="@(s => s.Wording)" Header="Step" CellClass="px-2 py-2" HeaderClass="px-2">
+                                    <CellTemplate Context="row">
+                                        <span data-testid="@($"wording-{row.Position}")">@row.Wording</span>
+                                    </CellTemplate>
+                                </DataTableColumn>
+                                <DataTableColumn TData="ProcessStepInfo" TValue="string" Property="@(s => s.StepCode)" Header="Kind" CellClass="whitespace-nowrap px-1.5 py-2" HeaderClass="px-1.5">
+                                    <CellTemplate Context="row">
+                                        <Badge Variant="@KindVariant(row)" Class="gap-1 rounded-full border-transparent" data-testid="@($"kind-{row.Position}")">
+                                            @if (row.Kind == ProcessStepKind.Check)
+                                            {
+                                                <LucideIcon Name="check" Size="11" />
+                                            }
+                                            else if (row.Kind == ProcessStepKind.OwnerStop)
+                                            {
+                                                <LucideIcon Name="pause" Size="11" />
+                                            }
+                                            @KindLabel(row)
+                                        </Badge>
+                                    </CellTemplate>
+                                </DataTableColumn>
+                            </Columns>
+                        </DataTable>
+                    }
+                </CardContent>
+            </Card>
+        }
+
+        <Alert data-testid="steps-are-code-note">
+            <LucideIcon Name="triangle-alert" Size="16" />
+            <AlertDescription>
+                The three numbers in each row are steps, checks and owner stops. The steps and the checks are code — the same ones run every time. Only the wording you read above is read from Chatur's database, so it can be reworded without touching the process.
+            </AlertDescription>
+        </Alert>
+
+        <Card data-testid="what-a-process-touches">
+            <CardHeader>
+                <CardTitle>What a process touches</CardTitle>
+            </CardHeader>
+            <CardContent Class="flex flex-col gap-2">
+                <div class="flex items-center gap-3" data-testid="touch-brd">
+                    <span class="w-32 text-sm text-muted-foreground">Reads</span>
+                    <span class="break-all font-mono text-sm">@(objDocuments?.Brd ?? "—")</span>
+                </div>
+                <div class="flex items-center gap-3" data-testid="touch-checklist">
+                    <span class="w-32 text-sm text-muted-foreground">Reads and writes</span>
+                    <span class="break-all font-mono text-sm">@(objDocuments?.Checklist ?? "—")</span>
+                </div>
+                <div class="flex items-center gap-3" data-testid="touch-status">
+                    <span class="w-32 text-sm text-muted-foreground">Writes</span>
+                    <span class="break-all font-mono text-sm">@(objDocuments?.Status ?? "—")</span>
+                </div>
+                <p class="text-sm text-muted-foreground" data-testid="touch-note">
+                    A process reads and writes the project's own BRD, checklist and status documents, and puts nothing else in the folder. No file of Chatur's own appears in @(objProject?.Name ?? "the project").
+                </p>
+            </CardContent>
+        </Card>
+    }
+</div>

@@ -22,6 +22,9 @@ public partial class MenuBar : IDisposable
     [Inject]
     private AppState AppStateService { get; set; } = default!;
 
+    [Inject]
+    private WorkbenchState Workbench { get; set; } = default!;
+
     /// <inheritdoc />
     protected override void OnInitialized()
     {
@@ -49,6 +52,9 @@ public partial class MenuBar : IDisposable
         await Projects.SelectProjectAsync(aProjectId);
         objProjectsLoaded = false;
     }
+
+    /// <summary>Opens the Agent workspace in a tab, on the agent already shown there or the first one.</summary>
+    private void OpenAgentWorkspace() => Workbench.OpenAgentWorkspace();
 
     private void OnAppStateChanged() => InvokeAsync(StateHasChanged);
 

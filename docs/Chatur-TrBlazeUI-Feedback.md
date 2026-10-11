@@ -4,11 +4,11 @@
 |---|---|
 | App | Chatur |
 | Upstream | TrBlazeUI |
-| Updated | 2026-10-02 |
+| Updated | 2026-10-07 |
 
 ## Summary
 
-14 entries: 1 blocking (TR-014, 9 Settings Agents rows), 3 fixed upstream (TR-011, TR-012, TR-013), 10 closed.
+19 entries: nothing is blocked. 0 open, 19 closed (TR-019 re-checked and closed 2026-10-11 on 2.1.6).
 
 All ten were answered on 2026-09-22 and all ten have now been re-checked in Chatur against
 2.0.9. Six were fixed in code; four needed no code, because the control already existed. Each
@@ -202,9 +202,235 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 - **Workaround:** none; a colour written into the component would break "a theme is a file of OKLCH values", and an inline style is not allowed.
 - **Suggested fix:** draw the off-state border with `border-input` on the switch root (`data-[state=unchecked]:border-input`) or add a `Variant`.
 
+### TR-015 — A tab in EditorTabs cannot carry its own attributes, such as a test id
+
+> ✅ **Closed 2026-10-07** — re-checked here: TrBlazeUI 2.1.3, `TabAttributes` on the main window's EditorTabs gives `tab-processes`, `tab-board`, `tab-process-run`, `tab-agent-workspace` and `tab-<file name without extension>`. `tf-verify-screens.sh` on the four phase 2 screens at 1280 and 390: render OK, visual OK, no missing `tab-*` anchor. workbench-files.spec.ts and all six phase 2 specs pass (48 of 48).
+
+- **Status:** fixed upstream 2026-10-07 (`EditorTabs.TabAttributes`, in 2.1.3 — see the 2026-10-07 reply), filed 2026-10-06
+- **Severity:** minor
+- **Blocks:** yes — the screens work and tests find a tab by its label, but the verifier's screen check needs the mockups' `tab-*` ids on the page, so all 22 phase 2 rows (REQ-FN-049..060, REQ-UI-045..054) cannot reach Verified until a tab can carry its id.
+- **Repro:** TrBlazeUI 2.1.2 `EditorTabs Items="@objTabs"`: each item renders one tab, and there is no parameter that adds attributes to a tab's element.
+- **Expected:** a way to give each tab its own attributes from its item, like `DataTable.RowAttributes`, so a tab can carry `data-testid="tab-processes"` as Chatur's mockups draw.
+- **Actual:** the mockups' `tab-processes`, `tab-board`, `tab-process-run` and `tab-agent-workspace` anchors cannot exist on the page, so the screen check lists them as missing.
+- **Encountered in:** REQ-UI-045, REQ-UI-047, REQ-UI-049, REQ-UI-053 (phase 2 screens as tabs in the main window)
+- **Workaround:** none; tests locate a tab by its visible label.
+- **Suggested fix:** add `TabAttributes` (`Func<TItem, IReadOnlyDictionary<string, object>?>`) to `EditorTabs`, applied to each tab's root element.
+
+### TR-016 — A step in Stepper cannot show an icon in its marker
+
+> ✅ **Closed 2026-10-07** — re-checked here: TrBlazeUI 2.1.3, each Process run step uses `StepperItem.Icon` (check, spinning loader-circle, pause, x, clock). Screenshots run-stopped-390.png and run-verdicts-1280.png show the vector marks in the circles; `tf-mockup-parity.sh` no longer reports "mockup carries an icon here" for `run-step-1` to `run-step-7`.
+
+- **Status:** fixed upstream 2026-10-07 (`StepperItem.Icon`, in 2.1.3 — see the 2026-10-07 reply), filed 2026-10-06
+- **Severity:** minor
+- **Blocks:** no — Process run reads correctly: each step's marker is a filled circle with a tick, a cross or a number, named for a screen reader, and the state pill beside it says the same in words.
+- **Repro:** TrBlazeUI 2.1.2 `StepperItem Status="StepStatus.Done"`: the marker (`data-slot="stepper-item-marker"`) is a text glyph (`✓`, `✕`, a number). There is no slot or parameter that puts a `LucideIcon` in it.
+- **Expected:** an `Icon` slot on `StepperItem` that replaces the glyph, so a step can carry the same vector tick, spinner or pause the mockup draws at the start of each row (`mockups/process-run.html`, `run-step-*`).
+- **Actual:** `tf-mockup-parity.sh` reports "mockup carries an icon here; the app does not" for `run-step-1` to `run-step-7` at both widths.
+- **Encountered in:** REQ-FN-052, REQ-UI-047 (Process run, the steps panel)
+- **Workaround:** none; an icon placed beside the marker would draw two marks for one state.
+- **Suggested fix:** add `Icon` (`RenderFragment?`) to `StepperItem`, drawn inside the marker in place of the glyph when given, with the marker's accessible name unchanged.
+
+### TR-017 — Badge has no soft red variant, and a text colour in Class cannot override a variant's
+
+> ✅ **Closed 2026-10-07** — re-checked here: TrBlazeUI 2.1.3, the stopped state and a failed step use `BadgeVariant.Danger` (soft red pill in run-stopped-390.png); the Board's Blocked count is `Class="text-destructive"` on a Secondary badge with the inner span removed, and reads red. Note: Chatur's theme tint tokens (`--alert-*-bg` and `-foreground`) stay. With them removed, `tf-mockup-parity.sh` reports Success and Warning pills as neutral (count-verified, right-*, run-step-*), because the library's own tints are paler than the mockup's 16 to 18 percent hue.
+
+- **Status:** fixed upstream 2026-10-07 (`BadgeVariant.Danger`, and a `Class` text colour now replaces the variant's, in 2.1.3 — see the 2026-10-07 reply), filed 2026-10-06
+- **Severity:** minor
+- **Blocks:** no — a failed or stopped state shows as `Destructive`, a solid red pill, and reads clearly; only its weight differs from the mockup's tinted pill.
+- **Repro:** TrBlazeUI 2.1.2 `Badge`: `Success`, `Info` and `Warning` paint a tinted surface with text in the hue (they mirror `AlertVariant`), but there is no matching `Danger`; the only red is `Destructive`, a solid fill. `Class="text-destructive"` on a `Secondary` badge renders both `text-secondary-foreground` and `text-destructive` and the first wins, so a coloured label cannot be had that way either.
+- **Expected:** `BadgeVariant.Danger` painting `--alert-danger-bg` with `--alert-danger-foreground`, the same as the other three, so the status vocabulary is complete (the mockups' `.pill.bad`).
+- **Actual:** the stopped state on Process run uses `Destructive`; the Blocked count on Board wraps its label in a coloured `<span>` inside a `Secondary` badge.
+- **Encountered in:** REQ-UI-047 (Process run state pill), REQ-UI-049 (Board status counts)
+- **Workaround:** none for the pill; the Blocked count's label colour is set on an inner `<span>`, which is ordinary markup, not a replacement for a control.
+- **Suggested fix:** add `Danger` to `BadgeVariant` with `border-alert-danger/30 bg-alert-danger-bg text-alert-danger-foreground`, and let `cn()` treat `text-*` colour classes as one group so a `Class` colour replaces the variant's.
+
+### TR-018 — A tab's close button draws an svg icon where the mockup draws a × glyph
+
+> ✅ **Closed 2026-10-07** — re-checked here: 2026-10-07: upgraded TrBlazeUI.Components and Icons.Lucide 2.1.3 -> 2.1.4 and set <CloseContent>×</CloseContent> on the main window's EditorTabs (EditorArea.razor). tf-mockup-parity.sh on Processes, Process run, Requirements board and Agent workspace: PASS, 0 findings at 1280 and 390 (no tab-* icon finding). workbench-files.spec.ts 9/9 pass.
+
+- **Status:** fixed upstream 2026-10-07 (`EditorTabs.CloseContent`, in 2.1.4 — see the later 2026-10-07 reply), filed 2026-10-07
+- **Severity:** minor
+- **Blocks:** yes — the close button works and is named for a screen reader, but the mockup comparison fails on every tab, so none of the 22 phase 2 rows (REQ-FN-049..060, REQ-UI-045..054) can reach Verified while the tab's close mark differs from the mockups' ×.
+- **Repro:** TrBlazeUI 2.1.3 `EditorTabs` on the main window; `tf-mockup-parity.sh` for Processes, Process run, Board and Agent workspace.
+- **Expected:** the tab matches the mockups' `tab-*` anchors, which end in a text × (`Processes×`).
+- **Actual:** parity reports "app carries an icon the mockup does not" for `tab-processes`, `tab-process-run`, `tab-board` and `tab-agent-workspace` at 1280, because the close button holds an svg. This appeared only once TR-015 let the tabs carry their ids.
+- **Encountered in:** REQ-UI-045, REQ-UI-047, REQ-UI-049, REQ-UI-053
+- **Workaround:** none; the close button is the library's own. The mockups could instead draw the svg.
+- **Suggested fix:** add `EditorTabs.CloseContent` (`RenderFragment?`, default the current svg) so an app can draw the close mark as its mockup does, e.g. a text `×`.
+
+### TR-019 — A DataTable column cannot be hidden below a screen width
+
+> ✅ **Closed 2026-10-11** — re-checked here: 2026-10-11: upgraded to TrBlazeUI 2.1.6; DataTableColumn.HideBelow and DataTableBreakpoint are in TrBlazeUI.Components.dll/.xml and sm:table-cell in the shipped CSS. Run queue Started/Time use HideBelow=Sm; tests/verify/run-queue.spec.ts (4/4 pass) shows them at 1280, hides them at 390 with Pause/Resume/Remove in view and no sideways scroll.
+
+> ⏳ **Re-checked 2026-10-09, not yet released** — TrBlazeUI 2.1.5 (the release after 2.1.4 on the feed) carries no `HideBelow`: neither its reference nor `TrBlazeUI.Components.dll` contains the name. Chatur stays on 2.1.4 and re-checks on the next release.
+
+- **Status:** fixed upstream 2026-10-09 (`DataTableColumn.HideBelow`, in the release after 2.1.4 — see the 2026-10-09 reply), filed 2026-10-07
+- **Severity:** minor
+- **Blocks:** no — the Run queue reads fully at 1280 and at 390 it scrolls sideways inside its card, as the mockup's table does; but a phone-width reader must scroll to reach Pause, Resume and Remove, which a hidden Started/Time pair would keep in view.
+- **Repro:** TrBlazeUI 2.1.4 `DataTable` with seven columns (Run queue, `/auto/queue`) in a tab about 430 px wide, and on a 390 px screen. `DataTableColumn.Visible` is a fixed initial value and `CellClass`/`HeaderClass` accept `hidden`, but no `sm:table-cell` (or any `table-cell` variant) is in the shipped `trblazeui.css`, so a column hidden by `hidden` cannot come back at a wider screen.
+- **Expected:** a column parameter such as `HideBelow="DataTableBreakpoint.Sm"`, or the `table-cell` display utility with its responsive variants in the bundle.
+- **Actual:** the only way to drop a column at 390 is to drop it at every width.
+- **Encountered in:** REQ-UI-057
+- **Workaround:** none; the table keeps every column and scrolls inside its card at 390 (`MinWidth="420px"`).
+- **Suggested fix:** ship `table-cell` plus `sm:`/`md:` variants, or add a responsive visibility parameter on `DataTableColumn`.
+
 ## Replies from TrBlazeUI
 
 <!-- The upstream team's answers, newest block first. Left in full: this is the record. -->
+
+### 2026-10-09 — TR-019 is fixed; it ships in the release after 2.1.4
+
+Fixed and tested in the library. It ships in the next release after 2.1.4 (**2.1.5** by the usual
+count) on GitHub Packages (`https://nuget.pkg.github.com/techierathore/index.json`). When this reply
+was written, the fix was built and verified but the release had not been cut yet. If the feed still
+stops at 2.1.4, wait; do not drop the Started and Time columns at every width.
+
+| Entry | State | What you get |
+|---|---|---|
+| **TR-019** a DataTable column cannot be hidden below a screen width | fixed | `DataTableColumn` gains `HideBelow`, a `DataTableBreakpoint?`: `Sm` (640 px), `Md` (768 px), `Lg` (1024 px) or `Xl` (1280 px). Below that width the column's header cell and every body cell are hidden; at or above it they show again. Left out, the column shows at every width, so nothing you have changes until you opt in. |
+
+```razor
+<DataTableColumn TData="QueueRun" TValue="DateTime" Property="@(r => r.Started)"
+                 Header="Started" HideBelow="DataTableBreakpoint.Sm" />
+<DataTableColumn TData="QueueRun" TValue="string" Property="@(r => r.Elapsed)"
+                 Header="Time" HideBelow="DataTableBreakpoint.Sm" />
+```
+
+Things to know before you use it:
+
+1. **The breakpoint is the screen width, not the tab's.** It is a CSS media query. At 390 px a
+   `Sm` column is gone; in a 430 px tab on a 1280 px screen it still shows, because the screen is
+   wide. If the Run queue must also drop columns inside a narrow tab on a wide screen, tell us and we
+   will look at a container-width version.
+2. **Use the parameter, not `hidden` in `CellClass`.** `HideBelow` puts the same classes on the
+   header cell and on the body cells. The shipped `trblazeui.css` now also carries
+   `sm:`/`md:`/`lg:`/`xl:table-cell`, which it never did before.
+3. **The table still owns the column.** Sorting, the search filter and the column chooser behave as
+   before; `Visible="false"` still hides a column at every width.
+4. **Your agent's reference describes it.** After the upgrade, the build refreshes
+   `.trblazeui/TrBlazeUI-AI-Reference.md`: "Which control do I use for…" has a row for this, and the
+   `DataTableColumn` table has the parameter. `CHANGELOG.md` has the full entry.
+
+#### What we need from you
+
+Upgrade once the release is on the feed, set `HideBelow="DataTableBreakpoint.Sm"` on the Run queue's
+Started and Time columns, and check `/auto/queue` at 390 (Pause, Resume and Remove in view without
+scrolling sideways) and at 1280 (all seven columns). Then close this entry here
+(`bash .tfcore/utils/tf-feedback.sh Chatur --close TR-019 "<what you ran and what it showed>"`) or
+tell us what does not fit.
+
+---
+
+### 2026-10-07, later the same day — TR-018 is fixed; it ships in 2.1.4
+
+Fixed and tested in the library on the day it was filed. It ships in **2.1.4** on GitHub Packages
+(`https://nuget.pkg.github.com/techierathore/index.json`). When this reply was written, the fix was
+built and verified but the release had not been cut yet. If the feed still stops at 2.1.3, wait for
+2.1.4; do not change the mockups to draw the svg.
+
+| Entry | State | What you get |
+|---|---|---|
+| **TR-018** a tab's close button draws an svg where the mockup draws × | fixed | `EditorTabs` gains `CloseContent`, a `RenderFragment`. What you put in it is drawn inside every tab's close button in place of the svg. Left out, the svg is drawn as before, so nothing you have changes until you opt in. |
+
+```razor
+<EditorTabs Items="@objTabs" @bind-ActiveId="objActiveTab"
+            TabAttributes="@(t => new Dictionary<string, object> { ["data-testid"] = $"tab-{t.Id}" })">
+    <CloseContent>×</CloseContent>
+</EditorTabs>
+```
+
+Things to know before you use it:
+
+1. **Only the button's content changes.** The close button keeps `data-slot="editor-tab-close"`, its
+   accessible name `aria-label="Close <label>"`, its hover and focus classes and its click. So put a
+   plain text `×` in `CloseContent`, as the mockup's `.tab .x` holds; do not give it a label of its
+   own and do not wrap it in a button. Your existing selector `[data-slot="editor-tab-close"]` still
+   finds it.
+2. **One mark for the whole strip.** `CloseContent` is drawn on every tab. There is no per-tab
+   version, because every mockup tab draws the same ×; tell us if a tab needs a different one.
+3. **The glyph takes the surrounding font size.** The svg was a fixed 12px; a text × is drawn at the
+   font size the strip inherits, inside the same 20px button. If it reads too large or too small
+   against the mockup, size it yourself: `<CloseContent><span class="text-xs">×</span></CloseContent>`.
+4. **Your agent's reference describes it.** After the upgrade, the build refreshes
+   `.trblazeui/TrBlazeUI-AI-Reference.md`: "Which version added what" has a 2.1.3 row for TR-015 to
+   TR-017 and an "After 2.1.3" row for this, "Which control do I use for…" has a row for the close
+   mark, and the `EditorTabs` table has the parameter. `CHANGELOG.md` has the full list.
+
+#### What we need from you
+
+Upgrade to 2.1.4 once it is on the feed, add `<CloseContent>×</CloseContent>` to the main window's
+`EditorTabs`, and run your screen check and `tf-mockup-parity` again on Processes, Process run, Board
+and Agent workspace at 1280 and 390. Then close this entry here
+(`bash .tfcore/utils/tf-feedback.sh Chatur --close TR-018 "<what you ran and what it showed>"`) or
+tell us what does not fit.
+
+---
+
+### 2026-10-07 — TR-015, TR-016 and TR-017 are fixed in 2.1.3
+
+All three are fixed and tested in the library. They ship in **2.1.3** on GitHub Packages
+(`https://nuget.pkg.github.com/techierathore/index.json`). When this reply was written, 2.1.3 was
+built and checked but the release had not been cut yet. If the feed still stops at 2.1.2, wait for
+2.1.3; do not work around TR-015.
+
+| Entry | State | What you get |
+|---|---|---|
+| **TR-015** a tab cannot carry its own attributes | fixed | `EditorTabs` gains `TabAttributes`, a function of each tab's `EditorTabItem`. What it returns is put on that tab's `<li>`, the same way `DataTable.RowAttributes` works. |
+| **TR-016** no icon in a step's marker | fixed | `StepperItem` gains `Icon`. It is drawn inside the marker in place of the glyph or number. |
+| **TR-017** no soft red badge; a `Class` text colour loses | fixed, both halves | `BadgeVariant.Danger` paints `--alert-danger-bg` with `--alert-danger-foreground`, built the same way as `Success`, `Info` and `Warning`. A text colour in `Class` now replaces the variant's own. |
+
+```razor
+<EditorTabs Items="@objTabs" @bind-ActiveId="objActiveTab"
+            TabAttributes="@(t => new Dictionary<string, object> { ["data-testid"] = $"tab-{t.Id}" })" />
+
+<StepperItem Title="Build" Status="StepStatus.Running">
+    <Icon><LucideIcon Name="loader-circle" Class="animate-spin" /></Icon>
+</StepperItem>
+
+<Badge Variant="BadgeVariant.Danger">Stopped</Badge>
+<Badge Variant="BadgeVariant.Secondary" Class="text-destructive">Blocked 3</Badge>
+```
+
+Things to know before you use them:
+
+1. **TR-015: the hook is on the `<li>`, which holds two buttons.** `tab-processes` is the whole tab,
+   the label button and the close button together. A test that clicks the hook clicks the middle of
+   the tab, which is the label. To be exact, click
+   `[data-testid="tab-processes"] [data-slot="editor-tab-label"]`, or the close button with
+   `[data-slot="editor-tab-close"]`. A `class` entry is added to the tab's classes, not swapped for
+   them. Leave out `data-slot`, `data-tab-id`, `data-active` and `data-dirty`, because the strip
+   owns them. The function runs on every render, so a changed id shows straight away.
+2. **TR-016: the icon replaces the glyph and nothing else.** The marker keeps its circle, its status
+   colour and its accessible name (`role="img"`, named "Done", "Running" and so on), so do not give
+   the icon its own label. An `svg` inside the marker is sized to 1rem. Pick an icon that says the
+   same thing as the `Status`; a spinner on a done step shows two answers for one state.
+3. **TR-017: the `Class` fix is library-wide, and two controls look different because of it.** The
+   class merger only treated one-word colours (`text-destructive`) as colours, so
+   `text-secondary-foreground` was never replaced and the stylesheet order decided which colour
+   won. It now treats `text-secondary-foreground`, `text-alert-danger-foreground` and
+   `text-destructive/80` as colours too, so the later one wins. We compared every element's classes
+   on all 125 demo pages before and after the change, and two things changed: an `Outline`
+   `Toggle`/`ToggleGroupItem` now shows `--accent-foreground` text on hover instead of
+   `--muted-foreground`, and the **selected row of a `NavList`** now shows `--accent-foreground`
+   text instead of inheriting its parent's colour. Chatur uses `NavList` on the agents list and
+   the Appearance theme cards, so look at the selected row there after upgrading. If your mockup
+   draws that text in another colour, tell us.
+4. **You can drop the Blocked count's inner `<span>`.** `Class="text-destructive"` on the
+   `Secondary` badge now does what you wanted.
+5. **Your agent's reference describes all of it.** After the upgrade, the build refreshes
+   `.trblazeui/TrBlazeUI-AI-Reference.md` from the package. It has rows for 2.1.1, 2.1.2 and 2.1.3
+   in "Which version added what", four new rows in "Which control do I use for…" (a tab's test
+   hook, a step icon, the soft red pill, a label colour in `Class`), and the new parameters in the
+   `EditorTabs`, `StepperItem` and `Badge` tables. `CHANGELOG.md` has the full list.
+
+#### What we need from you
+
+Upgrade to 2.1.3 once it is on the feed. Put the `tab-*` ids on through `TabAttributes`, put
+`Icon` on the Process run steps, switch the stopped pill to `Danger`, and run your screen check
+and `tf-mockup-parity` again on Process run, Board and the tabbed main window. Then close each
+entry here or tell us what does not fit.
+
+---
 
 ### 2026-10-03 — TR-014 is fixed in the library; not released yet
 

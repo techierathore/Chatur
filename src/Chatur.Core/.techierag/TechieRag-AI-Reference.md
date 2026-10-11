@@ -14,7 +14,7 @@ TechieRag is a complete RAG (Retrieval-Augmented Generation) + LLM management pl
 - **Agents** - Microsoft Agent Framework over TechieRag (`TechieRag.Agents`), and agentic retrieval on the classic loop
 - **Local Model** - Qwen2.5 0.5B on phones, Phi-3 mini on desktops, any ONNX Runtime GenAI model by name (`TechieRag.Local`)
 - **Provider Routing** - `UseLlmForModel("claude-sonnet-4-5")` picks the service from the model name
-- **Connectors and Web** - GitHub/GitLab repositories, IMAP/mbox mail, Confluence; URL and site ingestion behind an SSRF guard
+- **Connectors and Web** - GitHub/GitLab repositories, IMAP/mbox mail (plus mail actions: move, Gmail label, Trash, dry run), Confluence; URL and site ingestion behind an SSRF guard
 - **Reranking** - Cohere, Jina, or the embedded ONNX cross-encoder
 - **Workspaces and Persistence** - SQLite/PostgreSQL conversation and workspace stores
 - **Token Management** - Usage tracking, cost estimation, budgets
@@ -297,7 +297,7 @@ var response = await rag.AskAsync("What is quantum computing?");
 
 | Method | Description |
 |--------|-------------|
-| `UseSqliteVec(connectionString)` | SQLite with vec extension (default: "Data Source=techierag.db") |
+| `UseSqliteVec(connectionString)` | SQLite with vec extension; `UseSqliteVec()` with no path uses the per-app default database (`DataRoot.DefaultDatabasePath`) |
 | `UsePgVector(connectionString)` | PostgreSQL with pgvector extension |
 | `UseQdrant(endpoint, apiKey)` | Qdrant vector database |
 
@@ -336,7 +336,7 @@ var response = await rag.AskAsync("What is quantum computing?");
 | `WithReranker(source, apiKey, model?, endpoint?, topN, candidateCount)` | v3: Cohere or Jina rerank stage (Phase-2 Features, 9) |
 | `WithReranker(factory, topN, candidateCount)` | v3: custom `IReranker` |
 | `UseEmbeddedReranker(modelDirectory?, topN, candidateCount)` | v3: ONNX cross-encoder rerank, `RerankSource.LocalOnnx` (`TechieRag.Embedded`) |
-| `WithPersistence(provider, connectionString, defaultUserId)` | v3: SQLite/PostgreSQL conversation and workspace stores (Phase-2 Features, 10) |
+| `WithPersistence(provider, connectionString = null, defaultUserId)` | v3: SQLite/PostgreSQL conversation and workspace stores (Phase-2 Features, 10); a null connection string is the per-app SQLite default (1.1.3, TR-RAG-049) |
 | `UseModelRoot(path)` | v3: the folder every local model downloads to (`TechieRag.Embedded`; Phase-2 Features, 3) |
 
 ---
@@ -422,7 +422,7 @@ A custom `ILlmProvider` that implements `ChatStreamAsync` on top of the typed me
 
 ### 2. Local model: `TechieRag.Local`
 
-Package `TechieRag.Local` (depends on `TechieRag.Embedded`); namespace `TechieRag.Local`. One provider, `LocalLlmProvider : ILlmProvider`, over ONNX Runtime GenAI on Windows, Linux (x64, Arm64), Apple-silicon macOS, Android, iOS and Mac Catalyst (an Intel Mac throws `PlatformNotSupportedException` on load). The weights are downloaded once into the model root after the user accepts the licence terms, never packed. `SupportsToolCalling` is false; a request with tools is refused. A MAUI app writes no native wiring: the package's `buildTransitive` targets add the ONNX Runtime GenAI native library on Android, iOS and Mac Catalyst.
+Package `TechieRag.Local` (depends on `TechieRag.Embedded`); namespace `TechieRag.Local`. One provider, `LocalLlmProvider : ILlmProvider, IDisposable, IAsyncDisposable`, over ONNX Runtime GenAI on Windows, Linux (x64, Arm64), Apple-silicon macOS, Android, iOS and Mac Catalyst (an Intel Mac throws `PlatformNotSupportedException` on load). The weights are downloaded once into the model root after the user accepts the licence terms, never packed. `SupportsToolCalling` is false; a request with tools is refused. A MAUI app writes no native wiring: the package's `buildTransitive` targets add the ONNX Runtime GenAI native library on Android, iOS and Mac Catalyst.
 
 | Model | Id | Where it is the default | Download | Licence |
 |-------|----|-------------------------|----------|---------|
@@ -776,26 +776,44 @@ Package `TechieRag`; namespace `TechieRag.Llm`. An application persists one stri
 ```csharp
 // TechieRag.TechieRagBuilder
 public TechieRagBuilder UseLlmForModel(string modelName, string? apiKey = null);
+public TechieRagBuilder UseLlmForModel(string modelName, string? apiKey, string? endpoint);   // the app's Base URL (REQ-RAG-130)
 
 // TechieRag.Llm.ModelRouter
 public static ModelRoute? Resolve(string? modelName);
 public static ModelRoute Require(string modelName);
-public sealed record ModelRoute(LlmConnectorDescriptor Connector, string ModelId) { string? Endpoint; LlmSource Source; }
+public sealed record ModelRoute(LlmConnectorDescriptor Connector, string ModelId) { string? Endpoint; LlmSource Source; bool EndpointFromRoute; }   // "connector/model@https://host" sets the endpoint, which wins
 
 // TechieRag.Llm.LlmProviderFactory
-public static ILlmProvider CreateForModel(string modelName, string? apiKey, ILoggerFactory? loggerFactory = null, int maxTokens = 2048);
+public static ILlmProvider Create(ModelRoute route, string? apiKey, ILoggerFactory? loggerFactory = null, int maxTokens = 2048, int? contextTokens = null);
+public static ILlmProvider CreateForModel(string modelName, string? apiKey, ILoggerFactory? loggerFactory = null, int maxTokens = 2048, int? contextTokens = null, string? endpoint = null);   // endpoint: another host for the route (REQ-RAG-127)
+public static Task<IReadOnlyList<string>> ListModelsAsync(ModelRoute route, string? apiKey, string? endpoint = null, CancellationToken cancellationToken = default);   // REQ-RAG-126
+public static Task<IReadOnlyList<string>> ListModelsAsync(LlmConnectorDescriptor connector, string? apiKey, string? endpoint = null, CancellationToken cancellationToken = default);
+
+// TechieRag.Llm.ModelChooser : IModelChooser - a small model chooses the model for a request (REQ-RAG-128)
+public ModelChooser(ILlmProvider smallModel, ModelChooserOptions? options = null);
+public Task<ModelChoice> ChooseAsync(string request, IReadOnlyList<ModelCandidate> candidates, CancellationToken cancellationToken = default);
+public sealed record ModelCandidate { required string ModelId; string? Tier; string? Notes; string? Cost; }
+public sealed record ModelChoice(ModelCandidate Candidate, string Reason, ModelChoiceSource Source, TokenUsage? Usage) { string ModelId; }
+public enum ModelChoiceSource { SmallModel, OnlyCandidate, Fallback }
+public sealed class ModelChooserOptions { int MaxRequestCharacters = 4000; string? FallbackModelId; string? Guidance; int MaxTokens = 200; }
 
 // TechieRag.Llm.LlmConnectorCatalog
 public static IReadOnlyList<LlmConnectorDescriptor> All { get; }
 public static LlmConnectorDescriptor? Find(string? name);
 public static LlmConnectorDescriptor Require(string name);
-public sealed record LlmConnectorDescriptor { string Name; string DisplayName; LlmSource Source; string? Endpoint; IReadOnlyList<string> ModelPrefixes; string? DefaultModel; bool RequiresApiKey = true; string? SessionHeader; SubscriptionTerms? Subscription; }
+public static IReadOnlyList<LlmConnectorInfo> Describe();   // one row per usable connector, for a settings page (REQ-RAG-132)
+public sealed record LlmConnectorDescriptor { string Name; string DisplayName; LlmSource Source; string? Endpoint; IReadOnlyList<string> ModelPrefixes; string? DefaultModel; bool RequiresApiKey = true; bool RequiresEndpoint; bool IsLocal; string? ExampleModel; string? ExampleEndpoint; IReadOnlyDictionary<string, object>? RequestBodyFields; string? SessionHeader; SubscriptionTerms? Subscription; }
+public sealed record LlmConnectorInfo { string Name; string DisplayName; bool RequiresApiKey; bool RequiresEndpoint; bool RequiresSignIn; bool IsLocal; string? DefaultEndpoint; string ExampleRoute; }
 public const string OpenCodeGoName = "opencode-go";   // OpenCode Go: https://opencode.ai/zen/go/v1, session header x-opencode-session
+public const string VeniceName = "venice";   // https://api.venice.ai/api/v1, Venice's own system prompt switched off (REQ-RAG-131)
+public const string OpenAICompatibleName = "openai-compatible";   // any chat/completions service; needs an endpoint (REQ-RAG-130)
+public const string AnthropicCompatibleName = "anthropic-compatible";   // any Anthropic Messages service; needs an endpoint
 
 // TechieRag.LlmConfig - configuration can name the connector instead of pasting its URL
 public string? Connector { get; set; }   // e.g. "groq"; an explicit Endpoint still wins
 public Dictionary<string, string> Headers { get; set; }   // extra headers on every OpenAI-compatible request; set in code (WithLlmHeaders), refused in a configuration section; one named here replaces the library's own
 public string? SessionHeader { get; set; }   // header carrying LlmCompletionOptions.SessionId; null = the connector's own (opencode-go: x-opencode-session)
+public int? MaxContextTokens { get; set; }   // context window; Ollama gets it as options.num_ctx; null (default) = the runtime's own
 
 // TechieRag.Models.LlmCompletionOptions
 public string? SessionId { get; set; }   // stable per conversation; sent in the session header; null = one id per provider instance
@@ -806,6 +824,15 @@ public TechieRagBuilder UseOpenAICompatibleLlm(string endpoint, string apiKey, s
 ```
 
 OpenCode Go refuses a request without `x-opencode-session` (HTTP 400 `MissingSessionID`). The `opencode-go` connector sends it; pass the same `SessionId` on every turn of one conversation. Only Go's `chat/completions` models work through it (Kimi, GLM, DeepSeek, …); its `/responses` and `/messages` models need those wire formats. OpenAI-compatible requests carry `User-Agent: TechieRag/<version>` unless `Headers` names another, as OpenCode Go asks each client to name itself.
+
+Ollama sizes its context window per request and defaults to a small one (2k–4k tokens), silently dropping the front of a longer prompt. Set `LlmConfig.MaxContextTokens`, or pass `contextTokens` to `Create` / `CreateForModel`, and the Ollama provider sends it as `options.num_ctx`. It is unset by default because Ollama allocates the whole window up front. A reply Ollama cut off at the token limit reports `FinishReason == "length"`, as the other providers do.
+
+```csharp
+var route = ModelRouter.Require("ollama/llama3.2");
+var ollama = LlmProviderFactory.Create(route, null, contextTokens: 32768);   // sends options.num_ctx: 32768
+var reply = await ollama.ChatAsync(messages, new LlmCompletionOptions { MaxTokens = 4000 });
+if (reply.FinishReason == "length") { /* truncated: raise MaxTokens or continue */ }
+```
 
 ```csharp
 var rag = new TechieRagBuilder()
@@ -871,6 +898,18 @@ public sealed class ImapMailboxOptions { string Host; int Port = 993; string Use
 public MboxMailTransport(string path);
 public sealed class EmailConnectorOptions { IList<string> Folders = ["INBOX"]; DateTimeOffset? SinceUtc; string? SenderContains; string? SubjectContains; string? AccountAddress; bool IncludeSentByMe; bool IncludeSpam; bool IncludeAttachments; IList<string> AttachmentExtensions; long MaxAttachmentBytes = 8 MB; bool StripQuotedReplies = true; bool StripSignatures = true; int PageSize = 50; }
 
+// TechieRag.Connectors.Email - mail actions on the same IMAP login (the reader above stays read-only)
+public static ImapMailActions ImapMailActions.Create(ImapMailboxOptions options, ILogger<ImapMailActions>? logger = null);
+public Task<IReadOnlyList<MailActionResult>> ApplyAsync(IEnumerable<MailAction> actions, CancellationToken cancellationToken = default);
+public Task<IReadOnlyList<MailActionPlan>> DryRunAsync(IEnumerable<MailAction> actions, CancellationToken cancellationToken = default);   // sends no command that changes the mailbox
+public Task<IReadOnlyList<MailActionResult>> MoveAsync / TrashAsync / AddLabelAsync / RemoveLabelAsync(IEnumerable<MailMessageRef> messages, ...);
+public sealed record MailMessageRef(string Folder, string Uid, string? UidValidity = null) { static FromHeader(MailHeader); static FromConnectorItemId(string); }
+public sealed record MailAction(MailMessageRef Message, MailActionKind Kind, string? Target = null) { static Move(m, folder); AddLabel(m, label); RemoveLabel(m, label); Trash(m); }
+public sealed record MailActionResult(MailAction Action, MailActionOutcome Outcome /* Done, Skipped, Failed */, MailMoveStrategy Strategy, string? TargetFolder, string? Code, string? Reason);
+public sealed record MailActionPlan(MailAction Action, MailActionOutcome Outcome, MailMoveStrategy Strategy /* Move, CopyAndExpunge */, string? TargetFolder, IReadOnlyList<string> Commands, string? Code, string? Reason);
+// MailActionCodes: MoveNotSupported, LabelsNotSupported, TrashFolderNotFound, TargetFolderNotFound, MessageNotFound, UidValidityChanged, AlreadyInFolder, ServerRefused, CopiedNotRemoved, InvalidArgument, FolderNotFound, ConnectionLost
+// Trash = the \Trash special-use folder or [Gmail]/Trash, never a permanent delete; move = UID MOVE, else UID COPY + \Deleted + UID EXPUNGE of that UID; labels = Gmail X-GM-LABELS only
+
 // TechieRag.Web.WebIngestionExtensions
 public static Task<string> IngestUrlAsync(this ITechieRag rag, string url, IWebContentFetcher fetcher, CancellationToken cancellationToken = default);   // returns the document id
 public static Task<WebIngestionResult> IngestSiteAsync(this ITechieRag rag, string seedUrl, IWebContentFetcher fetcher,
@@ -916,6 +955,17 @@ var mail = new EmailConnector(
     new EmailConnectorOptions { Folders = ["INBOX"], SinceUtc = DateTimeOffset.UtcNow.AddDays(-30), IncludeAttachments = true });
 await rag.IngestConnectorAsync(mail);
 
+// Act on mail over the same login: dry run first, then apply; one result per message
+var mailActions = ImapMailActions.Create(new ImapMailboxOptions { Host = "imap.gmail.com", Username = user, Password = appPassword });
+var message = MailMessageRef.FromConnectorItemId(item.Id);   // or MailMessageRef.FromHeader(header)
+MailAction[] actions = [MailAction.Move(message, "Archive"), MailAction.AddLabel(message, "Receipts"), MailAction.Trash(other)];
+var plans = await mailActions.DryRunAsync(actions);          // plans[i].Commands, .Strategy, .TargetFolder; mailbox unchanged
+var results = await mailActions.ApplyAsync(actions);
+foreach (var failed in results.Where(r => r.Outcome == MailActionOutcome.Failed))
+{
+    // switch on failed.Code, e.g. MailActionCodes.LabelsNotSupported on a non-Gmail server
+}
+
 // Web pages: one URL, or a crawl from a seed; both go through the SSRF guard
 var fetcher = new HttpWebContentFetcher(HttpWebContentFetcher.CreateDefaultClient());
 var documentId = await rag.IngestUrlAsync("https://example.com/handbook", fetcher);
@@ -925,6 +975,8 @@ var site = await rag.IngestSiteAsync("https://example.com/docs/", fetcher, new W
 ### 8. Reranking: `WithReranker`, `UseEmbeddedReranker`, `SearchOptions.Rerank`
 
 Package `TechieRag` (Cohere, Jina, custom) or `TechieRag.Embedded` (the ONNX cross-encoder bge-reranker-v2-m3, `RerankSource.LocalOnnx`, downloaded once). The vector search fetches `candidateCount` chunks, the reranker orders them and returns `topN`. Configuration alone cannot select `LocalOnnx`: `"Rerank": { "Source": "LocalOnnx" }` throws at `Build()` unless the Embedded package's `UseEmbeddedReranker()` supplied the reranker.
+
+**`RerankConfig.Enabled` is the default, not the switch (REQ-RAG-047, Sevak TR-RAG-012).** It decides whether a search reranks when the call passes no `SearchOptions.Rerank` and no workspace decides. A reranker is built whenever `Source` is usable (Cohere or Jina with a key, a custom factory, `UseEmbeddedReranker()`), even with `Enabled = false`, so a call or a workspace can still opt in. To build no reranker, and so avoid the embedded model's download or an API key check, leave `Source = RerankSource.None`. `WithRerankEnabledByDefault(false)` after `WithReranker(...)` keeps the reranker for opt-in use with the default off.
 
 ```csharp
 // TechieRag.TechieRagBuilder
@@ -1121,6 +1173,209 @@ builder.Services.AddTechieRag(rag => rag
     .UseEmbedded()
     .UseSqliteVec()
     .UseChatGptSubscriptionLlm(async (prompt, ct) => await OpenSignInAsync(prompt.VerificationUri, prompt.UserCode, ct)));
+```
+
+---
+
+## Phase-3 Additions (Sevak feedback, cluster A)
+
+Every member below is additive: no existing call changes meaning except where a row says so (the per-app SQLite default and the tool-registry replacement).
+
+### Workspaces: one pinned search, the workspace rerank rule, `IWorkspaceManager`
+
+Package `TechieRag`; namespaces `TechieRag.Abstractions`, `TechieRag.Models`. Pinned documents are retrieved with ONE search filtered to the whole pinned set (`SearchOptions.DocumentFilters`, `IVectorStore.SearchDocumentsAsync`). **Rerank rule:** every workspace retrieval, pinned results included, follows `Workspace.RerankEnabled`; the library-wide `Rerank.Enabled` never overrides it inside a workspace. Services built on workspaces take `IWorkspaceManager`, which `WorkspaceManager` implements and `AddTechieRag` registers with `TryAdd`, so a test double needs no library client.
+
+```csharp
+// One search over a set of documents
+var hits = await rag.SearchAsync("refund window", new SearchOptions { TopK = 10, DocumentFilters = ["doc-1", "doc-2"], Rerank = false });
+var raw = await vectorStore.SearchDocumentsAsync(queryVector, 10, ["doc-1", "doc-2"]);
+
+// A host service depends on the interface; a test passes a double
+public sealed class WorkspaceTitles(IWorkspaceManager workspaces)
+{
+    public async Task<IReadOnlyList<string>> AllAsync() => (await workspaces.ListWorkspacesAsync()).Select(w => w.Name).ToList();
+}
+IWorkspaceManager manager = rag.GetWorkspaceManager()!;   // GetWorkspaceManager() keeps returning WorkspaceManager
+```
+
+### Connectors: partial runs, typed outcomes, public metadata builder, re-sync by key
+
+Package `TechieRag`; namespace `TechieRag.Connectors`. A cancelled run throws `ConnectorRunCanceledException` (still an `OperationCanceledException`) whose `PartialResult` carries the sync state and per-item reasons gathered so far; a failing run carries the same on `ConnectorException.PartialResult`. Through `IngestConnectorAsync` both also carry `PartialIngestion`. The partial sync state keeps the previous `LastRunUtc`, so the next run resumes. Each `ConnectorItemFailure` has a typed `Outcome` (`ConnectorItemOutcome.Failed` or `ConnectorItemOutcome.Skipped`); byte sizes in reasons are invariant digits with no thousands separator. `ConnectorIngestionExtensions.BuildMetadata` and `ConnectorIngestionExtensions.ConnectorDocumentKey` are public, and `IngestConnectorAsync` ingests each item under its key, so a re-synced item replaces its earlier document.
+
+```csharp
+try
+{
+    var result = await rag.IngestConnectorAsync(connector, previousSync, options, ct);
+    await SaveSyncAsync(result.Sync);
+    var skipped = result.Skipped.Where(f => f.Outcome == ConnectorItemOutcome.Skipped);
+}
+catch (ConnectorRunCanceledException cancelled)
+{
+    await SaveSyncAsync(cancelled.PartialIngestion?.Sync ?? cancelled.PartialResult.Sync);   // resume next time
+}
+catch (ConnectorException failed) when (failed.PartialResult is not null)
+{
+    await SaveSyncAsync(failed.PartialResult.Sync);
+}
+
+var metadata = ConnectorIngestionExtensions.BuildMetadata(connector, item);
+var key = ConnectorIngestionExtensions.ConnectorDocumentKey(connector, item);
+```
+
+### Text ingestion under a caller key: `IngestTextAsync(text, name, sourceKey, metadata)`
+
+Package `TechieRag`. Ingesting again under the same key replaces the earlier document (same document id, workspace memberships kept); the key is stored as `DocumentMetadataKeys.SourceKey`. A null key behaves like the original overload.
+
+```csharp
+var id = await rag.IngestTextAsync(noteText, "Meeting notes", sourceKey: "notes/2026-10-06", metadata: null);
+```
+
+### Mail parsing notes: `ParsedMailMessage.Notes`
+
+Package `TechieRag`; namespace `TechieRag.Connectors.Email`. A part nested deeper than `MimeParser.MaxNestingDepth`, or beyond `MimeParser.MaxAttachments`, is listed as a `MailParseNote` (`Code` from `MailParseCodes`, `PartName`, `Depth`) instead of vanishing. Existing callers are unaffected.
+
+```csharp
+var parsed = MimeParser.Parse(rawBytes);
+foreach (var note in parsed.Notes.Where(n => n.Code == MailParseCodes.NestingTooDeep))
+{
+    logger.LogWarning("Skipped {Part} at depth {Depth}", note.PartName, note.Depth);
+}
+```
+
+Mail synced through `EmailConnector` carries the same notes on the item, under `EmailConnector.ParseNotesMetadataKey` (`"MailParseNotes"`), as `code: part name (depth n)` entries joined by `"; "`. The key is absent when the whole message was read.
+
+```csharp
+var document = await emailConnector.FetchAsync(item, ct);
+if (document.Item.Metadata?.TryGetValue(EmailConnector.ParseNotesMetadataKey, out var notes) == true)
+{
+    logger.LogWarning("Mail {Name} was not read in full: {Notes}", document.Item.Name, notes);
+}
+```
+
+### Tools: registering a name again replaces it
+
+`ToolRegistry.Register` with a name already registered (case-insensitive) replaces the definition as well as the handler, keeping its position, so the tool list sent to the model holds each name once.
+
+```csharp
+tools.Register("get_weather", "Gets the weather", schema, args => "sunny");
+tools.Register("get_weather", "Gets the weather in Celsius", schema, args => "21 C");   // one get_weather, the new one
+```
+
+### Per-app SQLite database: `DataRoot`, `UseSqliteVec()`, `WithPersistence(StoreProvider.Sqlite)`
+
+Package `TechieRag`; namespace `TechieRag.Models`. When an app names no database folder, an existing `techierag.db` in the folder the app runs from is used (a warning names the folder; the file is never moved); otherwise the database is `<per-user TechieRag folder>/data/<app name>/techierag.db`, beside `models/`. Order: `DataRoot.Set` in code, then the data folder beside the model root (so `ModelRoot.Set` or `TECHIERAG_MODEL_ROOT` moves it), then `<LocalApplicationData>/TechieRag/data`. No new environment variable. `DataRoot.DefaultDatabasePath` returns the location; `DataRoot.SetAppName` overrides the entry-assembly name. Applies to `UseSqliteVec()`, the `VectorStore.ConnectionString` default, `WithPersistence(StoreProvider.Sqlite)` / Persistence `Provider: Sqlite` with no connection string, and the parameterless `SqliteVecStore(dimensions)`, `SqliteConversationStore()` and `SqliteWorkspaceStore()`. A path the caller sets is used exactly as given.
+
+```csharp
+DataRoot.SetAppName("HelpDesk");                       // optional; defaults to the entry assembly name
+var rag = new TechieRagBuilder()
+    .UseEmbedded()
+    .UseSqliteVec()                                    // no folder: per-app default
+    .WithPersistence(StoreProvider.Sqlite)             // same per-app database
+    .Build();
+Console.WriteLine(DataRoot.DefaultDatabasePath);       // ...\TechieRag\data\HelpDesk\techierag.db
+```
+
+**1.1.3 change (Sevak TR-RAG-049).** 1.1.2's `WithPersistence(StoreProvider provider, string defaultUserId)` is removed: it captured every existing two-argument call `WithPersistence(provider, "Data Source=…")` and turned the connection string into a user id. There is one method, `WithPersistence(StoreProvider provider, string? connectionString = null, string defaultUserId = "default")`, so a second positional argument is always a connection string; `connectionString: null` means the per-app default (SQLite only). To name a user with the default database, name the argument. `VectorStoreConfig.IsConnectionStringSet` is public, so a host that resolves the unset default into its own data folder can tell "unset" from a value; the getter of an unset `ConnectionString` returns the absolute per-app path.
+
+```csharp
+builder.WithPersistence(StoreProvider.Sqlite, $"Data Source={path}");     // a connection string, as in 1.0.8
+builder.WithPersistence(StoreProvider.Sqlite, defaultUserId: "alice");    // per-app default database, user alice
+var unset = !config.VectorStore.IsConnectionStringSet;                     // true until a value is set
+```
+
+### Flows: host step names and model use
+
+Package `TechieRag`; namespace `TechieRag.Orchestration`. `FlowNodeCatalog.CreateNode(kind, id, stepName)` names the node; a host should pass its own, localized name, because the default is the catalogue's English label. `FlowDefinition.UsesLanguageModel()` and `FlowDefinition.GetLanguageModelSteps()` say whether, and which, steps call a model (methods, so they are never persisted).
+
+```csharp
+var node = FlowNodeCatalog.CreateNode(FlowNodeKind.Agent, id: null, stepName: localizer["StepTriage"]);
+if (flow.UsesLanguageModel())
+{
+    var modelSteps = flow.GetLanguageModelSteps().Select(n => n.DisplayName);
+}
+```
+
+### Model listing and endpoints: `ListModelsAsync`, `CreateForModel(…, endpoint)`
+
+Package `TechieRag`; namespace `TechieRag.Llm` (REQ-RAG-126 and REQ-RAG-127, Lekhak TR-RAG-004 and TR-RAG-005). `LlmProviderFactory.ListModelsAsync(route or connector, apiKey, endpoint?)` asks the service which models it serves: LM Studio `GET /v1/models`, Ollama `GET /api/tags` (names as `ollama/<name>` takes them), any OpenAI-compatible connector `GET {endpoint}/models` with the key as a bearer token, Anthropic and any Anthropic-compatible connector `GET {endpoint}/v1/models` with `x-api-key` (REQ-RAG-130). The ids come back distinct and sorted. A server that is down or refuses throws `HttpRequestException`, never an empty list; so does a service without a model list (404). Gemini, subscription and in-process connectors throw `NotSupportedException`. `CreateForModel(modelName, apiKey, endpoint: url)` sends to another host, so a LAN LM Studio or Ollama needs no rebuilt route. `endpoint` must be an absolute http or https URL. Code compiled against the five-argument `CreateForModel` keeps working.
+
+```csharp
+var ids = await LlmProviderFactory.ListModelsAsync(LlmConnectorCatalog.Require("lmstudio"), null, "http://192.168.1.20:1234");
+var llm = LlmProviderFactory.CreateForModel($"lmstudio/{ids[0]}", null, endpoint: "http://192.168.1.20:1234");
+var groqIds = await LlmProviderFactory.ListModelsAsync(ModelRouter.Require("groq/llama-3.3-70b-versatile"), groqKey);
+```
+
+### Local model: will it run and fit, before the download
+
+Package `TechieRag.Local`; namespace `TechieRag.Local` (REQ-RAG-125, Sevak TR-RAG-047). Nothing here touches the network. `LocalLlmProvider.IsRuntimeAvailable` is false where there is no local runtime (an Intel Mac, a browser), where `LoadAsync` would throw `PlatformNotSupportedException`. `LocalModel.EstimateRequiredMemoryBytes(int? contextSize = null)` returns the free memory the load needs (weights + context cache + 256 MB runtime), the same figure the load checks; null when the weight size is not known yet (a Hugging Face model before `GetTermsAsync`, a missing host folder). For a Hugging Face model the context cache is counted only once its `genai_config.json` is on disk, so the figure before download is a lower bound. `AvailableMemory.Read()` returns the free memory the library measures, or null. `LoadAsync` now refuses a model that cannot fit with `LocalModelMemoryException` before the terms are asked and before the first byte, and checks again after the download. `LocalLlmOptions.DownloadProgress` (`IProgress<ModelDownloadProgress>?`) receives this provider's download alone, each report a copy.
+
+```csharp
+using var provider = new LocalLlmProvider(new LocalLlmOptions
+{
+    Model = LocalModel.Phi3Mini4kInstruct,
+    DownloadProgress = new Progress<ModelDownloadProgress>(p => bar.Value = p.OverallBytesProgressPercent)
+});
+var needed = provider.Model.EstimateRequiredMemoryBytes(provider.ContextSize);
+var free = AvailableMemory.Read();
+var canOffer = LocalLlmProvider.IsRuntimeAvailable && (needed is null || free is null || free >= needed);
+```
+
+### Local model lifetime: dispose while calls are inside
+
+Package `TechieRag.Local`; namespace `TechieRag.Local` (REQ-RAG-129, Sevak TR-RAG-053). `LocalLlmProvider.Dispose()` may be called while calls are loading, queued or generating. It refuses new calls, cancels the ones inside, and returns without blocking. Each of those calls ends with `ObjectDisposedException` at its next step, before it touches the model again; a caller's own cancellation stays `OperationCanceledException`. The native model is freed when the last call has left, never under a running token (one token step, about 0.3 s on a CPU). `await provider.DisposeAsync()` does the same and completes once the memory is freed, so await it before loading the next model. Every call made after the dispose, `EstimateTokenCount` included, throws `ObjectDisposedException`. A stream a host stops reading is freed when its `await foreach` ends.
+
+```csharp
+await oldProvider.DisposeAsync();            // calls still inside end with ObjectDisposedException
+var next = LocalLlm.Create("phi-3-mini-4k-instruct");
+try { reply = await oldProvider.ChatAsync(messages); }
+catch (ObjectDisposedException) { /* the model was unloaded or swapped: retry on `next` */ }
+```
+
+### Choosing a model for a piece of work: `ModelChooser`
+
+Package `TechieRag`; namespace `TechieRag.Llm` (REQ-RAG-128, Chatur TR-RAG-006). `ModelRouter` turns a model name into a service; `ModelChooser` decides which name. `new ModelChooser(smallModel, options?)` takes any `ILlmProvider`; a cheap or local one is enough. `ChooseAsync(request, candidates)` takes the request text and `ModelCandidate { ModelId, Tier?, Notes?, Cost? }` items, the free-text fields written in the host's own words. It returns a `ModelChoice` with `Candidate`, `ModelId`, `Reason` (one sentence to show and log), `Source` (`ModelChoiceSource.SmallModel`, `OnlyCandidate` or `Fallback`) and the small model's `Usage`. One candidate is returned without a model call. Otherwise the small model gets one chat call at temperature 0 in JSON mode, with the request cut to `ModelChooserOptions.MaxRequestCharacters` (default 4000). The reply's id is matched ignoring case. An id without its `connector/` prefix matches when exactly one candidate ends with it. **The answer is always a candidate:** a reply that is not JSON, or names a model that was not offered, gives `ModelChooserOptions.FallbackModelId` (else the first candidate) with `Source = Fallback`. **A failure of the small model is thrown** (unreachable, refused, cancelled), never turned into a choice; catch it to use the host's own rule. `ModelChooserOptions.Guidance` adds the host's rule to the instructions. The interface `IModelChooser` lets a unit test pass a fixed choice.
+
+```csharp
+var chooser = new ModelChooser(
+    LlmProviderFactory.CreateForModel("ollama/llama3.2", null),
+    new ModelChooserOptions { Guidance = "Prefer free models unless the work needs deep reasoning." });
+var choice = await chooser.ChooseAsync(userText,
+[
+    new ModelCandidate { ModelId = "ollama/llama3.2", Tier = "fast", Cost = "free, local", Notes = "short answers" },
+    new ModelCandidate { ModelId = "anthropic/claude-sonnet-5-5", Tier = "deep", Cost = "paid", Notes = "code, long reasoning" },
+]);
+log.LogInformation("Routed to {Model} ({Source}): {Reason}", choice.ModelId, choice.Source, choice.Reason);
+var llm = LlmProviderFactory.CreateForModel(choice.ModelId, keyFor(choice.ModelId));
+```
+
+### Any service by route, and Venice: `openai-compatible/`, `anthropic-compatible/`, `venice/`
+
+Package `TechieRag`; namespace `TechieRag.Llm` (REQ-RAG-130, REQ-RAG-131, REQ-RAG-133; owner report of 2026-10-11 from Lekhak's provider page). Two generic connectors reach a service the catalog does not list, without a release. `openai-compatible/<model>` uses the OpenAI chat/completions format. `anthropic-compatible/<model>` uses the Anthropic Messages format through `AnthropicLlmProvider`. Both need the service's endpoint. Give it as the app's Base URL (`CreateForModel(…, endpoint: url)`, `UseLlmForModel(route, key, endpoint)`, `LlmConfig.Endpoint`) or on the route itself as `openai-compatible/glm-4.6@https://api.z.ai/api/paas/v4`. An endpoint written on the route wins over the app's. Only `@http://` or `@https://` starts an endpoint, so `claude-3@20240229` stays one model id. Without an endpoint, creating the provider (or building, or listing models) throws `InvalidOperationException`, and the message names both ways to give one. Both require an API key, and a call without one is refused before any request with `InvalidOperationException` (hosted services such as OpenRouter, Azure AI Foundry and the Gemini API all need one). A self-hosted server that ignores keys takes any placeholder, e.g. `"none"`. `AnthropicLlmProvider` now keeps the endpoint's path: it posts to `{endpoint}/v1/messages`, and to `{endpoint}/messages` when the endpoint already ends in `/v1`. Before this, `https://api.z.ai/api/anthropic` was sent to `https://api.z.ai/v1/messages`.
+
+`venice/<model>` reaches `https://api.venice.ai/api/v1`. It has no default model, so `venice/` alone is refused. What Venice adds on its own (docs checked 2026-10-11):
+- **System prompt (handled):** Venice adds its own system prompt next to yours unless `venice_parameters.include_venice_system_prompt` is false; its default is true. The `venice` connector sends false on every plain and streamed request (`LlmConnectorDescriptor.RequestBodyFields`). To keep Venice's prompt, use `openai-compatible/<model>@https://api.venice.ai/api/v1`, which sends no Venice field.
+- **Tool calls (work):** function tools, `tool_choice` and parallel calls follow the OpenAI shape. Support is per model: Venice's `/models` gives `model_spec.capabilities.supportsFunctionCalling`. On 2026-10-11, 125 of the 130 text models had it, `zai-org-glm-5-1` among them. The five without it were `grok-4-20-multi-agent`, `hermes-3-llama-3.1-405b` and three `e2ee-…` models, so check `/models` before offering tools.
+- **Streaming (works):** `stream` and `stream_options.include_usage` are honoured, so streamed token usage arrives as usual.
+- **Not exposed as options:** web search, web citations, scraping, characters, `strip_thinking_response` and `disable_thinking`. Venice reads them from `venice_parameters` or from a suffix on the model id (`venice/zai-org-glm-5-1:enable_web_search=on`). The model id is sent unchanged, so the suffix form works. Whether a suffix can switch the system prompt back on, against the body field, is not documented and was not tested; use the `openai-compatible` route for that.
+- **Model list:** `ListModelsAsync(ModelRouter.Require("venice/x"), key)` asks `GET /models`, which returns Venice's text models.
+
+```csharp
+var glm = LlmProviderFactory.CreateForModel("anthropic-compatible/glm-4.6", zaiKey, endpoint: "https://api.z.ai/api/anthropic");
+var vllm = LlmProviderFactory.CreateForModel("openai-compatible/qwen3-32b@http://gpu-box:8000/v1", null);
+var venice = LlmProviderFactory.CreateForModel("venice/zai-org-glm-5-1", veniceKey);   // Venice's own system prompt off
+var veniceIds = await LlmProviderFactory.ListModelsAsync(ModelRouter.Require("venice/x"), veniceKey);
+builder.UseLlmForModel("anthropic-compatible/glm-4.6", zaiKey, "https://api.z.ai/api/anthropic");
+```
+
+### Connector list for app screens: `LlmConnectorCatalog.Describe()`
+
+Package `TechieRag`; namespace `TechieRag.Llm` (REQ-RAG-132). `LlmConnectorCatalog.Describe()` returns one `LlmConnectorInfo` per connector an app can offer, in catalog order. Each row has `Name`, `DisplayName`, `RequiresApiKey`, `RequiresEndpoint` (show a Base URL field), `RequiresSignIn` (a subscription, no key), `IsLocal` (Ollama, LM Studio, the in-process model), `DefaultEndpoint` (null for the generic routes and the in-process model) and `ExampleRoute`. Every example route resolves through `ModelRouter` to its own connector, e.g. `venice/zai-org-glm-5-1`, `openrouter/anthropic/claude-sonnet-4.5` or `openai-compatible/glm-4.6@https://api.z.ai/api/paas/v4`. Subscription vendors that forbid sign-in are left out. A provider page builds its hint from this list instead of a hard-coded one.
+
+```csharp
+foreach (var c in LlmConnectorCatalog.Describe())
+{
+    hints.Add($"{c.DisplayName}: {c.ExampleRoute}{(c.RequiresApiKey ? " (key)" : "")}{(c.RequiresEndpoint ? " (Base URL)" : "")}");
+}
 ```
 
 ---
@@ -1414,13 +1669,13 @@ public class ToolResult
       "Endpoint": "https://api.openai.com/v1",
       "Model": "gpt-4o",
       "Temperature": 0.7,
-      "MaxTokens": 2048,
-      "MaxContextTokens": 128000
+      "MaxTokens": 2048
     },
     "LlmFallback": {
       "Source": "Ollama",
       "Endpoint": "http://localhost:11434",
-      "Model": "llama3.2"
+      "Model": "llama3.2",
+      "MaxContextTokens": 32768
     },
     "UsageTracking": {
       "Enabled": true,
@@ -1826,7 +2081,7 @@ When generating code that uses TechieRag, follow these conventions:
 | `TechieRag.Llm` | OllamaLlmProvider, LmStudioLlmProvider, OpenAICompatibleLlmProvider, AzureAIFoundryLlmProvider, GoogleGeminiLlmProvider, AnthropicLlmProvider, ChatGptSubscriptionLlmProvider, ChatGptSubscriptionOptions, SubscriptionSignInException, LlmProviderFactory, ModelRouter, ModelRoute, LlmConnectorCatalog, LlmConnectorDescriptor, LlmStreamEventExtensions |
 | `TechieRag.Services` | TokenUsageTracker, InMemoryConversationMemory, AgentLoopRunner, ToolRegistry, PromptTemplateEngine, RetryHandler, FallbackLlmHandler, WorkspaceManager |
 | `TechieRag.Agentic` | RegisterKnowledgeBase (ToolRegistry extension), TechieRagRetrievalSource, IRetrievalSource, RetrievalToolOptions, RetrievalTurnState, RetrievalTrace, AgenticInstructions, KnowledgeBaseTools |
-| `TechieRag.Connectors` (+ `.Repository`, `.Email`, `.Http`) | ConnectorRunner, IngestConnectorAsync, ConnectorRunOptions, ConnectorSyncState, ConnectorErrorCodes, RepositoryConnector, EmailConnector, ImapMailTransport, MboxMailTransport, HttpConnectorTransport |
+| `TechieRag.Connectors` (+ `.Repository`, `.Email`, `.Http`) | ConnectorRunner, IngestConnectorAsync, ConnectorRunOptions, ConnectorSyncState, ConnectorErrorCodes, RepositoryConnector, EmailConnector, ImapMailTransport, ImapMailActions, MailActionCodes, MboxMailTransport, HttpConnectorTransport |
 | `TechieRag.Web` | IngestUrlAsync, IngestSiteAsync, HttpWebContentFetcher, WebCrawlOptions, WebIngestionResult |
 | `TechieRag.Mcp` | McpClient, McpServerConfig, McpTrustPolicy, McpToolHandler |
 | `TechieRag.Orchestration` | FlowDefinition, FlowSerializer, FlowRunner, FlowRuntime, FlowAgent, InMemoryFlowAgentResolver, FlowMessage |

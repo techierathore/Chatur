@@ -1,0 +1,277 @@
+@implements IDisposable
+@inject IAutoRunActions AutoRuns
+@inject IProjectActions ProjectActions
+@inject WorkbenchState WorkbenchTabs
+@inject Chatur.Core.Platform.IClock Clock
+@inject ToastService ToastService
+
+@* UI Design phase 3 "Screen: End-to-end run" — mockups/auto-run.html, a tab in the main window.
+   REQ-UI-055 (each role starts when it is needed, and the screen names it) and REQ-UI-056 (what is
+   happening now: the agent, the process, the step, the requirement). The run itself is carried by
+   IAutoRunActions (REQ-FN-061 to REQ-FN-066); this page starts it, shows it and relays Pause and Stop. *@
+<div class="flex flex-col gap-4" data-testid="auto-run">
+
+    <div class="flex flex-wrap items-start gap-3" data-testid="auto-heading">
+        <div class="min-w-0">
+            <h1 class="text-base font-semibold">One command, the whole chain</h1>
+            <p class="text-sm text-muted-foreground">Hand Chatur a brief. It runs every process in order, on its own, until nothing is left open.</p>
+        </div>
+        <span class="flex-1"></span>
+        <Button Variant="ButtonVariant.Outline" OnClick="WorkbenchTabs.OpenRunQueue" data-testid="go-queue">
+            <LucideIcon Name="list" Size="14" />
+            Queue
+        </Button>
+        <Button Variant="ButtonVariant.Outline" OnClick="WorkbenchTabs.OpenRunReport" data-testid="go-report">Run record</Button>
+    </div>
+
+    <Card data-testid="brief-panel">
+        <CardHeader>
+            <CardTitle>Start from a brief</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <div class="flex flex-wrap items-center gap-3" data-testid="brief-project-field">
+                <span class="w-24 text-sm text-muted-foreground">Project</span>
+                <div class="min-w-44 flex-1" data-testid="brief-project">
+                    <Select TValue="string" Value="@objProjectValue" ValueChanged="OnProjectChangedAsync" Disabled="@(objIsBusy || objIsGoing)"
+                            DisplayTextSelector="@(v => ProjectNameOf(v))" Class="w-full">
+                        <SelectTrigger AriaLabel="Project" data-testid="brief-project-button"><SelectValue /></SelectTrigger>
+                        <SelectContent data-testid="brief-project-pop">
+                            @foreach (var vProject in objProjects)
+                            {
+                                <SelectItem TValue="string" Value="@vProject.ProjectId.ToString()" Text="@vProject.Name">@vProject.Name</SelectItem>
+                            }
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <Field data-testid="brief-text-field">
+                <FieldLabel For="brief-text">Brief</FieldLabel>
+                <FieldContent>
+                    <Textarea Id="brief-text" @bind-Value="objBrief" Disabled="@(objIsBusy || objIsGoing)" Class="min-h-24 leading-relaxed"
+                              Placeholder="What should be true when this run finishes?" data-testid="brief-text" />
+                </FieldContent>
+            </Field>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="@(objBriefError is null ? "text-xs text-muted-foreground" : "text-xs text-destructive")" data-testid="brief-rule">
+                    @(objBriefError ?? "A project and at least a sentence. Anything shorter comes back asking what \"done\" means.")
+                </span>
+                <span class="flex-1"></span>
+                <Button OnClick="StartAsync" Disabled="@(objIsBusy || objIsGoing || objProjects.Count == 0)" data-testid="start-run">
+                    <LucideIcon Name="play" Size="14" />
+                    Start the run
+                </Button>
+            </div>
+
+            <div class="text-sm text-muted-foreground" data-testid="step-by-step-note">
+                Step-by-step working is untouched —
+                <Button Variant="ButtonVariant.Link" Class="h-auto !p-0 text-sm" OnClick="@(() => WorkbenchTabs.OpenProcesses())" data-testid="go-processes">run one process at a time</Button>
+                whenever you would rather watch each one.
+            </div>
+        </CardContent>
+    </Card>
+
+    @if (objIsLoading)
+    {
+        <div class="flex items-center gap-2 text-sm text-muted-foreground" data-testid="auto-loading">
+            <Spinner />
+            <span>Reading the run…</span>
+        </div>
+    }
+    else if (objError is not null)
+    {
+        <Alert Variant="AlertVariant.Danger" data-testid="auto-error">
+            <LucideIcon Name="triangle-alert" Size="16" />
+            <AlertTitle>The run could not be read</AlertTitle>
+            <AlertDescription>@objError</AlertDescription>
+        </Alert>
+    }
+    else if (objRun is null)
+    {
+        <div class="flex flex-wrap items-center gap-2 rounded-md border p-3 text-sm text-muted-foreground" data-testid="auto-empty">
+            <LucideIcon Name="clock" Size="16" />
+            <span>Nothing is running. Write a brief above and start the run.</span>
+        </div>
+    }
+    else
+    {
+        <Card data-testid="running-now">
+            <CardHeader>
+                <div class="flex flex-wrap items-center gap-2">
+                    <CardTitle Class="whitespace-nowrap">@(objIsGoing ? "Running now" : "The latest run")</CardTitle>
+                    <span class="flex-1"></span>
+                    <Badge Variant="@StateVariant" Class="shrink-0 whitespace-nowrap rounded-full border-transparent" data-testid="run-state">@objRun.StateText</Badge>
+                </div>
+            </CardHeader>
+            <CardContent Class="flex flex-col gap-3">
+                @if (objRun.Now is { } vNow)
+                {
+                    <div class="flex flex-wrap items-baseline gap-2"><span class="w-28 text-sm text-muted-foreground">Agent</span><span data-testid="running-agent">@vNow.Agent</span>@if (!string.IsNullOrWhiteSpace(vNow.Model)) { <span class="text-sm text-muted-foreground" data-testid="running-model">@vNow.Model</span> }</div>
+                    <div class="flex flex-wrap items-baseline gap-2">
+                        <span class="w-28 text-sm text-muted-foreground">Process</span>
+                        <span class="font-mono" data-testid="running-process">@vNow.ProcessCode</span>
+                        <span class="text-sm text-muted-foreground" data-testid="running-position">@vNow.ProcessPosition of @vNow.ProcessCount</span>
+                    </div>
+                    <div class="flex flex-wrap items-baseline gap-2">
+                        <span class="w-28 text-sm text-muted-foreground">Step</span>
+                        <span data-testid="running-step">@StepText(vNow)</span>
+                    </div>
+                    <div class="flex flex-wrap items-baseline gap-2">
+                        <span class="w-28 text-sm text-muted-foreground">Requirement</span>
+                        <span class="font-mono" data-testid="running-req">@(vNow.RequirementId ?? "—")</span>
+                        <span class="text-sm text-muted-foreground" data-testid="running-req-title">@(vNow.RequirementId is null ? "no requirement is open" : vNow.RequirementTitle)</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-sm text-muted-foreground" data-testid="running-none">Nothing is being worked on: this run is @objRun.StateText.@(objRun.StopReason is null ? "" : " " + objRun.StopReason)</div>
+                }
+                <div class="flex flex-wrap items-baseline gap-2">
+                    <span class="w-28 text-sm text-muted-foreground">Going for</span>
+                    <span data-testid="running-elapsed">@Elapsed</span>
+                    <span class="text-sm text-muted-foreground">started @StartedText</span>
+                </div>
+
+                <div class="flex flex-col gap-1.5" data-testid="progress-field">
+                    <div class="flex items-center"><span class="text-xs text-muted-foreground">Progress</span><span class="flex-1"></span><span class="text-xs" data-testid="progress-value">@objRun.ProgressPercent%</span></div>
+                    <Progress data-testid="progress-bar" Value="@objRun.ProgressPercent" Class="h-1.5" IndicatorClass="bg-alert-warning" />
+                </div>
+
+                @if (objIsGoing)
+                {
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if (objRun.State == AutoRunState.Paused)
+                        {
+                            <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="ResumeAsync" data-testid="pause-run">
+                                <LucideIcon Name="play" Size="14" />
+                                Resume
+                            </Button>
+                        }
+                        else
+                        {
+                            <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="PauseAsync" data-testid="pause-run">
+                                <LucideIcon Name="pause" Size="14" />
+                                Pause
+                            </Button>
+                        }
+                        <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="AskToStop" data-testid="stop-run">
+                            <LucideIcon Name="square" Size="14" />
+                            Stop
+                        </Button>
+                    </div>
+                }
+            </CardContent>
+        </Card>
+
+    }
+
+    @if (!objIsLoading && objError is null)
+    {
+    <Card data-testid="chain-panel">
+        <CardHeader>
+            <CardTitle>The chain — @CountWord(ChainRows.Count) processes</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <DataTable TData="AutoRunProcessView" Data="@ChainRows" ShowPagination="false" MinWidth="0px" Class="text-xs"
+                       RowAttributes="@(p => new Dictionary<string, object> { ["data-testid"] = $"chain-row-{p.Position}", ["class"] = RowClass(p) })"
+                       data-testid="chain-table">
+                <Columns>
+                    <DataTableColumn TData="AutoRunProcessView" TValue="string" Property="@(p => p.Position.ToString())" Header="#" CellClass="whitespace-nowrap text-muted-foreground" />
+                    <DataTableColumn TData="AutoRunProcessView" TValue="string" Property="@(p => p.ProcessCode)" Header="Process" CellClass="whitespace-nowrap font-mono" />
+                    <DataTableColumn TData="AutoRunProcessView" TValue="string" Property="@(p => p.Agent)" Header="Agent" CellClass="whitespace-nowrap">
+                        <CellTemplate Context="row">
+                            <span data-testid="@($"chain-agent-{row.Position}")">@row.Agent</span>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="AutoRunProcessView" TValue="string" Property="@(p => p.State.ToString())" Header="State">
+                        <CellTemplate Context="row">
+                            <div class="flex items-center gap-1.5">
+                                <Badge Variant="@ProcessVariant(row)" Class="@(row.State == AutoRunProcessState.Running ? "gap-1 rounded-full border-transparent text-primary" : "gap-1 rounded-full border-transparent")" data-testid="@($"chain-state-{row.Position}")">
+                                    @if (row.State == AutoRunProcessState.Finished)
+                                    {
+                                        <LucideIcon Name="check" Size="11" />
+                                    }
+                                    @ProcessStateText(row)
+                                </Badge>
+                                @if (row.Retries > 0)
+                                {
+                                    <Badge Variant="BadgeVariant.Warning" Class="rounded-full border-transparent" data-testid="@($"chain-retried-{row.Position}")">retried</Badge>
+                                }
+                            </div>
+                        </CellTemplate>
+                    </DataTableColumn>
+                </Columns>
+            </DataTable>
+        </CardContent>
+    </Card>
+    }
+
+    @if (!objIsLoading && objError is null && objRun is not null)
+    {
+        @if (objLimitEvent is { } vLimit)
+        {
+            <Alert Variant="AlertVariant.Info" data-testid="limit-note">
+                <LucideIcon Name="clock" Size="16" />
+                <AlertTitle>@vLimit.Message</AlertTitle>
+                @if (objLimitResumed is { } vResumed)
+                {
+                    <AlertDescription>@vResumed.Message</AlertDescription>
+                }
+                else if (objRun.ResumeAtUtc is { } vAt)
+                {
+                    <AlertDescription>The run carries on by itself at @vAt.ToLocalTime().ToString("HH:mm"), on the same step. Nobody has to be here.</AlertDescription>
+                }
+            </Alert>
+        }
+
+        @foreach (var vRetry in objRetryEvents)
+        {
+            <Alert Variant="AlertVariant.Warning" data-testid="retry-note">
+                <LucideIcon Name="triangle-alert" Size="16" />
+                <AlertTitle>@vRetry.Message</AlertTitle>
+                <AlertDescription>The retry, and why it happened, are in the <Button Variant="ButtonVariant.Link" Class="h-auto !p-0 text-sm" OnClick="WorkbenchTabs.OpenRunReport" data-testid="retry-to-report">run record</Button>.</AlertDescription>
+            </Alert>
+        }
+
+        @if (objRun.State == AutoRunState.Stopped && objRun.StopReason is not null)
+        {
+            <Alert Variant="AlertVariant.Danger" data-testid="stopped-note">
+                <LucideIcon Name="triangle-alert" Size="16" />
+                <AlertTitle>The run stopped</AlertTitle>
+                <AlertDescription>@objRun.StopReason</AlertDescription>
+            </Alert>
+        }
+
+        <Card data-testid="not-complete">
+            <CardHeader>
+                <CardTitle>@(objRun.Open.Total > 0 ? "Why this run cannot be called complete" : "Nothing is left open")</CardTitle>
+            </CardHeader>
+            <CardContent Class="flex flex-col gap-2">
+                <div class="flex flex-wrap items-center gap-3">
+                    <b class="@(objRun.Open.Total > 0 ? "text-2xl text-alert-warning" : "text-2xl")" data-testid="open-count">@objRun.Open.Total</b>
+                    <span class="grow text-sm">requirements on @objRun.ProjectName are still open — @objRun.Open.NotStarted not started, @objRun.Open.InHand in hand, @objRun.Open.SentBack sent back.</span>
+                </div>
+                <div class="text-sm text-muted-foreground" data-testid="complete-rule">
+                    A run never reports complete while a single requirement is open. It reports where it got to instead.
+                    <Button Variant="ButtonVariant.Link" Class="h-auto !p-0 text-sm" OnClick="WorkbenchTabs.OpenBoard" data-testid="open-board">Open the board</Button>
+                    to see all @objRun.Open.Total.
+                </div>
+            </CardContent>
+        </Card>
+    }
+
+    <AlertDialog Open="objIsStopDialogOpen" OpenChanged="OnStopDialogOpenChanged">
+        <AlertDialogContent data-testid="stop-run-dialog">
+            <AlertDialogHeader>
+                <AlertDialogTitle>Stop this run?</AlertDialogTitle>
+                <AlertDialogDescription>Stops the run. What it has already done stays in the run record.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <Button Variant="ButtonVariant.Outline" OnClick="CancelStop" data-testid="stop-run-cancel">Keep it going</Button>
+                <Button Variant="ButtonVariant.Destructive" OnClick="ConfirmStopAsync" data-testid="stop-run-confirm">Stop the run</Button>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
+</div>

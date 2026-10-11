@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="wordmark" data-testid="wordmark">Chatur</span>
 
   <div class="menu" data-testid="menu-file"><button onclick="menu(this,event)">File</button>
-   <div class="drop" data-testid="menu-file-items">
+   <div class="drop" data-testid="menu-file-items" data-tf-state="popup-open">
     <button onclick="say('Starts a new project here.')">New project…<span class="sub">⇧⌘N</span></button>
     <button onclick="say('Opens a .sln and reads its projects.')">Open a solution…<span class="sub">⌘O</span></button>
     <button onclick="say('Opens any folder as a project.')">Open a folder…<span class="sub">⇧⌘O</span></button>
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-edit"><button onclick="menu(this,event)">Edit</button>
-   <div class="drop" data-testid="menu-edit-items">
+   <div class="drop" data-testid="menu-edit-items" data-tf-state="popup-open">
     <button onclick="say('Undoes the last change in the open file.')">Undo<span class="sub">⌘Z</span></button>
     <button disabled onclick="say('Nothing to redo.')" title="Nothing to redo">Redo<span class="sub">⇧⌘Z</span></button>
     <hr>
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-view"><button onclick="menu(this,event)">View</button>
-   <div class="drop" data-testid="menu-view-items">
+   <div class="drop" data-testid="menu-view-items" data-tf-state="popup-open">
     <button onclick="say('Hides or shows the files panel.')"><span class="tick">✓</span>Files</button>
     <button onclick="say('Hides or shows the conversation. Hidden, the file view takes the window.')"><span class="tick">✓</span>Chat</button>
     <button onclick="say('Hides or shows the output strip.')"><span class="tick">✓</span>Output</button>
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-project"><button onclick="menu(this,event)">Project</button>
-   <div class="drop" data-testid="menu-project-items">
+   <div class="drop" data-testid="menu-project-items" data-tf-state="popup-open">
     <button onclick="say('Builds TfLens.')">Build<span class="sub">⌘B</span></button>
     <button onclick="say('Runs the chosen target.')">Run<span class="sub">⌘R</span></button>
     <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-tools"><button onclick="menu(this,event)">Tools</button>
-   <div class="drop" data-testid="menu-tools-items">
+   <div class="drop" data-testid="menu-tools-items" data-tf-state="popup-open">
     <a href="settings-providers.html">Settings…<span class="sub">⌘,</span></a>
     <hr>
     <div class="grouplbl">Go straight to</div>
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   </div>
 
   <div class="menu" data-testid="menu-help"><button onclick="menu(this,event)">Help</button>
-   <div class="drop" data-testid="menu-help-items">
+   <div class="drop" data-testid="menu-help-items" data-tf-state="popup-open">
     <button onclick="say('Chatur 0.1.0, built from a91f3c2.')">About Chatur</button>
     <a href="feedback.html">Send feedback…</a>
     <a href="prerequisites.html">Check for updates</a>
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="whoami" data-testid="signed-in">
    <div class="popwrap" data-testid="account">
     <button class="pick" style="height:26px;border:0" onclick="pop(this,event)"><span class="av">TR</span><span class="nm">Techie Rathore</span><svg><use href="#i-chevron"/></svg></button>
-    <div class="pop right" data-testid="account-pop">
+    <div class="pop right" data-testid="account-pop" data-tf-state="popup-open">
      <div class="note">techierathore@gmail.com</div>
      <a href="settings-account.html">Account</a>
      <a href="licence.html">Licence</a>
@@ -154,9 +154,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     </div>
    </div>
    <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
-   <div class="popwrap" data-testid="palette">
+   <div class="popwrap" data-testid="palette" data-tf-state="mockup-only">
     <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one lives in Settings ▸ Appearance"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
-    <div class="pop right" id="palette-pop" data-testid="palette-pop">
+    <div class="pop right" id="palette-pop" data-testid="palette-pop" data-tf-state="popup-open">
      <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber<span class="swatchrow"><i style="background:oklch(0.795 0.135 70)"></i><i style="background:oklch(0.222 0.012 65)"></i></span></button>
      <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo<span class="swatchrow"><i style="background:oklch(0.675 0.165 275)"></i><i style="background:oklch(0.218 0.016 275)"></i></span></button>
      <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal<span class="swatchrow"><i style="background:oklch(0.755 0.115 195)"></i><i style="background:oklch(0.216 0.019 195)"></i></span></button>
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="sep"></span>
   <div class="popwrap" data-testid="target">
    <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop" data-testid="target-pop">
+   <div class="pop" data-testid="target-pop" data-tf-state="popup-open">
     <button onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
     <button onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
     <button onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <span class="sep"></span>
   <div class="popwrap" data-testid="branch-pick">
    <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop" data-testid="branch-pop">
+   <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
     <button onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
     <button onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
     <button onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
@@ -201,16 +201,16 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="panel files" data-testid="files-panel">
    <div class="ph" data-testid="files-head">Files</div>
    <div class="tree" data-testid="file-tree">
-    <a href="main.html"><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
-    <a href="main.html" class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
-    <a href="main.html" class="d2"><svg><use href="#i-folder-open"/></svg>TfLens</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Program.cs</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Query.cs</a>
-    <a href="main.html" class="d3"><svg><use href="#i-file"/></svg>Coverage.razor</a>
-    <a href="main.html" class="d2"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
-    <a href="main.html" class="d1"><svg><use href="#i-folder"/></svg>docs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d2"><svg><use href="#i-folder-open"/></svg>TfLens</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Program.cs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Query.cs</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d3"><svg><use href="#i-file"/></svg>Coverage.razor</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d2"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
+    <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder"/></svg>docs</a>
    </div>
-   <a class="branch" href="repository.html" data-testid="branch"><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
+   <a class="branch" href="repository.html" data-testid="branch" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
   </div>
 
   <div class="split">
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    <div class="panel half" data-testid="tool-area">
     <div class="tabs" data-testid="tabs">
      <span class="tab on" data-testid="tab-process-run">verify-phase · run 42<button class="x" onclick="say('Closes this tab. The run carries on without it.')">×</button></span>
-     <a class="tab" href="main.html" data-testid="tab-query">Query.cs</a>
+     <a class="tab" href="main.html" data-testid="tab-query" data-tf-state="sample-data" data-tf-sample>Query.cs</a>
      <button class="closepane" title="Close the file view" onclick="say('Closes this pane. The chat takes the whole window.')" data-testid="close-file-view">×</button>
     </div>
 
@@ -237,54 +237,54 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      </div>
 
      <div class="panel" data-testid="run-steps-panel">
-      <div class="ph"><span>Seven steps</span><span class="grow"></span><span class="pill" data-testid="run-progress-count">3 done · 1 running · 3 to come</span></div>
+      <div class="ph"><span>Seven steps</span><span class="grow"></span><span class="pill" data-testid="run-progress-count">5 done · 1 waiting · 1 to come</span></div>
       <div style="padding:6px 0">
 
-       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-1">
+       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-1" data-tf-state="sample-data" data-tf-sample>
         <svg style="margin-top:3px;color:var(--ok)"><use href="#i-check"/></svg>
         <div class="grow"><b class="sm">1 · Read the phase checklist</b>
          <div class="sm dim" data-testid="run-step-1-result">34 requirements collected from docs/TfLens-P2-Checklist.md · 4 s</div></div>
         <span class="pill ok" data-testid="run-step-1-state">done</span>
        </div>
 
-       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-2">
+       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-2" data-tf-state="sample-data" data-tf-sample>
         <svg style="margin-top:3px;color:var(--ok)"><use href="#i-check"/></svg>
         <div class="grow"><b class="sm">2 · Build the solution</b>
          <div class="sm dim" data-testid="run-step-2-result">dotnet build TfLens.sln — succeeded in 5.1 s, 0 warnings</div></div>
         <span class="pill ok" data-testid="run-step-2-state">done</span>
        </div>
 
-       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-3">
+       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-3" data-tf-state="sample-data" data-tf-sample>
         <svg style="margin-top:3px;color:var(--ok)"><use href="#i-check"/></svg>
         <div class="grow"><b class="sm">3 · The build succeeded and left no warning behind</b>
          <div class="sm dim" data-testid="run-step-3-result">Check passed · this check failed on run 41</div></div>
         <span class="pill ok" data-testid="run-step-3-state">check passed</span>
        </div>
 
-       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-4">
-        <svg style="margin-top:3px;color:var(--accent)"><use href="#i-terminal"/></svg>
+       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-4" data-tf-state="sample-data" data-tf-sample>
+        <svg style="margin-top:3px;color:var(--ok)"><use href="#i-check"/></svg>
         <div class="grow"><b class="sm">4 · Run the tests and the screen checks</b>
-         <div class="sm dim" data-testid="run-step-4-result">188 of 302 tests done · 0 failed so far</div>
+         <div class="sm dim" data-testid="run-step-4-result">302 tests ran · 0 failed · 4 screens checked</div>
          <div style="height:6px;border-radius:999px;background:var(--soft);overflow:hidden;margin-top:7px" data-testid="run-step-4-progress">
-          <div style="width:62%;height:100%;background:var(--accent)"></div></div></div>
-        <span class="pill warn" data-testid="run-step-4-state">running</span>
+          <div style="width:100%;height:100%;background:var(--ok)"></div></div></div>
+        <span class="pill ok" data-testid="run-step-4-state">done</span>
        </div>
 
-       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-5">
+       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-5" data-tf-state="sample-data" data-tf-sample>
+        <svg style="margin-top:3px;color:var(--ok)"><use href="#i-check"/></svg>
+        <div class="grow"><b class="sm">5 · Every requirement in the phase carries a verdict</b>
+         <div class="sm dim" data-testid="run-step-5-result">Check passed · 34 of 34 requirements carry a verdict</div></div>
+        <span class="pill ok" data-testid="run-step-5-state">check passed</span>
+       </div>
+
+       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-6" data-tf-state="sample-data" data-tf-sample>
         <svg style="margin-top:3px;color:var(--warn)"><use href="#i-pause"/></svg>
-        <div class="grow"><b class="sm">5 · Approve the verdicts before they are written down</b>
-         <div class="sm dim" data-testid="run-step-5-result">Waiting for you — the question is below</div></div>
-        <span class="pill warn" data-testid="run-step-5-state">waiting for you</span>
+        <div class="grow"><b class="sm">6 · Approve the verdicts before they are written down</b>
+         <div class="sm dim" data-testid="run-step-6-result">Waiting for you — the question is below</div></div>
+        <span class="pill warn" data-testid="run-step-6-state">waiting for you</span>
        </div>
 
-       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)" data-testid="run-step-6">
-        <svg style="margin-top:3px;color:var(--faint)"><use href="#i-clock"/></svg>
-        <div class="grow"><b class="sm" style="color:var(--dim)">6 · Every requirement in the phase carries a verdict</b>
-         <div class="sm faint" data-testid="run-step-6-result">Not started</div></div>
-        <span class="pill" data-testid="run-step-6-state">to come</span>
-       </div>
-
-       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px" data-testid="run-step-7">
+       <div class="row" style="align-items:flex-start;gap:10px;padding:10px 14px" data-testid="run-step-7" data-tf-state="sample-data" data-tf-sample>
         <svg style="margin-top:3px;color:var(--faint)"><use href="#i-clock"/></svg>
         <div class="grow"><b class="sm" style="color:var(--dim)">7 · Write the verdicts into the phase checklist</b>
          <div class="sm faint" data-testid="run-step-7-result">Not started</div></div>
@@ -294,24 +294,42 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       </div>
      </div>
 
-     <div class="panel" data-testid="question-panel">
-      <div class="ph"><span>The run is asking you something</span><span class="grow"></span><span class="pill warn" data-testid="question-step">step 5</span></div>
-      <div style="padding:13px 14px;display:flex;flex-direction:column;gap:11px">
-       <div style="font-size:13.5px" data-testid="question-text">REQ-FN-034 has no test of its own — the Verifier read the code and believes it is met. Record it as verified on that reading?</div>
-       <div class="sm dim" data-testid="question-detail">Requirement: <span class="mono">REQ-FN-034</span> — only one run of a process at a time. Evidence: <span class="mono">RunLock.cs</span>, lines 18–41.</div>
-       <div class="row" style="flex-wrap:wrap;gap:8px" data-testid="question-actions">
-        <button class="send" onclick="say('Recorded as verified. The run goes on to step 6.')" data-testid="answer-yes"><svg><use href="#i-check"/></svg>Yes</button>
-        <button class="pick" onclick="say('Recorded as not verified. REQ-FN-034 stays open and the run goes on to step 6.')" data-testid="answer-no"><svg><use href="#i-x"/></svg>No</button>
-        <button class="pick" onclick="say('The run stays here. It waits as long as it needs to.')" data-testid="answer-later"><svg><use href="#i-clock"/></svg>Answer later</button>
-       </div>
-       <div class="row" style="align-items:flex-start;gap:9px;padding:10px 12px;border-radius:var(--r);background:var(--soft);color:var(--dim)" data-testid="question-note">
+     <div class="panel" data-testid="handed-step" data-tf-state="handed-step">
+      <div class="ph"><span>Step 4 is with the Flow master</span><span class="grow"></span><span class="pill" style="color:var(--accent)" data-testid="handed-step-state"><span class="dots"><i></i><i></i><i></i></span>working</span></div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:9px">
+       <div class="row" style="flex-wrap:wrap"><span class="dim sm" style="width:112px">Agent</span><span data-testid="handed-step-agent">Flow master</span><span class="dim sm" data-testid="handed-step-model">Claude Opus 5 · tier 1</span></div>
+       <div class="row" style="flex-wrap:wrap"><span class="dim sm" style="width:112px">Task</span><span class="sm" data-testid="handed-step-task">build-phase run 43, step 4 — Build the cluster to the coding standards, on TfLens</span></div>
+       <div class="row" style="flex-wrap:wrap;align-items:flex-start" data-testid="handed-step-files"><span class="dim sm" style="width:112px">Files written</span><span class="sm mono">src/TfLens/Coverage.razor · src/TfLens/CoverageFilter.cs · tests/TfLens.Tests/CoverageFilterTests.cs</span></div>
+       <div class="row" style="flex-wrap:wrap;align-items:flex-start" data-testid="handed-step-commands"><span class="dim sm" style="width:112px">Commands run</span><span class="sm mono">dotnet build TfLens.sln</span></div>
+       <div class="row" style="align-items:flex-start;gap:9px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);color:var(--warn)" data-testid="handed-step-refusal">
         <svg style="margin-top:2px"><use href="#i-alert"/></svg>
-        <span class="sm">Nothing further runs until this is answered. Close Chatur and open it again and the run is still here, at step 5, with the same question.</span>
+        <span class="sm">Refused: <span class="mono">git commit</span> — no agent runs source control. Nothing was changed.</span>
+       </div>
+       <div class="sm dim" data-testid="handed-step-final">The final message appears here when the agent finishes; the checks at steps 5 and 8 then read the project on disk.</div>
+       <div class="row" style="flex-wrap:wrap;gap:7px">
+        <button class="pick" onclick="say('Ends the Flow master\'s session and stops the run on step 4. What it already wrote stays written.')" data-testid="handed-step-stop"><svg><use href="#i-stop"/></svg>Stop</button>
        </div>
       </div>
      </div>
 
-     <div class="row" style="align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid var(--bad);border-radius:var(--r2);color:var(--bad)" data-testid="failed-check">
+     <div class="panel" data-testid="question-panel" data-tf-state="owner-stop">
+      <div class="ph"><span>The run is asking you something</span><span class="grow"></span><span class="pill warn" data-testid="question-step">step 6</span></div>
+      <div style="padding:13px 14px;display:flex;flex-direction:column;gap:11px">
+       <div style="font-size:13.5px" data-testid="question-text">REQ-FN-034 has no test of its own — the Verifier read the code and believes it is met. Record it as verified on that reading?</div>
+       <div class="sm dim" data-testid="question-detail">Requirement: <span class="mono">REQ-FN-034</span> — only one run of a process at a time. Evidence: <span class="mono">RunLock.cs</span>, lines 18–41.</div>
+       <div class="row" style="flex-wrap:wrap;gap:8px" data-testid="question-actions">
+        <button class="send" onclick="say('Recorded as verified. The run goes on to step 7.')" data-testid="answer-yes"><svg><use href="#i-check"/></svg>Yes</button>
+        <button class="pick" onclick="say('Recorded as not verified. REQ-FN-034 stays open and the run goes on to step 7.')" data-testid="answer-no"><svg><use href="#i-x"/></svg>No</button>
+        <button class="pick" onclick="say('The run stays here. It waits as long as it needs to.')" data-testid="answer-later"><svg><use href="#i-clock"/></svg>Answer later</button>
+       </div>
+       <div class="row" style="align-items:flex-start;gap:9px;padding:10px 12px;border-radius:var(--r);background:var(--soft);color:var(--dim)" data-testid="question-note">
+        <svg style="margin-top:2px"><use href="#i-alert"/></svg>
+        <span class="sm">Nothing further runs until this is answered. Close Chatur and open it again and the run is still here, at step 6, with the same question.</span>
+       </div>
+      </div>
+     </div>
+
+     <div class="row" style="align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid var(--bad);border-radius:var(--r2);color:var(--bad)" data-testid="failed-check" data-tf-state="check-failed">
       <svg style="margin-top:2px"><use href="#i-alert"/></svg>
       <div class="grow"><b class="sm">A check failed on the run before this one</b>
        <div class="sm" style="opacity:.9" data-testid="failed-check-detail">Run 41, 22 Sep 09:12 — step 3, <b>the build succeeded and left no warning behind</b>. The build failed with 2 errors in <span class="mono">src/TfLens/Query.cs</span>. Run 41 stopped there and wrote nothing.</div></div>
@@ -319,10 +337,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      </div>
 
      <div class="out" style="margin:0" data-testid="run-output">
-      <div class="oh"><svg><use href="#i-terminal"/></svg>Output — step 4<span class="pill warn" data-testid="output-state">running</span><span class="grow"></span>
+      <div class="oh"><svg><use href="#i-terminal"/></svg>Output — step 4<span class="pill ok" data-testid="output-state">done</span><span class="grow"></span>
        <button class="iconbtn" onclick="say('Copies the whole output of this run.')" data-testid="copy-output"><svg><use href="#i-copy"/></svg></button>
       </div>
-      <div class="ob" data-testid="output-text"><span class="d">&gt; dotnet test TfLens.Tests -c Debug</span>
+      <div class="ob" data-testid="output-text" data-tf-state="sample-data" data-tf-sample><span class="d">&gt; dotnet test TfLens.Tests -c Debug</span>
   Starting test execution…
 <span class="ok">  passed  QueryPagesRepositories</span>
 <span class="ok">  passed  QueryKeepsSortWhenPaging</span>
@@ -331,17 +349,17 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
 <span class="d">&gt; playwright test screens/board.spec.ts</span>
 <span class="ok">  passed  board reads at 820 pixels</span>
 <span class="ok">  passed  board filters keep their choice</span>
-  188 of 302 done · 0 failed
-<span class="d">  …still running</span></div>
+  302 of 302 done · 0 failed
+<span class="d">  4 screens checked</span></div>
      </div>
 
      <div class="panel" data-testid="what-this-run-wrote">
       <div class="ph">What this run wrote</div>
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:9px">
-       <div class="row" data-testid="wrote-runs"><span class="pill" style="width:96px;justify-content:center">runs</span><span class="sm">One record for run 42, with the tool named <span class="mono">chatur</span> — not the agent, not the model.</span></div>
-       <div class="row" data-testid="wrote-gates"><span class="pill" style="width:96px;justify-content:center">gates</span><span class="sm">Three gate records so far, one for each check that has run.</span></div>
-       <div class="row" data-testid="wrote-misses"><span class="pill" style="width:96px;justify-content:center">misses</span><span class="sm">One miss, carried over from run 41 — the build that failed at step 3.</span></div>
-       <div class="row" data-testid="wrote-verdicts"><span class="pill" style="width:96px;justify-content:center">verdicts</span><span class="sm">Nothing yet. The verdicts go into the phase checklist at step 7, once step 5 is answered.</span></div>
+       <div class="row" data-testid="wrote-runs" data-tf-state="sample-data" data-tf-sample><span class="pill" style="width:96px;justify-content:center">runs</span><span class="sm">One record for run 42, with the tool named <span class="mono">chatur</span> — not the agent, not the model.</span></div>
+       <div class="row" data-testid="wrote-gates" data-tf-state="sample-data" data-tf-sample><span class="pill" style="width:96px;justify-content:center">gates</span><span class="sm">Two gate records so far, one for each check that has run.</span></div>
+       <div class="row" data-testid="wrote-misses" data-tf-state="sample-data" data-tf-sample><span class="pill" style="width:96px;justify-content:center">misses</span><span class="sm">One miss, carried over from run 41 — the build that failed at step 3.</span></div>
+       <div class="row" data-testid="wrote-verdicts" data-tf-state="sample-data" data-tf-sample><span class="pill" style="width:96px;justify-content:center">verdicts</span><span class="sm">Nothing yet. The verdicts go into the phase checklist at step 7, once step 6 is answered.</span></div>
        <div class="row"><a class="pick" href="settings-measurements.html" data-testid="open-measurements">See every record Chatur keeps</a></div>
       </div>
      </div>
@@ -355,9 +373,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       <button class="iconbtn" onclick="say('Starts a new conversation.')" data-testid="new-chat"><svg><use href="#i-plus"/></svg></button>
       <div class="popwrap" data-testid="history">
        <button class="iconbtn" onclick="pop(this,event)" title="Earlier conversations"><svg><use href="#i-list"/></svg></button>
-       <div class="pop right" data-testid="history-pop">
+       <div class="pop right" data-testid="history-pop" data-tf-state="popup-open">
         <div class="note">Earlier on TfLens</div>
-        <button onclick="say('Opens that conversation where it stopped.')">Run 42 held at step 5 · today</button>
+        <button onclick="say('Opens that conversation where it stopped.')">Run 42 held at step 6 · today</button>
         <button onclick="say('Opens that conversation where it stopped.')">Why run 41 stopped at step 3 · yesterday</button>
         <button onclick="say('Opens that conversation where it stopped.')">REQ-FN-034 and its missing test · Friday</button>
        </div>
@@ -365,14 +383,21 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      </span>
     </div>
     <div class="talk" data-testid="conversation">
-     <div class="msg me" data-testid="msg-1"><span class="who">TR</span>
+     <div class="msg me" data-testid="msg-1" data-tf-state="sample-data" data-tf-sample><span class="who">TR</span>
       <div class="body"><span class="name">You<span class="model">14:08</span></span>
        <div class="said">Why is it asking me about REQ-FN-034?</div></div></div>
-     <div class="msg agent" data-testid="msg-2"><span class="who"><svg><use href="#i-sparkle"/></svg></span>
+     <div class="msg agent" data-testid="msg-2" data-tf-state="sample-data" data-tf-sample><span class="who"><svg><use href="#i-sparkle"/></svg></span>
       <div class="body"><span class="name">Verifier<span class="model">Claude Opus 5 · 1,640 tokens</span></span>
        <div class="said">Because no test covers it. I read <b class="mono">RunLock.cs</b> and the lock is there, but a verdict from reading alone is yours to allow. Answer no and it stays open for the next phase.</div>
-       <div class="step"><svg class="ok"><use href="#i-check"/></svg>33 of 34 requirements have a verdict</div>
-       <div class="step"><svg><use href="#i-pause"/></svg>run held at step 5</div>
+       <div class="step"><svg class="ok"><use href="#i-check"/></svg>34 of 34 requirements have a verdict</div>
+       <div class="step"><svg><use href="#i-pause"/></svg>run held at step 6</div>
+      </div></div>
+     <div class="msg agent" data-testid="msg-handed-step" data-tf-state="handed-step"><span class="who"><svg><use href="#i-sparkle"/></svg></span>
+      <div class="body"><span class="name">Flow master<span class="model">Claude Opus 5 · build-phase run 43, step 4</span></span>
+       <div class="said">Building the coverage filter for REQ-FN-021 and its tests.</div>
+       <div class="step"><svg class="ok"><use href="#i-check"/></svg>wrote src/TfLens/CoverageFilter.cs</div>
+       <div class="step"><svg class="ok"><use href="#i-check"/></svg>ran dotnet build TfLens.sln</div>
+       <div class="step"><svg><use href="#i-alert"/></svg>refused: git commit</div>
       </div></div>
     </div>
     <div class="ask" data-testid="composer">
@@ -381,7 +406,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       <div class="tools">
        <div class="popwrap" data-testid="model-pick">
         <button class="pick" onclick="pop(this,event)"><svg><use href="#i-sparkle"/></svg><span data-value>Claude Opus 5</span><svg><use href="#i-chevron"/></svg></button>
-        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop">
+        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop" data-tf-state="popup-open">
          <button onclick="choose(this,'Claude Opus 5',event)"><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
          <button onclick="choose(this,'Claude Sonnet 5',event)"><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
          <button onclick="choose(this,'Claude Haiku 4.5',event)"><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
@@ -393,7 +418,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        </div>
        <div class="popwrap" data-testid="agent-pick">
         <button class="pick" onclick="pop(this,event)"><span data-value>Verifier</span><svg><use href="#i-chevron"/></svg></button>
-        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="agent-pop">
+        <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="agent-pop" data-tf-state="popup-open">
          <button onclick="choose(this,'No agent',event)"><span class="tick"></span>No agent — the model itself</button>
          <hr>
          <button onclick="choose(this,'Analyst',event)"><span class="tick"></span>Analyst</button>

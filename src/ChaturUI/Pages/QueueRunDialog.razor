@@ -1,0 +1,51 @@
+@inject IProjectActions ProjectActions
+@inject IRunQueueActions RunQueueActions
+
+@* The "Queue a run" brief form on Run queue (mockups/run-queue.html, button data-testid="queue-a-run"):
+   a project and what should be true when the run finishes. The same two rules as the brief on Auto run. *@
+<Dialog Open="Open" OpenChanged="HandleOpenChangedAsync">
+    <DialogContent Class="max-w-xl" data-testid="queue-run-dialog">
+        <DialogHeader>
+            <DialogTitle>Queue a run</DialogTitle>
+            <DialogDescription>It goes to the end of the queue and starts when the runs above it have ended.</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-4">
+            <Field>
+                <FieldLabel For="queue-project">Project</FieldLabel>
+                <FieldContent>
+                    <Select TValue="string" @bind-Value="ProjectKey" Class="w-full" data-testid="queue-project">
+                        <SelectTrigger Id="queue-project">
+                            <SelectValue Placeholder="Pick a project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            @foreach (var vProject in objProjects)
+                            {
+                                <SelectItem TValue="string" Value="@vProject.ProjectId.ToString()" Text="@vProject.Name">@vProject.Name</SelectItem>
+                            }
+                        </SelectContent>
+                    </Select>
+                </FieldContent>
+            </Field>
+            <Field>
+                <FieldLabel For="queue-brief">Brief</FieldLabel>
+                <FieldContent>
+                    <Textarea Id="queue-brief" @bind-Value="Brief" Class="h-32" data-testid="queue-brief" />
+                    <FieldDescription>What should be true when the run finishes.</FieldDescription>
+                </FieldContent>
+            </Field>
+            @if (objErrorMessage is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="queue-run-error">
+                    <AlertDescription>@objErrorMessage</AlertDescription>
+                </Alert>
+            }
+        </DialogBody>
+        <DialogFooter data-testid="queue-run-actions">
+            <Button Variant="ButtonVariant.Outline" OnClick="CloseAsync" data-testid="queue-run-cancel">Cancel</Button>
+            <Button Disabled="objIsBusy" OnClick="QueueAsync" data-testid="queue-run-add">
+                <LucideIcon Name="plus" Size="14" />
+                Queue it
+            </Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

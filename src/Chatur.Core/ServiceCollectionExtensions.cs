@@ -107,13 +107,44 @@ public static class ServiceCollectionExtensions
         // see Agent.AgentSessionRegistry's own doc comment (REQ-UI-023).
         aServices.AddSingleton<Agent.AgentSessionRegistry>();
         aServices.AddScoped<Agent.IAgentLlmProviderFactory, Agent.TechieRagLlmProviderFactory>();
+        aServices.AddSingleton<IModelChooserFactory, TechieRagModelChooserFactory>();
+        aServices.AddScoped<IAutoRouter, AutoRouter>();
         aServices.AddScoped<IAgentActions, AgentActions>();
         aServices.AddScoped<IChangeActions, ChangeActions>();
         aServices.AddScoped<IRoleActions, RoleActions>();
         aServices.AddScoped<ICorrectionActions, CorrectionActions>();
         aServices.AddScoped<IMeasurementActions, MeasurementActions>();
+        aServices.AddScoped<IProcessActions, Processes.ProcessActions>();
         aServices.AddScoped<ISourceControlActions, SourceControlActions>();
         aServices.AddScoped<IThemeActions, ThemeActions>();
+        aServices.AddScoped<IRequirementBoardActions, Board.RequirementBoardActions>();
+        // Run report (REQ-UI-058..061, cluster E): read-only, from the project's measurement streams.
+        aServices.AddScoped<IRunReportActions, RunReports.RunReportActions>();
+        // Process run (REQ-FN-052..055, cluster C): the executor does each step's real work; verify-phase
+        // builds and tests the user's project and grades from the tests' own results (REQ-UI-048).
+        aServices.AddSingleton(new ProcessRuns.ProcessRunOptions());
+        aServices.AddSingleton<ProcessRuns.IProjectCommandRunner, ProcessRuns.ProjectCommandRunner>();
+        aServices.AddScoped<ProcessRuns.ProjectFolders>();
+        aServices.AddScoped<ProcessRuns.RunEvidenceStore>();
+        // Step work (REQ-FN-084..087, REQ-FN-090): a work step goes to the agent that owns its process; checks judge the disk.
+        aServices.AddScoped<ProcessRuns.ProcessRunBaseline>();
+        aServices.AddScoped<IStepAgentActions, StepAgents.StepAgentActions>();
+        aServices.AddScoped<ProcessRuns.IProcessStepExecutor, ProcessRuns.ProjectStepExecutor>();
+        aServices.AddScoped<ProcessRuns.IRunVerdictWriter, ProcessRuns.RunVerdictWriter>();
+        aServices.AddScoped<ProcessRuns.ProcessRunActions>();
+        aServices.AddScoped<IProcessRunActions>(aProvider => aProvider.GetRequiredService<ProcessRuns.ProcessRunActions>());
+        aServices.AddScoped<IAgentWorkspaceActions, AgentWorkspace.AgentWorkspaceActions>();
+        // End-to-end run (REQ-FN-061..066, cluster A): the chain over the same engine, unattended.
+        aServices.AddScoped<ProcessRuns.IUnattendedProcessRuns>(aProvider => aProvider.GetRequiredService<ProcessRuns.ProcessRunActions>());
+        aServices.AddSingleton(new AutoRun.AutoRunOptions());
+        aServices.AddSingleton<AutoRun.IAutoRunDelay, AutoRun.TaskAutoRunDelay>();
+        aServices.AddSingleton<AutoRun.IAutoRunLauncher, AutoRun.BackgroundAutoRunLauncher>();
+        aServices.AddScoped<AutoRun.AutoRunStore>();
+        aServices.AddScoped<AutoRun.OpenRequirementReader>();
+        aServices.AddScoped<AutoRun.AutoRunViewBuilder>();
+        aServices.AddScoped<IAutoRunActions, AutoRun.AutoRunActions>();
+        // Run queue (REQ-FN-067..070, cluster C): end-to-end runs taken one at a time through IAutoRunActions.
+        aServices.AddScoped<IRunQueueActions, RunQueue.RunQueueActions>();
 
         // GuardPipeline resolves every registered IToolGuard, in this order.
         aServices.AddScoped<IToolGuard, RoleRightsGuard>();
