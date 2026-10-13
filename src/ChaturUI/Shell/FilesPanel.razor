@@ -21,8 +21,8 @@
             </TreeView>
         }
     </div>
-    <a href="/repository" class="flex h-8 flex-none items-center gap-2 border-t px-3 text-xs text-muted-foreground hover:bg-accent" data-testid="branch">
+    <button type="button" @onclick="@(() => SecondaryWindow.Open("/repository"))" class="flex h-8 w-full flex-none items-center gap-2 border-t px-3 text-left text-xs text-muted-foreground hover:bg-accent" data-testid="branch">
         <LucideIcon Name="git-branch" Size="14" />
         @(objBranchName ?? "—")
-    </a>
+    </button>
 </Card>

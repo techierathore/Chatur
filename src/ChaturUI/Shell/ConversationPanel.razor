@@ -3,6 +3,8 @@
    region owns the sessions list (REQ-UI-031), the activity panel and its refusals (REQ-UI-022,
    REQ-UI-033), stopping the work (REQ-UI-023), the session's mode (REQ-UI-024), the token total
    (REQ-UI-021) and the proposed change's diff (REQ-UI-032). *@
+@if (Workbench.ConversationVisible)
+{
 <Card Class="flex min-w-0 flex-1 flex-col overflow-hidden" data-testid="chat-panel">
     <div class="flex h-9 flex-none items-center justify-between border-b px-3" data-testid="chat-head">
         <span class="text-xs font-medium uppercase text-muted-foreground">Chat</span>
@@ -38,6 +40,10 @@
                     }
                 </DropdownMenuContent>
             </DropdownMenu>
+            @* Closes the conversation so the file view takes the window; View ▸ Chat brings it back (REQ-UI-074). *@
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" OnClick="@(() => Workbench.SetConversationVisible(false))" AriaLabel="Close the conversation" title="Close the conversation — the file view takes the whole window. View ▸ Chat brings it back." data-testid="close-chat">
+                <LucideIcon Name="x" Size="14" />
+            </Button>
         </span>
     </div>
 
@@ -52,6 +58,8 @@
         }
         else
         {
+            @* Each step sits under the message it belongs to, in the order it happened (REQ-UI-023). *@
+            var vPlaced = PlaceActivity();
             <div class="flex flex-col gap-3 p-3" data-testid="conversation-thread">
                 @if (objMessages.Count == 0)
                 {
@@ -111,17 +119,17 @@
                                 }
                             </span>
                             <div class="said min-w-0 whitespace-pre-wrap leading-relaxed [overflow-wrap:anywhere] @(vIsMe && !vIsTask ? "inline-block self-start rounded-lg bg-muted px-3 py-2" : "")" data-testid="@(vIsTask ? "step-task" : null)">@vMessage.Text</div>
-                            @if (vIsLastAgent)
+                            @if (vIsLastAgent || vPlaced.ByMessage.ContainsKey(vIndex))
                             {
-                                <ConversationActivity Events="objActivity" Changes="objProposedChanges" OnOpen="OpenChangeAsync" OnApprove="ApproveAsync" OnReject="RejectAsync" />
+                                <ConversationActivity Events="@(vPlaced.ByMessage.TryGetValue(vIndex, out var vSteps) ? vSteps : [])" Changes="@(vIsLastAgent ? objProposedChanges : [])" OnOpen="OpenChangeAsync" OnApprove="ApproveAsync" OnReject="RejectAsync" />
                             }
                         </div>
                     </div>
                 }
-                @if (!objMessages.Any(m => m.Role != "user"))
+                @if (vPlaced.Unplaced.Count > 0 || !objMessages.Any(m => m.Role != "user"))
                 {
-                    @* No reply yet (a refusal can come first): the steps still show, under the thread. *@
-                    <ConversationActivity Events="objActivity" Changes="objProposedChanges" OnOpen="OpenChangeAsync" OnApprove="ApproveAsync" OnReject="RejectAsync" />
+                    @* No reply yet (a refusal can come first), or a step before any message: it still shows, under the thread. *@
+                    <ConversationActivity Events="vPlaced.Unplaced" Changes="@(objMessages.Any(m => m.Role != "user") ? [] : objProposedChanges)" OnOpen="OpenChangeAsync" OnApprove="ApproveAsync" OnReject="RejectAsync" />
                 }
             </div>
         }
@@ -169,7 +177,7 @@
                         </DropdownMenuItem>
                     }
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem Href="/settings/routing" data-testid="model-routing-link">Which model does which work…</DropdownMenuItem>
+                    <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/settings/routing"))" data-testid="model-routing-link">Which model does which work…</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
             </span>
@@ -228,3 +236,4 @@
         }
     </div>
 </Card>
+}

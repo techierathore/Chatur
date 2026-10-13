@@ -170,11 +170,22 @@ Added 2026-10-09 on the owner's decision (option A, archived at `docs/OldDocs/Ch
 - **BRD-183** — A handed step writes its documents but not source. *Screen:* Process run · *Mockup:* [mockup](mockups/process-run.html)
   - *Acceptance:* When an agent with only "writes documents" works a handed step on Process run, then its docs/ writes succeed and a source write is refused and recorded on the step.
 
+### The main window, as the owner uses it
+
+Added 2026-10-13 from the owner's test of the 12 Oct nightly (`docs/screenshots/NightlyBuildIssues`). The main window's menu bar drew File, Edit and View with nothing in them, the Settings window never opened, and the conversation could not be closed. The Workbench screen is phase 1's; these items make its menu bar and its windows do what the UI Design and `mockups/main.html` already draw, so they are phase 3's open work rather than a phase of their own.
+
+- **BRD-184** — The menu bar's menus do their jobs. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the owner opens File, Edit, View or Help on Workbench, then every drawn item works and none says "Nothing to do yet".
+- **BRD-185** — Close the conversation and bring it back. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the owner closes the conversation panel on Workbench, then the file view takes the window, and View ▸ Chat brings the conversation back.
+- **BRD-186** — Settings and the other pages open from the main window. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the owner picks Settings, a settings page, Prerequisites or Repository from the main window's menus, then the secondary window opens on that page.
+
 ## 4. Development status
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-10-11.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
+**Snapshot as of 2026-10-13.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
@@ -183,6 +194,7 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | Run report | 4 | 4 | 0 | Done |
 | Settings | 5 | 5 | 0 | Done |
 | Process run | 20 | 20 | 0 | Done |
+| Workbench | 3 | 3 | 0 | Done |
 
 ## 5. Where the rest lives
 

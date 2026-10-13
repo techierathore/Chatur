@@ -11,7 +11,7 @@ export const STUB_PORT = Number(process.env.CHATUR_STUB_PORT ?? 18951);
 export const STUB_PROVIDER_NAME = 'Stub edit model';
 export const STUB_MODEL = 'stub-edit-model';
 
-export type StubModel = { baseUrl: string; calls: string[]; close: () => Promise<void> };
+export type StubModel = { baseUrl: string; calls: string[]; close: () => Promise<void>; setDelay: (aMs: number) => void };
 
 function readBody(aReq: IncomingMessage): Promise<string> {
   return new Promise((resolve) => {
@@ -30,6 +30,7 @@ const chunk = (aDelta: object, aFinish: string | null = null) =>
  */
 export async function startStubModel(aTool: string, aArguments: object): Promise<StubModel> {
   const calls: string[] = [];
+  let vDelayMs = 0;
   const vServer: Server = createServer(async (aReq, aRes) => {
     const vUrl = aReq.url ?? '';
     if (aReq.method === 'GET' && /\/models\/?(\?.*)?$/.test(vUrl)) {
@@ -39,6 +40,7 @@ export async function startStubModel(aTool: string, aArguments: object): Promise
     }
     if (aReq.method === 'POST' && /\/chat\/completions\/?(\?.*)?$/.test(vUrl)) {
       const vBody = JSON.parse((await readBody(aReq)) || '{}');
+      if (vDelayMs > 0) await new Promise((r) => setTimeout(r, vDelayMs));
       const vMessages: { role: string }[] = vBody.messages ?? [];
       const vAfterTool = vMessages.length > 0 && vMessages[vMessages.length - 1].role === 'tool';
       calls.push(vAfterTool ? 'text' : `tool:${aTool}`);
@@ -87,6 +89,8 @@ export async function startStubModel(aTool: string, aArguments: object): Promise
     baseUrl: `http://127.0.0.1:${STUB_PORT}/v1`,
     calls,
     close: () => new Promise<void>((resolve) => vServer.close(() => resolve())),
+    // a slow model keeps a step going long enough for a test to act while it runs
+    setDelay: (aMs: number) => { vDelayMs = aMs; },
   };
 }
 

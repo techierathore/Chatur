@@ -1,0 +1,57 @@
+@* Edit ▸ Go to file… and Edit ▸ Find in files… (REQ-UI-073): type, see where it is, pick one and it
+   opens in the file view. Go to file lists as you type; Find in files searches when asked. *@
+<Dialog Open="Open" OpenChanged="OpenChanged">
+    <DialogContent Class="max-w-2xl" data-testid="@(Mode == FileSearchMode.GoToFile ? "goto-dialog" : "find-dialog")">
+        <DialogHeader>
+            <DialogTitle>@(Mode == FileSearchMode.GoToFile ? "Go to file" : "Find in files")</DialogTitle>
+            <DialogDescription>
+                @(Mode == FileSearchMode.GoToFile ? "Any part of a file's name or path." : "Searches the text of every file in the project.")
+            </DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-3">
+            <div class="flex gap-2">
+                <Input Value="objQuery" ValueChanged="OnQueryChangedAsync" DebounceMilliseconds="150" @onkeydown="OnKeyDownAsync" Placeholder="@(Mode == FileSearchMode.GoToFile ? "A file name" : "Text to find")" Class="flex-1" AriaLabel="Search" data-testid="search-input" />
+                @if (Mode == FileSearchMode.FindInFiles)
+                {
+                    <Button Disabled="@(objIsBusy || string.IsNullOrWhiteSpace(objQuery))" OnClick="SearchAsync" data-testid="search-go">
+                        <LucideIcon Name="search" Size="14" />
+                        Find
+                    </Button>
+                }
+            </div>
+            @if (objProjectId is null)
+            {
+                <p class="text-sm text-muted-foreground" data-testid="search-no-project">Open a project to search its files.</p>
+            }
+            else if (objIsBusy)
+            {
+                <p class="text-sm text-muted-foreground" data-testid="search-busy">Searching…</p>
+            }
+            else if (objSearched && objHits.Count == 0)
+            {
+                <p class="text-sm text-muted-foreground" data-testid="search-none">Nothing found.</p>
+            }
+            else
+            {
+                <div class="max-h-96 overflow-y-auto rounded-md border" data-testid="search-results">
+                    @foreach (var vHit in objHits)
+                    {
+                        <button type="button" class="flex w-full min-w-0 items-baseline gap-2 border-b px-3 py-1.5 text-left text-sm last:border-b-0 hover:bg-accent"
+                                @onclick="() => OpenHitAsync(vHit)" data-testid="search-hit">
+                            <span class="font-mono text-xs">@vHit.RelativePath@(vHit.Line > 0 ? $":{vHit.Line}" : "")</span>
+                            @if (vHit.Line > 0)
+                            {
+                                <span class="min-w-0 truncate text-xs text-muted-foreground">@vHit.Text</span>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        </DialogBody>
+        <DialogFooter>
+            <DialogClose AsChild>
+                <Button Variant="ButtonVariant.Outline" data-testid="search-close">Close</Button>
+            </DialogClose>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

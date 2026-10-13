@@ -91,6 +91,8 @@ public static class MauiProgram
         // The window pages take no constructor dependencies yet, so WindowService creates them
         // directly rather than resolving them here; nothing to register for them today.
         aServices.AddSingleton<IWindowService, WindowService>();
+        aServices.AddSingleton<ISecondaryWindow, MauiSecondaryWindow>();
+        aServices.AddSingleton<IAppShell, MauiAppShell>();
     }
 
     /// <summary>

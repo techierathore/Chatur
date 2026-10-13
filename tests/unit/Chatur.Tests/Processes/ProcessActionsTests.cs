@@ -187,6 +187,37 @@ public sealed class ProcessActionsTests : MigratedDatabaseFixture
         Assert.False(ProcessDocumentGuard.TryResolve(objProjectRoot, "docs/../../X-Checklist.md", out _));
     }
 
+    /// <summary>REQ-UI-075: saving a step's wording stores it, counts its version up, shows it in the next StepsAsync and leaves a kept correction holding the old words.</summary>
+    [Fact]
+    public async Task SavedStepWordingIsStoredVersionedAndRemembered()
+    {
+        var vOld = (await objSut.StepsAsync("verify-phase")).First(aStep => aStep.StepCode == "s2").Wording;
+
+        await objSut.SaveStepWordingAsync("verify-phase", "s2", "  Build the whole solution first  ");
+
+        var vNow = (await objSut.StepsAsync("verify-phase")).First(aStep => aStep.StepCode == "s2");
+        Assert.Equal("Build the whole solution first", vNow.Wording);
+        using var vConnection = new SqliteConnection(ConnectionString);
+        Assert.Equal(2, vConnection.ExecuteScalar<int>("SELECT Version FROM ProcessStepText WHERE ProcessCode='verify-phase' AND StepCode='s2'"));
+        var vCorrection = vConnection.QuerySingle<(string Target, string Before, string After, string Status)>(
+            "SELECT Target, Before, After, Status FROM Correction");
+        Assert.Equal(("step:verify-phase/s2", vOld, "Build the whole solution first", "Kept"), vCorrection);
+    }
+
+    /// <summary>REQ-UI-075: an empty wording, an unknown process and an unknown step are each refused and nothing is written.</summary>
+    [Fact]
+    public async Task SavingBlankOrUnknownStepWordingIsRefused()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => objSut.SaveStepWordingAsync("verify-phase", "s1", "   "));
+        await Assert.ThrowsAsync<ArgumentException>(() => objSut.SaveStepWordingAsync("no-such-process", "s1", "x"));
+        await Assert.ThrowsAsync<ArgumentException>(() => objSut.SaveStepWordingAsync("verify-phase", "s99", "x"));
+        await Assert.ThrowsAsync<ArgumentException>(() => objSut.SaveStepWordingAsync("verify-phase", "x1", "x"));
+
+        using var vConnection = new SqliteConnection(ConnectionString);
+        Assert.Equal(0, vConnection.ExecuteScalar<int>("SELECT COUNT(*) FROM Correction"));
+        Assert.Equal(1, vConnection.ExecuteScalar<int>("SELECT Version FROM ProcessStepText WHERE ProcessCode='verify-phase' AND StepCode='s1'"));
+    }
+
     /// <summary>Removes the temporary project folder.</summary>
     public override void Dispose()
     {

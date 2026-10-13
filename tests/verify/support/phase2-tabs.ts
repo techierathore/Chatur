@@ -30,6 +30,11 @@ export async function openBoardTab(aPage: Page): Promise<void> {
   await expect(aPage.getByTestId('board-table')).toBeVisible({ timeout: 30_000 });
 }
 
+/** Project ▸ Board… without waiting for the table, for a project whose board has none to show. */
+export async function openBoardTabAnyState(aPage: Page): Promise<void> {
+  await fromProjectMenu(aPage, 'menu-project-board', 'Board');
+}
+
 /** Project ▸ Agent workspace… */
 export async function openAgentsTab(aPage: Page): Promise<void> {
   await fromProjectMenu(aPage, 'menu-project-agents', 'Agents');

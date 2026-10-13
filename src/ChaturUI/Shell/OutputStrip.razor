@@ -1,6 +1,8 @@
 @* The build and run output, live, with the result as a pill (UI Design "Screen: Workbench", region
    `output`). IBuildRunActions.StreamOutputAsync feeds LogView's Lines (REQ-UI-014); a build's errors
    list underneath with file and line, each one opening that file (REQ-UI-016). *@
+@if (Workbench.OutputVisible)
+{
 <Card Class="mx-2 mb-2 flex-none" data-testid="output">
     @* The mockup's `.oh` is the header (icon, "Output", the result pill) and `output-text` is the text below it. *@
     <div class="flex h-8 items-center gap-2 border-b px-3 text-xs text-muted-foreground">
@@ -25,3 +27,4 @@
         </div>
     }
 </Card>
+}

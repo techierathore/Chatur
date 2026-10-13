@@ -20,6 +20,8 @@ public static class ServiceCollectionExtensions
         aServices.AddScoped<ThemeInterop>();
         aServices.AddScoped<FileDownloadInterop>();
         aServices.AddScoped<BrowserInterop>();
+        aServices.AddScoped<EditorInterop>();
+        aServices.AddScoped<ShortcutInterop>();
         aServices.AddScoped<WorkbenchState>();
         return aServices;
     }

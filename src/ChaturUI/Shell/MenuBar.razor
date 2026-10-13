@@ -1,6 +1,5 @@
 @* The main window's menu bar: File, Edit, View, Project, Tools, Help, with the signed-in user at
-   the right (UI Design "Screen: Workbench", region `menubar`). Cluster H wires the real commands;
-   this is the empty-state shell every one of them hangs off. *@
+   the right (UI Design "Screen: Workbench", region `menubar`). Every item does its job (REQ-UI-073). *@
 <div class="flex h-9 flex-none items-center gap-1 border-b bg-card px-2" data-testid="menubar">
     <span class="flex h-5 w-5 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground" data-testid="logo">C</span>
     <span class="mx-2 text-sm font-semibold" data-testid="wordmark">Chatur</span>
@@ -43,28 +42,74 @@
 
     <Menubar Class="h-7 border-0 bg-transparent p-0">
         <MenubarMenu>
-            <MenubarTrigger data-testid="menu-file">File</MenubarTrigger>
+            <MenubarTrigger @onpointerdown="LoadRecentAsync" data-testid="menu-file">File</MenubarTrigger>
             <MenubarContent data-testid="menu-file-items">
-                <MenubarItem Disabled="true">Nothing to do yet</MenubarItem>
+                @* The four ways into a project open one dialog (REQ-UI-073); each ends with the project selected. *@
+                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.NewProject))" data-testid="menu-file-new">New project…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Solution))" data-testid="menu-file-open-solution">Open a solution…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="menu-file-open-folder">Open a folder…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Clone))" data-testid="menu-file-clone">Clone a repository…</MenubarItem>
+                <MenubarSeparator />
+                @if (objRecent.Count == 0)
+                {
+                    <MenubarItem Disabled="true" data-testid="menu-file-recent">Recent projects</MenubarItem>
+                }
+                else
+                {
+                    <MenubarLabel data-testid="menu-file-recent">Recent projects</MenubarLabel>
+                    @foreach (var vRecent in objRecent)
+                    {
+                        <MenubarItem OnClick="@(() => SwitchToAsync(vRecent.ProjectId))" data-testid="@($"menu-file-recent-{vRecent.ProjectId}")">@vRecent.Name</MenubarItem>
+                    }
+                }
+                <MenubarSeparator />
+                <MenubarItem Disabled="@(!CanSave)" OnClick="SaveAsync" data-testid="menu-file-save">Save</MenubarItem>
+                <MenubarItem Disabled="@(!CanSaveAll)" OnClick="SaveAllAsync" data-testid="menu-file-save-all">Save all</MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="CloseProjectAsync" data-testid="menu-file-close">Close project</MenubarItem>
+                <MenubarItem OnClick="@(() => AppShell.Exit())" data-testid="menu-file-exit">Exit</MenubarItem>
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
-            <MenubarTrigger data-testid="menu-edit">Edit</MenubarTrigger>
+            <MenubarTrigger @onpointerdown="RefreshEditStateAsync" data-testid="menu-edit">Edit</MenubarTrigger>
             <MenubarContent data-testid="menu-edit-items">
-                <MenubarItem Disabled="true">Nothing to do yet</MenubarItem>
+                @* Undo, redo and the clipboard act on the open file's editor (REQ-UI-073). *@
+                <MenubarItem Disabled="@(!CanEdit)" OnClick="@(() => EditAsync("undo"))" data-testid="menu-edit-undo">Undo</MenubarItem>
+                <MenubarItem Disabled="@(!CanEdit || !objCanRedo)" OnClick="@(() => EditAsync("redo"))" data-testid="menu-edit-redo">Redo</MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem Disabled="@(!CanEdit)" OnClick="@(() => EditAsync("cut"))" data-testid="menu-edit-cut">Cut</MenubarItem>
+                <MenubarItem Disabled="@(Workbench.ActiveFile is null)" OnClick="@(() => EditAsync("copy"))" data-testid="menu-edit-copy">Copy</MenubarItem>
+                <MenubarItem Disabled="@(!CanEdit)" OnClick="PasteAsync" data-testid="menu-edit-paste">Paste</MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="@(() => OpenSearch(FileSearchMode.FindInFiles))" data-testid="menu-edit-find">Find in files…</MenubarItem>
+                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="@(() => OpenSearch(FileSearchMode.GoToFile))" data-testid="menu-edit-goto">Go to file…</MenubarItem>
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
             <MenubarTrigger data-testid="menu-view">View</MenubarTrigger>
             <MenubarContent data-testid="menu-view-items">
-                <MenubarItem Disabled="true">Nothing to do yet</MenubarItem>
+                @* Each region shows or hides; the ticks follow WorkbenchState, so the close buttons and this menu agree (REQ-UI-074). *@
+                <MenubarCheckboxItem Checked="Workbench.FilesVisible" CheckedChanged="Workbench.SetFilesVisible" data-testid="menu-view-files">Files</MenubarCheckboxItem>
+                <MenubarCheckboxItem Checked="Workbench.ConversationVisible" CheckedChanged="Workbench.SetConversationVisible" data-testid="menu-view-chat">Chat</MenubarCheckboxItem>
+                <MenubarCheckboxItem Checked="Workbench.OutputVisible" CheckedChanged="Workbench.SetOutputVisible" data-testid="menu-view-output">Output</MenubarCheckboxItem>
+                <MenubarSeparator />
+                <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-view-prerequisites">Prerequisites</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/repository"))" data-testid="menu-view-repository">Repository</MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem OnClick="@(() => OpenSecondary("/settings/appearance"))" data-testid="menu-view-appearance">Appearance…</MenubarItem>
+                <MenubarSeparator />
+                <MenubarLabel>Zoom</MenubarLabel>
+                <MenubarItem OnClick="@(() => AppShell.ZoomBy(1))" data-testid="menu-view-zoom-in">Zoom in</MenubarItem>
+                <MenubarItem OnClick="@(() => AppShell.ZoomBy(-1))" data-testid="menu-view-zoom-out">Zoom out</MenubarItem>
+                <MenubarItem OnClick="@(() => AppShell.ResetZoom())" data-testid="menu-view-zoom-reset">Actual size</MenubarItem>
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
             <MenubarTrigger data-testid="menu-project">Project</MenubarTrigger>
             <MenubarContent data-testid="menu-project-items">
-                <MenubarItem Href="/prerequisites">Prerequisites…</MenubarItem>
-                <MenubarItem Href="/repository">Repository…</MenubarItem>
+                @* REQ-FN-106: these open the secondary window, never the main window's own route. *@
+                <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-project-prerequisites">Prerequisites…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/repository"))" data-testid="menu-project-repository">Repository…</MenubarItem>
                 @* Phase 2: each opens as a tab in this window, the conversation still on the right. *@
                 <MenubarItem OnClick="@(() => Workbench.OpenProcesses())" data-testid="menu-project-processes">Processes…</MenubarItem>
                 <MenubarItem OnClick="Workbench.OpenBoard" data-testid="menu-project-board">Board…</MenubarItem>
@@ -78,13 +123,24 @@
         <MenubarMenu>
             <MenubarTrigger data-testid="menu-tools">Tools</MenubarTrigger>
             <MenubarContent data-testid="menu-tools-items">
-                <MenubarItem Href="/settings/providers">Settings…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/settings/providers"))" data-testid="menu-tools-settings">
+                    Settings…
+                    <MenubarShortcut>Ctrl+,</MenubarShortcut>
+                </MenubarItem>
+                <MenubarSeparator />
+                <MenubarLabel>Go straight to</MenubarLabel>
+                @foreach (var vItem in SettingsPages)
+                {
+                    <MenubarItem OnClick="@(() => OpenSecondary(vItem.Route))" data-testid="@($"menu-tools-{vItem.TestId}")">@vItem.Label</MenubarItem>
+                }
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
             <MenubarTrigger data-testid="menu-help">Help</MenubarTrigger>
             <MenubarContent data-testid="menu-help-items">
-                <MenubarItem Disabled="true">About Chatur</MenubarItem>
+                <MenubarItem OnClick="ShowAboutAsync" data-testid="menu-help-about">About Chatur</MenubarItem>
+                @* The newer-build offer lives on Prerequisites (REQ-UI-018), so this opens it there. *@
+                <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-help-updates">Check for updates</MenubarItem>
             </MenubarContent>
         </MenubarMenu>
     </Menubar>
@@ -99,3 +155,33 @@
     @* The light/dark switch sits last, as in mockups/main.html (its mockup-only palette picker is not drawn). *@
     <ThemeToggle />
 </div>
+
+<OpenProjectDialog @bind-Open="objOpenProjectOpen" Mode="objOpenProjectMode" />
+<FileSearchDialog @bind-Open="objSearchOpen" Mode="objSearchMode" />
+
+@* Help ▸ About Chatur: the version and commit Prerequisites shows (REQ-UI-018). *@
+<Dialog @bind-Open="objAboutOpen">
+    <DialogContent Class="max-w-sm" data-testid="about-dialog">
+        <DialogHeader>
+            <DialogTitle>About Chatur</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+            @if (objBuildInfo is null)
+            {
+                <p class="text-sm text-muted-foreground" data-testid="about-unread">Chatur's own version and commit could not be read.</p>
+            }
+            else
+            {
+                <div class="flex flex-col gap-1 text-sm">
+                    <div class="flex gap-2"><span class="w-20 text-muted-foreground">Version</span><span data-testid="about-version">@Pages.Prerequisites.DisplayVersion(objBuildInfo.Version)</span></div>
+                    <div class="flex gap-2"><span class="w-20 text-muted-foreground">Commit</span><span class="font-mono" data-testid="about-commit">@Pages.Prerequisites.ShortCommit(objBuildInfo.Commit)</span></div>
+                </div>
+            }
+        </DialogBody>
+        <DialogFooter>
+            <DialogClose AsChild>
+                <Button Variant="ButtonVariant.Outline" data-testid="about-close">Close</Button>
+            </DialogClose>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

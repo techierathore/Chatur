@@ -25,14 +25,15 @@ public sealed class BackgroundAutoRunLauncher : IAutoRunLauncher
     }
 
     /// <inheritdoc />
-    public void Launch(int aAutoRunId)
+    public bool Launch(int aAutoRunId)
     {
         if (!objActive.TryAdd(aAutoRunId, true))
         {
-            return;
+            return false;
         }
 
         _ = Task.Run(() => CarryOnAsync(aAutoRunId));
+        return true;
     }
 
     private async Task CarryOnAsync(int aAutoRunId)

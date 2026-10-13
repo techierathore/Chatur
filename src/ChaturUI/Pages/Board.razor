@@ -26,6 +26,17 @@
     {
         <Empty Title="Reading the checklists…" Size="EmptySize.Small" data-testid="board-loading" />
     }
+    else if (objBoard.MissingFolder is not null)
+    {
+        <Alert Variant="AlertVariant.Warning" data-testid="folder-missing">
+            <AlertIcon><LucideIcon Name="triangle-alert" Size="16" /></AlertIcon>
+            <AlertTitle>@objBoard.ProjectName's folder cannot be found</AlertTitle>
+            <AlertDescription>
+                <p>Chatur looked for it at <span class="break-all font-mono" data-testid="folder-missing-path">@objBoard.MissingFolder</span> and it is not there any more, so there are no checklists to read.</p>
+                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="mt-2" Href="/start?all=1" data-testid="pick-another-project">Pick another project</Button>
+            </AlertDescription>
+        </Alert>
+    }
     else if (!objBoard.HasProject)
     {
         <Empty Title="No project is open" Description="Open a project to see its requirements." Size="EmptySize.Small" data-testid="no-project" />

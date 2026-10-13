@@ -55,9 +55,19 @@ public abstract class MigratedDatabaseFixture : IDisposable
     public virtual void Dispose()
     {
         SqliteConnection.ClearAllPools();
-        if (File.Exists(objDatabasePath))
+        // On Windows a background run (the end-to-end launcher) can still be closing its last connection
+        // when the test ends, and the file stays locked for a moment; try again before giving up.
+        for (var vTry = 1; File.Exists(objDatabasePath); vTry++)
         {
-            File.Delete(objDatabasePath);
+            try
+            {
+                File.Delete(objDatabasePath);
+            }
+            catch (IOException) when (vTry < 20)
+            {
+                Thread.Sleep(250);
+                SqliteConnection.ClearAllPools();
+            }
         }
     }
 }

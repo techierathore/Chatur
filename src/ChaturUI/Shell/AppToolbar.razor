@@ -85,7 +85,7 @@
                     }
                 }
                 <DropdownMenuSeparator />
-                <DropdownMenuItem Href="/repository" data-testid="toolbar-open-repository">Open the repository…</DropdownMenuItem>
+                <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/repository"))" data-testid="toolbar-open-repository">Open the repository…</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     </div>

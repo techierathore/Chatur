@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using Chatur.Core.Accounts;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -72,10 +73,36 @@ public sealed class AppManagerClientTests
         Assert.Contains("\"deviceId\":\"device-42\"", vHandler.LastRequestBody);
     }
 
-    private static AppManagerClient CreateClient(HttpMessageHandler aHandler)
+    /// <summary>
+    /// When <c>AppManager:ApplicationId</c> is 1 (Chatur on the production App Manager), then
+    /// device-login and device-register both carry <c>"applicationId":1</c>; when it is not set, the
+    /// field is left out rather than sent as null.
+    /// </summary>
+    [Fact]
+    public async Task AuthCallsCarryTheConfiguredApplicationId()
+    {
+        var vHandler = new FakeHandler(_ => JsonResponse(
+            """{"success":false,"error":"INVALID_CREDENTIALS","message":"Invalid email or password","statusCode":401}""",
+            HttpStatusCode.Unauthorized));
+        var vDevice = new AppManagerDeviceInfo("device-1", null, null, null, null);
+
+        var vClient = CreateClient(vHandler, "1");
+        await vClient.DeviceLoginAsync("owner@example.com", "encrypted", vDevice);
+        Assert.Contains("\"applicationId\":1", vHandler.LastRequestBody);
+        await vClient.DeviceRegisterAsync("owner@example.com", "encrypted", "The", "Owner", vDevice);
+        Assert.Contains("\"applicationId\":1", vHandler.LastRequestBody);
+
+        await CreateClient(vHandler).DeviceLoginAsync("owner@example.com", "encrypted", vDevice);
+        Assert.DoesNotContain("applicationId", vHandler.LastRequestBody);
+    }
+
+    private static AppManagerClient CreateClient(HttpMessageHandler aHandler, string? aApplicationId = null)
     {
         var vHttp = new HttpClient(aHandler) { BaseAddress = new Uri("https://appmanager.test/") };
-        return new AppManagerClient(vHttp, NullLogger<AppManagerClient>.Instance);
+        var vConfiguration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["AppManager:ApplicationId"] = aApplicationId })
+            .Build();
+        return new AppManagerClient(vHttp, vConfiguration, NullLogger<AppManagerClient>.Instance);
     }
 
     private static HttpResponseMessage JsonResponse(string aJson, HttpStatusCode aStatusCode = HttpStatusCode.OK) =>

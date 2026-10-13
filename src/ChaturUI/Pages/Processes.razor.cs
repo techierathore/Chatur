@@ -32,6 +32,9 @@ public partial class Processes
     private string? objError;
     private bool objIsLoading;
     private bool objIsBusy;
+    private string? objEditStepCode;
+    private string objEditText = string.Empty;
+    private bool objIsSaving;
 
     /// <summary>The "7 steps · 4 checks · 1 owner stop" pill over the opened process's rows.</summary>
     private string StepsSummary
@@ -114,11 +117,53 @@ public partial class Processes
         try
         {
             objSteps = await ProcessActionsService.StepsAsync(aCode);
+            if (objOpenCode != aCode)
+            {
+                objEditStepCode = null;
+            }
+
             objOpenCode = aCode;
         }
         catch (Exception aEx)
         {
             ToastService.Error(aEx.Message, "Could not read the process");
+        }
+    }
+
+    /// <summary>Opens one step's wording for editing in place (REQ-UI-075).</summary>
+    /// <param name="aStep">The step to edit.</param>
+    private void BeginEdit(ProcessStepInfo aStep)
+    {
+        objEditStepCode = aStep.StepCode;
+        objEditText = aStep.Wording;
+    }
+
+    /// <summary>Leaves the wording as it was.</summary>
+    private void CancelEdit() => objEditStepCode = null;
+
+    /// <summary>Stores the new wording, then shows what the database now holds (REQ-UI-075).</summary>
+    private async Task SaveEditAsync()
+    {
+        if (objOpenCode is null || objEditStepCode is null)
+        {
+            return;
+        }
+
+        objIsSaving = true;
+        try
+        {
+            await ProcessActionsService.SaveStepWordingAsync(objOpenCode, objEditStepCode, objEditText);
+            objEditStepCode = null;
+            objSteps = await ProcessActionsService.StepsAsync(objOpenCode);
+            ToastService.Success("The new wording is saved and the next run uses it.", "Step reworded");
+        }
+        catch (ArgumentException aEx)
+        {
+            ToastService.Error(aEx.Message, "Could not save the wording");
+        }
+        finally
+        {
+            objIsSaving = false;
         }
     }
 

@@ -48,5 +48,15 @@ public sealed class WindowService : IWindowService
         }
 
         objSecondaryPage.NavigateTo(aRoute);
+        Application.Current?.ActivateWindow(objSecondaryWindow);
+    }
+
+    /// <inheritdoc />
+    public void CloseSecondaryWindow()
+    {
+        if (objSecondaryWindow is not null)
+        {
+            Application.Current?.CloseWindow(objSecondaryWindow);
+        }
     }
 }

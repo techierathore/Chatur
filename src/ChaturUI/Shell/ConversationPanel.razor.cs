@@ -1,5 +1,6 @@
 using Chatur.Core;
 using Chatur.Core.Actions;
+using Chatur.Core.Platform;
 using Microsoft.AspNetCore.Components;
 
 namespace ChaturUI.Shell;
@@ -20,7 +21,8 @@ public partial class ConversationPanel : IDisposable
     /// <param name="Tokens">The tokens the finished reply used.</param>
     /// <param name="IsFinal">Whether the reply is done streaming.</param>
     /// <param name="At">When the owner sent it in this view; <see langword="null"/> for a message loaded from history, which records no time.</param>
-    private sealed record DisplayMessage(string Role, string Text, string? ModelName, int? Tokens, bool IsFinal, DateTime? At = null);
+    /// <param name="Seq">The message's order within the session; <see langword="null"/> for one added in this view until the session is read again.</param>
+    private sealed record DisplayMessage(string Role, string Text, string? ModelName, int? Tokens, bool IsFinal, DateTime? At = null, int? Seq = null);
 
     private IReadOnlyList<SessionSummary> objSessions = [];
     private IReadOnlyList<ActivityEvent> objActivity = [];
@@ -43,6 +45,11 @@ public partial class ConversationPanel : IDisposable
     private HandedSession? objFollowed;
     private SessionSummary? objResumeAfterFollow;
     private CancellationTokenSource? objFollowCts;
+    private bool objShown = true;
+
+    /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
+    [Inject]
+    private ISecondaryWindow SecondaryWindow { get; set; } = default!;
 
     [Inject]
     private IAgentActions Agent { get; set; } = default!;
@@ -74,11 +81,25 @@ public partial class ConversationPanel : IDisposable
         AppStateService.Changed += OnAppStateChanged;
         Workbench.ConversationStartRequested += OnConversationStartRequested;
         Workbench.HandedSessionChanged += OnHandedSessionChanged;
+        Workbench.Changed += OnWorkbenchChanged;
+        objShown = Workbench.ConversationVisible;
         await EnsureLoadedAsync();
         if (Workbench.Handed is not null)
         {
             await ShowHandedAsync();
         }
+    }
+
+    /// <summary>Repaints when View ▸ Chat or the close button shows or hides the conversation (REQ-UI-074); other tab changes do not touch it.</summary>
+    private void OnWorkbenchChanged()
+    {
+        if (objShown == Workbench.ConversationVisible)
+        {
+            return;
+        }
+
+        objShown = Workbench.ConversationVisible;
+        _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnHandedSessionChanged() => _ = InvokeAsync(ShowHandedAsync);
@@ -310,7 +331,7 @@ public partial class ConversationPanel : IDisposable
         var vDetail = await Agent.ContinueSessionAsync(aSessionId);
         objMessages = vDetail.Events
             .Where(e => e.Kind is "user" or "assistant")
-            .Select(e => new DisplayMessage(e.Kind, e.Payload, e.Model, e.Tokens, true))
+            .Select(e => new DisplayMessage(e.Kind, e.Payload, e.Model, e.Tokens, true, null, e.Seq))
             .ToList();
 
         // A handed step's agent is still writing while the run holds the step: its last line keeps the spinner.
@@ -407,6 +428,88 @@ public partial class ConversationPanel : IDisposable
         Workbench.Open(aChange.FilePath, vContent);
     }
 
+    /// <summary>
+    /// Works out which message each activity step is drawn under, so a step shows where it happened and
+    /// not under whichever reply is newest (REQ-UI-022, REQ-UI-023). A step the agent took (a read, an
+    /// edit, a refusal) belongs to the reply that followed it; a stop belongs to the message it came
+    /// after, so it never moves to a later reply. A step with no such message waits at the thread's end.
+    /// </summary>
+    /// <returns>The steps for each message index, and those that belong to no message.</returns>
+    private (Dictionary<int, List<ActivityEvent>> ByMessage, List<ActivityEvent> Unplaced) PlaceActivity()
+    {
+        var vByMessage = new Dictionary<int, List<ActivityEvent>>();
+        var vUnplaced = new List<ActivityEvent>();
+        var vHasUnsequenced = objMessages.Any(m => m.Seq is null);
+
+        foreach (var vEvent in objActivity)
+        {
+            var vIndex = -1;
+            if (vHasUnsequenced || vEvent.Seq == 0)
+            {
+                // A reply still being written (or an event with no order): the newest reply is where the work is.
+                vIndex = objMessages.FindLastIndex(m => m.Role != "user");
+            }
+            else if (vEvent.Kind == "stopped")
+            {
+                vIndex = objMessages.FindLastIndex(m => m.Seq < vEvent.Seq);
+            }
+            else
+            {
+                vIndex = objMessages.FindIndex(m => m.Role != "user" && m.Seq > vEvent.Seq);
+                if (vIndex < 0)
+                {
+                    vIndex = objMessages.FindLastIndex(m => m.Seq < vEvent.Seq);
+                }
+            }
+
+            if (vIndex < 0)
+            {
+                vUnplaced.Add(vEvent);
+            }
+            else
+            {
+                if (!vByMessage.TryGetValue(vIndex, out var vList))
+                {
+                    vByMessage[vIndex] = vList = [];
+                }
+
+                vList.Add(vEvent);
+            }
+        }
+
+        return (vByMessage, vUnplaced);
+    }
+
+    /// <summary>
+    /// Gives the messages added in this view their place in the session once they are stored, so the
+    /// steps that follow are drawn in order (REQ-UI-023). The stored messages are the same ones, in
+    /// the same order, so the newest of them take the numbers.
+    /// </summary>
+    private async Task ResolveLiveSeqsAsync(int aSessionId)
+    {
+        var vLive = objMessages.Count(m => m.Seq is null);
+        if (vLive == 0 || objSending)
+        {
+            return;
+        }
+
+        var vDetail = await Agent.ContinueSessionAsync(aSessionId);
+        var vStored = vDetail.Events.Where(e => e.Kind is "user" or "assistant").ToList();
+        if (vStored.Count < objMessages.Count)
+        {
+            return;
+        }
+
+        var vOffset = vStored.Count - objMessages.Count;
+        for (var vIndex = 0; vIndex < objMessages.Count; vIndex++)
+        {
+            if (objMessages[vIndex].Seq is null && vStored[vIndex + vOffset].Kind == objMessages[vIndex].Role)
+            {
+                objMessages[vIndex] = objMessages[vIndex] with { Seq = vStored[vIndex + vOffset].Seq };
+            }
+        }
+    }
+
     private void WatchActivity(int aSessionId)
     {
         objActivityCts?.Cancel();
@@ -424,6 +527,7 @@ public partial class ConversationPanel : IDisposable
             {
                 vEvents.Add(vEvent);
                 objActivity = vEvents.ToList();
+                await ResolveLiveSeqsAsync(aSessionId);
 
                 // A proposed change and a token count usually land in the same turn as its activity
                 // step, so the change card, the running total and the activity line update together
@@ -527,6 +631,7 @@ public partial class ConversationPanel : IDisposable
 
         await LoadProposedChangesAsync(vSession.SessionId);
         await LoadTotalTokensAsync(vSession.SessionId);
+        await ResolveLiveSeqsAsync(vSession.SessionId);
 
         // A role picked in the composer is now the session's role (AgentActions.SendAsync), so the
         // replies are labelled with it.
@@ -616,6 +721,7 @@ public partial class ConversationPanel : IDisposable
         AppStateService.Changed -= OnAppStateChanged;
         Workbench.ConversationStartRequested -= OnConversationStartRequested;
         Workbench.HandedSessionChanged -= OnHandedSessionChanged;
+        Workbench.Changed -= OnWorkbenchChanged;
         objFollowCts?.Cancel();
         objActivityCts?.Cancel();
     }

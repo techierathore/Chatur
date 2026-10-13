@@ -61,10 +61,12 @@ public sealed class ResultParserTests
 
     /// <summary>When a name carries ids, then each distinct id is found, the slash shorthand expands, and a longer number is never read as a shorter one.</summary>
     [Theory(DisplayName = "REQ-UI-048 requirement ids are found in test names")]
-    [InlineData("REQ-FN-001 does a thing", "REQ-FN-001")]
-    [InlineData("REQ-FN-053/055 stop", "REQ-FN-053,REQ-FN-055")]
-    [InlineData("REQ-UI-048 and REQ-FN-051 and REQ-UI-048", "REQ-UI-048,REQ-FN-051")]
-    [InlineData("REQ-FN-0510 long", "REQ-FN-0510")]
+    // The sample ids are in the 900s, which no checklist row uses: a theory case's name carries its
+    // arguments, and verify read a real id there as a passing test for that row (TechieFlow TF-012).
+    [InlineData("REQ-FN-901 does a thing", "REQ-FN-901")]
+    [InlineData("REQ-FN-953/955 stop", "REQ-FN-953,REQ-FN-955")]
+    [InlineData("REQ-UI-948 and REQ-FN-951 and REQ-UI-948", "REQ-UI-948,REQ-FN-951")]
+    [InlineData("REQ-FN-9510 long", "REQ-FN-9510")]
     [InlineData("no id here", "")]
     public void ScannerFindsIds(string aName, string aExpected) =>
         Assert.Equal(aExpected, string.Join(',', RequirementIdScanner.Scan(aName)));

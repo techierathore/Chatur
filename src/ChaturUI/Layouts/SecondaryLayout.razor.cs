@@ -1,3 +1,6 @@
+using Chatur.Core.Platform;
+using Microsoft.AspNetCore.Components;
+
 namespace ChaturUI.Layouts;
 
 /// <summary>
@@ -17,6 +20,10 @@ public partial class SecondaryLayout : IDisposable
     // the plain, always-visible ItemClass below.
     private const string DesktopActiveClass = "hidden h-8 items-center gap-2 rounded-md px-3 text-sm font-medium bg-primary/10 text-primary sm:flex";
     private const string DesktopInactiveClass = "hidden h-8 items-center gap-2 rounded-md px-3 text-sm text-foreground hover:bg-accent sm:flex";
+
+    /// <summary>Closes this window (REQ-FN-106); the web harness goes back to the Workbench.</summary>
+    [Inject]
+    private ISecondaryWindow SecondaryWindow { get; set; } = default!;
 
     /// <summary>The title bar's text for the current route, or "Chatur" when none match.</summary>
     private string CurrentTitle =>

@@ -209,6 +209,26 @@ public sealed class RequirementBoardActionsTests : IDisposable
         Assert.Empty(vBoard.Items);
     }
 
+    /// <summary>REQ-UI-049: a selected project whose folder is gone gives an empty board that names the missing folder, so the screen does not say "no project".</summary>
+    [Fact]
+    public async Task MissingFolderIsNamedNotReportedAsNoProject()
+    {
+        var vGone = Path.Combine(Path.GetTempPath(), $"chatur-gone-{Guid.NewGuid():N}");
+        var vBoard = await new RequirementBoardActions(new FixedProjectActions(new ProjectSummary(1, "SmokeProj", vGone, "Folder", null)))
+            .LoadAsync(RequirementFilter.None);
+
+        Assert.False(vBoard.HasProject);
+        Assert.Equal("SmokeProj", vBoard.ProjectName);
+        Assert.Equal(vGone, vBoard.MissingFolder);
+        Assert.Null((await objSut.LoadAsync(RequirementFilter.None)).MissingFolder);
+
+        // A missing project directly under a folder that does exist is still missing, not an empty project.
+        var vInsideExisting = Path.Combine(objFolder, "swept-away");
+        var vSwept = await new RequirementBoardActions(new FixedProjectActions(new ProjectSummary(2, "Swept", vInsideExisting, "Folder", null)))
+            .LoadAsync(RequirementFilter.None);
+        Assert.Equal(vInsideExisting, vSwept.MissingFolder);
+    }
+
     private sealed class FixedProjectActions : IProjectActions
     {
         private readonly ProjectSummary? objProject;

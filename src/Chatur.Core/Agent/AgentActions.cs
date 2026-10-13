@@ -640,7 +640,7 @@ public sealed class AgentActions : IAgentActions
             foreach (var vRow in vRows)
             {
                 vLastSeq = (int)vRow.Seq;
-                yield return new ActivityEvent(vRow.Kind, vRow.Payload, !string.Equals(vRow.Kind, "refusal", StringComparison.OrdinalIgnoreCase));
+                yield return new ActivityEvent(vRow.Kind, vRow.Payload, !string.Equals(vRow.Kind, "refusal", StringComparison.OrdinalIgnoreCase), (int)vRow.Seq);
             }
 
             try

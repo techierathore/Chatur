@@ -14,13 +14,13 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 
 | ID | Requirement | Status | % | Remarks | Details |
 |----|-------------|--------|---|---------|---------|
-| REQ-FN-061 | A brief in, the whole chain run | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-061 REQ-FN-065 a brief starts the chain by itself, ha`; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-061) |
+| REQ-FN-061 | A brief in, the whole chain run | Verified | 100% | 2026-10-13 verify: PASS — test `REQ-FN-061 REQ-FN-065 a brief starts the chain by itself, ha`; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-061) |
 | REQ-UI-055 | Each role starts when it is needed | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-UI-055 the chain names the role each process starts and `; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-055) |
 | REQ-FN-062 | It stops at the acceptance test | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-062 REQ-FN-066 a chain that has finished reads ready `; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-062) |
 | REQ-UI-056 | What is happening now | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-UI-056 a run that is going shows the agent, the process,`; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-056) |
 | REQ-FN-063 | Step by step is untouched | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-063 with no run going every process can still be star`; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-063) |
 | REQ-FN-064 | A limit is waited out | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-064 a limit that never lifts stops the run with a rea`; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-064) |
-| REQ-FN-065 | A stall or a crash is survived | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-061 REQ-FN-065 a brief starts the chain by itself, ha`; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-065) |
+| REQ-FN-065 | A stall or a crash is survived | Verified | 100% | 2026-10-13 verify: PASS — test `REQ-FN-061 REQ-FN-065 a brief starts the chain by itself, ha`; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-065) |
 | REQ-FN-066 | Never complete while work is open | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-062 REQ-FN-066 a chain that has finished reads ready `; End-to-end run renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-066) |
 | REQ-FN-067 | Queue a run | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-067 queueing a run lists it with its project and posi`; Run queue renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-067) |
 | REQ-UI-057 | One at a time | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-UI-057 the next run waits while one is going and starts `; Run queue renders and looks right @1280/390; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) |  [view](#d-req-ui-057) |
@@ -58,6 +58,9 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 | REQ-FN-104 | The Analyst, the Architect and the Verifier hold it | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-104 each role on Settings: the Analyst, Architect and` | [view](#d-req-fn-104) |
 | REQ-UI-072 | The right is shown where rights are listed | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-UI-072 Settings > Agents lists "Writes documents" among ` | [view](#d-req-ui-072) |
 | REQ-FN-105 | A handed step writes its documents but not source | Verified | 100% | 2026-10-11 verify: PASS — test `REQ-FN-105 a handed step with only writes documents writes i` | [view](#d-req-fn-105) |
+| REQ-UI-073 | The menu bar's menus do their jobs | Verified | 100% | 2026-10-13 verify: PASS — test `REQ-UI-073 REQ-FN-106 Ctrl+, in the main window opens Settin` | [d](#d-req-ui-073) |
+| REQ-UI-074 | Close the conversation and bring it back | Verified | 100% | 2026-10-13 verify: PASS — test `REQ-UI-074 closing the conversation gives the file view the ` | [d](#d-req-ui-074) |
+| REQ-FN-106 | Settings and the other pages open from the main window | Verified | 100% | 2026-10-13 verify: PASS — test `REQ-FN-106 REQ-FN-011 REQ-UI-017 REQ-UI-018 REQ-FN-012 REQ-F` | [d](#d-req-fn-106) |
 
 **Status values:** `Not Started` · `In Progress` · `Implemented` · `Verified` · `Done (pre-existing)` · `Needs re-verify` · `PARTIAL` · `FAIL` · `Blocked` · `Owner-UAT` · `N/A`.
 
@@ -247,3 +250,15 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 - **REQ-FN-105** — A handed step writes its documents but not source. *BRD:* BRD-183 · *Mockup:* mockups/process-run.html
   - *Acceptance:* When an agent with only "writes documents" works a handed step on Process run, then its docs/ writes succeed and a source write is refused and recorded on the step.
 
+
+
+## Workbench
+
+- <a id="d-req-ui-073"></a> **REQ-UI-073** — The menu bar's menus do their jobs. *BRD:* BRD-184 · *Mockup:* mockups/main.html
+  - *Acceptance:* When the owner opens File, Edit, View or Help on Workbench, then every drawn item works and none says 'Nothing to do yet'.
+
+- <a id="d-req-ui-074"></a> **REQ-UI-074** — Close the conversation and bring it back. *BRD:* BRD-185 · *Mockup:* mockups/main.html
+  - *Acceptance:* When the owner closes the conversation panel on Workbench, then the file view takes the window, and View ▸ Chat brings the conversation back.
+
+- <a id="d-req-fn-106"></a> **REQ-FN-106** — Settings and the other pages open from the main window. *BRD:* BRD-186 · *Mockup:* mockups/main.html
+  - *Acceptance:* When the owner picks Settings, a settings page, Prerequisites or Repository from the main window's menus, then the secondary window opens on that page.

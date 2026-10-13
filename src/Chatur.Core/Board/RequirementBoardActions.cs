@@ -30,7 +30,15 @@ public sealed class RequirementBoardActions : IRequirementBoardActions
         var vFolder = vProject is null ? null : FolderOf(vProject.Path);
         if (vProject is null || vFolder is null)
         {
-            return new RequirementBoard(false, vProject?.Name ?? string.Empty, [], [], [], new BoardCounts(0, 0, 0, 0, 0));
+            // A selected project whose folder is gone is not "no project": say where it was looked for.
+            return new RequirementBoard(
+                false,
+                vProject?.Name ?? string.Empty,
+                [],
+                [],
+                [],
+                new BoardCounts(0, 0, 0, 0, 0),
+                vProject?.Path);
         }
 
         var vFiles = ChecklistFiles(vFolder);
@@ -72,8 +80,14 @@ public sealed class RequirementBoardActions : IRequirementBoardActions
 
     private static string? FolderOf(string aProjectPath)
     {
-        var vFolder = Directory.Exists(aProjectPath) ? aProjectPath : Path.GetDirectoryName(aProjectPath);
-        return vFolder is not null && Directory.Exists(vFolder) ? vFolder : null;
+        // A path to a solution or project file is read from the folder holding it; a path that is not there at all is
+        // a missing project, never its parent folder (a swept-away project must not read as an empty one).
+        if (Directory.Exists(aProjectPath))
+        {
+            return aProjectPath;
+        }
+
+        return File.Exists(aProjectPath) ? Path.GetDirectoryName(aProjectPath) : null;
     }
 
     private static List<string> ChecklistFiles(string aFolder)

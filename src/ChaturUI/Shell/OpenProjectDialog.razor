@@ -1,0 +1,57 @@
+@* The File menu's ways into a project (REQ-UI-073): New project, Open a solution, Open a folder and
+   Clone a repository share one dialog. Each asks for a place (typed, or chosen with the machine's own
+   folder picker) and, for a new project or a clone, a name or an address; doing it selects the project. *@
+<Dialog Open="Open" OpenChanged="OpenChanged">
+    <DialogContent Class="max-w-lg" data-testid="open-project-dialog">
+        <DialogHeader>
+            <DialogTitle>@Title</DialogTitle>
+            <DialogDescription>@Description</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-4">
+            @if (Mode == ProjectOpenMode.Clone)
+            {
+                <Field>
+                    <FieldLabel For="open-project-address">Repository address</FieldLabel>
+                    <FieldContent>
+                        <Input Id="open-project-address" @bind-Value="objAddress" Placeholder="https://github.com/owner/name.git" data-testid="open-project-address" />
+                    </FieldContent>
+                </Field>
+            }
+            @if (Mode == ProjectOpenMode.NewProject)
+            {
+                <Field>
+                    <FieldLabel For="open-project-name">Project name</FieldLabel>
+                    <FieldContent>
+                        <Input Id="open-project-name" @bind-Value="objName" Placeholder="A name for the new solution" data-testid="open-project-name" />
+                    </FieldContent>
+                </Field>
+            }
+            <Field>
+                <FieldLabel For="open-project-path">@PathLabel</FieldLabel>
+                <FieldContent>
+                    <div class="flex gap-2">
+                        <Input Id="open-project-path" @bind-Value="objPath" Placeholder="@PathPlaceholder" Class="flex-1" data-testid="open-project-path" />
+                        <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="BrowseAsync" data-testid="open-project-browse">
+                            <LucideIcon Name="folder-open" Size="14" />
+                            Browse…
+                        </Button>
+                    </div>
+                </FieldContent>
+            </Field>
+            @if (objErrorMessage is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="open-project-error">
+                    <AlertDescription>@objErrorMessage</AlertDescription>
+                </Alert>
+            }
+        </DialogBody>
+        <DialogFooter>
+            <DialogClose AsChild>
+                <Button Variant="ButtonVariant.Outline" data-testid="open-project-cancel">Cancel</Button>
+            </DialogClose>
+            <Button Disabled="@(objIsBusy || !CanSubmit)" OnClick="SubmitAsync" data-testid="open-project-go">
+                @(objIsBusy ? "Working…" : ActionLabel)
+            </Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

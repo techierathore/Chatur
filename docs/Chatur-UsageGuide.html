@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Usage Guide</h1>
-    <div class="subtitle">Rendered 2026-09-22 &middot; source <code>Chatur-UsageGuide.md</code></div>
+    <div class="subtitle">Rendered 2026-10-13 &middot; source <code>Chatur-UsageGuide.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -137,15 +137,24 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <h2 id="test-users">Test users<a class="anchor-link" href="#test-users">#</a></h2>
-<p>Chatur signs in through App Manager, so a test user is a real App Manager account on the Chatur application. None of these exists yet; they are made once, at the start of phase 1 step 1, and never invented again by an agent.</p>
+<p>Chatur signs in through the production App Manager at https://appmgrapi.techierathore.com, where Chatur is <strong>application id 1</strong>. There is no local App Manager: every build — the web harness, the Mac and Windows heads run from the build output, and the GitHub nightly — signs in there. A test user is a real account on that application and is never invented by an agent.</p>
 <table>
-<thead><tr><th>#</th><th>User</th><th>Password source</th><th>Role</th><th>Exists</th></tr></thead>
+<thead><tr><th>#</th><th>User</th><th>Password source</th><th>Role</th><th>Exists on the production App Manager</th></tr></thead>
 <tbody>
-<tr><td>1</td><td>chatur-owner@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Owner</code></td><td>User (the owner's own account shape)</td><td>no</td></tr>
-<tr><td>2</td><td>chatur-second@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Second</code></td><td>User (a second machine on the same account)</td><td>no</td></tr>
-<tr><td>3</td><td>chatur-yolo-tester@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Yolo</code></td><td>User (unattended runs)</td><td>no</td></tr>
+<tr><td>1</td><td>chatur-owner@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Owner</code></td><td>User (the owner's own account shape)</td><td>yes (registered 2026-10-06 through the nightly's Register screen)</td></tr>
+<tr><td>2</td><td>chatur-second@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Second</code></td><td>User (a second machine on the same account)</td><td>not yet — register it through Register before a check needs it</td></tr>
+<tr><td>3</td><td>chatur-yolo-tester@techierathore.com</td><td>user secrets key <code>Chatur:TestUsers:Yolo</code></td><td>User (unattended runs)</td><td>not yet — register it through Register before a check needs it</td></tr>
 </tbody>
 </table>
+<p>Where the settings come from:</p>
+<ul>
+<li><code>AppManager:BaseUrl</code> (<code>https://appmgrapi.techierathore.com</code>) and <code>AppManager:ApplicationId</code> (<code>1</code>) are in each host's <code>appsettings.json</code>; the client sends the application id on every sign-in and registration, so App Manager scopes the account to Chatur.
+</li>
+<li><code>AppManager:ApiKey</code> is the owner's key for application 1 on the production App Manager. On a developer machine it lives in user secrets (the <code>secrets.json</code> behind Visual Studio's <strong>Manage User Secrets</strong>, id <code>chatur-3f1c9a52-0d4e-4b7a-9c1e-5a8e2b7d6f10</code>); the nightly gets its installed-app key (<code>pk_live_…</code>) from the repository secret <code>CHATUR_APPMANAGER_KEY</code>. A key that belongs to another application is refused by App Manager with <code>APP_ID_MISMATCH</code>, never silently used.
+</li>
+<li>The RSA public key is fetched fresh for every sign-in; it is never cached.
+</li>
+</ul>
 <h2 id="execution-guide">Execution guide<a class="anchor-link" href="#execution-guide">#</a></h2>
 <p>Prerequisites: .NET 10 SDK, the MAUI workloads, Node 20 or newer with Playwright for the browser checks, and a NuGet credential for the owner's GitHub Packages feed (TrBlazeUI and TechieRag live there, not on nuget.org). A Mac builds the Mac Catalyst head; a Windows machine builds the Windows head.</p>
 <pre><code>dotnet restore Chatur.sln

@@ -1,4 +1,5 @@
 using Chatur.Core.Actions;
+using ChaturUI.Shell;
 using Microsoft.AspNetCore.Components;
 
 namespace ChaturUI.Pages;
@@ -7,7 +8,8 @@ namespace ChaturUI.Pages;
 /// Start (mockups/start.html). Reopens whatever project survived the restart (REQ-FN-006, cluster
 /// F); otherwise loads the named folders and the projects Chatur finds in them (REQ-UI-005,
 /// REQ-UI-006, REQ-UI-008, REQ-UI-009) and opens the one the owner chooses into the Workbench
-/// (REQ-UI-007).
+/// (REQ-UI-007). Its ways in (clone, open a solution, open a folder, new project) open the same
+/// dialog as the File menu's (REQ-UI-073).
 /// </summary>
 public partial class Start
 {
@@ -18,6 +20,8 @@ public partial class Start
     private bool objSearchOpen;
     private string? objSearchText;
     private bool objForgetMode;
+    private bool objOpenProjectOpen;
+    private ProjectOpenMode objOpenProjectMode;
 
     /// <summary>
     /// Set by the menu bar's "All projects…" (<c>/start?all=1</c>): the owner deliberately came to
@@ -88,6 +92,13 @@ public partial class Start
     }
 
     private void OpenFoldersDialog() => objDialogOpen = true;
+
+    /// <summary>Opens the Clone / Open a solution / Open a folder / New project dialog (REQ-UI-073).</summary>
+    private void OpenProjectDialog(ProjectOpenMode aMode)
+    {
+        objOpenProjectMode = aMode;
+        objOpenProjectOpen = true;
+    }
 
     /// <summary>Shows or hides the search box; hiding it clears the filter so the whole list returns.</summary>
     private void ToggleSearch()

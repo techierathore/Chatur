@@ -45,9 +45,52 @@ public sealed class WorkbenchState
     public bool FileViewVisible { get; private set; } = true;
 
     /// <summary>Hides the file view so the conversation takes the window. The open tabs are kept.</summary>
+    /// <remarks>The conversation comes back if it was hidden, so the window is never left with neither.</remarks>
     public void CloseFileView()
     {
         FileViewVisible = false;
+        ConversationVisible = true;
+        RaiseChanged();
+    }
+
+    /// <summary>
+    /// Whether the conversation panel is showing (View ▸ Chat, and the close button in its header).
+    /// Closing it gives the file view the whole window (UI Design "Screen: Workbench", REQ-UI-074).
+    /// </summary>
+    public bool ConversationVisible { get; private set; } = true;
+
+    /// <summary>Whether the files panel is showing (View ▸ Files).</summary>
+    public bool FilesVisible { get; private set; } = true;
+
+    /// <summary>Whether the output strip is showing (View ▸ Output).</summary>
+    public bool OutputVisible { get; private set; } = true;
+
+    /// <summary>Hides or shows the conversation. The file view comes back if hiding the conversation would leave the window with neither.</summary>
+    /// <param name="aVisible">Whether the conversation should show.</param>
+    public void SetConversationVisible(bool aVisible)
+    {
+        ConversationVisible = aVisible;
+        if (!aVisible)
+        {
+            FileViewVisible = true;
+        }
+
+        RaiseChanged();
+    }
+
+    /// <summary>Hides or shows the files panel.</summary>
+    /// <param name="aVisible">Whether the panel should show.</param>
+    public void SetFilesVisible(bool aVisible)
+    {
+        FilesVisible = aVisible;
+        RaiseChanged();
+    }
+
+    /// <summary>Hides or shows the output strip.</summary>
+    /// <param name="aVisible">Whether the strip should show.</param>
+    public void SetOutputVisible(bool aVisible)
+    {
+        OutputVisible = aVisible;
         RaiseChanged();
     }
 

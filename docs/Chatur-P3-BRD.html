@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Business Requirements — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-10-11 &middot; source <code>Chatur-P3-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-10-13 &middot; source <code>Chatur-P3-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -121,6 +121,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#step-work">Step work</a></li>
         <li class="h3"><a href="#what-done-means-for-each-process">What done means for each process</a></li>
         <li class="h3"><a href="#document-rights">Document rights</a></li>
+        <li class="h3"><a href="#the-main-window-as-the-owner-uses-it">The main window, as the owner uses it</a></li>
         <li><a href="#development-status">4. Development status</a></li>
         <li><a href="#where-the-rest-lives">5. Where the rest lives</a></li>
       </ol>
@@ -470,9 +471,31 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
+<h3 id="the-main-window-as-the-owner-uses-it">The main window, as the owner uses it<a class="anchor-link" href="#the-main-window-as-the-owner-uses-it">#</a></h3>
+<p>Added 2026-10-13 from the owner's test of the 12 Oct nightly (<code>docs/screenshots/NightlyBuildIssues</code>). The main window's menu bar drew File, Edit and View with nothing in them, the Settings window never opened, and the conversation could not be closed. The Workbench screen is phase 1's; these items make its menu bar and its windows do what the UI Design and <code>mockups/main.html</code> already draw, so they are phase 3's open work rather than a phase of their own.</p>
+<ul>
+<li><strong>BRD-184</strong> — The menu bar's menus do their jobs. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens File, Edit, View or Help on Workbench, then every drawn item works and none says "Nothing to do yet".
+</li>
+</ul>
+</li>
+<li><strong>BRD-185</strong> — Close the conversation and bring it back. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner closes the conversation panel on Workbench, then the file view takes the window, and View ▸ Chat brings the conversation back.
+</li>
+</ul>
+</li>
+<li><strong>BRD-186</strong> — Settings and the other pages open from the main window. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner picks Settings, a settings page, Prerequisites or Repository from the main window's menus, then the secondary window opens on that page.
+</li>
+</ul>
+</li>
+</ul>
 <h2 id="development-status"><a id="4-development-status"></a>4. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-10-11.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-10-13.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
@@ -481,6 +504,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Run report</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
 <tr><td>Settings</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
 <tr><td>Process run</td><td>20</td><td>20</td><td>0</td><td>Done</td></tr>
+<tr><td>Workbench</td><td>3</td><td>3</td><td>0</td><td>Done</td></tr>
 </tbody>
 </table>
 <h2 id="where-the-rest-lives"><a id="5-where-the-rest-lives"></a>5. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>

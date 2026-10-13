@@ -50,6 +50,8 @@ try
     vBuilder.Services.AddSingleton<ISecretStore, HarnessSecretStore>();
     vBuilder.Services.AddSingleton<IFolderPicker, HarnessFolderPicker>();
     vBuilder.Services.AddSingleton<IProcessLauncher, HarnessProcessLauncher>();
+    vBuilder.Services.AddScoped<ISecondaryWindow, HarnessSecondaryWindow>();
+    vBuilder.Services.AddScoped<IAppShell, HarnessAppShell>();
 
     vBuilder.Services.AddHealthChecks();
 

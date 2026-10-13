@@ -1,5 +1,6 @@
 using Chatur.Core;
 using Chatur.Core.Actions;
+using Chatur.Core.Platform;
 using Microsoft.AspNetCore.Components;
 
 namespace ChaturUI.Shell;
@@ -15,6 +16,10 @@ public partial class FilesPanel : IDisposable
     private int? objLoadedForProjectId;
     private string? objSelectedPath;
     private string? objBranchName;
+
+    /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
+    [Inject]
+    private ISecondaryWindow SecondaryWindow { get; set; } = default!;
 
     [Inject]
     private IFileActions Files { get; set; } = default!;

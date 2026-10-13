@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Components;
+
 namespace Chatur.Windows;
 
 /// <summary>
@@ -22,14 +24,14 @@ public partial class SecondaryWindowPage : ContentPage
     /// </summary>
     /// <param name="aRoute">The route to show.</param>
     /// <remarks>
-    /// Not built yet: setting <see cref="Microsoft.AspNetCore.Components.WebView.Maui.BlazorWebView.StartPath"/>
-    /// after the page has loaded does not re-navigate a running Blazor circuit. The real
-    /// implementation resolves <c>NavigationManager</c> from <c>blazorWebView.Services</c> once the
-    /// web view has initialised and calls <c>NavigateTo</c> on it (cluster L/M, whichever needs a
-    /// second route in the same already-open window first).
+    /// Setting <see cref="Microsoft.AspNetCore.Components.WebView.Maui.BlazorWebView.StartPath"/>
+    /// after the page has loaded does not re-navigate a running Blazor app, so the route goes to this
+    /// window's own <see cref="NavigationManager"/> through the web view's dispatcher (REQ-FN-106).
+    /// Before the web view is up, the start path is still the one it will open on.
     /// </remarks>
     public void NavigateTo(string aRoute)
     {
         blazorWebView.StartPath = aRoute;
+        _ = blazorWebView.TryDispatchAsync(aServices => aServices.GetRequiredService<NavigationManager>().NavigateTo(aRoute));
     }
 }

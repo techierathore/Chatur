@@ -46,6 +46,8 @@ Every TechieFlow command, as something Chatur runs rather than something a harne
   - *Acceptance:* When a step's wording is changed in the database, then Processes shows the new wording without any file being edited.
 - **BRD-99** — Start it on this project. *Screen:* Processes · *Mockup:* [mockup](mockups/processes.html)
   - *Acceptance:* When the owner starts a process on Processes, then Process run opens for the selected project and the first step begins.
+- **BRD-187** — Edit a process (added 2026-10-13 from the owner's test of the 12 Oct nightly; only a step's wording is editable, the steps and checks stay code). *Screen:* Processes · *Mockup:* [mockup](mockups/processes.html)
+  - *Acceptance:* When the owner rewords a step on Processes and saves, then the new wording is stored, shown there and used by the next run.
 - **BRD-100** — It works on the project's own documents. *Screen:* Processes · *Mockup:* [mockup](mockups/processes.html)
   - *Acceptance:* When a process writes on Processes, then it writes the project's own BRD, checklist and status documents and puts nothing else in the folder.
 
@@ -102,11 +104,11 @@ Each agent's own view of the project, holding only what that agent may do.
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-10-07.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P2-Checklist.md`.
+**Snapshot as of 2026-10-13.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P2-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
-| Processes | 5 | 5 | 0 | Done |
+| Processes | 6 | 6 | 0 | Done |
 | Process run | 6 | 6 | 0 | Done |
 | Requirements board | 6 | 6 | 0 | Done |
 | Agent workspace | 5 | 5 | 0 | Done |

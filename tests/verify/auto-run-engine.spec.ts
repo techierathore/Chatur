@@ -10,6 +10,7 @@ import { query, run } from './support/db';
 import { openProcessesTab, tab } from './support/phase2-tabs';
 import { test, ROOT, write, openProject, SHOTS } from './support/workbench-a';
 import { ensureStubProvider, removeStubProvider, startStubModel, StubModel } from './support/stub-model';
+import { restartHarness } from './support/restart';
 
 const NAME = 'AutoEngineApp';
 const DIR = join(ROOT, NAME);
@@ -96,6 +97,52 @@ test('REQ-FN-061 REQ-FN-065 a brief starts the chain by itself, hands the work t
   expect(vWork.every((w) => w.AgentName === 'Analyst')).toBe(true);
   expect(stub.calls.length).toBeGreaterThan(0);
   await page.screenshot({ path: join(SHOTS, 'auto-run-engine-stopped.png'), fullPage: true });
+});
+
+test('REQ-FN-061 a run going when Chatur closes is the same run after it opens again, and goes on to the same end', async () => {
+  test.setTimeout(420_000);
+  resetEngineFixture();
+  await openProject(page, NAME);
+  clearRuns(projectId());
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByTestId('project-switch-name')).toHaveText(NAME, { timeout: 30_000 });
+  await openAutoRunTab();
+
+  // a slow model keeps the Analyst's step going, so Chatur is closed while the run is under way
+  stub.setDelay(25_000);
+  let vId = 0;
+  try {
+    await page.getByTestId('brief-text').fill('Begin the not-yet-begun requirement of the fixture and verify it before you stop, tagging every REQ id.');
+    await expect(async () => {
+      if ((await page.getByTestId('running-now').count()) === 0) await page.getByTestId('start-run').click({ timeout: 2_500 });
+      await expect(page.getByTestId('running-now')).toBeVisible({ timeout: 4_000 });
+    }).toPass({ timeout: 60_000 });
+    const vRun = query('SELECT AutoRunId, State FROM AutoRun WHERE ProjectId = ?', projectId());
+    expect(vRun).toHaveLength(1);
+    expect(vRun[0].State).toBe('Running');
+    vId = Number(vRun[0].AutoRunId);
+
+    await restartHarness();
+  } finally {
+    stub.setDelay(0);
+  }
+
+  await signIn(page, 'Owner');
+  await openProject(page, NAME);
+  await openAutoRunTab();
+  // the same run, not a new one, and it goes on to the end the uninterrupted run reaches
+  await expect(page.getByTestId('run-state')).toHaveText('stopped', { timeout: 240_000 });
+  await expect(page.getByTestId('stopped-note')).toContainText('the project brief exists');
+  const vAfter = query('SELECT AutoRunId FROM AutoRun WHERE ProjectId = ?', projectId());
+  expect(vAfter.map((r) => Number(r.AutoRunId)), 'still the one run, carried on').toEqual([vId]);
+  const vOwn = 'SELECT ProcessRunId FROM AutoRunProcess WHERE ProcessRunId IS NOT NULL AND AutoRunId = ?';
+  const vRuns = query(`SELECT ProcessCode FROM ProcessRun WHERE RunId IN (${vOwn})`, vId);
+  expect(vRuns.map((r) => r.ProcessCode), 'day1-greenfield was carried on, not started a second time').toEqual(['day1-greenfield']);
+  // the interruption is in the run's record (REQ-FN-065: the retry is recorded)
+  const vPickedUp = query("SELECT Kind, ProcessCode, Message FROM AutoRunEvent WHERE AutoRunId = ? AND Message LIKE '%picked up again%'", vId);
+  expect(vPickedUp, 'one record line says the run was picked up after Chatur closed').toHaveLength(1);
+  expect(vPickedUp[0]).toMatchObject({ Kind: 'Retry', ProcessCode: 'day1-greenfield' });
+  await page.screenshot({ path: join(SHOTS, 'auto-run-after-restart.png'), fullPage: true });
 });
 
 test('REQ-FN-062 REQ-FN-066 a chain that has finished reads ready for acceptance, reports the open work and cannot be complete', async () => {

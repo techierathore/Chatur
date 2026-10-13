@@ -43,7 +43,8 @@ public static class ServiceCollectionExtensions
         aServices.AddSingleton<IDbConnectionFactory, SqliteConnectionFactory>();
 
         // App Manager (Architecture §1 Q4, §5 "Identity"): one HttpClient for every sign-in,
-        // registration, refresh and sign-out call, configured from AppManager:BaseUrl / ApiKey /
+        // registration, refresh and sign-out call, against the production App Manager where Chatur
+        // is application 1, configured from AppManager:BaseUrl / ApplicationId / ApiKey /
         // ApiSecret (docs/AppManager-api-usage-guide.md §1 "Option A: API Key Headers"). Cluster C's
         // Register reuses this same client rather than opening a second one. A downloaded Chatur
         // carries an installed-app key with no secret (§2.1.1), so every call also sends this
@@ -70,14 +71,6 @@ public static class ServiceCollectionExtensions
                 aClient.DefaultRequestHeaders.Add("X-Api-Secret", vApiSecret);
             }
         })
-        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            // The local development App Manager (docs/Chatur-UsageGuide.md "Test users") serves
-            // HTTPS on localhost with a self-signed certificate; every other host is validated
-            // normally — this never relaxes trust for a real deployment.
-            ServerCertificateCustomValidationCallback = (aRequest, aCertificate, aChain, aErrors) =>
-                aErrors == System.Net.Security.SslPolicyErrors.None || IsLocalDevelopmentHost(aRequest?.RequestUri)
-        })
         .AddHttpMessageHandler<AppManagerDeviceIdHandler>();
 
         // Prerequisites (Architecture §7 "Doctor"; REQ-FN-011..013): a typed client for read-only,
@@ -94,7 +87,9 @@ public static class ServiceCollectionExtensions
 
         aServices.AddScoped<IAccountActions, AccountActions>();
         aServices.AddScoped<IProjectActions, ProjectActions>();
+        aServices.AddScoped<IProjectOpenActions, ProjectOpenActions>();
         aServices.AddScoped<IFileActions, FileActions>();
+        aServices.AddScoped<IFileSearchActions, FileSearchActions>();
         aServices.AddScoped<IBuildRunActions, BuildRunActions>();
         aServices.AddScoped<IPrerequisiteActions, PrerequisiteActions>();
         aServices.AddScoped<ILlmConnectionProbe, TechieRagConnectionProbe>();
@@ -154,12 +149,4 @@ public static class ServiceCollectionExtensions
 
         return aServices;
     }
-
-    /// <summary>
-    /// Whether a request is going to the local development App Manager rather than a real deployment
-    /// (docs/Chatur-UsageGuide.md "Test users" — <c>https://localhost:32769/</c>).
-    /// </summary>
-    /// <param name="aUri">The request's target address.</param>
-    private static bool IsLocalDevelopmentHost(Uri? aUri) =>
-        aUri is not null && (aUri.Host == "localhost" || aUri.Host == "127.0.0.1");
 }

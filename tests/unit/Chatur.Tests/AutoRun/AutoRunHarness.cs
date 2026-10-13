@@ -54,7 +54,11 @@ public sealed class RecordingLauncher : IAutoRunLauncher
     public List<int> Launched { get; } = [];
 
     /// <inheritdoc />
-    public void Launch(int aAutoRunId) => Launched.Add(aAutoRunId);
+    public bool Launch(int aAutoRunId)
+    {
+        Launched.Add(aAutoRunId);
+        return true;
+    }
 }
 
 /// <summary>A verdict writer that grades nothing, so a verifying process does not rewrite the test checklist.</summary>

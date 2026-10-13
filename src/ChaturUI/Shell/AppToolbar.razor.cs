@@ -1,5 +1,6 @@
 using Chatur.Core;
 using Chatur.Core.Actions;
+using Chatur.Core.Platform;
 using Microsoft.AspNetCore.Components;
 using TrBlazeUI.Components.Toast;
 
@@ -32,6 +33,10 @@ public partial class AppToolbar : IDisposable
 
     /// <summary>Whether a build or run is in progress for the selected project — Build, Run and Stop share this one flag since they share one output slot per project.</summary>
     private bool IsBusy { get; set; }
+
+    /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
+    [Inject]
+    private ISecondaryWindow SecondaryWindow { get; set; } = default!;
 
     [Inject]
     private IBuildRunActions BuildRun { get; set; } = default!;

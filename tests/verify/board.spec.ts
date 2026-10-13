@@ -6,7 +6,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import * as path from 'path';
 import { signIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
-import { openBoardTab, closeTab } from './support/phase2-tabs';
+import { openBoardTab, openBoardTabAnyState, openAgentsTab, closeTab } from './support/phase2-tabs';
 
 test.describe.configure({ mode: 'serial' });
 test.setTimeout(120_000);
@@ -38,11 +38,11 @@ function buildFixture(): void {
     '## Page: Settings (`/settings/providers`)\n\n- **REQ-UI-001** — Settings form keeps what you typed. *BRD:* BRD-2 · *Mockup:* mockups/settings-providers.html\n  - *Acceptance:* Typing in the providers form and coming back leaves every field as it was.\n\n- **REQ-FN-001** — A run resumes at its step. *BRD:* BRD-3\n  - *Acceptance:* A stopped run carries on at the step it stopped at.\n\n- **REQ-RAG-001** — Routing picks the model. *BRD:* BRD-4\n  - *Acceptance:* The tier picks the model.\n'));
 }
 
-async function selectFixtureProject(aPage: Page): Promise<void> {
+async function selectFixtureProject(aPage: Page, aProject = 'boardspec-proj'): Promise<void> {
   await aPage.goto('/', { waitUntil: 'networkidle' });
   const vName = aPage.getByTestId('project-switch-name');
   if (await vName.waitFor({ timeout: 10_000 }).then(() => true, () => false)) {
-    if ((await vName.innerText()).trim() === 'boardspec-proj') return;
+    if ((await vName.innerText()).trim() === aProject) return;
   }
   await aPage.goto('/start?all=1', { waitUntil: 'networkidle' });
   const vDialog = await openFoldersDialog(aPage);
@@ -53,7 +53,7 @@ async function selectFixtureProject(aPage: Page): Promise<void> {
   }
   await vDialog.getByTestId('folders-dialog-close').click();
   await expect(vDialog).toBeHidden();
-  const vRow = aPage.getByTestId(/^project-\d+-name$/).filter({ hasText: /^boardspec-proj$/ });
+  const vRow = aPage.getByTestId(/^project-\d+-name$/).filter({ hasText: new RegExp(`^${aProject}$`) });
   await expect(vRow).toBeVisible();
   await vRow.click();
   await expect(aPage).not.toHaveURL(/\/start/);
@@ -203,5 +203,38 @@ test('REQ-FN-057 a status changed on the board is a change in the checklist file
     await expect(page.getByTestId('status-REQ-FN-001-button')).toContainText('In progress');
   } finally {
     writeFileSync(P2, vBefore);
+  }
+});
+
+test('REQ-UI-049 a project whose folder is gone says so and names the folder instead of "No project is open"', async ({ page }) => {
+  // REQ-UI-049: the selected project's folder was swept away; Board must not claim that no project is open.
+  const vGone = path.join(ROOT, 'goneproj');
+  mkdirSync(path.join(vGone, 'docs'), { recursive: true });
+  writeFileSync(path.join(vGone, 'docs', 'Gone-Checklist.md'), readFileSync(P1, 'utf8'));
+  try {
+    await selectFixtureProject(page, 'goneproj');
+    await openBoardTab(page);
+    await expect(page.getByTestId('count-all')).toContainText('1');
+    await closeTab(page, 'Board');
+    rmSync(vGone, { recursive: true, force: true });
+    await openBoardTabAnyState(page);
+    await expect(page.getByTestId('folder-missing')).toContainText("goneproj's folder cannot be found");
+    await expect(page.getByTestId('folder-missing-path')).toContainText('goneproj');
+    await expect(page.getByTestId('no-project')).toHaveCount(0);
+    await expect(page.getByTestId('pick-another-project')).toHaveAttribute('href', /\/start\?all=1$/);
+    await page.screenshot({ path: `${SHOTS}/board-folder-missing.png`, fullPage: true });
+    // The Agent workspace tells the same truth instead of "0 requirements".
+    await openAgentsTab(page);
+    await expect(page.getByTestId('open-work-panel').getByTestId('folder-missing')).toContainText("goneproj's folder cannot be found");
+    await expect(page.getByTestId('open-work-count')).toHaveText('folder missing');
+    await page.screenshot({ path: `${SHOTS}/agent-workspace-folder-missing.png`, fullPage: true });
+    // The way out works: Pick another project opens the project list, and a project with a folder shows its rows again.
+    await page.getByTestId('pick-another-project').click();
+    await expect(page).toHaveURL(/\/start/);
+    await selectFixtureProject(page);
+    await openBoardTab(page);
+    await expect(page.getByTestId('count-all')).toContainText('4');
+  } finally {
+    rmSync(vGone, { recursive: true, force: true });
   }
 });

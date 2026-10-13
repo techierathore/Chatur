@@ -116,10 +116,12 @@ public sealed record BoardAgent(string Code, string Name);
 /// <param name="Phases">The distinct phases found, ascending.</param>
 /// <param name="Items">Every requirement that passes the filter.</param>
 /// <param name="Counts">The counts over the whole project, before the filter.</param>
+/// <param name="MissingFolder">The selected project's folder when it no longer exists on disk, so a screen can say so instead of "no project"; else <see langword="null"/>.</param>
 public sealed record RequirementBoard(
     bool HasProject,
     string ProjectName,
     IReadOnlyList<string> ChecklistFiles,
     IReadOnlyList<int> Phases,
     IReadOnlyList<RequirementItem> Items,
-    BoardCounts Counts);
+    BoardCounts Counts,
+    string? MissingFolder = null);

@@ -110,7 +110,7 @@
         <h2 class="text-base font-semibold">Get started</h2>
         <p class="text-sm text-muted-foreground">Open something that exists, or make something new.</p>
     </div>
-    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" Disabled="true" data-testid="clone-repo">
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Clone))" data-testid="clone-repo">
         <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
             <LucideIcon Name="github" Size="18" />
         </span>
@@ -119,7 +119,7 @@
             <span class="text-xs text-muted-foreground">From GitHub, or any address you paste</span>
         </span>
     </Button>
-    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" Disabled="true" data-testid="open-solution">
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Solution))" data-testid="open-solution">
         <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
             <LucideIcon Name="folder-open" Size="18" />
         </span>
@@ -128,7 +128,7 @@
             <span class="text-xs text-muted-foreground">A .sln, with its projects read</span>
         </span>
     </Button>
-    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" Disabled="true" data-testid="open-folder">
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="open-folder">
         <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
             <LucideIcon Name="folder" Size="18" />
         </span>
@@ -137,7 +137,7 @@
             <span class="text-xs text-muted-foreground">Anything on disk, project or not</span>
         </span>
     </Button>
-    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" Disabled="true" data-testid="new-project">
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.NewProject))" data-testid="new-project">
         <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
             <LucideIcon Name="plus" Size="18" />
         </span>
@@ -149,3 +149,4 @@
 </div>
 
 <ProjectFoldersDialog @bind-Open="objDialogOpen" FoldersChanged="ReloadAsync" />
+<OpenProjectDialog @bind-Open="objOpenProjectOpen" Mode="objOpenProjectMode" />

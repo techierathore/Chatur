@@ -106,13 +106,13 @@ public partial class Prerequisites
         aName.ToLowerInvariant().Replace(" ", "-").Replace(".", string.Empty);
 
     /// <summary>Splits a semver prerelease tag onto its own side of a middle dot for display, e.g. <c>"0.1.0-nightly"</c> → <c>"0.1.0 · nightly"</c>.</summary>
-    private static string DisplayVersion(string aVersion)
+    internal static string DisplayVersion(string aVersion)
     {
         var vDashIndex = aVersion.IndexOf('-');
         return vDashIndex < 0 ? aVersion : $"{aVersion[..vDashIndex]} · {aVersion[(vDashIndex + 1)..]}";
     }
 
-    private static string ShortCommit(string aCommit) => aCommit.Length > 7 ? aCommit[..7] : aCommit;
+    internal static string ShortCommit(string aCommit) => aCommit.Length > 7 ? aCommit[..7] : aCommit;
 
     private static BadgeVariant StateVariant(ToolCheckState aState) => aState switch
     {

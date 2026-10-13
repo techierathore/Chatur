@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Chatur.Core.Accounts;
@@ -13,24 +15,37 @@ public sealed class AppManagerClient : IAppManagerClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    /// <summary>The sign-in and register bodies: an <c>applicationId</c> that is not configured is left out, not sent as null.</summary>
+    private static readonly JsonSerializerOptions AuthBodyOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     private readonly HttpClient objHttp;
+    private readonly int? objApplicationId;
     private readonly ILogger<AppManagerClient> objLogger;
 
     /// <summary>Creates the client.</summary>
     /// <param name="aHttp">The <see cref="HttpClient"/> configured with App Manager's base address and API key headers.</param>
+    /// <param name="aConfiguration">
+    /// Where <c>AppManager:ApplicationId</c> is read: Chatur's application on the production App
+    /// Manager (id 1). It is sent on sign-in and register (API usage guide §1 "Option B"), so the
+    /// account is scoped to Chatur even when no API key is configured, and App Manager refuses with
+    /// <c>APP_ID_MISMATCH</c> when a key belongs to another application.
+    /// </param>
     /// <param name="aLogger">Where a refused or unreachable call is logged.</param>
-    public AppManagerClient(HttpClient aHttp, ILogger<AppManagerClient> aLogger)
+    public AppManagerClient(HttpClient aHttp, IConfiguration aConfiguration, ILogger<AppManagerClient> aLogger)
     {
         objHttp = aHttp;
+        objApplicationId = int.TryParse(aConfiguration["AppManager:ApplicationId"], out var vId) && vId > 0 ? vId : null;
         objLogger = aLogger;
     }
 
     /// <inheritdoc />
     /// <remarks>
     /// Fetched fresh on every call, never cached: the guide says the key "only changes if the
-    /// server's encryption keys are rotated", but the local development App Manager rotates it far
-    /// more often (an ephemeral key), so caching it here would encrypt against a key the server has
-    /// already replaced and turn every later sign-in into a <c>DECRYPTION_FAILED</c>.
+    /// server's encryption keys are rotated", and a cached key after a rotation would encrypt against
+    /// a key the server has already replaced and turn every later sign-in into a <c>DECRYPTION_FAILED</c>.
     /// </remarks>
     public async Task<string> GetPublicKeyAsync(CancellationToken aCt = default)
     {
@@ -52,6 +67,7 @@ public sealed class AppManagerClient : IAppManagerClient
             {
                 email = aEmail,
                 encryptedPassword = aEncryptedPassword,
+                applicationId = objApplicationId,
                 deviceInfo = ToDeviceInfoBody(aDevice)
             },
             aCt);
@@ -66,6 +82,7 @@ public sealed class AppManagerClient : IAppManagerClient
                 encryptedPassword = aEncryptedPassword,
                 firstName = aFirstName,
                 lastName = aLastName,
+                applicationId = objApplicationId,
                 deviceInfo = ToDeviceInfoBody(aDevice)
             },
             aCt);
@@ -96,7 +113,7 @@ public sealed class AppManagerClient : IAppManagerClient
 
     private async Task<AppManagerAuthResult> PostAuthAsync(string aPath, object aBody, CancellationToken aCt)
     {
-        var vResponse = await objHttp.PostAsJsonAsync(aPath, aBody, JsonOptions, aCt).ConfigureAwait(false);
+        var vResponse = await objHttp.PostAsJsonAsync(aPath, aBody, AuthBodyOptions, aCt).ConfigureAwait(false);
         var vEnvelope = await ReadEnvelopeAsync<AuthData>(vResponse, aCt).ConfigureAwait(false);
         if (!vEnvelope.Success || vEnvelope.Data is null)
         {

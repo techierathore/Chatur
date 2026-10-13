@@ -103,6 +103,72 @@ public sealed class ProcessActions : IProcessActions
     }
 
     /// <inheritdoc />
+    public async Task SaveStepWordingAsync(string aProcessCode, string aStepCode, string aText, CancellationToken aCt = default)
+    {
+        var vText = (aText ?? string.Empty).Trim();
+        if (vText.Length == 0)
+        {
+            throw new ArgumentException("A step needs its wording.", nameof(aText));
+        }
+
+        var vProcess = ProcessCatalogue.Find(aProcessCode)
+            ?? throw new ArgumentException($"'{aProcessCode}' is not one of the TechieFlow commands.", nameof(aProcessCode));
+        var vPosition = StepPosition(aStepCode);
+        if (vPosition is null || vPosition < 1 || vPosition > vProcess.Steps)
+        {
+            throw new ArgumentException($"'{vProcess.Code}' has no step '{aStepCode}'.", nameof(aStepCode));
+        }
+
+        var vStepCode = "s" + vPosition.Value.ToString(CultureInfo.InvariantCulture);
+        using var vConnection = objConnections.OpenConnection();
+        using var vTransaction = vConnection.BeginTransaction();
+        var vBefore = await vConnection.QuerySingleOrDefaultAsync<string>(new CommandDefinition(
+            "SELECT Text FROM ProcessStepText WHERE ProcessCode = @ProcessCode AND StepCode = @vStepCode",
+            new { ProcessCode = vProcess.Code, vStepCode },
+            vTransaction,
+            cancellationToken: aCt)).ConfigureAwait(false);
+        if (vBefore is null)
+        {
+            await vConnection.ExecuteAsync(new CommandDefinition(
+                "INSERT INTO ProcessStepText (ProcessCode, StepCode, Text, Version) VALUES (@ProcessCode, @vStepCode, @vText, 1)",
+                new { ProcessCode = vProcess.Code, vStepCode, vText },
+                vTransaction,
+                cancellationToken: aCt)).ConfigureAwait(false);
+        }
+        else
+        {
+            await vConnection.ExecuteAsync(new CommandDefinition(
+                "UPDATE ProcessStepText SET Text = @vText, Version = Version + 1 WHERE ProcessCode = @ProcessCode AND StepCode = @vStepCode",
+                new { ProcessCode = vProcess.Code, vStepCode, vText },
+                vTransaction,
+                cancellationToken: aCt)).ConfigureAwait(false);
+        }
+
+        // The same trail a correction leaves (REQ-UI-034): the owner made this change themselves, so it is Kept.
+        await vConnection.ExecuteAsync(new CommandDefinition(
+            @"INSERT INTO Correction (Target, Before, After, Why, Status, CreatedUtc)
+              VALUES (@Target, @vBefore, @vText, 'Reworded on Processes', 'Kept', @CreatedUtc)",
+            new
+            {
+                Target = $"step:{vProcess.Code}/{vStepCode}",
+                vBefore,
+                vText,
+                CreatedUtc = objClock.UtcNow.ToString("O", CultureInfo.InvariantCulture)
+            },
+            vTransaction,
+            cancellationToken: aCt)).ConfigureAwait(false);
+
+        vTransaction.Commit();
+    }
+
+    /// <summary>The position in a step code such as <c>s3</c>, or null when it is not one.</summary>
+    private static int? StepPosition(string aStepCode) =>
+        aStepCode is { Length: > 1 } && aStepCode[0] == 's'
+        && int.TryParse(aStepCode.AsSpan(1), NumberStyles.None, CultureInfo.InvariantCulture, out var vPosition)
+            ? vPosition
+            : null;
+
+    /// <inheritdoc />
     public async Task<ProcessRunStarted> StartAsync(int aProjectId, string aProcessCode, CancellationToken aCt = default)
     {
         var vProcess = ProcessCatalogue.Find(aProcessCode)

@@ -4,11 +4,11 @@
 |---|---|
 | App | Chatur |
 | Upstream | TrBlazeUI |
-| Updated | 2026-10-07 |
+| Updated | 2026-10-13 |
 
 ## Summary
 
-19 entries: nothing is blocked. 0 open, 19 closed (TR-019 re-checked and closed 2026-10-11 on 2.1.6).
+21 entries: nothing is blocked. 2 fixed upstream, awaiting re-check (TR-020, TR-021, fixed 2026-10-13, ship in the release after 2.1.6 — see the 2026-10-13 reply), 19 closed (TR-019 re-checked and closed 2026-10-11 on 2.1.6).
 
 All ten were answered on 2026-09-22 and all ten have now been re-checked in Chatur against
 2.0.9. Six were fixed in code; four needed no code, because the control already existed. Each
@@ -274,9 +274,134 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 - **Workaround:** none; the table keeps every column and scrolls inside its card at 390 (`MinWidth="420px"`).
 - **Suggested fix:** ship `table-cell` plus `sm:`/`md:` variants, or add a responsive visibility parameter on `DataTableColumn`.
 
+### TR-020 — Menubar has no submenu
+
+- **Status:** fixed upstream 2026-10-13 (`MenubarSub`, `MenubarSubTrigger`, `MenubarSubContent`, and the same for `DropdownMenu` and `ContextMenu`, in the release after 2.1.6 — see the 2026-10-13 reply), filed 2026-10-13
+- **Severity:** minor
+- **Blocks:** no — the items work; only the way they are grouped differs from the mockup.
+- **Repro:** TrBlazeUI 2.1.6 `Menubar`: the parts are `MenubarMenu`, `MenubarTrigger`, `MenubarContent`, `MenubarItem`, `MenubarCheckboxItem`, `MenubarLabel`, `MenubarSeparator` and `MenubarShortcut`. There is no `MenubarSub`, `MenubarSubTrigger` or `MenubarSubContent`. Checked again on 2026-10-13 against the library's own source (`src/TrBlazeUI.Components/Components/Menubar`, `DropdownMenu`, `ContextMenu`): none of the three menus has a sub part. The only nesting in the library and its demo is the Sidebar (`SidebarMenuSub`, `SidebarCollapsibleMenuItem`), which is side navigation, not a list that opens from a menu bar.
+- **Expected:** a submenu part, as `DropdownMenu` sits beside its sub-parts in shadcn/ui, so File ▸ Recent projects ▸ and View ▸ Zoom ▸ open a second list beside the first, as `mockups/main.html` draws them (a `▸` at the right of the row).
+- **Actual:** no way to nest a list inside a menu item.
+- **Encountered in:** REQ-UI-073
+- **Workaround:** Recent projects and Zoom are a labelled group of items inside the menu (`MenubarLabel` then the items), so every item is still there and does its job; the `▸` is not drawn.
+- **Suggested fix:** add `MenubarSub`, `MenubarSubTrigger` and `MenubarSubContent`.
+
+### TR-021 — A disabled MenubarItem is not announced as disabled
+
+- **Status:** fixed upstream 2026-10-13 (`aria-disabled="true"` and `data-disabled` on a disabled `MenubarItem`, `MenubarCheckboxItem` and `ContextMenuItem`, in the release after 2.1.6 — see the 2026-10-13 reply), filed 2026-10-13
+- **Severity:** minor
+- **Blocks:** no — a disabled item looks dim and takes no click.
+- **Repro:** `<MenubarItem Disabled="true">Save</MenubarItem>` renders `<div role="menuitem" class="… pointer-events-none opacity-50" tabindex="-1">`: no `aria-disabled`, no `data-disabled`.
+- **Expected:** `aria-disabled="true"` (and `data-disabled`), so a screen reader says the item is unavailable and a test can tell it from an enabled one without reading a class name.
+- **Actual:** the only sign is the `pointer-events-none` class; Playwright's `toBeDisabled()` reports such an item as enabled.
+- **Encountered in:** REQ-UI-073 (File ▸ Save, Edit ▸ Redo)
+- **Workaround:** the verify spec reads the `pointer-events-none` class.
+- **Suggested fix:** set `aria-disabled` on a disabled `MenubarItem` and `MenubarCheckboxItem`.
+
 ## Replies from TrBlazeUI
 
 <!-- The upstream team's answers, newest block first. Left in full: this is the record. -->
+
+### 2026-10-13 — TR-020 and TR-021 are fixed; they ship in the release after 2.1.6
+
+Both are fixed and tested in the library on the day they were filed. They ship in the next release
+after 2.1.6 on GitHub Packages (`https://nuget.pkg.github.com/techierathore/index.json`). The
+release number is the owner's to set when the release is cut, so this reply does not name one.
+When this reply was written, the fixes were built and verified but the release had not been cut
+yet. If the feed still stops at 2.1.6, wait; keep the labelled groups and the class check until
+then.
+
+| Entry | State | What you get |
+|---|---|---|
+| **TR-020** Menubar has no submenu | fixed, for all three menus | `MenubarSub` holds a `MenubarSubTrigger` (the row, with a ▸ at its right edge) and a `MenubarSubContent` (the list that opens beside it). A `MenubarSub` goes inside a `MenubarContent` or inside another `MenubarSubContent`, so submenus nest to any depth. `DropdownMenuSub`/`…SubTrigger`/`…SubContent` and `ContextMenuSub`/`…SubTrigger`/`…SubContent` work the same way. |
+| **TR-021** a disabled MenubarItem is not announced | fixed | A disabled `MenubarItem` or `MenubarCheckboxItem` now renders `aria-disabled="true"` and `data-disabled`, so a screen reader says it is unavailable and Playwright's `toBeDisabled()` passes. `ContextMenuItem` had the same gap and is fixed too; `DropdownMenuItem` already rendered both. |
+
+```razor
+<Menubar>
+    <MenubarMenu>
+        <MenubarTrigger>File</MenubarTrigger>
+        <MenubarContent>
+            <MenubarItem OnClick="NewProject">New project</MenubarItem>
+            <MenubarSub>
+                <MenubarSubTrigger data-testid="menu-recent">Recent projects</MenubarSubTrigger>
+                <MenubarSubContent data-testid="menu-recent-list">
+                    @foreach (var vProject in objRecent)
+                    {
+                        <MenubarItem OnClick="@(() => OpenProject(vProject))">@vProject.Name</MenubarItem>
+                    }
+                </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarItem Disabled="@(!objHasChanges)">Save<MenubarShortcut>Ctrl+S</MenubarShortcut></MenubarItem>
+        </MenubarContent>
+    </MenubarMenu>
+    <MenubarMenu>
+        <MenubarTrigger>View</MenubarTrigger>
+        <MenubarContent>
+            <MenubarSub>
+                <MenubarSubTrigger>Zoom</MenubarSubTrigger>
+                <MenubarSubContent>
+                    <MenubarItem OnClick="ZoomIn">Zoom in</MenubarItem>
+                    <MenubarItem OnClick="ZoomOut">Zoom out</MenubarItem>
+                </MenubarSubContent>
+            </MenubarSub>
+        </MenubarContent>
+    </MenubarMenu>
+</Menubar>
+```
+
+```ts
+// TR-021: the class check can go.
+await expect(page.getByRole('menuitem', { name: 'Save' })).toBeDisabled();
+```
+
+Things to know before you use them:
+
+1. **Escape closes one level, not the whole menu.** In a submenu, ArrowLeft or Escape closes that
+   list and puts the focus back on its row; a second Escape closes the menu. ArrowRight or Enter on
+   a ▸ row opens its list and focuses the first enabled item. ArrowRight on an ordinary row still
+   moves to the next menu of the bar. Choosing an item at any depth runs it and closes the whole
+   menu.
+2. **Hover opens a submenu; pointing at a sibling closes it.** Moving the mouse off the list does
+   not close it, so the diagonal path from the row to the list is safe. A click on the row opens it
+   too, which is what a touch screen gets.
+3. **At phone width the list may open on the left.** It opens on the right and flips to the left
+   when the window has no room. At 390 px, File ▸ Recent projects ▸ More ▸ puts the third list on
+   the left, over part of the File list. If `mockups/main.html` draws something else at 390, tell
+   us what.
+4. **The ▸ is text, at the right of the row.** It is an `aria-hidden` `<span>`, so the row's
+   accessible name stays "Recent projects". `Chevron` replaces it, for example with
+   `<LucideIcon Name="chevron-right" Size="14" />`, if your mockup draws an icon.
+5. **The three menu panels no longer clip.** `MenubarContent`, `DropdownMenuContent` and
+   `ContextMenuContent` dropped `overflow-hidden` so a submenu can sit outside them. A long menu
+   that must scroll needs `Class="max-h-80 overflow-y-auto"`, and then it cannot hold a submenu.
+6. **Test hooks go on the parts.** `data-testid` on `MenubarSubTrigger` lands on the row
+   (`role="menuitem"`, `aria-haspopup="menu"`, `aria-expanded`); on `MenubarSubContent` it lands on
+   the list (`role="menu"`), which is in the page only while it is open.
+7. **Your agent's reference describes both.** After the upgrade, the build refreshes
+   `.trblazeui/TrBlazeUI-AI-Reference.md`: "Which control do I use for…" has a row for each, the
+   Menubar section has the submenu parts and their parameters, and "Which version added what" has an
+   "After 2.1.6" row. `CHANGELOG.md` has the full entry.
+
+#### What we need from you
+
+Upgrade once the release after 2.1.6 is on the feed. Check that
+`.trblazeui/TrBlazeUI-AI-Reference.md` names `MenubarSubTrigger`; if it does not, the upgrade has
+not landed yet.
+
+- **TR-020:** in the main window's menu bar (REQ-UI-073), replace the labelled Recent projects and
+  Zoom groups with `MenubarSub`, as in the sample above. Run `tf-mockup-parity` on the main window
+  at 1280 and 390 with File ▸ Recent projects and View ▸ Zoom open, and check from the keyboard
+  that ArrowRight opens each list and ArrowLeft and Escape close it. Then close the entry:
+  `bash .tfcore/utils/tf-feedback.sh Chatur --close TR-020 "<what you ran and what it showed>"`.
+- **TR-021:** in the REQ-UI-073 verify spec, replace the `pointer-events-none` class check on
+  File ▸ Save and Edit ▸ Redo with `toBeDisabled()`, and check that an enabled item still passes
+  `toBeEnabled()`. Then close it:
+  `bash .tfcore/utils/tf-feedback.sh Chatur --close TR-021 "<what you ran and what it showed>"`.
+
+Tell us what does not fit.
+
+---
 
 ### 2026-10-09 — TR-019 is fixed; it ships in the release after 2.1.4
 

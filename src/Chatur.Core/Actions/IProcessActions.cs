@@ -24,6 +24,19 @@ public interface IProcessActions
     Task<IReadOnlyList<ProcessStepInfo>> StepsAsync(string aProcessCode, CancellationToken aCt = default);
 
     /// <summary>
+    /// Rewords one step of a process (REQ-UI-075): the step's text is replaced, its <c>Version</c> counts up
+    /// and a <c>Correction</c> row keeps the wording it had, so Settings &gt; Corrections can show it and put it back.
+    /// The next <see cref="StepsAsync"/> and the next run read the new wording. Only the wording changes; the
+    /// steps and checks stay code.
+    /// </summary>
+    /// <param name="aProcessCode">The command, e.g. <c>"verify-phase"</c>.</param>
+    /// <param name="aStepCode">The step, e.g. <c>"s3"</c>.</param>
+    /// <param name="aText">The new wording.</param>
+    /// <param name="aCt">A token that cancels the save.</param>
+    /// <exception cref="ArgumentException">The wording is empty, or the process or step is not known.</exception>
+    Task SaveStepWordingAsync(string aProcessCode, string aStepCode, string aText, CancellationToken aCt = default);
+
+    /// <summary>
     /// Starts a process on a project: records a running run on its first step, then the page opens
     /// <c>/processes/{RunId}/run</c> (REQ-FN-050). A process already running on the project is
     /// returned, not started twice.

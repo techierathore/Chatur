@@ -15,8 +15,22 @@ const EMAILS: Record<TestUser, string> = {
   Yolo: 'chatur-yolo-tester@techierathore.com',
 };
 
+/**
+ * The test users that have an account on the production App Manager (Chatur is application 1 there;
+ * UsageGuide "Test users"). Second and Yolo are not registered there yet, so a test asking for one
+ * of them signs in as Owner, and says so, rather than failing at the Sign in screen.
+ */
+const ON_PRODUCTION: TestUser[] = (process.env.CHATUR_PRODUCTION_USERS ?? 'Owner').split(',') as TestUser[];
+
+function available(aUser: TestUser): TestUser {
+  if (ON_PRODUCTION.includes(aUser)) return aUser;
+  console.warn(`Test user ${aUser} has no account on the production App Manager yet; signing in as Owner.`);
+  return 'Owner';
+}
+
 /** The email and password of one UsageGuide test user. */
-export function credentials(aUser: TestUser): { email: string; password: string } {
+export function credentials(aRequested: TestUser): { email: string; password: string } {
+  const aUser = available(aRequested);
   const vSecrets = JSON.parse(readFileSync(SECRETS_PATH, 'utf8').replace(/^﻿/, ''));
   const vPassword = vSecrets[`Chatur:TestUsers:${aUser}`];
   if (!vPassword) throw new Error(`No password for Chatur:TestUsers:${aUser} in user secrets.`);
@@ -28,7 +42,7 @@ export function credentials(aUser: TestUser): { email: string; password: string 
  * submitted before Blazor is interactive (it then posts empty and lands on `/sign-in?`), so each
  * attempt re-checks the typed values after a settle and the whole attempt is retried.
  */
-export async function signIn(aPage: Page, aUser: TestUser = 'Yolo'): Promise<void> {
+export async function signIn(aPage: Page, aUser: TestUser = 'Owner'): Promise<void> {
   const { email, password } = credentials(aUser);
   let vLastError: unknown;
   for (let vAttempt = 1; vAttempt <= 3; vAttempt++) {

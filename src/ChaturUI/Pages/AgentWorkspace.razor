@@ -29,7 +29,7 @@
                         <p class="text-sm text-muted-foreground">One agent at a time. This is the whole of what it sees and what it may do.</p>
                     </div>
                     <span class="flex-1"></span>
-                    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/settings/agents" Class="h-7 shrink-0 whitespace-nowrap rounded-full leading-6" data-testid="edit-agents">Change the agents</Button>
+                    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => SecondaryWindow.Open("/settings/agents"))" Class="h-7 shrink-0 whitespace-nowrap rounded-full leading-6" data-testid="edit-agents">Change the agents</Button>
                 </div>
 
                 <div class="flex flex-wrap items-start gap-3" data-testid="agent-picker-row">
@@ -99,11 +99,22 @@
                         <div class="flex items-center gap-2">
                             <CardTitle Class="text-base">Open work for the @objView.Agent.Name</CardTitle>
                             <span class="flex-1"></span>
-                            <Badge Variant="BadgeVariant.Secondary" data-testid="open-work-count">@OpenLine(objOpenWork.Count)</Badge>
+                            <Badge Variant="BadgeVariant.Secondary" data-testid="open-work-count">@(objMissingFolder is null ? OpenLine(objOpenWork.Count) : "folder missing")</Badge>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        @if (objOpenWork.Count == 0)
+                        @if (objMissingFolder is not null)
+                        {
+                            <Alert Variant="AlertVariant.Warning" data-testid="folder-missing">
+                                <AlertIcon><LucideIcon Name="triangle-alert" Size="16" /></AlertIcon>
+                                <AlertTitle>@ProjectName's folder cannot be found</AlertTitle>
+                                <AlertDescription>
+                                    <p>Chatur looked for it at <span class="break-all font-mono" data-testid="folder-missing-path">@objMissingFolder</span> and it is not there any more, so there are no requirements to list.</p>
+                                    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="mt-2" Href="/start?all=1" data-testid="pick-another-project">Pick another project</Button>
+                                </AlertDescription>
+                            </Alert>
+                        }
+                        else if (objOpenWork.Count == 0)
                         {
                             <Empty Title="Nothing open for this agent" Description="Every requirement it owns is verified." Size="EmptySize.Small" data-testid="open-work-empty" />
                         }

@@ -25,4 +25,9 @@ public interface IWindowService
     /// </summary>
     /// <param name="aRoute">The route to show, e.g. <c>/prerequisites</c> or <c>/settings/providers</c>.</param>
     void ShowSecondaryWindow(string aRoute);
+
+    /// <summary>
+    /// Closes the secondary window when it is open; does nothing otherwise.
+    /// </summary>
+    void CloseSecondaryWindow();
 }

@@ -17,8 +17,8 @@
         <DropdownMenuContent Class="w-56" data-testid="account-pop">
             <DropdownMenuLabel>@(AppStateService.CurrentUser?.Email ?? string.Empty)</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem Href="/settings/account" data-testid="account-link">Account</DropdownMenuItem>
-            <DropdownMenuItem Href="/settings/providers" data-testid="account-settings">Settings…</DropdownMenuItem>
+            <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/settings/account"))" data-testid="account-link">Account</DropdownMenuItem>
+            <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/settings/providers"))" data-testid="account-settings">Settings…</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem OnClick="SignOutAsync" data-testid="sign-out">Sign out</DropdownMenuItem>
         </DropdownMenuContent>

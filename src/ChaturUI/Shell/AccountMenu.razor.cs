@@ -1,5 +1,6 @@
 using Chatur.Core;
 using Chatur.Core.Actions;
+using Chatur.Core.Platform;
 using Microsoft.AspNetCore.Components;
 
 namespace ChaturUI.Shell;
@@ -10,6 +11,10 @@ namespace ChaturUI.Shell;
 /// </summary>
 public partial class AccountMenu : IDisposable
 {
+    /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
+    [Inject]
+    private ISecondaryWindow SecondaryWindow { get; set; } = default!;
+
     [Inject]
     private IAccountActions Accounts { get; set; } = default!;
 

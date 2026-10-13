@@ -142,8 +142,17 @@ public sealed class AutoRunActions : IAutoRunActions
 
         if (vRow.State is nameof(AutoRunState.Running) or nameof(AutoRunState.WaitingForLimit))
         {
-            // A run found going with nobody carrying it on (Chatur was closed and opened again) is picked up here.
-            objLauncher.Launch((int)vRow.AutoRunId);
+            // A run found going with nobody carrying it on (Chatur was closed and opened again, or the work
+            // crashed) is picked up here, and its record says so (REQ-FN-065: the retry is recorded).
+            if (objLauncher.Launch((int)vRow.AutoRunId))
+            {
+                var vPosition = (int)vRow.CurrentProcess;
+                var vCode = vPosition >= 1 && vPosition <= AutoRunChain.Processes.Count ? AutoRunChain.Processes[vPosition - 1] : null;
+                await objStore.AddEventAsync(
+                    (int)vRow.AutoRunId, AutoRunEventKind.Retry, vCode is null ? null : vPosition, vCode,
+                    $"Nothing was carrying this run on: Chatur was closed while it was going, or its work crashed. It was picked up again{(vCode is null ? "" : $" at {vCode}")}, on the step it had reached.",
+                    null, aCt).ConfigureAwait(false);
+            }
         }
 
         return await objViews.BuildAsync(vRow, aCt).ConfigureAwait(false);

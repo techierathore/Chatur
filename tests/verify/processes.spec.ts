@@ -57,3 +57,42 @@ test('REQ-UI-045 a link by address opens Processes on the named process', async 
   await expect(page.getByTestId('steps-panel')).toContainText('verify-phase, step by step', { timeout: 30_000 });
   await expect(page.getByTestId('steps-count')).toContainText('7 steps');
 });
+
+test('REQ-UI-075 a step reworded on Processes is saved, shown at once and used by the next run', async ({ page }) => {
+  // REQ-UI-075: open a process, change a step's wording, save; the database holds it, Processes shows it after a reload and the run uses it.
+  await openProcesses(page);
+  await page.getByTestId('open-verify-phase').click();
+  const vOld = query("SELECT Text FROM ProcessStepText WHERE ProcessCode='verify-phase' AND StepCode='s1'")[0].Text as string;
+  const vNew = 'Read the checklist and list every requirement ' + Date.now();
+  try {
+    // Cancel leaves the wording alone.
+    await page.getByTestId('edit-1').click();
+    await page.getByTestId('edit-input-1').fill('never saved');
+    await page.getByTestId('edit-cancel-1').click();
+    await expect(page.getByTestId('wording-1')).toHaveText(vOld);
+
+    // An empty wording cannot be saved.
+    await page.getByTestId('edit-1').click();
+    await page.getByTestId('edit-input-1').fill('');
+    await page.getByTestId('edit-input-1').press('Tab');
+    await expect(page.getByTestId('edit-save-1')).toBeDisabled();
+
+    await page.getByTestId('edit-input-1').fill(vNew);
+    await page.getByTestId('edit-input-1').press('Tab');
+    await page.getByTestId('edit-save-1').click();
+    await expect(page.getByTestId('wording-1')).toHaveText(vNew, { timeout: 15_000 });
+    expect(query("SELECT Text, Version FROM ProcessStepText WHERE ProcessCode='verify-phase' AND StepCode='s1'")[0]).toMatchObject({ Text: vNew, Version: 2 });
+    expect(query("SELECT Before, After FROM Correction WHERE Target='step:verify-phase/s1' ORDER BY CorrectionId DESC")[0]).toMatchObject({ Before: vOld, After: vNew });
+
+    await page.getByTestId('reload-processes').click();
+    await expect(page.getByTestId('wording-1')).toHaveText(vNew, { timeout: 15_000 });
+    await page.screenshot({ path: 'tests/.artifacts/verify/processes-edited.png', fullPage: true });
+
+    // The next run reads the new wording.
+    await page.getByTestId('start-verify-phase').click();
+    await expect(page.getByText(vNew).first()).toBeVisible({ timeout: 30_000 });
+  } finally {
+    run("UPDATE ProcessStepText SET Text=?, Version=1 WHERE ProcessCode='verify-phase' AND StepCode='s1'", vOld);
+    run("DELETE FROM Correction WHERE Target='step:verify-phase/s1'");
+  }
+});

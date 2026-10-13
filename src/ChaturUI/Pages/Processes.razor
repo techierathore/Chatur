@@ -148,7 +148,27 @@
                                 </DataTableColumn>
                                 <DataTableColumn TData="ProcessStepInfo" TValue="string" Property="@(s => s.Wording)" Header="Step" CellClass="px-2 py-2" HeaderClass="px-2">
                                     <CellTemplate Context="row">
-                                        <span data-testid="@($"wording-{row.Position}")">@row.Wording</span>
+                                        @if (objEditStepCode == row.StepCode)
+                                        {
+                                            <div class="flex flex-wrap items-center gap-2" data-testid="@($"edit-form-{row.Position}")">
+                                                <Input Value="@objEditText" ValueChanged="@(v => objEditText = v)" AriaLabel="@($"Wording of step {row.Position}")"
+                                                       Class="min-w-64 flex-1" data-testid="@($"edit-input-{row.Position}")" />
+                                                <Button Size="ButtonSize.Small" Disabled="@(objIsSaving || string.IsNullOrWhiteSpace(objEditText))"
+                                                        OnClick="SaveEditAsync" data-testid="@($"edit-save-{row.Position}")">Save</Button>
+                                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="objIsSaving"
+                                                        OnClick="CancelEdit" data-testid="@($"edit-cancel-{row.Position}")">Cancel</Button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="flex items-center gap-2">
+                                                <span data-testid="@($"wording-{row.Position}")">@row.Wording</span>
+                                                <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-6 w-6 flex-none p-0" OnClick="@(() => BeginEdit(row))"
+                                                        AriaLabel="@($"Edit step {row.Position}")" title="Edit the wording" data-testid="@($"edit-{row.Position}")">
+                                                    <LucideIcon Name="pencil" Size="12" />
+                                                </Button>
+                                            </div>
+                                        }
                                     </CellTemplate>
                                 </DataTableColumn>
                                 <DataTableColumn TData="ProcessStepInfo" TValue="string" Property="@(s => s.StepCode)" Header="Kind" CellClass="whitespace-nowrap px-1.5 py-2" HeaderClass="px-1.5">
@@ -176,7 +196,7 @@
         <Alert data-testid="steps-are-code-note">
             <LucideIcon Name="triangle-alert" Size="16" />
             <AlertDescription>
-                The three numbers in each row are steps, checks and owner stops. The steps and the checks are code — the same ones run every time. Only the wording you read above is read from Chatur's database, so it can be reworded without touching the process.
+                The three numbers in each row are steps, checks and owner stops. The steps and the checks are code — the same ones run every time. Only the wording you read above is read from Chatur's database, so Edit rewords it without touching the process; the next run uses the new words.
             </AlertDescription>
         </Alert>
 

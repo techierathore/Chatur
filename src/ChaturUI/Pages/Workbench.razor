@@ -10,7 +10,10 @@
    flex-none column (`.files`), while the editor and the conversation share a `.split` that the
    UIDesign "Rules" stack below 1100px; MainLayout's style block (below 820px) drops the files
    panel outright. Both keep the panel's own scroll, never the window's. *@
-<FilesPanel />
+@if (WorkbenchTabs.FilesVisible)
+{
+    <FilesPanel />
+}
 <div class="workbench-split flex min-w-0 flex-1 gap-2 overflow-hidden">
     <EditorArea />
     <ConversationPanel />

@@ -51,8 +51,12 @@ public partial class OutputStrip : IDisposable
     {
         AppStateService.Changed += OnAppStateChanged;
         Workbench.BuildOrRunStarted += OnBuildOrRunStarted;
+        Workbench.Changed += OnWorkbenchChanged;
         EnsureStreaming();
     }
+
+    /// <summary>View ▸ Output hides or shows the strip; what it holds keeps streaming while hidden (REQ-UI-073).</summary>
+    private void OnWorkbenchChanged() => InvokeAsync(StateHasChanged);
 
     private void EnsureStreaming()
     {
@@ -211,6 +215,7 @@ public partial class OutputStrip : IDisposable
     public void Dispose()
     {
         AppStateService.Changed -= OnAppStateChanged;
+        Workbench.Changed -= OnWorkbenchChanged;
         objStreamCts?.Cancel();
     }
 }

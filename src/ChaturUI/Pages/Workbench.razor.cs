@@ -31,12 +31,16 @@ public partial class Workbench : IDisposable
     {
         objProjectId = AppStateService.SelectedProject?.ProjectId;
         AppStateService.Changed += OnAppStateChanged;
+        WorkbenchTabs.Changed += OnWorkbenchChanged;
 
         if (AppStateService.SelectedProject is null)
         {
             objProjectId = (await Projects.SelectedProjectAsync())?.ProjectId;
         }
     }
+
+    /// <summary>View ▸ Files shows or hides the files panel, which this page hosts (REQ-UI-073).</summary>
+    private void OnWorkbenchChanged() => InvokeAsync(StateHasChanged);
 
     private void OnAppStateChanged()
     {
@@ -51,5 +55,9 @@ public partial class Workbench : IDisposable
     }
 
     /// <inheritdoc />
-    public void Dispose() => AppStateService.Changed -= OnAppStateChanged;
+    public void Dispose()
+    {
+        AppStateService.Changed -= OnAppStateChanged;
+        WorkbenchTabs.Changed -= OnWorkbenchChanged;
+    }
 }

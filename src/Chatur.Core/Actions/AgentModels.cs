@@ -48,4 +48,5 @@ public sealed record SessionDetail(SessionSummary Summary, IReadOnlyList<Session
 /// <param name="Kind">The kind of step, e.g. <c>"read"</c>, <c>"edit"</c>, <c>"run"</c>, <c>"refused"</c>.</param>
 /// <param name="Description">A short description of the step.</param>
 /// <param name="Succeeded">Whether the step succeeded.</param>
-public sealed record ActivityEvent(string Kind, string Description, bool Succeeded);
+/// <param name="Seq">The step's order within the session, the same numbering the messages carry, so the conversation can draw it where it happened (REQ-UI-023); 0 when not known.</param>
+public sealed record ActivityEvent(string Kind, string Description, bool Succeeded, int Seq = 0);

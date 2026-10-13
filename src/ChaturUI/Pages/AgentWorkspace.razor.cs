@@ -1,6 +1,7 @@
 using Chatur.Core;
 using Chatur.Core.Actions;
 using ChaturUI.Shell;
+using Chatur.Core.Platform;
 using Microsoft.AspNetCore.Components;
 using TrBlazeUI.Components.Badge;
 
@@ -34,6 +35,7 @@ public partial class AgentWorkspace : IDisposable
 
     private AgentWorkspaceView? objView;
     private IReadOnlyList<RequirementItem> objOpenWork = [];
+    private string? objMissingFolder;
     private string? objError;
     private bool objPickerOpen;
     private string? objBusyKey;
@@ -42,6 +44,10 @@ public partial class AgentWorkspace : IDisposable
     /// <summary>The agent code in the route; an unknown one falls back to the first agent.</summary>
     [Parameter]
     public string? Agent { get; set; }
+
+    /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
+    [Inject]
+    private ISecondaryWindow SecondaryWindow { get; set; } = default!;
 
     [Inject]
     private IAgentWorkspaceActions Workspace { get; set; } = default!;
@@ -90,6 +96,7 @@ public partial class AgentWorkspace : IDisposable
         {
             objView = null;
             objOpenWork = [];
+            objMissingFolder = null;
             return;
         }
 
@@ -111,6 +118,7 @@ public partial class AgentWorkspace : IDisposable
     private async Task<IReadOnlyList<RequirementItem>> OpenWorkAsync(string aAgentCode)
     {
         var vBoard = await Board.LoadAsync(new RequirementFilter(AgentCode: aAgentCode));
+        objMissingFolder = vBoard.MissingFolder;
         return vBoard.Items
             .Where(i => i.BoardStatus is BoardStatuses.Planned or BoardStatuses.InProgress or BoardStatuses.Blocked)
             .ToList();

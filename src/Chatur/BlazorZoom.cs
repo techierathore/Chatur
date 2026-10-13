@@ -21,7 +21,7 @@ namespace Chatur;
 /// <para><b>Code Flow:</b> <c>MainPage</c> hands the platform web view to <see cref="Attach"/> once the BlazorWebView is
 /// initialised, which applies the saved level. Mac Catalyst: the View menu's Zoom In (Cmd+=), Zoom Out (Cmd+-) and
 /// Actual Size (Cmd+0), added by <see cref="BuildMenu"/> from the app delegate, call <see cref="ZoomBy"/> and
-/// <see cref="Reset"/>, which set <c>WKWebView.PageZoom</c>. Windows: WebView2's own zoom (25% to 500%, uneven steps,
+/// <see cref="Reset"/>, which set <c>WKWebView.PageZoom</c> on every attached web view, one per window. Windows: WebView2's own zoom (25% to 500%, uneven steps,
 /// not kept) is turned off, and a script run on every page handles Ctrl+plus, Ctrl+minus, Ctrl+0 and Ctrl+wheel with
 /// the same steps, posting each new level back to be saved (and keeping it for the session, so a page reload keeps
 /// it). The WinUI WebView2 control does not expose WebView2's own ZoomFactor, so that cannot be saved instead.</para>
@@ -52,14 +52,19 @@ public static class BlazorZoom
     public static double Clamp(double aLevel) => Math.Round(Math.Clamp(aLevel, Min, Max) * 10) / 10;
 
 #if MACCATALYST
-    private static WKWebView? objWebView;
+    // every window's web view, weakly, so a Mac app with several BlazorWebView windows zooms them all (Chatur TF-010)
+    private static readonly List<WeakReference<WKWebView>> lstWebViews = new();
     private static bool blnMenuSet;
 
     /// <summary>Takes the platform web view and applies the saved level.</summary>
     /// <param name="aPlatformWebView">The <c>BlazorWebViewInitializedEventArgs.WebView</c>.</param>
     public static void Attach(object aPlatformWebView)
     {
-        objWebView = aPlatformWebView as WKWebView;
+        if (aPlatformWebView is WKWebView objWebView)
+        {
+            lstWebViews.Add(new WeakReference<WKWebView>(objWebView));
+        }
+
         Apply(Preferences.Default.Get(PreferenceKey, FirstLevel));
         if (!blnMenuSet && OperatingSystem.IsMacCatalystVersionAtLeast(26))
         {
@@ -117,13 +122,44 @@ public static class BlazorZoom
     {
         Level = Clamp(aLevel);
         Preferences.Default.Set(PreferenceKey, Level);
-        if (objWebView != null)
+        lstWebViews.RemoveAll(w => !w.TryGetTarget(out _));
+        foreach (var objRef in lstWebViews)
         {
-            objWebView.PageZoom = (nfloat)Level;
+            if (objRef.TryGetTarget(out var objWebView))
+            {
+                objWebView.PageZoom = (nfloat)Level;
+            }
         }
     }
 #elif WINDOWS
     private const string MessagePrefix = "tfzoom:";
+
+    // every window's web view, weakly, so the View menu's Zoom reaches each of them (Chatur REQ-UI-073)
+    private static readonly List<WeakReference<Microsoft.Web.WebView2.Core.CoreWebView2>> lstCores = new();
+
+    /// <summary>Zooms in (a positive step) or out (a negative one), as the page's own Ctrl+plus and Ctrl+minus do.</summary>
+    /// <param name="aSteps">How many 10% steps.</param>
+    public static void ZoomBy(int aSteps) => PressZoomKey(aSteps > 0 ? "=" : "-", Math.Abs(aSteps));
+
+    /// <summary>Back to actual size, as Ctrl+0 does.</summary>
+    public static void Reset() => PressZoomKey("0", 1);
+
+    // The page's script (installed by Attach) owns the level and saves it, so a key press is sent to it
+    // rather than a second level being kept here.
+    private static void PressZoomKey(string aKey, int aTimes)
+    {
+        lstCores.RemoveAll(c => !c.TryGetTarget(out _));
+        foreach (var objRef in lstCores)
+        {
+            if (objRef.TryGetTarget(out var objCore))
+            {
+                for (var intTime = 0; intTime < aTimes; intTime++)
+                {
+                    _ = objCore.ExecuteScriptAsync("window.dispatchEvent(new KeyboardEvent('keydown',{key:'" + aKey + "',ctrlKey:true,bubbles:true,cancelable:true}));");
+                }
+            }
+        }
+    }
 
     /// <summary>Takes the platform web view, turns WebView2's own zoom off and installs the key and wheel handler.</summary>
     /// <param name="aPlatformWebView">The <c>BlazorWebViewInitializedEventArgs.WebView</c>.</param>
@@ -135,6 +171,7 @@ public static class BlazorZoom
         }
 
         var objCore = objWebView.CoreWebView2;
+        lstCores.Add(new WeakReference<Microsoft.Web.WebView2.Core.CoreWebView2>(objCore));
         Level = Clamp(Preferences.Default.Get(PreferenceKey, FirstLevel));
         objCore.Settings.IsZoomControlEnabled = false;
         objCore.WebMessageReceived += (sender, args) =>
@@ -166,6 +203,17 @@ public static class BlazorZoom
     /// <summary>No zoom on this head.</summary>
     /// <param name="aPlatformWebView">Unused.</param>
     public static void Attach(object aPlatformWebView)
+    {
+    }
+
+    /// <summary>No zoom on this head.</summary>
+    /// <param name="aSteps">Unused.</param>
+    public static void ZoomBy(int aSteps)
+    {
+    }
+
+    /// <summary>No zoom on this head.</summary>
+    public static void Reset()
     {
     }
 #endif

@@ -57,7 +57,10 @@ public sealed class FileActions : IFileActions
             "SELECT Path FROM Project WHERE ProjectId = @aProjectId",
             new { aProjectId },
             cancellationToken: aCt);
-        return await vConnection.QuerySingleOrDefaultAsync<string>(vCommand).ConfigureAwait(false) ?? string.Empty;
+        var vPath = await vConnection.QuerySingleOrDefaultAsync<string>(vCommand).ConfigureAwait(false) ?? string.Empty;
+
+        // A solution's project path is its .sln file; the files to browse are in the folder around it.
+        return File.Exists(vPath) ? Path.GetDirectoryName(vPath) ?? string.Empty : vPath;
     }
 
     private static string ResolveSafePath(string aProjectPath, string aRelativePath)

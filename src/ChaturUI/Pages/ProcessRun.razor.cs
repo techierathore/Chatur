@@ -450,7 +450,7 @@ public partial class ProcessRun : IDisposable
 
     private void BackToProcesses() => WorkbenchTabs.OpenProcesses();
 
-    private void OpenMeasurements() => Nav.NavigateTo("/settings/measurements");
+    private void OpenMeasurements() => SecondaryWindow.Open("/settings/measurements");
 
     /// <summary>Copies the whole output of the run to the clipboard.</summary>
     private async Task CopyOutputAsync()
