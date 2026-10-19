@@ -14,25 +14,25 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 
 | ID | Requirement | Status | % | Remarks | Details |
 |----|-------------|--------|---|---------|---------|
-| REQ-UI-062 | Say what is wrong from inside Chatur | Not Started | 0% | — | [view](#d-req-ui-062) |
-| REQ-FN-073 | Raise it against the library it belongs to | Not Started | 0% | — | [view](#d-req-fn-073) |
-| REQ-UI-063 | See what came back | Not Started | 0% | — | [view](#d-req-ui-063) |
-| REQ-FN-074 | Nothing is lost when the network is down | Not Started | 0% | — | [view](#d-req-fn-074) |
-| REQ-UI-064 | The licence in force | Not Started | 0% | — | [view](#d-req-ui-064) |
-| REQ-UI-065 | Too many machines is reported | Not Started | 0% | — | [view](#d-req-ui-065) |
-| REQ-UI-066 | Forget a machine | Not Started | 0% | — | [view](#d-req-ui-066) |
-| REQ-FN-075 | A feature switched off is not offered | Not Started | 0% | — | [view](#d-req-fn-075) |
-| REQ-FN-076 | Everything at once | Not Started | 0% | — | [view](#d-req-fn-076) |
-| REQ-UI-067 | Where each one stands | Not Started | 0% | — | [view](#d-req-ui-067) |
-| REQ-FN-077 | Go straight in | Not Started | 0% | — | [view](#d-req-fn-077) |
-| REQ-FN-078 | The roles follow the developer | Not Started | 0% | — | [view](#d-req-fn-078) |
-| REQ-FN-079 | Work in a separate copy | Not Started | 0% | — | [view](#d-req-fn-079) |
-| REQ-FN-080 | Give a run its own copy | Not Started | 0% | — | [view](#d-req-fn-080) |
-| REQ-UI-068 | Clear it away | Not Started | 0% | — | [view](#d-req-ui-068) |
-| REQ-FN-081 | The actions are published | Not Started | 0% | — | [view](#d-req-fn-081) |
-| REQ-FN-082 | Something outside can start one | Not Started | 0% | — | [view](#d-req-fn-082) |
-| REQ-FN-083 | The verifier drives real windows | Not Started | 0% | — | [view](#d-req-fn-083) |
-| REQ-UI-069 | Signed downloads | Not Started | 0% | — | [view](#d-req-ui-069) |
+| REQ-UI-062 | Say what is wrong from inside Chatur | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /feedback answered HTTP 404 | [view](#d-req-ui-062) |
+| REQ-FN-073 | Raise it against the library it belongs to | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /feedback answered HTTP 404 | [view](#d-req-fn-073) |
+| REQ-UI-063 | See what came back | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /feedback answered HTTP 404 | [view](#d-req-ui-063) |
+| REQ-FN-074 | Nothing is lost when the network is down | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /feedback answered HTTP 404 | [view](#d-req-fn-074) |
+| REQ-UI-064 | The licence in force | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /licence answered HTTP 404 | [view](#d-req-ui-064) |
+| REQ-UI-065 | Too many machines is reported | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /licence answered HTTP 404 | [view](#d-req-ui-065) |
+| REQ-UI-066 | Forget a machine | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /licence answered HTTP 404 | [view](#d-req-ui-066) |
+| REQ-FN-075 | A feature switched off is not offered | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /licence answered HTTP 404 | [view](#d-req-fn-075) |
+| REQ-FN-076 | Everything at once | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /all-projects answered HTTP 404 | [view](#d-req-fn-076) |
+| REQ-UI-067 | Where each one stands | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /all-projects answered HTTP 404 | [view](#d-req-ui-067) |
+| REQ-FN-077 | Go straight in | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /all-projects answered HTTP 404 | [view](#d-req-fn-077) |
+| REQ-FN-078 | The roles follow the developer | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /all-projects answered HTTP 404 | [view](#d-req-fn-078) |
+| REQ-FN-079 | Work in a separate copy | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /worktrees answered HTTP 404 | [view](#d-req-fn-079) |
+| REQ-FN-080 | Give a run its own copy | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /worktrees answered HTTP 404 | [view](#d-req-fn-080) |
+| REQ-UI-068 | Clear it away | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /worktrees answered HTTP 404 | [view](#d-req-ui-068) |
+| REQ-FN-081 | The actions are published | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /integrations answered HTTP 404 | [view](#d-req-fn-081) |
+| REQ-FN-082 | Something outside can start one | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /integrations answered HTTP 404 | [view](#d-req-fn-082) |
+| REQ-FN-083 | The verifier drives real windows | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /integrations answered HTTP 404 | [view](#d-req-fn-083) |
+| REQ-UI-069 | Signed downloads | Needs re-verify | 0% | 2026-10-19 verify: ⚠ render — /integrations answered HTTP 404 | [view](#d-req-ui-069) |
 
 **Status values:** `Not Started` · `In Progress` · `Implemented` · `Verified` · `Done (pre-existing)` · `Needs re-verify` · `PARTIAL` · `FAIL` · `Blocked` · `Owner-UAT` · `N/A`.
 

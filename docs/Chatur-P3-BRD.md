@@ -185,13 +185,13 @@ Added 2026-10-13 from the owner's test of the 12 Oct nightly (`docs/screenshots/
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-10-13.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
+**Snapshot as of 2026-10-19.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
-| End-to-end run | 10 | 10 | 0 | Done |
-| Run queue | 5 | 5 | 0 | Done |
-| Run report | 4 | 4 | 0 | Done |
+| End-to-end run | 10 | 0 | 10 | In progress |
+| Run queue | 5 | 0 | 5 | In progress |
+| Run report | 4 | 0 | 4 | In progress |
 | Settings | 5 | 5 | 0 | Done |
 | Process run | 20 | 20 | 0 | Done |
 | Workbench | 3 | 3 | 0 | Done |

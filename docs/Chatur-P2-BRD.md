@@ -104,14 +104,14 @@ Each agent's own view of the project, holding only what that agent may do.
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-10-13.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P2-Checklist.md`.
+**Snapshot as of 2026-10-19.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P2-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
-| Processes | 6 | 6 | 0 | Done |
-| Process run | 6 | 6 | 0 | Done |
-| Requirements board | 6 | 6 | 0 | Done |
-| Agent workspace | 5 | 5 | 0 | Done |
+| Processes | 6 | 0 | 6 | In progress |
+| Process run | 6 | 0 | 6 | In progress |
+| Requirements board | 6 | 0 | 6 | In progress |
+| Agent workspace | 5 | 0 | 5 | In progress |
 
 ## 5. Where the rest lives
 

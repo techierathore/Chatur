@@ -377,17 +377,17 @@ The owner's own hand on check-in, push and branches.
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-10-13.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
+**Snapshot as of 2026-10-19.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
 | Sign in | 5 | 5 | 0 | Done |
 | Register | 4 | 4 | 0 | Done |
-| Start | 6 | 6 | 0 | Done |
-| Workbench | 34 | 34 | 0 | Done |
+| Start | 6 | 0 | 6 | In progress |
+| Workbench | 34 | 0 | 34 | In progress |
 | Prerequisites | 5 | 5 | 0 | Done |
-| Settings | 33 | 33 | 0 | Done |
-| Repository | 5 | 5 | 0 | Done |
+| Settings | 33 | 19 | 14 | Partial |
+| Repository | 5 | 0 | 5 | In progress |
 | Non-functional | 6 | 6 | 0 | Done |
 
 ## 8. Context diagram

@@ -4,11 +4,11 @@
 |---|---|
 | App | Chatur |
 | Upstream | TechieFlow |
-| Updated | 2026-10-14 |
+| Updated | 2026-10-19 |
 
 ## Summary
 
-12 entries: nothing is blocked. None open. 4 fixed upstream and not yet re-checked (TF-008 — no screen with a value in its address was graded since; TF-010, fixed 2026-10-12; TF-011 and TF-012, fixed 2026-10-14 for v1.2.0), 8 closed (TF-001 to TF-007, TF-009 re-checked 2026-10-09).
+13 entries: nothing is blocked. 1 open and not blocking (TF-013, filed 2026-10-19). 2 fixed upstream and not yet re-checked (TF-008 — no row on a route with a value got past its render check on 2026-10-19, so the comparison was never the deciding check; TF-010, fixed 2026-10-12). 10 closed (TF-001 to TF-007, TF-009 re-checked 2026-10-09; TF-011 and TF-012 re-checked 2026-10-19).
 
 TF-007 was re-checked here on 2026-10-03: no list box on Start, Workbench, Prerequisites, Providers or Corrections reports "app carries an icon the mockup does not" at either width, and Start, Prerequisites, Providers and Corrections now pass mockup parity outright.
 
@@ -155,6 +155,8 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 
 ### TF-011 — Verify passes screens that are placeholders: no gate opens a menu or follows the way in
 
+> ✅ **Closed 2026-10-19** — re-checked here: 2026-10-19 *verify all Chatur: tf-verify-screens and tf-mockup-parity opened every menu on the 12 screens of phase 1 and the 7 of phases 2 and 3 (tests/.artifacts/verify/screens-p1.json, parity-p1.json). Workbench reports File, Edit and View items; no 'Nothing to do yet' anywhere. The findings are the three kinds the reply named: Account > Licence, Project > Build/Run/Stop and the run targets, Help > Send feedback, Appearance > Follow the machine missing; and the unmarked sample choices in the branch, history and model drop-downs. 53 phase-1 rows and 19 phase-3 rows went to Needs re-verify on them.
+
 - **Status:** fixed upstream 2026-10-14 (ships in v1.2.0), filed 2026-10-13
 - **Severity:** critical
 - **Blocks:** no — Chatur's own tests now click every menu item; the gates are unchanged.
@@ -173,6 +175,8 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 
 ### TF-012 — Verify counts a row as tested when its id appears in another test's sample data
 
+> ✅ **Closed 2026-10-19** — re-checked here: 2026-10-19 *verify all Chatur: tf-verify-tests merged 14 parts (tests/.artifacts/verify/tests.json). REQ-FN-051 passes on its own test 'REQ-FN-051 a process names the project own documents and leaves the folder as it was'; REQ-FN-053 and REQ-FN-055 pass on process-run-progress.spec.ts and their unit tests. The five sample ids of the ResultParser theory (REQ-FN-901, 951, 953, 955, REQ-UI-948) are printed as NO TEST and credited to no row.
+
 - **Status:** fixed upstream 2026-10-14 (ships in v1.2.0), filed 2026-10-13
 - **Severity:** critical
 - **Blocks:** no. Chatur now has real tests for the two rows, and none of its other rows was passed this way.
@@ -182,6 +186,17 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Encountered in:** checking phase 2 by hand after the 12 Oct nightly, 2026-10-13
 - **Workaround:** Chatur added `tests/verify/process-run-progress.spec.ts`, which really tests REQ-FN-052, REQ-FN-053 and REQ-FN-055, the last one across a real restart.
 - **Suggested fix:** in `tf-verify-tests`, read ids only from the leading run of `REQ-…` tokens of a test's name, and drop everything from the first `(` of a theory case's arguments. Also flag a row whose only passing test's name is about another row.
+
+### TF-013 — An all-phase verify turns the Not Started rows of an unbuilt phase into Needs re-verify
+
+- **Severity:** minor
+- **Blocks:** no — the rows are listed under Known blockers in PROJECT-STATUS as not built, and the work carried on.
+- **Repro:** `bash .tfcore/utils/tf-verify-list.sh Chatur all --phase 4` on a phase whose five routes do not exist yet, then `tf-verify-screens.sh` (every route answers 404) and `tf-verify-verdict.sh Chatur --apply`.
+- **Expected:** a row that was Not Started and whose screen does not exist stays Not Started, with a Remark saying the route answered 404; nothing was built, so there is nothing to re-verify.
+- **Actual:** all 19 rows of `docs/Chatur-P4-Checklist.md` are rewritten to Needs re-verify (first failing check: render, "/feedback answered HTTP 404"), and 19 misses are recorded against work nobody has started.
+- **Encountered in:** `*verify all Chatur --phase all`, 2026-10-19
+- **Workaround:** none in the checklist; the status page says the phase is unbuilt.
+- **Suggested fix:** in `tf-verify-verdict`, keep Not Started when the row's prior status was Not Started and the only failing check is a route that answered 404 or was never built; write the reason in the Remark and emit no miss.
 
 ## Replies from TechieFlow
 

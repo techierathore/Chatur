@@ -102,15 +102,15 @@ Chatur's own actions, offered to whatever else the owner uses.
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-09-22.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P4-Checklist.md`.
+**Snapshot as of 2026-10-19.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P4-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
-| Feedback and issues | 4 | 0 | 4 | Planned |
-| Licence | 4 | 0 | 4 | Planned |
-| All projects | 4 | 0 | 4 | Planned |
-| Worktrees | 3 | 0 | 3 | Planned |
-| Integrations | 4 | 0 | 4 | Planned |
+| Feedback and issues | 4 | 0 | 4 | In progress |
+| Licence | 4 | 0 | 4 | In progress |
+| All projects | 4 | 0 | 4 | In progress |
+| Worktrees | 3 | 0 | 3 | In progress |
+| Integrations | 4 | 0 | 4 | In progress |
 
 ## 5. Where the rest lives
 
