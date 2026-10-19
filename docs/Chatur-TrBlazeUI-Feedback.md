@@ -8,7 +8,7 @@
 
 ## Summary
 
-21 entries: nothing is blocked. 2 fixed upstream, awaiting re-check (TR-020, TR-021, fixed 2026-10-13, ship in the release after 2.1.6 — see the 2026-10-13 reply), 19 closed (TR-019 re-checked and closed 2026-10-11 on 2.1.6).
+21 entries: nothing is blocked. 21 closed — TR-020 and TR-021 ship in 2.1.9, the rest closed on 2.1.6 or earlier.
 
 All ten were answered on 2026-09-22 and all ten have now been re-checked in Chatur against
 2.0.9. Six were fixed in code; four needed no code, because the control already existed. Each
@@ -276,7 +276,9 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 
 ### TR-020 — Menubar has no submenu
 
-- **Status:** fixed upstream 2026-10-13 (`MenubarSub`, `MenubarSubTrigger`, `MenubarSubContent`, and the same for `DropdownMenu` and `ContextMenu`, in the release after 2.1.6 — see the 2026-10-13 reply), filed 2026-10-13
+> ✅ **Fixed upstream, in 2.1.9** — `MenubarSub`, `MenubarSubTrigger`, `MenubarSubContent`, and the same for `DropdownMenu` and `ContextMenu`. Tests `tests/verify/req-ui-050.spec.ts`.
+
+- **Status:** fixed upstream 2026-10-13 (`MenubarSub`, `MenubarSubTrigger`, `MenubarSubContent`, and the same for `DropdownMenu` and `ContextMenu`, in 2.1.9 — see the 2026-10-13 reply), filed 2026-10-13
 - **Severity:** minor
 - **Blocks:** no — the items work; only the way they are grouped differs from the mockup.
 - **Repro:** TrBlazeUI 2.1.6 `Menubar`: the parts are `MenubarMenu`, `MenubarTrigger`, `MenubarContent`, `MenubarItem`, `MenubarCheckboxItem`, `MenubarLabel`, `MenubarSeparator` and `MenubarShortcut`. There is no `MenubarSub`, `MenubarSubTrigger` or `MenubarSubContent`. Checked again on 2026-10-13 against the library's own source (`src/TrBlazeUI.Components/Components/Menubar`, `DropdownMenu`, `ContextMenu`): none of the three menus has a sub part. The only nesting in the library and its demo is the Sidebar (`SidebarMenuSub`, `SidebarCollapsibleMenuItem`), which is side navigation, not a list that opens from a menu bar.
@@ -288,7 +290,9 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 
 ### TR-021 — A disabled MenubarItem is not announced as disabled
 
-- **Status:** fixed upstream 2026-10-13 (`aria-disabled="true"` and `data-disabled` on a disabled `MenubarItem`, `MenubarCheckboxItem` and `ContextMenuItem`, in the release after 2.1.6 — see the 2026-10-13 reply), filed 2026-10-13
+> ✅ **Fixed upstream, in 2.1.9** — a disabled `MenubarItem`, `MenubarCheckboxItem` and `ContextMenuItem` renders `aria-disabled="true"` and `data-disabled`. Tests `tests/verify/req-ui-050.spec.ts`.
+
+- **Status:** fixed upstream 2026-10-13 (`aria-disabled="true"` and `data-disabled` on a disabled `MenubarItem`, `MenubarCheckboxItem` and `ContextMenuItem`, in 2.1.9 — see the 2026-10-13 reply), filed 2026-10-13
 - **Severity:** minor
 - **Blocks:** no — a disabled item looks dim and takes no click.
 - **Repro:** `<MenubarItem Disabled="true">Save</MenubarItem>` renders `<div role="menuitem" class="… pointer-events-none opacity-50" tabindex="-1">`: no `aria-disabled`, no `data-disabled`.
