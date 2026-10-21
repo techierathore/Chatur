@@ -381,12 +381,12 @@ Written by the status gate after every build, verify and handoff; not by hand.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
-| Sign in | 5 | 5 | 0 | Done |
+| Sign in | 5 | 0 | 5 | In progress |
 | Register | 4 | 0 | 4 | In progress |
-| Start | 6 | 0 | 6 | In progress |
+| Start | 6 | 5 | 1 | Partial |
 | Workbench | 34 | 0 | 34 | In progress |
-| Prerequisites | 5 | 0 | 5 | In progress |
-| Settings | 33 | 0 | 33 | In progress |
+| Prerequisites | 5 | 2 | 3 | Partial |
+| Settings | 33 | 13 | 20 | Partial |
 | Repository | 5 | 0 | 5 | In progress |
 | Non-functional | 6 | 6 | 0 | Done |
 

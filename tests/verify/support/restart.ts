@@ -6,7 +6,7 @@
 import { spawn } from 'child_process';
 import { openSync, readFileSync, writeFileSync } from 'fs';
 
-const ROOT = '/mnt/c/1MyCode/Chatur';
+const ROOT = process.env.REPO || process.cwd();
 
 function port(): number {
   const vBase = process.env.BASE_URL;

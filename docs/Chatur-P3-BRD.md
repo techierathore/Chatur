@@ -194,7 +194,7 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | Run report | 4 | 0 | 4 | In progress |
 | Settings | 5 | 5 | 0 | Done |
 | Process run | 20 | 20 | 0 | Done |
-| Workbench | 3 | 3 | 0 | Done |
+| Workbench | 3 | 1 | 2 | Partial |
 
 ## 5. Where the rest lives
 

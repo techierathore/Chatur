@@ -124,7 +124,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
     <div class="subtitle">Rendered 2026-10-21 &middot; source <code>PROJECT-STATUS.md</code></div>
     <div class="cta-next" style="padding:20px; background:var(--cta-bg); border:2px solid var(--accent); border-radius:10px; margin:20px 0;">
       <div style="font-size:11px; color:var(--muted); letter-spacing:.5px;">NEXT COMMAND TO RUN</div>
-      <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:flow-master *verify-phase Chatur --scope all --head maccatalyst</div>
+      <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:flow-master *build-phase Chatur</div>
     </div>
 
     <div class="toc-inline">
@@ -143,18 +143,18 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <hr>
 <p>project: Chatur
 last_updated: 2026-10-21
-current_phase: Phase 1 of 4 (Workbench) · Verify — blocked at Sign in; 11/98 verified
+current_phase: Phase 1 of 4 (Workbench) · Build — 7 not built, 62 to fix, 26 of 98 verified
 last_verified_build: PASS
 last_verified_date: 2026-10-21
 ---</p>
 <h2 id="where-i-am">Where I am<a class="anchor-link" href="#where-i-am">#</a></h2>
-<p>Phase 1 verify ran on the Mac Catalyst head. Build is green and the app boots. The 19 Oct code fixes are in. Only Sign-in rows and NFR unit tests verified; every other screen is unreachable because the test-user password and App Manager key are not on this Mac. Phases 2–4 were not graded due to the same blocker plus a framework crash.</p>
+<p>Web-harness verify finished across all four phases. The user-secrets path fix cleared the 20 settings- and workbench-conversation FAIL rows caused by the Windows-only secret path; their acceptance tests now pass. Seven rows still FAIL, and 62 rows carry render or mockup-parity defects that need a build pass.</p>
 <h2 id="next-command-to-run">Next command to run<a class="anchor-link" href="#next-command-to-run">#</a></h2>
 <p>Claude Code:</p>
-<pre><code>/TechieFlow:agents:flow-master *verify-phase Chatur --scope all --head maccatalyst</code></pre>
+<pre><code>/TechieFlow:agents:flow-master *build-phase Chatur</code></pre>
 <p>OpenCode:</p>
-<pre><code>/flow-master *verify-phase Chatur --scope all --head maccatalyst</code></pre>
-<p>Run after adding <code>Chatur:TestUsers:Owner</code> and <code>AppManager:ApiKey</code> to this Mac's dotnet user secrets.</p>
+<pre><code>/flow-master *build-phase Chatur</code></pre>
+<p>Clear the 7 FAIL and 62 defect rows in phase 1 before the next verify.</p>
 <h2 id="open-requirements">Open requirements<a class="anchor-link" href="#open-requirements">#</a></h2>
 <table>
 <thead><tr><th>Status</th><th>Count</th></tr></thead>
@@ -162,41 +162,44 @@ last_verified_date: 2026-10-21
 <tr><td>Not Started</td><td>0</td></tr>
 <tr><td>In Progress</td><td>0</td></tr>
 <tr><td>Implemented</td><td>0</td></tr>
-<tr><td>Needs re-verify</td><td>87</td></tr>
+<tr><td>Needs re-verify</td><td>65</td></tr>
 <tr><td>Blocked</td><td>0</td></tr>
+<tr><td>FAIL</td><td>7</td></tr>
 </tbody>
 </table>
 <ul>
-<li>[ ] REQ-FN-004 — Register an account (Needs re-verify)
+<li>[ ] REQ-FN-004 — Register an account (FAIL)
 </li>
-<li>[ ] REQ-FN-005 — A weak password is caught before it is sent (Needs re-verify)
+<li>[ ] REQ-UI-011 — Only targets that fit the machine (FAIL)
 </li>
-<li>[ ] REQ-FN-006 — The choice survives a restart (Needs re-verify)
+<li>[ ] REQ-UI-012 — Build the project (FAIL)
 </li>
-<li>[ ] REQ-FN-007 — What the selected project is (Needs re-verify)
+<li>[ ] REQ-UI-015 — Stop everything the run started (FAIL)
 </li>
-<li>[ ] REQ-FN-008 — Straight into the work (Needs re-verify)
+<li>[ ] REQ-UI-017 — A missing tool says how to fix it (FAIL)
 </li>
-<li>[ ] REQ-FN-009 — Sign out (Needs re-verify)
+<li>[ ] REQ-UI-023 — Stop the work (FAIL)
 </li>
-<li>[ ] REQ-FN-010 — The last target is offered first (Needs re-verify)
+<li>[ ] REQ-UI-037 — Choose how Chatur looks (FAIL)
 </li>
-<li>[ ] REQ-FN-011 — Every tool, with the version found (Needs re-verify)
+<li>[ ] REQ-FN-001 — The password never leaves the machine as text (Needs re-verify)
 </li>
-<li>[ ] REQ-FN-012 — Homebrew tools are found on a Mac (Needs re-verify)
+<li>[ ] REQ-FN-002 — The installation names its device (Needs re-verify)
 </li>
-<li>[ ] REQ-FN-013 — A newer build is offered (Needs re-verify)
+<li>[ ] REQ-FN-003 — Staying signed in (Needs re-verify)
 </li>
-<li>(77 more open rows in docs/Chatur-Checklist.md)
+<li>(62 more open rows in docs/Chatur-Checklist.md)
 </li>
 </ul>
 <h2 id="known-blockers">Known blockers<a class="anchor-link" href="#known-blockers">#</a></h2>
 <ul>
-<li>The UsageGuide test-user password for <code>chatur-owner@techierathore.com</code> and <code>AppManager:ApiKey</code> are not in this Mac's dotnet user secrets (<code>dotnet user-secrets list</code> is empty). Without them the Mac Catalyst app stays on Sign in.
+<li>Web harness verify has no seeded project state, so Workbench and project-scoped screens render empty; seed scripts need an opened project first.
 </li>
-<li><code>tf-verify-verdict.py</code> crashes with <code>UnboundLocalError: bad</code> when the first graded screen is unreachable on a Blazor Hybrid Mac head. Filed as TF-015.
+<li>Phase 4 secondary-window screens use mockup anchors (<code>palette-pop</code>) that do not exist in the web implementation.
 </li>
-<li>Unit test <code>RunVerdictTests.TestsThatRunPastTheirLimitCannotVerifyAnything</code> (REQ-UI-048) fails consistently on this Mac (not flaky) and makes <code>tf-doc-tests.sh</code> fail; it is unrelated to the 19 Oct findings and is named for triage.
+<li>The unattended test user <code>chatur-yolo-tester</code> has no account on the production App Manager, so sign-in falls back to the Owner test user.
+</li>
+<li><code>tf-doc-tests.sh</code> reports one flaky unit-test failure (<code>REQ-UI-048 tests stopped at their time limit grade as could not run</code>) under full-suite load; the same test passes in isolation.
 </li>
 </ul>
 <h2 id="verification-log">Verification log<a class="anchor-link" href="#verification-log">#</a></h2>
@@ -204,16 +207,16 @@ last_verified_date: 2026-10-21
 <table>
 <thead><tr><th>Date</th><th>Phase</th><th>Result</th><th>Status table</th></tr></thead>
 <tbody>
-<tr><td>2026-10-13</td><td>fix-issues</td><td>47/47 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-19</td><td>verify-phase</td><td>28/47 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-20</td><td>log-miss</td><td>38/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-20</td><td>fix-issues</td><td>38/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-21</td><td>verify-phase --scope all --head maccatalyst</td><td>11/98 Verified (phase 1 only)</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-21</td><td>verify-phase all --head maccatalyst</td><td>6/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-21</td><td>verify-phase --scope all --head web</td><td>25/98 Verified (phase 1)</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-21</td><td>verify-phase --scope all --head web</td><td>26/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
 </tbody>
 </table>
 <h2 id="library-feedback-summary">Library feedback summary<a class="anchor-link" href="#library-feedback-summary">#</a></h2>
 <ul>
-<li>TechieFlow: 3 open (TF-013, TF-014, TF-015) · 2 fixed upstream, not yet re-checked (TF-008, TF-010) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
+<li>TechieFlow: 3 open · 2 fixed upstream, not yet re-checked (TF-008, TF-010) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
 </li>
 <li>TechieRag: 0 open · 1 fixed upstream, not yet re-checked (TR-RAG-006) · 5 closed — docs/Chatur-TechieRag-Feedback.md
 </li>
@@ -222,7 +225,7 @@ last_verified_date: 2026-10-21
 </ul>
 <h2 id="standards-compliance">Standards compliance<a class="anchor-link" href="#standards-compliance">#</a></h2>
 <ul>
-<li>Last check 2026-10-21: 124 warnings, 0 failures; see the checklist Remarks.
+<li>Last check 2026-10-21: 120 warnings, 0 failures; see the checklist Remarks.
 </li>
 </ul>
 <h2 id="deferred-future"><a id="deferred--future"></a>Deferred / future<a class="anchor-link" href="#deferred-future">#</a></h2>

@@ -2,10 +2,20 @@
 // dialog, once per app database. The key is read from Chatur's user secrets and never printed.
 import { Page, expect } from '@playwright/test';
 import { readFileSync } from 'fs';
+import * as path from 'path';
 
-const SECRETS_PATH =
-  process.env.CHATUR_SECRETS ??
-  '/mnt/c/Users/srkra/AppData/Roaming/Microsoft/UserSecrets/chatur-3f1c9a52-0d4e-4b7a-9c1e-5a8e2b7d6f10/secrets.json';
+const SECRETS_ID = 'chatur-3f1c9a52-0d4e-4b7a-9c1e-5a8e2b7d6f10';
+
+function defaultSecretsPath(): string {
+  if (process.env.CHATUR_SECRETS) return process.env.CHATUR_SECRETS;
+  const home = process.env.HOME ?? process.env.USERPROFILE;
+  if (home) {
+    return path.join(home, '.microsoft', 'usersecrets', SECRETS_ID, 'secrets.json');
+  }
+  return `C:\\Users\\srkra\\AppData\\Roaming\\Microsoft\\UserSecrets\\${SECRETS_ID}\\secrets.json`;
+}
+
+const SECRETS_PATH = defaultSecretsPath();
 
 /** The test provider's name, address, model and key from user secrets (`Chatur:TestProvider:*`). */
 export function testProvider(): { name: string; baseUrl: string; model: string; key: string } {

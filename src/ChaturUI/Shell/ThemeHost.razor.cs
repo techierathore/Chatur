@@ -43,21 +43,11 @@ public partial class ThemeHost : ComponentBase, IDisposable
             // its own default (amber, dark) and ApplyAsync below still paints that.
         }
 
-        try
-        {
-            AppState.SetSystemDark(await ThemeInterop.IsSystemDarkAsync().ConfigureAwait(false));
-        }
-        catch (JSDisconnectedException)
-        {
-            // The window closed before the system-mode probe returned.
-        }
-
-        // ApplyAsync is JS interop and used to run here, but every route in the app is rendered with
-        // an initial static-prerender pass before the SignalR circuit exists (Blazor Server), and JS
-        // interop during that pass throws "JavaScript interop calls cannot be issued at this time" —
-        // observed on every route (/, /sign-in, /start, ...) while smoke-testing REQ-UI-005 through
-        // REQ-UI-009, unrelated to those rows. Deferred to OnAfterRenderAsync(firstRender) below,
-        // which only ever runs once the circuit is live, exactly as the exception's own message says.
+        // ApplyAsync and the system dark probe are JS interop; every route in the app is rendered
+        // with an initial static-prerender pass before the SignalR circuit exists (Blazor Server),
+        // and JS interop during that pass throws "JavaScript interop calls cannot be issued at this
+        // time". Both are deferred to OnAfterRenderAsync(firstRender) below, which only ever runs
+        // once the circuit is live, exactly as the exception's own message says.
     }
 
     /// <inheritdoc />
@@ -65,6 +55,15 @@ public partial class ThemeHost : ComponentBase, IDisposable
     {
         if (aFirstRender)
         {
+            try
+            {
+                AppState.SetSystemDark(await ThemeInterop.IsSystemDarkAsync().ConfigureAwait(false));
+            }
+            catch (JSDisconnectedException)
+            {
+                // The window closed before the system-mode probe returned.
+            }
+
             await ApplyAsync().ConfigureAwait(false);
         }
     }
