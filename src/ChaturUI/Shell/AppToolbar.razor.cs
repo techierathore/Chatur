@@ -22,8 +22,6 @@ public partial class AppToolbar : IDisposable
         "Build succeeded", "Build FAILED", "Build stopped.", "Process exited", "Run stopped.", "Failed to run:"
     ];
 
-    private IReadOnlyList<RunTarget> objTargets = [];
-    private RunTarget? objSelectedTarget;
     private int? objLoadedForProjectId;
     private int? objWatchingProjectId;
     private int? objBranchLoadedForProjectId;
@@ -32,7 +30,10 @@ public partial class AppToolbar : IDisposable
     private CancellationTokenSource? objWatchCts;
 
     /// <summary>Whether a build or run is in progress for the selected project — Build, Run and Stop share this one flag since they share one output slot per project.</summary>
-    private bool IsBusy { get; set; }
+    private bool IsBusy => Workbench.IsBuildRunBusy;
+
+    private IReadOnlyList<RunTarget> objTargets => Workbench.RunTargets;
+    private RunTarget? objSelectedTarget => Workbench.SelectedRunTarget;
 
     /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
     [Inject]
@@ -134,20 +135,11 @@ public partial class AppToolbar : IDisposable
             return;
         }
 
-        objTargets = await BuildRun.TargetsAsync(vProjectId);
-        objSelectedTarget = objTargets.FirstOrDefault(t => t.IsAvailableOnThisMachine) ?? objTargets.FirstOrDefault();
+        Workbench.SetRunTargets(await BuildRun.TargetsAsync(vProjectId));
         objLoadedForProjectId = vProjectId;
     }
 
-    private void SelectTarget(RunTarget aTarget)
-    {
-        if (!aTarget.IsAvailableOnThisMachine)
-        {
-            return;
-        }
-
-        objSelectedTarget = aTarget;
-    }
+    private void SelectTarget(RunTarget aTarget) => Workbench.SelectRunTarget(aTarget);
 
     /// <summary>Builds the project on the chosen target (REQ-UI-012).</summary>
     private async Task BuildAsync()
@@ -157,7 +149,7 @@ public partial class AppToolbar : IDisposable
             return;
         }
 
-        IsBusy = true;
+        Workbench.SetBuildRunBusy(true);
 
         // Call first, notify second: BuildRunActions.BuildAsync clears its output buffer as the very
         // first thing it does, before its own first await — calling it (without awaiting yet) already
@@ -178,7 +170,7 @@ public partial class AppToolbar : IDisposable
             return;
         }
 
-        IsBusy = true;
+        Workbench.SetBuildRunBusy(true);
 
         // Same ordering as BuildAsync above: BuildRunActions.RunAsync clears the buffer synchronously
         // before it returns (even though the run itself keeps going in the background), so calling it
@@ -214,7 +206,7 @@ public partial class AppToolbar : IDisposable
 
         objWatchCts?.Cancel();
         objWatchingProjectId = ProjectId;
-        IsBusy = false;
+        Workbench.SetBuildRunBusy(false);
 
         if (ProjectId is { } vProjectId)
         {
@@ -231,8 +223,7 @@ public partial class AppToolbar : IDisposable
             {
                 if (Array.Exists(TerminalMarkers, m => vLine.Text.Contains(m, StringComparison.Ordinal)))
                 {
-                    IsBusy = false;
-                    await InvokeAsync(StateHasChanged);
+                    Workbench.SetBuildRunBusy(false);
                 }
             }
         }

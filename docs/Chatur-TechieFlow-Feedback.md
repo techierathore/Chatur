@@ -4,11 +4,11 @@
 |---|---|
 | App | Chatur |
 | Upstream | TechieFlow |
-| Updated | 2026-10-19 |
+| Updated | 2026-10-20 |
 
 ## Summary
 
-13 entries: nothing is blocked. 1 open and not blocking (TF-013, filed 2026-10-19). 2 fixed upstream and not yet re-checked (TF-008 — no row on a route with a value got past its render check on 2026-10-19, so the comparison was never the deciding check; TF-010, fixed 2026-10-12). 10 closed (TF-001 to TF-007, TF-009 re-checked 2026-10-09; TF-011 and TF-012 re-checked 2026-10-19).
+15 entries: 3 open (TF-013, TF-014, TF-015), 2 fixed upstream and not yet re-checked (TF-008, TF-010), 10 closed (TF-001 to TF-007, TF-009, TF-011, TF-012). TF-015 is blocking: it prevents the Mac Catalyst verifier from grading phases 2–4 when the first screen is unreachable.
 
 TF-007 was re-checked here on 2026-10-03: no list box on Start, Workbench, Prerequisites, Providers or Corrections reports "app carries an icon the mockup does not" at either width, and Start, Prerequisites, Providers and Corrections now pass mockup parity outright.
 
@@ -197,6 +197,30 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Encountered in:** `*verify all Chatur --phase all`, 2026-10-19
 - **Workaround:** none in the checklist; the status page says the phase is unbuilt.
 - **Suggested fix:** in `tf-verify-verdict`, keep Not Started when the row's prior status was Not Started and the only failing check is a route that answered 404 or was never built; write the reason in the Remark and emit no miss.
+
+### TF-014 — The database guard blocks any command that contains the word "dbup", even when nothing runs a migration
+
+- **Status:** open, filed 2026-10-20
+- **Severity:** minor
+- **Blocks:** no — the sentence was passed to `tf-log-miss.sh` from a file (`--what "$(cat <file>)"`), and the search was done under a `fix-issues` marker; the work carried on.
+- **Repro:** with the marker at `log-miss`, run `bash .tfcore/utils/tf-log-miss.sh Chatur --what "the DbUp console logger throws …" --sort weak-check --req REQ-NFR-004`, or a read-only search such as `grep -n -i "dbup" docs/Chatur-Checklist.md`.
+- **Expected:** the guard blocks only a command that runs a migration; a word inside a quoted argument or a search pattern is a mention, as the guard's own header says ("What counts is what RUNS, not what a command mentions").
+- **Actual:** `BLOCKED by TechieFlow policy: a database migration runs only from *build-phase, *fix-issues or *triage-and-fix, and the marker says log-miss`. `MIGRATORS` in `.tfcore/hooks/guard-db.sh` line 47 holds a bare `\bdbup\b`, and line 174 searches the whole command text, so `*log-miss` could not take a sentence naming DbUp. The same command form blocked three searches of this repository.
+- **Encountered in:** `*log-miss Chatur` for MISS-Chatur-20261020-01, 2026-10-20
+- **Workaround:** pass the sentence from a file; search for the code without the word.
+- **Suggested fix:** match `dbup` only as the command word of a segment (the `SEG` prefix `CLIENT_AT` already uses), and drop quoted arguments and `grep`/`rg` patterns before the `MIGRATORS` search.
+
+### TF-015 — `tf-verify-verdict.py` crashes when the first graded screen is unreachable on a Blazor Hybrid Mac head
+
+- **Status:** open, filed 2026-10-21
+- **Severity:** major
+- **Blocks:** yes — phases 2, 3 and 4 of an all-phase Mac Catalyst verify cannot produce a verdict when the first screen in the checklist is unreachable (the app is stuck on Sign in)
+- **Repro:** boot the Mac Catalyst head (`--head maccatalyst`) with a Blazor Hybrid app that opens on Sign in. Run `bash .tfcore/utils/tf-verify-list.sh Chatur all --phase 2`, then `bash .tfcore/utils/tf-verify-screens.sh --list tests/.artifacts/verify/list.json --appium http://localhost:4723` (screens report UNREACHABLE), then `bash .tfcore/utils/tf-verify-verdict.sh Chatur --apply --started <ts>`.
+- **Expected:** the verdict grades every row, marking unreachable-screen rows as NOT-DRIVEN or RENDER-FAIL, and writes the checklist.
+- **Actual:** Python raises `UnboundLocalError: cannot access local variable 'bad' where it is not associated with a value` at line 215 of `.tfcore/utils/tf-verify-verdict.py`. The variable `bad` is defined only in the `else` branch of the render check (line 209), but line 215 references it unconditionally when `anchors_not_measured` is true — which is always true for a web-view Mac head.
+- **Encountered in:** `*verify-phase Chatur --scope all --head maccatalyst`, 2026-10-21
+- **Workaround:** none without editing `.tfcore/`; the phase-2..4 checklists remain ungraded.
+- **Suggested fix:** initialize `bad = []` before the `if scr.get("render") == "UNREACHABLE"` branch, or move the `anchors_not_measured` note inside the `else` branch.
 
 ## Replies from TechieFlow
 

@@ -1,4 +1,5 @@
 using Chatur.Core;
+using Chatur.Core.Actions;
 using Chatur.Core.Themes;
 using Chatur.Tests.Support;
 using Xunit;
@@ -40,7 +41,7 @@ public sealed class ThemeActionsTests : MigratedDatabaseFixture
         var vChoice = await vActions.CurrentAsync();
 
         Assert.Equal("amber", vChoice.ThemeName);
-        Assert.True(vChoice.IsDark);
+        Assert.Equal(ThemeMode.Dark, vChoice.Mode);
     }
 
     /// <summary>
@@ -55,11 +56,11 @@ public sealed class ThemeActionsTests : MigratedDatabaseFixture
         vAppState.Changed += () => vRepainted = true;
         var vActions = new ThemeActions(CreateFactory(), vAppState);
 
-        await vActions.ChooseAsync("teal", false);
+        await vActions.ChooseAsync("teal", ThemeMode.Light);
 
         var vChoice = await vActions.CurrentAsync();
         Assert.Equal("teal", vChoice.ThemeName);
-        Assert.False(vChoice.IsDark);
+        Assert.Equal(ThemeMode.Light, vChoice.Mode);
         Assert.Equal("teal", vAppState.ThemeName);
         Assert.False(vAppState.IsDark);
         Assert.True(vRepainted);
@@ -70,7 +71,7 @@ public sealed class ThemeActionsTests : MigratedDatabaseFixture
     public async Task ChooseAsyncRefusesAnUnknownTheme()
     {
         var vActions = new ThemeActions(CreateFactory(), new AppState());
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => vActions.ChooseAsync("no-such-theme", true));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => vActions.ChooseAsync("no-such-theme", ThemeMode.Dark));
     }
 
     /// <summary>

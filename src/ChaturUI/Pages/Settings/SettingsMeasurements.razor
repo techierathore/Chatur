@@ -65,7 +65,14 @@
                         </DataTableColumn>
                         <DataTableColumn TData="MeasurementStream" TValue="int" Property="@(s => s.Refused)" Header="Refused" Align="DataTableColumnAlign.End">
                             <CellTemplate Context="stream">
-                                <span class="@(stream.Refused > 0 ? "text-alert-warning" : "text-muted-foreground")" data-testid="@($"{StreamKey(stream.Name)}-refused")">@stream.Refused</span>
+                                @if (stream.Refused > 0)
+                                {
+                                    <Badge Variant="BadgeVariant.Warning" data-testid="@($"{StreamKey(stream.Name)}-refused")">@stream.Refused</Badge>
+                                }
+                                else
+                                {
+                                    <span class="text-muted-foreground" data-testid="@($"{StreamKey(stream.Name)}-refused")">@stream.Refused</span>
+                                }
                             </CellTemplate>
                         </DataTableColumn>
                         <DataTableColumn TData="MeasurementStream" TValue="string" Property="@(s => s.LastWriteFailed ? "failed" : "ok")" Header="Last write" Width="110px">
@@ -142,7 +149,7 @@
 
         var vFailed = objStreams.Any(s => s.LastWriteFailed);
         @* The mockup draws the failed write as a bordered note with warning-coloured text, not a tinted alert; the calm state is the same note in the neutral colour. *@
-        <div class="@($"flex items-start gap-2 rounded-md border px-3 py-2.5 {(vFailed ? "text-alert-warning" : "text-muted-foreground")}")" role="@(vFailed ? "alert" : null)" data-testid="write-failed">
+        <div class="@($"flex items-start gap-2 rounded-md border px-3 py-2.5 {(vFailed ? "border-alert-warning/50 bg-alert-warning/10 text-alert-warning" : "text-muted-foreground")}")" role="@(vFailed ? "alert" : null)" data-testid="write-failed">
             <LucideIcon Name="@(vFailed ? "triangle-alert" : "check")" Size="16" Class="mt-0.5" />
             <span class="text-sm">@(vFailed ? $"One write failed — {FailedStreamsText()}. The record was dropped, the failure was logged, and the session carried on." : "No write has failed. If one does, the record is dropped, the failure is logged, and the session carries on.")</span>
         </div>

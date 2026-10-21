@@ -74,13 +74,14 @@
             <CardTitle>Light or dark</CardTitle>
         </CardHeader>
         <CardContent>
-            <Select Value="@(State.IsDark ? "dark" : "light")" ValueChanged="OnModeChangedAsync" TValue="string" Class="w-64" data-testid="mode-choices">
+            <Select Value="@ModeValue" ValueChanged="OnModeChangedAsync" TValue="string" Class="w-64" data-testid="mode-choices">
                 <SelectTrigger data-testid="mode-button">
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent data-testid="mode-pop">
                     <SelectItem Value="@("light")" Text="Light" TValue="string" data-testid="mode-light">Light</SelectItem>
                     <SelectItem Value="@("dark")" Text="Dark" TValue="string" data-testid="mode-dark">Dark</SelectItem>
+                    <SelectItem Value="@("follow")" Text="Follow the machine" TValue="string" data-testid="mode-follow">Follow the machine</SelectItem>
                 </SelectContent>
             </Select>
             <p class="mt-2 text-xs text-muted-foreground">The theme chosen above carries both a light set of values and a dark one, so this choice never changes the theme.</p>

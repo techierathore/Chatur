@@ -1,3 +1,5 @@
+using Chatur.Core.Actions;
+
 namespace ChaturUI.Shell;
 
 /// <summary>
@@ -27,6 +29,47 @@ public sealed class WorkbenchState
 
     /// <summary>Announces that a build or run was just asked for, for <see cref="BuildOrRunStarted"/>'s listener.</summary>
     public void NotifyBuildOrRunStarted() => BuildOrRunStarted?.Invoke();
+
+    /// <summary>Whether a build or run is in progress for the selected project.</summary>
+    public bool IsBuildRunBusy { get; private set; }
+
+    /// <summary>Sets whether a build or run is in progress, so every region that offers Build/Run/Stop stays in sync.</summary>
+    public void SetBuildRunBusy(bool aBusy)
+    {
+        if (IsBuildRunBusy == aBusy)
+        {
+            return;
+        }
+
+        IsBuildRunBusy = aBusy;
+        RaiseChanged();
+    }
+
+    /// <summary>The run targets offered for the selected project.</summary>
+    public IReadOnlyList<RunTarget> RunTargets { get; private set; } = [];
+
+    /// <summary>The target currently chosen for build and run.</summary>
+    public RunTarget? SelectedRunTarget { get; private set; }
+
+    /// <summary>Replaces the target list and picks the first available target, or the first target if none are available.</summary>
+    public void SetRunTargets(IReadOnlyList<RunTarget> aTargets)
+    {
+        RunTargets = aTargets;
+        SelectedRunTarget = aTargets.FirstOrDefault(t => t.IsAvailableOnThisMachine) ?? aTargets.FirstOrDefault();
+        RaiseChanged();
+    }
+
+    /// <summary>Selects a target that this machine can build.</summary>
+    public void SelectRunTarget(RunTarget aTarget)
+    {
+        if (!aTarget.IsAvailableOnThisMachine)
+        {
+            return;
+        }
+
+        SelectedRunTarget = aTarget;
+        RaiseChanged();
+    }
 
     /// <summary>
     /// Raised after the branch checked out for the selected project may have changed — the toolbar's

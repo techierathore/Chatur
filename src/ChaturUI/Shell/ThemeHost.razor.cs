@@ -2,6 +2,7 @@ using Chatur.Core;
 using Chatur.Core.Actions;
 using ChaturUI.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace ChaturUI.Shell;
 
@@ -34,12 +35,21 @@ public partial class ThemeHost : ComponentBase, IDisposable
         {
             objThemes = await ThemeActionsService.ListAsync();
             var vCurrent = await ThemeActionsService.CurrentAsync();
-            AppState.SetTheme(vCurrent.ThemeName, vCurrent.IsDark);
+            AppState.SetTheme(vCurrent.ThemeName, vCurrent.Mode);
         }
         catch (NotImplementedException)
         {
             // The theme table has not been wired up yet on this build; AppState already carries
             // its own default (amber, dark) and ApplyAsync below still paints that.
+        }
+
+        try
+        {
+            AppState.SetSystemDark(await ThemeInterop.IsSystemDarkAsync().ConfigureAwait(false));
+        }
+        catch (JSDisconnectedException)
+        {
+            // The window closed before the system-mode probe returned.
         }
 
         // ApplyAsync is JS interop and used to run here, but every route in the app is rendered with
@@ -75,15 +85,16 @@ public partial class ThemeHost : ComponentBase, IDisposable
         }
 
         var vTheme = objThemes.FirstOrDefault(t => t.Name == AppState.ThemeName);
+        var vIsDark = AppState.IsDark;
 
         if (vTheme is { Source: "file" })
         {
-            await ThemeInterop.ApplyCustomThemeAsync(vTheme.Name, vTheme.LightValues, vTheme.DarkValues, AppState.IsDark)
+            await ThemeInterop.ApplyCustomThemeAsync(vTheme.Name, vTheme.LightValues, vTheme.DarkValues, vIsDark)
                 .ConfigureAwait(false);
         }
         else
         {
-            await ThemeInterop.SetThemeAsync(AppState.ThemeName, AppState.IsDark).ConfigureAwait(false);
+            await ThemeInterop.SetThemeAsync(AppState.ThemeName, vIsDark).ConfigureAwait(false);
         }
     }
 

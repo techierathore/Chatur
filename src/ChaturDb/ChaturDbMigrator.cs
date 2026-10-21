@@ -1,7 +1,9 @@
 using System.Reflection;
 using DbUp;
 using DbUp.Engine;
+using DbUp.Engine.Output;
 using DbUp.Sqlite;
+using Microsoft.Extensions.Logging;
 
 namespace ChaturDb;
 
@@ -26,13 +28,17 @@ public static class ChaturDbMigrator
     /// Applies every embedded migration that has not yet run against <paramref name="aConnectionString"/>.
     /// </summary>
     /// <param name="aConnectionString">A SQLite connection string, e.g. <c>Data Source=/path/chatur.db</c>.</param>
+    /// <param name="aLogger">Where DbUp writes what it does — the head's Serilog-backed logger. Never the
+    /// console: on Mac Catalyst DbUp's console log throws <see cref="PlatformNotSupportedException"/> and
+    /// hides the migration's own error (MISS-Chatur-20261020-01). <see langword="null"/> logs nothing.</param>
     /// <returns>The result DbUp reports; <see cref="DatabaseUpgradeResult.Successful"/> when every script ran.</returns>
-    public static DatabaseUpgradeResult Migrate(string aConnectionString)
+    public static DatabaseUpgradeResult Migrate(string aConnectionString, ILogger? aLogger = null)
     {
-        var vUpgrader = DeployChanges.To
+        var vBuilder = DeployChanges.To
             .SqliteDatabase(aConnectionString)
-            .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly())
-            .LogToConsole()
+            .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly());
+
+        var vUpgrader = (aLogger is null ? vBuilder.LogToNowhere() : vBuilder.LogTo(new MicrosoftUpgradeLog(aLogger)))
             .Build();
 
         return vUpgrader.PerformUpgrade();

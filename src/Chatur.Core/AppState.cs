@@ -23,8 +23,14 @@ public sealed class AppState
     /// <summary>The chosen theme's name — <c>"amber"</c> until Settings ▸ Appearance changes it.</summary>
     public string ThemeName { get; private set; } = "amber";
 
-    /// <summary>Whether the chosen theme is showing its dark set.</summary>
-    public bool IsDark { get; private set; } = true;
+    /// <summary>How the app decides whether the chosen theme shows its light or dark set.</summary>
+    public ThemeMode ThemeMode { get; private set; } = ThemeMode.Dark;
+
+    /// <summary>Whether the chosen theme is showing its dark set right now (resolved from <see cref="ThemeMode"/>).</summary>
+    public bool IsDark => ThemeMode == ThemeMode.Dark || (ThemeMode == ThemeMode.FollowSystem && IsSystemDark);
+
+    /// <summary>Whether the operating system is currently in dark mode. Set by <see cref="SetSystemDark"/> from ThemeInterop.</summary>
+    public bool IsSystemDark { get; private set; }
 
     /// <summary>
     /// Records the project every screen should now show.
@@ -50,11 +56,24 @@ public sealed class AppState
     /// Records the chosen theme.
     /// </summary>
     /// <param name="aThemeName">The theme's name, matching a file under <c>wwwroot/themes</c>.</param>
-    /// <param name="aIsDark">Whether the dark set of that theme is showing.</param>
-    public void SetTheme(string aThemeName, bool aIsDark)
+    /// <param name="aMode">How the light/dark set is chosen.</param>
+    public void SetTheme(string aThemeName, ThemeMode aMode)
     {
         ThemeName = aThemeName;
-        IsDark = aIsDark;
+        ThemeMode = aMode;
+        RaiseChanged();
+    }
+
+    /// <summary>Records the operating system's current dark mode, used when <see cref="ThemeMode"/> is <see cref="ThemeMode.FollowSystem"/>.</summary>
+    /// <param name="aDark">Whether the system is in dark mode.</param>
+    public void SetSystemDark(bool aDark)
+    {
+        if (IsSystemDark == aDark)
+        {
+            return;
+        }
+
+        IsSystemDark = aDark;
         RaiseChanged();
     }
 

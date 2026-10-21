@@ -8,6 +8,7 @@
 //  - Shared state other writers also use (the selected project, the Appearance settings) is put back at the end.
 import { test, expect, Page, Locator } from '@playwright/test';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs';
+import * as path from 'path';
 import { signIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
 import { ensureTestProvider, chooseTestModel } from './support/provider';
@@ -16,7 +17,7 @@ import { query, run, snapshot, restore, ROLE_TABLES, Snapshot } from './support/
 
 // Tests are independent (each restores what it changed); run with --workers=1 because the harness has one session store.
 
-const REPO = '/mnt/c/1MyCode/Chatur';
+const REPO = process.env.REPO || path.resolve('.');
 const FIXTURES = `${REPO}/tests/.artifacts/verify/fixtures`;
 const SETTINGS_B = `${FIXTURES}/settings-b`;
 const SHOTS = `${REPO}/tests/.artifacts/verify/settings-b-shots`;

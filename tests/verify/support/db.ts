@@ -2,6 +2,9 @@
 // UI cannot produce (a correction row, a refused write) and to RESTORE what a test changed — never to decide a verdict
 // on its own; every assertion goes through the UI except where the acceptance line itself is about the database.
 import { DatabaseSync } from 'node:sqlite';
+import * as path from 'path';
+
+const REPO = process.env.REPO || path.resolve('.');
 
 // Follows the booted instance: CHATUR_DB wins, otherwise run-<port of BASE_URL>/harness-data/chatur.db.
 const PORT = (() => {
@@ -12,7 +15,7 @@ const PORT = (() => {
   }
 })();
 const DB_PATH =
-  process.env.CHATUR_DB ?? `/mnt/c/1MyCode/Chatur/tests/.artifacts/verify/run-${PORT}/harness-data/chatur.db`;
+  process.env.CHATUR_DB ?? path.resolve(REPO, `tests/.artifacts/verify/run-${PORT}/harness-data/chatur.db`);
 
 export type Row = Record<string, string | number | null>;
 

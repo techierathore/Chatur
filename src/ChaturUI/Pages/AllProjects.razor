@@ -1,0 +1,21 @@
+@page "/all-projects"
+@layout Layouts.SecondaryLayout
+
+@* UI Design phase 4 "Screen: All projects" — mockups/all-projects.html. Cluster P4-C lists every
+   project Chatur knows, its phase and how its requirements stand (REQ-FN-076, REQ-UI-067,
+   REQ-FN-077, REQ-FN-078). *@
+<div class="flex flex-col gap-4" data-testid="page">
+    <div data-testid="page-heading">
+        <h1 class="text-lg font-semibold">All projects</h1>
+        <p class="text-sm text-muted-foreground">Every project Chatur knows, with where each one stands.</p>
+    </div>
+
+    <Card data-testid="projects-panel">
+        <CardHeader>
+            <CardTitle>Projects</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Empty Title="No projects yet" Description="Projects you open appear here with their phase and status." Size="EmptySize.Small" data-testid="projects-empty" />
+        </CardContent>
+    </Card>
+</div>

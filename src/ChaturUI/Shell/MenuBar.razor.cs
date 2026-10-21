@@ -55,6 +55,9 @@ public partial class MenuBar : IAsyncDisposable
     private IPrerequisiteActions PrerequisiteActions { get; set; } = default!;
 
     [Inject]
+    private IBuildRunActions BuildRun { get; set; } = default!;
+
+    [Inject]
     private EditorInterop Editor { get; set; } = default!;
 
     [Inject]
@@ -73,6 +76,66 @@ public partial class MenuBar : IAsyncDisposable
 
     /// <summary>Opens the secondary window on a page (REQ-FN-106).</summary>
     private void OpenSecondary(string aRoute) => SecondaryWindow.Open(aRoute);
+
+    private int? ProjectId => AppStateService.SelectedProject?.ProjectId;
+
+    private bool objIsBusy => Workbench.IsBuildRunBusy;
+
+    private IReadOnlyList<RunTarget> objTargets => Workbench.RunTargets;
+
+    private RunTarget? objSelectedTarget => Workbench.SelectedRunTarget;
+
+    /// <summary>Loads run targets the first time the Project menu opens, matching the toolbar's timing.</summary>
+    private async Task EnsureTargetsLoadedAsync()
+    {
+        if (ProjectId is not { } vProjectId || objTargets.Count > 0)
+        {
+            return;
+        }
+
+        Workbench.SetRunTargets(await BuildRun.TargetsAsync(vProjectId));
+    }
+
+    private void SelectTarget(RunTarget aTarget) => Workbench.SelectRunTarget(aTarget);
+
+    /// <summary>Builds the project on the chosen target (REQ-UI-012).</summary>
+    private async Task BuildAsync()
+    {
+        if (ProjectId is not { } vProjectId || objSelectedTarget is null || objIsBusy)
+        {
+            return;
+        }
+
+        Workbench.SetBuildRunBusy(true);
+        var vBuildTask = BuildRun.BuildAsync(vProjectId, objSelectedTarget.RunTargetId);
+        Workbench.NotifyBuildOrRunStarted();
+        await vBuildTask;
+    }
+
+    /// <summary>Runs the chosen target (REQ-UI-013).</summary>
+    private async Task RunAsync()
+    {
+        if (ProjectId is not { } vProjectId || objSelectedTarget is null || objIsBusy)
+        {
+            return;
+        }
+
+        Workbench.SetBuildRunBusy(true);
+        var vRunTask = BuildRun.RunAsync(vProjectId, objSelectedTarget.RunTargetId);
+        Workbench.NotifyBuildOrRunStarted();
+        await vRunTask;
+    }
+
+    /// <summary>Stops the run and every program it started (REQ-UI-015).</summary>
+    private async Task StopAsync()
+    {
+        if (ProjectId is not { } vProjectId)
+        {
+            return;
+        }
+
+        await BuildRun.StopAsync(vProjectId);
+    }
 
     /// <summary>Ctrl+, (⌘, on a Mac) does what Tools ▸ Settings does, the shortcut that item shows (REQ-UI-073).</summary>
     [JSInvokable]

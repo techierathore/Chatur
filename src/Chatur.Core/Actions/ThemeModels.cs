@@ -13,7 +13,20 @@ public sealed record ThemeSummary(
     IReadOnlyDictionary<string, string> LightValues,
     IReadOnlyDictionary<string, string> DarkValues);
 
+/// <summary>How the app decides whether to show the light or dark set of the chosen theme.</summary>
+public enum ThemeMode
+{
+    /// <summary>Always use the light set.</summary>
+    Light,
+
+    /// <summary>Always use the dark set.</summary>
+    Dark,
+
+    /// <summary>Use whichever set matches the operating system's current appearance.</summary>
+    FollowSystem
+}
+
 /// <summary>The theme and light/dark choice persisted on Settings ▸ Appearance (REQ-UI-037).</summary>
 /// <param name="ThemeName">The chosen theme's name.</param>
-/// <param name="IsDark">Whether the dark set is showing.</param>
-public sealed record ThemeChoice(string ThemeName, bool IsDark);
+/// <param name="Mode">How the light/dark choice is made.</param>
+public sealed record ThemeChoice(string ThemeName, ThemeMode Mode);

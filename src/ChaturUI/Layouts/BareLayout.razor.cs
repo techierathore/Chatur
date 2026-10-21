@@ -1,4 +1,5 @@
 using Chatur.Core;
+using Chatur.Core.Actions;
 using ChaturUI.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -34,16 +35,16 @@ public partial class BareLayout : IDisposable
 
     private async Task ToggleDarkModeAsync()
     {
-        var vIsDark = !AppState.IsDark;
-        AppState.SetTheme(AppState.ThemeName, vIsDark);
-        await ThemeInterop.SetThemeAsync(AppState.ThemeName, vIsDark);
+        var vMode = AppState.IsDark ? ThemeMode.Light : ThemeMode.Dark;
+        AppState.SetTheme(AppState.ThemeName, vMode);
+        await ThemeInterop.SetThemeAsync(AppState.ThemeName, AppState.IsDark);
     }
 
     private async Task CyclePaletteAsync()
     {
         var vIndex = Array.IndexOf(Palette, AppState.ThemeName);
         var vNext = Palette[(vIndex + 1) % Palette.Length];
-        AppState.SetTheme(vNext, AppState.IsDark);
+        AppState.SetTheme(vNext, AppState.ThemeMode);
         await ThemeInterop.SetThemeAsync(vNext, AppState.IsDark);
     }
 

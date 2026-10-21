@@ -116,7 +116,7 @@
                                     <SelectContent data-testid="@($"{agent.Key}-tier-pop")">
                                         @for (var vTierNumber = 1; vTierNumber <= 3; vTierNumber++)
                                         {
-                                            <SelectItem Value="@vTierNumber.ToString()" Text="@($"Tier {vTierNumber}")" TValue="string"
+                                            <SelectItem Value="@vTierNumber.ToString()" Text="@TierLabel(vTierNumber)" TValue="string"
                                                         data-testid="@($"{agent.Key}-tier-{vTierNumber}")">@TierLabel(vTierNumber)</SelectItem>
                                         }
                                     </SelectContent>
@@ -150,7 +150,7 @@
                                 <SelectContent data-testid="@($"{work.Kind}-tier-pop")">
                                     @for (var vTierNumber = 1; vTierNumber <= 3; vTierNumber++)
                                     {
-                                        <SelectItem Value="@vTierNumber.ToString()" Text="@($"Tier {vTierNumber}")" TValue="string"
+                                        <SelectItem Value="@vTierNumber.ToString()" Text="@TierLabel(vTierNumber)" TValue="string"
                                                     data-testid="@($"{work.Kind}-tier-{vTierNumber}")">@TierLabel(vTierNumber)</SelectItem>
                                     }
                                 </SelectContent>

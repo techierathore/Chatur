@@ -7,7 +7,7 @@ import * as path from 'path';
 import { credentials } from './support/auth';
 import { openFoldersDialog } from './support/start';
 
-const REPO = '/mnt/c/1MyCode/Chatur';
+const REPO = process.env.REPO || path.resolve('.');
 
 // REQ-UI-017: a project whose files make Doctor require a tool this machine really lacks. A .csproj with
 // <UseMaui>true</UseMaui> makes Doctor probe the MAUI workload; `dotnet workload list` here lists only

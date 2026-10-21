@@ -30,6 +30,13 @@ public partial class SettingsAppearance
 
     private ThemeSummary? CurrentTheme => objThemes?.FirstOrDefault(t => t.Name == State.ThemeName);
 
+    private string ModeValue => State.ThemeMode switch
+    {
+        ThemeMode.Light => "light",
+        ThemeMode.FollowSystem => "follow",
+        _ => "dark"
+    };
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -71,16 +78,25 @@ public partial class SettingsAppearance
     /// <summary>Chooses a theme, keeping the current light/dark mode (REQ-UI-037).</summary>
     private async Task ChooseAsync(string aThemeName)
     {
-        await ThemeActions.ChooseAsync(aThemeName, State.IsDark);
+        await ThemeActions.ChooseAsync(aThemeName, State.ThemeMode);
         Toast.Success($"{aThemeName} is now the chosen theme.");
     }
 
-    /// <summary>Switches light/dark without changing the theme (REQ-UI-037).</summary>
-    private async Task OnModeChangedAsync(string aMode) =>
-        await ThemeActions.ChooseAsync(State.ThemeName, aMode == "dark");
+    /// <summary>Switches light/dark/follow without changing the theme (REQ-UI-037).</summary>
+    private async Task OnModeChangedAsync(string aMode)
+    {
+        var vMode = aMode switch
+        {
+            "light" => ThemeMode.Light,
+            "follow" => ThemeMode.FollowSystem,
+            _ => ThemeMode.Dark
+        };
+
+        await ThemeActions.ChooseAsync(State.ThemeName, vMode);
+    }
 
     /// <summary>Back to Amber, dark — the shipped default.</summary>
-    private async Task ResetAsync() => await ThemeActions.ChooseAsync("amber", true);
+    private async Task ResetAsync() => await ThemeActions.ChooseAsync("amber", ThemeMode.Dark);
 
     /// <summary>Reads the typed file, validates its shape, and adds it beside the built-in themes (REQ-UI-038).</summary>
     private async Task AddThemeAsync()

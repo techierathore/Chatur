@@ -1,0 +1,20 @@
+@page "/worktrees"
+@layout Layouts.SecondaryLayout
+
+@* UI Design phase 4 "Screen: Working copies" — mockups/worktrees.html. Cluster P4-D lists working
+   copies for branches and lets the owner add or remove them (REQ-FN-079, REQ-FN-080, REQ-UI-068). *@
+<div class="flex flex-col gap-4" data-testid="page">
+    <div data-testid="page-heading">
+        <h1 class="text-lg font-semibold">Working copies</h1>
+        <p class="text-sm text-muted-foreground">A separate copy of the project for a branch or a run.</p>
+    </div>
+
+    <Card data-testid="worktrees-panel">
+        <CardHeader>
+            <CardTitle>Copies</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Empty Title="No working copies" Description="Add a copy to work on a branch without touching the owner's own folder." Size="EmptySize.Small" data-testid="worktrees-empty" />
+        </CardContent>
+    </Card>
+</div>

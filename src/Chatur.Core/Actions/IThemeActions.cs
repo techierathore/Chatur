@@ -15,12 +15,12 @@ public interface IThemeActions
     Task<ThemeChoice> CurrentAsync(CancellationToken aCt = default);
 
     /// <summary>
-    /// Chooses a theme and whether it shows its light or dark set (REQ-UI-037).
+    /// Chooses a theme and how it decides its light or dark set (REQ-UI-037).
     /// </summary>
     /// <param name="aThemeName">The theme to choose.</param>
-    /// <param name="aDark">Whether to show the dark set.</param>
+    /// <param name="aMode">How the light/dark choice is made.</param>
     /// <param name="aCt">A token that cancels the write.</param>
-    Task ChooseAsync(string aThemeName, bool aDark, CancellationToken aCt = default);
+    Task ChooseAsync(string aThemeName, ThemeMode aMode, CancellationToken aCt = default);
 
     /// <summary>
     /// Adds a theme from a file of OKLCH values, with no new build of Chatur (REQ-UI-038).

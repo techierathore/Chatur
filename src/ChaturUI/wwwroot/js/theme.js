@@ -52,6 +52,10 @@ export function clearCustomTheme() {
     }
 }
 
+export function isSystemDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 function toDeclarationBlock(values) {
     let vCss = '';
     for (const vToken in values) {

@@ -105,8 +105,36 @@
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
-            <MenubarTrigger data-testid="menu-project">Project</MenubarTrigger>
+            <MenubarTrigger @onpointerdown="EnsureTargetsLoadedAsync" data-testid="menu-project">Project</MenubarTrigger>
             <MenubarContent data-testid="menu-project-items">
+                @* The same build/run/stop commands as the toolbar (REQ-UI-012, REQ-UI-013, REQ-UI-015). *@
+                <MenubarItem Disabled="@(ProjectId is null || objSelectedTarget is null || objIsBusy)" OnClick="BuildAsync" data-testid="menu-project-build">Build<span class="ml-auto pl-4 text-xs text-muted-foreground">⌘B</span></MenubarItem>
+                <MenubarItem Disabled="@(ProjectId is null || objSelectedTarget is null || objIsBusy)" OnClick="RunAsync" data-testid="menu-project-run">Run<span class="ml-auto pl-4 text-xs text-muted-foreground">⌘R</span></MenubarItem>
+                <MenubarItem Disabled="@(ProjectId is null || !objIsBusy)" OnClick="StopAsync" data-testid="menu-project-stop">Stop<span class="ml-auto pl-4 text-xs text-muted-foreground">⇧⌘R</span></MenubarItem>
+                <MenubarSeparator />
+                @if (objTargets.Count == 0)
+                {
+                    <MenubarLabel>No run target</MenubarLabel>
+                }
+                else
+                {
+                    <MenubarLabel>Run target</MenubarLabel>
+                    @foreach (var vTarget in objTargets)
+                    {
+                        <MenubarItem OnClick="() => SelectTarget(vTarget)" Disabled="@(!vTarget.IsAvailableOnThisMachine)" data-testid="@($"menu-project-target-{vTarget.RunTargetId}")">
+                            @if (vTarget == objSelectedTarget)
+                            {
+                                <LucideIcon Name="check" Size="14" />
+                            }
+                            <span>@vTarget.Name</span>
+                            @if (!vTarget.IsAvailableOnThisMachine)
+                            {
+                                <span class="ml-2 text-xs text-muted-foreground">needs another machine</span>
+                            }
+                        </MenubarItem>
+                    }
+                    <MenubarSeparator />
+                }
                 @* REQ-FN-106: these open the secondary window, never the main window's own route. *@
                 <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-project-prerequisites">Prerequisites…</MenubarItem>
                 <MenubarItem OnClick="@(() => OpenSecondary("/repository"))" data-testid="menu-project-repository">Repository…</MenubarItem>
@@ -139,6 +167,7 @@
             <MenubarTrigger data-testid="menu-help">Help</MenubarTrigger>
             <MenubarContent data-testid="menu-help-items">
                 <MenubarItem OnClick="ShowAboutAsync" data-testid="menu-help-about">About Chatur</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/feedback"))" data-testid="menu-help-feedback">Send feedback…</MenubarItem>
                 @* The newer-build offer lives on Prerequisites (REQ-UI-018), so this opens it there. *@
                 <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-help-updates">Check for updates</MenubarItem>
             </MenubarContent>

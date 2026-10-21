@@ -54,13 +54,13 @@ public sealed class ThemeActions : IThemeActions
     {
         using var vConnection = objConnections.OpenConnection();
         var vName = await ReadSettingAsync(vConnection, "Appearance.ThemeName", aCt).ConfigureAwait(false);
-        var vDark = await ReadSettingAsync(vConnection, "Appearance.IsDark", aCt).ConfigureAwait(false);
+        var vMode = await ReadSettingAsync(vConnection, "Appearance.ThemeMode", aCt).ConfigureAwait(false);
 
-        return new ThemeChoice(vName ?? "amber", vDark is null || vDark == "1");
+        return new ThemeChoice(vName ?? "amber", ParseMode(vMode));
     }
 
     /// <inheritdoc />
-    public async Task ChooseAsync(string aThemeName, bool aDark, CancellationToken aCt = default)
+    public async Task ChooseAsync(string aThemeName, ThemeMode aMode, CancellationToken aCt = default)
     {
         if (string.IsNullOrWhiteSpace(aThemeName))
         {
@@ -80,11 +80,14 @@ public sealed class ThemeActions : IThemeActions
         }
 
         await UpsertSettingAsync(vConnection, "Appearance.ThemeName", aThemeName, aCt).ConfigureAwait(false);
-        await UpsertSettingAsync(vConnection, "Appearance.IsDark", aDark ? "1" : "0", aCt).ConfigureAwait(false);
+        await UpsertSettingAsync(vConnection, "Appearance.ThemeMode", aMode.ToString(), aCt).ConfigureAwait(false);
 
         // Every open window reads AppState, so this one write repaints all of them (REQ-UI-037).
-        objAppState.SetTheme(aThemeName, aDark);
+        objAppState.SetTheme(aThemeName, aMode);
     }
+
+    private static ThemeMode ParseMode(string? aValue) =>
+        Enum.TryParse<ThemeMode>(aValue, out var vMode) ? vMode : ThemeMode.Dark;
 
     /// <inheritdoc />
     public async Task<ThemeSummary> AddFromFileAsync(string aFilePath, CancellationToken aCt = default)

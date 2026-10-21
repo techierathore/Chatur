@@ -1,3 +1,4 @@
+using Chatur.Core.Actions;
 using Chatur.Core.Platform;
 using Microsoft.AspNetCore.Components;
 
@@ -90,5 +91,5 @@ public partial class SecondaryLayout : IDisposable
     public void Dispose() => State.Changed -= OnAppStateChanged;
 
     /// <summary>Chooses a theme from the title bar's quick-switch menu (REQ-UI-037).</summary>
-    private async Task ChooseThemeAsync(string aThemeName) => await ThemeActions.ChooseAsync(aThemeName, State.IsDark);
+    private async Task ChooseThemeAsync(string aThemeName) => await ThemeActions.ChooseAsync(aThemeName, State.ThemeMode);
 }

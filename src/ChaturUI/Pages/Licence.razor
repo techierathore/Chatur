@@ -1,0 +1,34 @@
+@page "/licence"
+@layout Layouts.SecondaryLayout
+
+@* UI Design phase 4 "Screen: Licence" — mockups/licence.html. Cluster P4-B shows the licence in
+   force, the machines it is on, and which features are switched off (REQ-UI-064, REQ-UI-065,
+   REQ-UI-066, REQ-FN-075). *@
+<div class="flex flex-col gap-4" data-testid="page">
+    <div data-testid="page-heading">
+        <h1 class="text-lg font-semibold">Licence</h1>
+        <p class="text-sm text-muted-foreground">The licence in force on this account and the machines using it.</p>
+    </div>
+
+    <Card data-testid="licence-panel">
+        <CardHeader>
+            <CardTitle>Chatur Individual</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <div class="flex items-center gap-2" data-testid="licence-state">
+                <Badge Variant="BadgeVariant.Success">active</Badge>
+                <span class="text-sm">365 days remaining</span>
+            </div>
+            <p class="text-sm text-muted-foreground" data-testid="licence-note">A feature switched off for this licence is not offered anywhere in Chatur.</p>
+        </CardContent>
+    </Card>
+
+    <Card data-testid="devices-panel">
+        <CardHeader>
+            <CardTitle>Machines</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Empty Title="No devices to show" Description="The machines signed in to this licence appear here." Size="EmptySize.Small" data-testid="devices-empty" />
+        </CardContent>
+    </Card>
+</div>

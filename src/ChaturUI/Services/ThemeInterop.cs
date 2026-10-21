@@ -36,6 +36,13 @@ public sealed class ThemeInterop : IAsyncDisposable
         await vModule.InvokeVoidAsync("setTheme", aThemeName, aIsDark).ConfigureAwait(false);
     }
 
+    /// <summary>Asks the browser whether the operating system is currently in dark mode.</summary>
+    public async Task<bool> IsSystemDarkAsync()
+    {
+        var vModule = await objModuleTask.Value.ConfigureAwait(false);
+        return await vModule.InvokeAsync<bool>("isSystemDark").ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Applies a theme added from a file (REQ-UI-038) by mapping its named colour values onto the
     /// real TrBlazeUI variables at runtime — there is no static stylesheet for it, so "no new build

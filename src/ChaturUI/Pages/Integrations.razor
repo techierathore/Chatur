@@ -1,0 +1,21 @@
+@page "/integrations"
+@layout Layouts.SecondaryLayout
+
+@* UI Design phase 4 "Screen: Integrations" — mockups/integrations.html. Cluster P4-E lists the
+   actions Chatur offers to outside tools and how to start them (REQ-FN-081, REQ-FN-082, REQ-FN-083,
+   REQ-UI-069). *@
+<div class="flex flex-col gap-4" data-testid="page">
+    <div data-testid="page-heading">
+        <h1 class="text-lg font-semibold">Integrations</h1>
+        <p class="text-sm text-muted-foreground">The actions Chatur offers to outside tools, and how to start them.</p>
+    </div>
+
+    <Card data-testid="actions-panel">
+        <CardHeader>
+            <CardTitle>Published actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Empty Title="No actions published yet" Description="Actions Chatur exposes to other tools appear here with their addresses." Size="EmptySize.Small" data-testid="actions-empty" />
+        </CardContent>
+    </Card>
+</div>

@@ -21,8 +21,11 @@ public partial class ThemeToggle : IDisposable
     protected override void OnInitialized() => AppStateService.Changed += OnAppStateChanged;
 
     /// <summary>Switches light/dark, keeping the chosen theme (REQ-UI-037).</summary>
-    private async Task ToggleModeAsync() =>
-        await ThemeActionsService.ChooseAsync(AppStateService.ThemeName, !AppStateService.IsDark);
+    private async Task ToggleModeAsync()
+    {
+        var vMode = AppStateService.IsDark ? ThemeMode.Light : ThemeMode.Dark;
+        await ThemeActionsService.ChooseAsync(AppStateService.ThemeName, vMode);
+    }
 
     private void OnAppStateChanged() => _ = InvokeAsync(StateHasChanged);
 

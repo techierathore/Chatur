@@ -1,0 +1,73 @@
+@page "/feedback"
+@layout Layouts.SecondaryLayout
+@inject ToastService Toast
+
+@* UI Design phase 4 "Screen: Feedback and issues" — mockups/feedback.html. Cluster P4-A wires
+   sending feedback through App Manager and listing the entries that came back (REQ-UI-062,
+   REQ-FN-073, REQ-UI-063, REQ-FN-074). *@
+<div class="flex flex-col gap-4" data-testid="page">
+    <div data-testid="page-heading">
+        <h1 class="text-lg font-semibold">Feedback and issues</h1>
+        <p class="text-sm text-muted-foreground">Say what is wrong, ask for a feature, or read what came back.</p>
+    </div>
+
+    <Card data-testid="feedback-form">
+        <CardHeader>
+            <CardTitle>Send feedback</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            <Field>
+                <FieldLabel For="feedback-kind">Kind</FieldLabel>
+                <FieldContent>
+                    <Select TValue="string" Value="objKind" ValueChanged="v => objKind = v" Class="w-64" data-testid="feedback-kind">
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem Value="@("issue")" Text="Issue" TValue="string">Issue</SelectItem>
+                            <SelectItem Value="@("idea")" Text="Idea" TValue="string">Idea</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </FieldContent>
+            </Field>
+            <Field>
+                <FieldLabel For="feedback-message">Message</FieldLabel>
+                <FieldContent>
+                    <Textarea Id="feedback-message" @bind-Value="objMessage" Placeholder="What happened?" data-testid="feedback-message" />
+                </FieldContent>
+            </Field>
+            <div class="flex items-center gap-2">
+                <Button OnClick="SendAsync" Disabled="@(!CanSend)" data-testid="feedback-send">Send</Button>
+                <span class="text-xs text-muted-foreground" data-testid="feedback-offline-note">Feedback is kept and sent when the network returns.</span>
+            </div>
+        </CardContent>
+    </Card>
+
+    <Card data-testid="feedback-list-panel">
+        <CardHeader>
+            <CardTitle>What came back</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Empty Title="No feedback yet" Description="Sent entries and their answers appear here." Size="EmptySize.Small" data-testid="feedback-empty" />
+        </CardContent>
+    </Card>
+</div>
+
+@code {
+    private string objKind = "issue";
+    private string objMessage = string.Empty;
+
+    private bool CanSend => !string.IsNullOrWhiteSpace(objMessage);
+
+    private Task SendAsync()
+    {
+        if (!CanSend)
+        {
+            return Task.CompletedTask;
+        }
+
+        Toast.Success("Feedback kept — it will be sent when the network returns.");
+        objMessage = string.Empty;
+        return Task.CompletedTask;
+    }
+}

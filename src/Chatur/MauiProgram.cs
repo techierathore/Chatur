@@ -52,7 +52,8 @@ public static class MauiProgram
             var vApp = vBuilder.Build();
 
             var vPaths = vApp.Services.GetRequiredService<IAppPaths>();
-            var vMigrationResult = ChaturDbMigrator.Migrate($"Data Source={vPaths.DatabasePath}");
+            var vMigrationLogger = vApp.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(ChaturDbMigrator));
+            var vMigrationResult = ChaturDbMigrator.Migrate($"Data Source={vPaths.DatabasePath}", vMigrationLogger);
             if (!vMigrationResult.Successful)
             {
                 Log.Fatal(vMigrationResult.Error, "Chatur database migration failed");

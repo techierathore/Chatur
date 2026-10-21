@@ -18,7 +18,12 @@ public static class SecondaryNavigation
         new SecondaryNavItem("/settings/corrections", "Corrections", "nav-corrections", "Corrections", "refresh-cw"),
         new SecondaryNavItem("/settings/measurements", "Measurements", "nav-measurements", "Measurements", "chart-column"),
         new SecondaryNavItem("/settings/appearance", "Appearance", "nav-appearance", "Appearance", "palette"),
-        new SecondaryNavItem("/settings/account", "Account", "nav-account", "Account", "user")
+        new SecondaryNavItem("/settings/account", "Account", "nav-account", "Account", "user"),
+        new SecondaryNavItem("/licence", "Licence", "nav-licence", "Licence", "key"),
+        new SecondaryNavItem("/feedback", "Feedback", "nav-feedback", "Feedback", "alert-triangle"),
+        new SecondaryNavItem("/worktrees", "Working copies", "nav-worktrees", "Working copies", "copy"),
+        new SecondaryNavItem("/all-projects", "All projects", "nav-all-projects", "All projects", "bar-chart-3"),
+        new SecondaryNavItem("/integrations", "Integrations", "nav-integrations", "Integrations", "route")
     ];
 
     /// <summary>
