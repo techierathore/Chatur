@@ -60,6 +60,7 @@ public partial class AppToolbar : IDisposable
     protected override async Task OnInitializedAsync()
     {
         AppStateService.Changed += OnAppStateChanged;
+        Workbench.Changed += OnWorkbenchChanged;
         Workbench.BranchChanged += OnBranchChanged;
         await EnsureTargetsLoadedAsync();
         EnsureWatching();
@@ -248,10 +249,13 @@ public partial class AppToolbar : IDisposable
         });
     }
 
+    private void OnWorkbenchChanged() => InvokeAsync(StateHasChanged);
+
     /// <inheritdoc />
     public void Dispose()
     {
         AppStateService.Changed -= OnAppStateChanged;
+        Workbench.Changed -= OnWorkbenchChanged;
         Workbench.BranchChanged -= OnBranchChanged;
         objWatchCts?.Cancel();
     }

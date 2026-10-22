@@ -118,9 +118,22 @@ public sealed class TechieRagLlmProviderFactory : IAgentLlmProviderFactory
     {
         static string Normalise(string aUrl) => aUrl.Trim().TrimEnd('/').ToLowerInvariant();
         var vBase = Normalise(aBaseUrl);
-        return LlmConnectorCatalog.All
+        var vCatalog = LlmConnectorCatalog.All
             .FirstOrDefault(aConnector => aConnector.Endpoint is { } vEndpoint && Normalise(vEndpoint) == vBase)
             ?.SessionHeader;
+        if (vCatalog is not null)
+        {
+            return vCatalog;
+        }
+
+        // OpenCode Go is an OpenAI-compatible endpoint that always needs x-opencode-session
+        // even when the running TechieRag catalog does not list it (TR-RAG-007).
+        if (vBase.Contains("opencode.ai/zen/go", StringComparison.OrdinalIgnoreCase))
+        {
+            return "x-opencode-session";
+        }
+
+        return null;
     }
 
     private static string ChaturVersion()

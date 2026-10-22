@@ -67,7 +67,7 @@ MARKER="[verify-seed]"
 PROCESS_NOTE="process check-in seeded for the Repository mockup"
 
 stamp() { # $1 = epoch; prints "<epoch> <utc offset>"
-  echo "$1 $(date -d "@$1" +%z)"
+  echo "$1 $(python3 -c "import time; print(time.strftime('%z', time.localtime($1)))")"
 }
 
 # Dates. Process check-ins follow the mockup's "Last touched" column (today 08:52, yesterday 16:07) and the hand
@@ -79,9 +79,9 @@ stamp() { # $1 = epoch; prints "<epoch> <utc offset>"
 # commits the seed did not make, so a second run finds the same one and writes the same commits.
 FLOOR="$(git -C "$REPO" log --all --format='%ct%x09%s' | awk -F'\t' -v m="$MARKER" -v n="$PROCESS_NOTE" 'index($2, m) != 1 && index($2, n) == 0 && $1 > max { max = $1 } END { print max + 0 }')"
 NOW="$(date +%s)"
-T_P1="$(date -d "today 08:52" +%s)"
-if (( T_P1 > NOW - 180 )); then T_P1="$(date -d "yesterday 23:30" +%s)"; fi
-T_P2="$(date -d "yesterday 16:07" +%s)"
+T_P1="$(python3 -c "import datetime,time; d=datetime.datetime.combine(datetime.date.today(),datetime.time(8,52)); print(int(d.timestamp()))")"
+if (( T_P1 > NOW - 180 )); then T_P1="$(python3 -c "import datetime,time; d=datetime.datetime.combine(datetime.date.today()-datetime.timedelta(days=1),datetime.time(23,30)); print(int(d.timestamp()))")"; fi
+T_P2="$(python3 -c "import datetime,time; d=datetime.datetime.combine(datetime.date.today()-datetime.timedelta(days=1),datetime.time(16,7)); print(int(d.timestamp()))")"
 if (( T_P2 >= T_P1 )); then T_P2=$(( T_P1 - 3600 )); fi
 T_H6=$(( T_P2 - 60 )); T_H4=$(( T_P2 + 60 )); T_H2=$(( T_P1 + 60 )); T_H1=$(( T_P1 + 120 ))
 if (( T_H6 <= FLOOR )); then
@@ -119,4 +119,8 @@ seed_run "run/BRD-96-101" "[REQ-FN-096] [REQ-FN-101] $PROCESS_NOTE" "$T_P1" "$H6
 H2="$(commit_at "$BASE_TREE" "$H4" "$T_H2" "$MARKER Fix a typo by hand")"
 H1="$(commit_at "$BASE_TREE" "$H2" "$T_H1" "$MARKER Update the readme by hand")"
 git -C "$REPO" update-ref "$BRANCH_REF" "$H1"
+
+# The Repository mockup also shows a plain feature branch in the branch picker.
+git -C "$REPO" branch -f feature/board "$H6"
+
 echo "seeded the hand check-ins on ${BRANCH_REF#refs/heads/}: tip ${H1:0:7} in $REPO"

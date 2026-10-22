@@ -11,6 +11,16 @@ import {
 
 let page: Page;
 
+/** Whether a process is still running, portable across Linux (/proc) and macOS. */
+function isAlive(aPid: number): boolean {
+  try {
+    process.kill(aPid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage({ baseURL: process.env.BASE_URL });
   await signIn(page, 'Yolo');
@@ -90,9 +100,9 @@ test('REQ-UI-015 stopping ends every program the run started and Run shows it as
   await expect(outputText(page)).toContainText('WBA tick 1', { timeout: 90_000 });
   await expect.poll(() => existsSync(PID_FILE), { timeout: 10_000 }).toBe(true);
   const vPid = Number(readFileSync(PID_FILE, 'utf8').trim());
-  expect(existsSync(`/proc/${vPid}`)).toBe(true);
+  expect(isAlive(vPid)).toBe(true);
   await page.getByTestId('stop').click();
-  await expect.poll(() => existsSync(`/proc/${vPid}`), { timeout: 20_000 }).toBe(false);
+  await expect.poll(() => isAlive(vPid), { timeout: 20_000 }).toBe(false);
   await expect(outputText(page)).toContainText('Run stopped.', { timeout: 20_000 });
   await expect(page.getByTestId('run')).toBeEnabled({ timeout: 20_000 });
   await shot(page, 'ui-015-stopped');

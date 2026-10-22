@@ -6,7 +6,7 @@ import { join } from 'path';
 import { signIn } from './support/auth';
 import { query, run } from './support/db';
 import { openProcessesTab, startProcess, closeTab, tab } from './support/phase2-tabs';
-import { test, NAME, resetFixture, openProject, SHOTS } from './support/workbench-a';
+import { test, NAME, PROJECT, resetFixture, openProject, write, SHOTS } from './support/workbench-a';
 
 let page: Page;
 
@@ -19,6 +19,15 @@ test.beforeEach(async () => {
   // A verify-phase run builds and tests the fixture project for real (owner decision 1, option A), about a minute.
   test.setTimeout(420_000);
   resetFixture();
+  // Give the run a requirement that is implemented but not yet verified, so the verdict step writes something.
+  write(
+    join(PROJECT, 'docs', `${NAME}-P2-Checklist.md`),
+    `# ${NAME} — Checklist\n\n## Requirements Status\n\n| ID | Requirement | Status | % | Remarks | Details |\n|----|-------------|--------|---|---------|---------|\n| REQ-UI-999 | Sample requirement | Implemented | 100% | | |\n\n## Page: Main\n\n- **REQ-UI-999** — Sample requirement. *BRD:* BRD-1\n  - *Acceptance:* It works.\n`,
+  );
+  write(
+    join(PROJECT, 'docs', `${NAME}-P2-BRD.md`),
+    `# ${NAME} — BRD\n\n- **BRD-1** — Sample requirement. *Screen:* Main\n  - *Acceptance:* It works.\n`,
+  );
 });
 
 async function startVerifyPhase(): Promise<number> {
@@ -81,7 +90,7 @@ test('REQ-UI-048 a finished run says the verdicts are in the checklist table', a
   await expect(page.getByTestId('run-state')).toContainText('finished', { timeout: 180_000 });
   await expect(page.getByTestId('question-panel')).toHaveCount(0);
   // The verdicts panel names the checklist the verdicts were written into (Fixture-P2-Checklist.md).
-  await expect(page.getByTestId('wrote-verdicts')).toContainText(/Wrote \d+ verdicts? into docs\/Fixture-P2-Checklist\.md/);
+  await expect(page.getByTestId('wrote-verdicts')).toContainText(new RegExp(`Wrote \\d+ verdicts? into docs/${NAME}-P2-Checklist\\.md`));
   await page.screenshot({ path: join(SHOTS, 'process-run-finished.png'), fullPage: true });
   expect(vId).toBeGreaterThan(0);
 });

@@ -8,11 +8,35 @@
 
 ## Summary
 
-6 entries: nothing is blocked. 0 open, 1 fixed upstream and not yet fully re-checked (TR-RAG-006 — in 1.1.5 and built on, live check waiting for a small model), 5 closed.
+8 entries: 2 open (TR-RAG-007 with Chatur workaround, TR-RAG-008 blocking), 1 fixed upstream and not yet fully re-checked (TR-RAG-006), 5 closed.
 
 Chatur is on 1.1.5 since 2026-10-11. REQ-FN-071 and REQ-FN-072 are built on `ModelChooser` and Verified (2026-10-11).
 
 ## Entries
+
+### TR-RAG-007 — OpenCode Go needs `x-opencode-session`; the `OpenAICompatible` connector does not send it because `LlmConnectorCatalog.All` omits the endpoint
+
+- **Status:** open 2026-10-22 (worked around in Chatur)
+- **Severity:** minor
+- **Blocks:** no — `TechieRagLlmProviderFactory.SessionHeaderFor` falls back to `x-opencode-session` for `opencode.ai/zen/go`, and the seeded provider uses `OpenAICompatible` with that base URL. We tried TechieRag's own `opencode-go` connector (`UseConnectorLlm`), but its `chat/completions` calls returned 401 while the model list worked, so the fallback path is kept.
+- **Repro:** `OpenAICompatible` + `https://opencode.ai/zen/go/v1` without the fallback → HTTP 400 `MissingSessionID`; `opencode-go` connector → model list 200, chat 401.
+- **Expected:** `LlmConnectorCatalog.All` lists OpenCode Go, or `UseConnectorLlm("opencode-go")` sends the same auth as `UseOpenAICompatibleLlm`.
+- **Actual:** `SessionHeaderFor` finds no catalog entry, so no `x-opencode-session` header is sent on the generic path; the dedicated connector answers model list but returns 401 on chat completions.
+- **Encountered in:** REQ-FN-021, REQ-FN-026, REQ-FN-027, REQ-FN-033–036, REQ-UI-021, REQ-UI-022, REQ-UI-032, REQ-UI-034
+- **Workaround:** Header fallback in `SessionHeaderFor`; provider seeded as `OpenAICompatible`.
+- **Suggested fix:** Add OpenCode Go to `LlmConnectorCatalog.All`, or fix `opencode-go` connector auth.
+
+### TR-RAG-008 — TechieRag drops `reasoning_content` deltas, so reasoning models stream no visible text
+
+- **Status:** open 2026-10-22
+- **Severity:** blocker
+- **Blocks:** yes — conversation rows that need real replies fail when the model emits reasoning tokens before content. Only `content` deltas reach the caller; `reasoning_content` is silently dropped. A low `max_tokens` can then starve the answer entirely.
+- **Repro:** Stream `kimi-k2.7-code` with "say hello"; the first deltas carry `reasoning_content` and empty `content`, so TechieRag emits no text until the content phase.
+- **Expected:** Forward `reasoning_content` as a thinking stream (or include it in usage) and count those tokens.
+- **Actual:** Only `content` deltas reach the caller; `reasoning_content` is silently dropped, and `completion_tokens_details.reasoning_tokens` in usage is not surfaced.
+- **Encountered in:** REQ-FN-021, REQ-FN-026, REQ-FN-027, REQ-FN-033–036, REQ-UI-021, REQ-UI-022, REQ-UI-032, REQ-UI-034
+- **Workaround:** Switched the test model to `minimax-m3`, the first Go model whose first delta carried content.
+- **Suggested fix:** Add a `ReasoningContent`/`Thinking` event to the streaming API and include reasoning tokens in `TokenUsage`; expose `LlmCompletionOptions.ReasoningEffort`.
 
 ### TR-RAG-006 — No small-model router that chooses a model for a piece of work
 

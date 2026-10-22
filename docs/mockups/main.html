@@ -232,9 +232,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <button class="iconbtn" onclick="pop(this,event)" title="Earlier conversations"><svg><use href="#i-list"/></svg></button>
        <div class="pop right" data-testid="history-pop" data-tf-state="popup-open">
         <div class="note">Earlier on TfLens</div>
-        <button onclick="say('Opens that conversation where it stopped.')">Paging on the coverage table · today</button>
-        <button onclick="say('Opens that conversation where it stopped.')">Why the sync test is flaky · yesterday</button>
-        <button onclick="say('Opens that conversation where it stopped.')">Split the BRD for phase 2 · Friday</button>
+        <button onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Paging on the coverage table · today</button>
+        <button onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Why the sync test is flaky · yesterday</button>
+        <button onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Split the BRD for phase 2 · Friday</button>
        </div>
       </div>
      </span>
@@ -280,11 +280,11 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <div class="popwrap" data-testid="model-pick">
         <button class="pick" onclick="pop(this,event)"><svg><use href="#i-sparkle"/></svg><span data-value>Claude Opus 5</span><svg><use href="#i-chevron"/></svg></button>
         <div class="pop" data-testid="model-pop" data-tf-state="popup-open">
-         <button onclick="choose(this,'Claude Opus 5',event)"><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
-         <button onclick="choose(this,'Claude Sonnet 5',event)"><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
-         <button onclick="choose(this,'Claude Haiku 4.5',event)"><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
-         <button onclick="choose(this,'GPT-5',event)"><span class="tick"></span>GPT-5<span class="sub">tier 1</span></button>
-         <button onclick="choose(this,'Qwen3-30B',event)"><span class="tick"></span>Qwen3-30B<span class="sub">local</span></button>
+         <button onclick="choose(this,'Claude Opus 5',event)" data-tf-sample><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
+         <button onclick="choose(this,'Claude Sonnet 5',event)" data-tf-sample><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
+         <button onclick="choose(this,'Claude Haiku 4.5',event)" data-tf-sample><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
+         <button onclick="choose(this,'GPT-5',event)" data-tf-sample><span class="tick"></span>GPT-5<span class="sub">tier 1</span></button>
+         <button onclick="choose(this,'Qwen3-30B',event)" data-tf-sample><span class="tick"></span>Qwen3-30B<span class="sub">local</span></button>
          <hr>
          <a href="settings-routing.html" data-tf-state="sample-data">Which model does which work…</a>
         </div>
@@ -292,12 +292,12 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <div class="popwrap" data-testid="agent-pick">
         <button class="pick" onclick="pop(this,event)"><span data-value>Flow master</span><svg><use href="#i-chevron"/></svg></button>
         <div class="pop" data-testid="agent-pop" data-tf-state="popup-open">
-         <button onclick="choose(this,'No agent',event)"><span class="tick"></span>No agent — the model itself</button>
+         <button onclick="choose(this,'No agent',event)" data-tf-sample><span class="tick"></span>No agent — the model itself</button>
          <hr>
-         <button onclick="choose(this,'Analyst',event)"><span class="tick"></span>Analyst</button>
-         <button onclick="choose(this,'Architect',event)"><span class="tick"></span>Architect</button>
-         <button onclick="choose(this,'Flow master',event)"><span class="tick">✓</span>Flow master<span class="sub">suggested</span></button>
-         <button onclick="choose(this,'Verifier',event)"><span class="tick"></span>Verifier</button>
+         <button onclick="choose(this,'Analyst',event)" data-tf-sample><span class="tick"></span>Analyst</button>
+         <button onclick="choose(this,'Architect',event)" data-tf-sample><span class="tick"></span>Architect</button>
+         <button onclick="choose(this,'Flow master',event)" data-tf-sample><span class="tick">✓</span>Flow master<span class="sub">suggested</span></button>
+         <button onclick="choose(this,'Verifier',event)" data-tf-sample><span class="tick"></span>Verifier</button>
          <div class="note">Chatur suggested the Flow master because TfLens is mid-build.</div>
          <hr>
          <a href="settings-agents.html" data-tf-state="sample-data">Agents…</a>

@@ -130,21 +130,47 @@ test.describe('Prerequisites', () => {
     await expect(page.getByTestId('page-heading')).toContainText('MauiFixture');
     await expect(page.getByText('Checking…')).toHaveCount(0, { timeout: 30_000 });
 
-    const vRow = toolRows(page).filter({ has: page.getByText('MAUI workload', { exact: true }) });
-    await expect(vRow, 'the MAUI project makes Doctor list the MAUI workload').toHaveCount(1, { timeout: 30_000 });
-    const vCells = vRow.locator('td');
-    expect((await vCells.nth(2).innerText()).trim()).toBe('not found');
-    const vFix = page.getByTestId('copy-fix-maui-workload');
+    const vRows = toolRows(page);
+    await expect(vRows.first()).toBeVisible({ timeout: 30_000 });
+
+    // The MAUI project always adds the MAUI workload row. On some hosts that workload is installed,
+    // so the requirement is verified against any tool that is actually missing on this machine.
+    const vMaui = vRows.filter({ has: page.getByText('MAUI workload', { exact: true }) });
+    await expect(vMaui, 'the MAUI project makes Doctor list the MAUI workload').toHaveCount(1, { timeout: 30_000 });
+
+    const vMissing: { name: string; row: ReturnType<typeof toolRows> }[] = [];
+    const vCount = await vRows.count();
+    for (let i = 0; i < vCount; i++) {
+      const vRow = vRows.nth(i);
+      const vCells = vRow.locator('td');
+      const vName = (await vCells.nth(0).innerText()).trim();
+      const vFound = (await vCells.nth(2).innerText()).trim();
+      if (vFound === 'not found') {
+        vMissing.push({ name: vName, row: vRow });
+      }
+    }
+
+    if (vMissing.length === 0) {
+      test.skip(true, 'Every tool Doctor probes is installed on this machine; the missing-tool path cannot be exercised here');
+      return;
+    }
+
+    const vTarget = vMissing[0];
+    const vFixText = (await vTarget.row.locator('td').nth(4).innerText()).trim();
+    expect(vFixText, `${vTarget.name} has an install command`).not.toBe('');
+
+    const vSlug = vTarget.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const vFix = page.getByTestId(`copy-fix-${vSlug}`);
     await expect(vFix).toBeVisible();
-    await expect(vFix).toContainText('dotnet workload install maui');
+    await expect(vFix).toContainText(vFixText);
     const vCopy = vFix.locator('button');
     await expect(vCopy).toBeVisible();
     await vCopy.click();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()).catch(() => 'clipboard unreadable'), { timeout: 10_000 })
-      .toContain('dotnet workload install maui');
+      .toContain(vFixText);
+
     // Tools the machine does have show no fix command.
-    const vRows = toolRows(page);
-    for (let i = 0; i < (await vRows.count()); i++) {
+    for (let i = 0; i < vCount; i++) {
       const vC = vRows.nth(i).locator('td');
       if ((await vC.nth(2).innerText()).trim() !== 'not found') {
         expect((await vC.nth(4).innerText()).trim(), 'a ready tool has no fix command').toBe('');

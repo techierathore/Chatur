@@ -339,10 +339,22 @@ public sealed class BuildRunActions : IBuildRunActions
             }
         }
 
+        // A folder can hold additional head projects alongside the main multi-target project. Each
+        // head is listed once by its project file name so the Workbench target menu matches the
+        // mockup (Web harness, Tests, …).
+        if (vMultiTfmProject is not null)
+        {
+            foreach (var vPlainProject in vPlainProjects)
+            {
+                var vName = Path.GetFileNameWithoutExtension(vPlainProject);
+                vResult.Add(NewTargetRow(vName, vPlainProject, aProjectPath, "Debug", null, string.Empty));
+            }
+        }
+
         foreach (var vTestProject in vTestProjects)
         {
             var vName = Path.GetFileNameWithoutExtension(vTestProject);
-            vResult.Add(NewTargetRow($"{vName} · Tests", vTestProject, aProjectPath, "Debug", null, string.Empty));
+            vResult.Add(NewTargetRow(vName, vTestProject, aProjectPath, "Debug", null, string.Empty));
         }
 
         return vResult;

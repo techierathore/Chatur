@@ -377,7 +377,7 @@ The owner's own hand on check-in, push and branches.
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-10-21.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
+**Snapshot as of 2026-10-22.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
@@ -386,7 +386,7 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | Start | 6 | 5 | 1 | Partial |
 | Workbench | 34 | 0 | 34 | In progress |
 | Prerequisites | 5 | 2 | 3 | Partial |
-| Settings | 33 | 13 | 20 | Partial |
+| Settings | 33 | 12 | 21 | Partial |
 | Repository | 5 | 0 | 5 | In progress |
 | Non-functional | 6 | 6 | 0 | Done |
 

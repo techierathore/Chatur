@@ -247,7 +247,7 @@ test('REQ-UI-073 Edit ▸ Undo, Redo, Cut, Copy and Paste act on the open file',
   await expect(vEditor).toHaveValue(/XYZ/);
 
   // copy, then cut what is selected, then paste it back
-  await vEditor.press('Control+A');
+  await vEditor.evaluate((el) => (el as HTMLTextAreaElement).select());
   await pick(page, 'edit', 'copy');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('XYZ');
   await pick(page, 'edit', 'cut');
@@ -388,6 +388,7 @@ test('REQ-UI-074 closing the conversation gives the file view the window and Vie
   await openMenu(page, 'view');
   await expect(page.getByTestId('menu-view-chat')).toHaveAttribute('aria-checked', 'true');
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
 
   // View ▸ Chat also hides it, and the close button and the menu stay in step
   await pick(page, 'view', 'chat');
@@ -410,10 +411,16 @@ test('REQ-UI-074 the window is never left with neither the file view nor the con
 });
 
 test('REQ-UI-023 a stop shows only where the stop was, and each step under the reply it belongs to', async () => {
+  const vProject = query('SELECT ProjectId FROM Project WHERE Name = ?', NAME)[0].ProjectId as number;
+  const vBeforeSession = (query('SELECT MAX(SessionId) AS Id FROM Session WHERE ProjectId = ?', vProject)[0].Id as number) ?? 0;
   await page.getByTestId('new-chat').click();
   await expect(page.getByTestId('conversation-empty')).toBeVisible({ timeout: 15_000 });
-  const vProject = query('SELECT ProjectId FROM Project WHERE Name = ?', NAME)[0].ProjectId as number;
-  const vSession = query('SELECT MAX(SessionId) AS Id FROM Session WHERE ProjectId = ?', vProject)[0].Id as number;
+  let vSession = vBeforeSession;
+  await expect.poll(() => {
+    const vId = query('SELECT MAX(SessionId) AS Id FROM Session WHERE ProjectId = ?', vProject)[0].Id as number | null;
+    vSession = vId ?? vSession;
+    return vId ?? 0;
+  }, { timeout: 10_000 }).toBeGreaterThan(vBeforeSession);
   const vRows: [number, string, string][] = [
     [1, 'user', 'first question'],
     [2, 'tool', 'Read notes.txt'],
@@ -427,6 +434,11 @@ test('REQ-UI-023 a stop shows only where the stop was, and each step under the r
     run('INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, CreatedUtc) VALUES (?, ?, ?, ?, ?)', vSession, vSeq, vKind, vText, new Date().toISOString());
   }
   await page.reload({ waitUntil: 'networkidle' });
+  await expect(page.getByTestId('project-switch-name')).toHaveText(NAME, { timeout: 20_000 });
+  // The harness's shared database may have older sessions for this project; pick the one we seeded.
+  await page.getByTestId('history').click();
+  await page.getByTestId(`session-${vSession}`).click();
+  await expect(page.getByTestId('conversation-empty')).toHaveCount(0, { timeout: 10_000 });
   const vThread = page.getByTestId('conversation-thread');
   await expect(vThread.getByText('second reply')).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId('activity-step')).toHaveCount(3, { timeout: 15_000 });

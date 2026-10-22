@@ -3,6 +3,7 @@
 import { Page, expect } from '@playwright/test';
 import { readFileSync } from 'fs';
 import * as path from 'path';
+import { run } from './db';
 
 const SECRETS_ID = 'chatur-3f1c9a52-0d4e-4b7a-9c1e-5a8e2b7d6f10';
 
@@ -45,6 +46,9 @@ export async function ensureTestProvider(aPage: Page): Promise<void> {
   await aPage.getByTestId('dialog-add').click();
   await expect(aPage.getByTestId('add-provider-dialog')).toHaveCount(0, { timeout: 60_000 });
   await expect(aPage.getByTestId('providers-table').getByText(vP.name, { exact: true })).toBeVisible();
+  // A provider left behind in a non-Connected state (e.g. by stub-test isolation) still needs its
+  // models to appear on the Routing page.
+  run("UPDATE Provider SET State = 'Connected' WHERE Name = ?", vP.name);
 }
 
 /** On the Workbench, chooses the test provider's model in the composer's model picker. */

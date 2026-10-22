@@ -45,7 +45,7 @@
                                 Class="@($"h-auto w-full flex-col items-start gap-2 p-3 text-left whitespace-normal {(vIsCurrent ? "border-primary bg-accent" : "")}")"
                                 OnClick="() => ChooseAsync(vTheme.Name)"
                                 data-testid="@($"theme-{vTheme.Name}")">
-                            <span class="flex w-full items-center gap-2">
+                            <span class="flex w-full flex-wrap items-center gap-2">
                                 <b class="font-semibold capitalize">@vTheme.Name</b>
                                 @if (vTheme.Source == "build" && vTheme.Name == "amber")
                                 {

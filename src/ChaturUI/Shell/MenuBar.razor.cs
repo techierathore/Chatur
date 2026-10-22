@@ -85,6 +85,8 @@ public partial class MenuBar : IAsyncDisposable
 
     private RunTarget? objSelectedTarget => Workbench.SelectedRunTarget;
 
+    private void OnWorkbenchChanged() => InvokeAsync(StateHasChanged);
+
     /// <summary>Loads run targets the first time the Project menu opens, matching the toolbar's timing.</summary>
     private async Task EnsureTargetsLoadedAsync()
     {
@@ -161,10 +163,11 @@ public partial class MenuBar : IAsyncDisposable
     }
 
     /// <inheritdoc />
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         AppStateService.Changed += OnAppStateChanged;
         Workbench.Changed += OnAppStateChanged;
+        await EnsureTargetsLoadedAsync();
     }
 
     /// <summary>Whether the open file can be saved now: it has changes, and no proposed change holds it read-only.</summary>

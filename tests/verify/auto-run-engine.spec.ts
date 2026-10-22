@@ -4,6 +4,7 @@
 // builds the fixture), so the budgets are honest. A work step is handed to its process's agent (REQ-FN-084), so a
 // scripted model service (tests/verify/support/stub-model.ts) answers every agent turn the same way each time.
 import { Page, expect } from '@playwright/test';
+import { rmSync } from 'fs';
 import { join } from 'path';
 import { signIn } from './support/auth';
 import { query, run } from './support/db';
@@ -36,6 +37,8 @@ test.afterAll(async () => {
 });
 
 function resetEngineFixture(): void {
+  // A previous real-model run may have left generated documents; start clean so checks stop at the first missing one.
+  rmSync(join(DIR, 'docs'), { recursive: true, force: true });
   write(join(DIR, 'Directory.Build.props'), '<Project />\n');
   write(join(DIR, 'nuget.config'), '<?xml version="1.0" encoding="utf-8"?>\n<configuration><packageSources><clear /></packageSources></configuration>\n');
   write(join(DIR, `${NAME}.csproj`),

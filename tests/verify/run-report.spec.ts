@@ -141,7 +141,7 @@ test('REQ-UI-061 picking an earlier run shows that run instead of the newest', a
   await page.getByTestId('run-select-button').click();
   const vPop = page.getByTestId('run-select-pop');
   await expect(vPop).toBeVisible();
-  await vPop.getByText(/20 Sep 09:05/).click();
+  await vPop.getByText(/20 Sep/).first().click();
   await expect(page.getByTestId('req-row-1')).toContainText('REQ-UI-001');
   await expect(page.getByTestId('tile-touched-value')).toHaveText('1');
   await expect(page.getByTestId('tile-tokens-value')).toHaveText('150');

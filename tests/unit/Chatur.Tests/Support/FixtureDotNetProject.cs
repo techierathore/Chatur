@@ -20,6 +20,7 @@ public static class FixtureDotNetProject
 
     private const string Tests =
         """
+        using System.Threading;
         using Xunit;
 
         namespace Fixture;
@@ -30,7 +31,11 @@ public static class FixtureDotNetProject
             public void FirstPasses() => Assert.Equal(4, 2 + 2);
 
             [Fact(DisplayName = "REQ-FN-002 second requirement fails")]
-            public void SecondFails() => Assert.Fail("deliberate failure for the verdict test");
+            public void SecondFails()
+            {
+                Thread.Sleep(1500);
+                Assert.Fail("deliberate failure for the verdict test");
+            }
 
             [Fact(DisplayName = "REQ-FN-006/007 shorthand pair passes")]
             public void PairPasses() => Assert.Equal(6, 3 + 3);

@@ -30,6 +30,24 @@ Console.WriteLine("WBA third")
 `;
 export const NOTES = 'alpha notes line\n';
 
+/** A platform TFM this host cannot build, so the target-pop shows it as needing another machine. */
+export function remoteTfm(): string {
+  switch (process.platform) {
+    case 'win32': return 'net10.0-ios';
+    case 'darwin': return 'net10.0-windows10.0.19041.0';
+    default: return 'net10.0-ios';
+  }
+}
+
+/** Human-readable platform name shown in the target menu for the {@link remoteTfm} row. */
+export function remoteLabel(): string {
+  switch (process.platform) {
+    case 'win32': return 'iOS';
+    case 'darwin': return 'Windows';
+    default: return 'iOS';
+  }
+}
+
 export function write(aPath: string, aText: string) {
   mkdirSync(join(aPath, '..'), { recursive: true });
   writeFileSync(aPath, aText);
@@ -48,7 +66,7 @@ export function resetFixture(aProgram = PROGRAM_OK) {
   write(join(PROJECT, 'Notes', 'notes.txt'), NOTES);
   // A second project that is only discovered, never built: a multi-head csproj with a head this machine cannot build.
   write(join(ROOT, MULTI, `${MULTI}.csproj`),
-    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFrameworks>net10.0;net10.0-ios</TargetFrameworks>\n  </PropertyGroup>\n</Project>\n');
+    `<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFrameworks>net10.0;${remoteTfm()}</TargetFrameworks>\n  </PropertyGroup>\n</Project>\n`);
   write(join(ROOT, MULTI, 'Multi.cs'), 'class Multi { }\n');
   write(join(ROOT, MULTI, 'Docs', 'readme.txt'), 'multi readme\n');
 }

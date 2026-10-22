@@ -6,6 +6,7 @@
 // the activity panel - is the real thing; only the model's choice is fixed.
 import { createServer, IncomingMessage, Server } from 'http';
 import { Page, expect } from '@playwright/test';
+import { query, run } from './db';
 
 export const STUB_PORT = Number(process.env.CHATUR_STUB_PORT ?? 18951);
 export const STUB_PROVIDER_NAME = 'Stub edit model';
@@ -98,6 +99,7 @@ const field = (aPage: Page, aId: string) => aPage.locator(`input[data-testid=${a
 
 /** Adds the stub as an OpenAI-compatible provider through the real Add a provider dialog, unless it is already listed. */
 export async function ensureStubProvider(aPage: Page, aStub: StubModel): Promise<void> {
+  await isolateStubProvider();
   await aPage.goto('/settings/providers', { waitUntil: 'networkidle' });
   await aPage.waitForTimeout(1500);
   if ((await aPage.getByTestId('providers-table').getByText(STUB_PROVIDER_NAME, { exact: true }).count()) > 0) return;
@@ -122,6 +124,7 @@ export async function chooseStubModel(aPage: Page): Promise<void> {
 /** Takes the stub provider off Settings ▸ Model providers again, so no later test sees a provider it did not add. */
 export async function removeStubProvider(aPage: Page): Promise<void> {
   try {
+    await restoreOtherProviders();
     await aPage.goto('/settings/providers', { waitUntil: 'networkidle' });
     await aPage.waitForTimeout(1500);
     const vRemove = aPage.getByTestId(`remove-${STUB_PROVIDER_NAME.toLowerCase().replace(/ /g, '-')}`);
@@ -132,4 +135,26 @@ export async function removeStubProvider(aPage: Page): Promise<void> {
   } catch {
     // best effort: the stub address is fixed, so a provider left behind is found and reused by the next run
   }
+}
+
+/** Original states of providers that were connected before {@link isolateStubProvider} ran. */
+let objPausedProviderStates: { Name: string; State: string }[] = [];
+
+/** Disconnects every connected provider except the stub, so ResolveModelAsync picks the stub model. */
+export async function isolateStubProvider(): Promise<void> {
+  objPausedProviderStates = query(
+    "SELECT Name, State FROM Provider WHERE State = 'Connected' AND Name <> ?",
+    STUB_PROVIDER_NAME,
+  ) as { Name: string; State: string }[];
+  if (objPausedProviderStates.length > 0) {
+    run("UPDATE Provider SET State = 'NotTestedYet' WHERE State = 'Connected' AND Name <> ?", STUB_PROVIDER_NAME);
+  }
+}
+
+/** Reconnects the providers paused by {@link isolateStubProvider}. */
+export async function restoreOtherProviders(): Promise<void> {
+  for (const vProvider of objPausedProviderStates) {
+    run("UPDATE Provider SET State = ? WHERE Name = ?", vProvider.State, vProvider.Name);
+  }
+  objPausedProviderStates = [];
 }

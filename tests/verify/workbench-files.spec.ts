@@ -6,7 +6,7 @@ import { join } from 'path';
 import { signIn } from './support/auth';
 import {
   test, NAME, MULTI, PROJECT, NOTES, resetFixture, openProject, switchTo, openTargetMenu, openFile, setFolder,
-  projectName, tree, tabs, editorText,
+  projectName, tree, tabs, editorText, remoteLabel,
 } from './support/workbench-a';
 
 let page: Page;
@@ -63,18 +63,18 @@ test('REQ-UI-011 only targets this machine can build are choosable; one needing 
   await openProject(page, MULTI);
   await openTargetMenu(page);
   const vPop = page.getByTestId('target-pop');
-  const vIos = vPop.getByRole('menuitem').filter({ hasText: 'iOS' });
+  const vRemote = vPop.getByRole('menuitem').filter({ hasText: remoteLabel() });
   const vBuildable = vPop.getByRole('menuitem').filter({ hasText: 'net10.0 ·' });
-  await expect(vIos.first()).toBeVisible();
-  await expect(vIos.first()).toContainText('needs another machine');
-  await expect(vIos.first()).toHaveAttribute('data-disabled', /.*/);
+  await expect(vRemote.first()).toBeVisible();
+  await expect(vRemote.first()).toContainText('needs another machine');
+  await expect(vRemote.first()).toHaveAttribute('data-disabled', /.*/);
   await expect(vBuildable.first()).toBeVisible();
   await expect(vBuildable.first()).not.toHaveAttribute('data-disabled', /.*/);
   const vBefore = (await page.getByTestId('target').innerText()).trim();
-  await vIos.first().click({ force: true });
+  await vRemote.first().click({ force: true });
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('target')).toHaveText(vBefore);
-  await expect(page.getByTestId('target')).not.toContainText('iOS');
+  await expect(page.getByTestId('target')).not.toContainText(remoteLabel());
 });
 
 test('REQ-UI-039 the files card shows the solution and folders, and a folder opens and closes', async () => {

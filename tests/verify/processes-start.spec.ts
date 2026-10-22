@@ -4,8 +4,9 @@ import { Page, expect } from '@playwright/test';
 import { readdirSync } from 'fs';
 import { join } from 'path';
 import { signIn } from './support/auth';
-import { query } from './support/db';
+import { query, run } from './support/db';
 import { openProcessesTab, startProcess, tab } from './support/phase2-tabs';
+import { ensureStubProvider, removeStubProvider, startStubModel, StubModel } from './support/stub-model';
 import { test, NAME, PROJECT, resetFixture, openProject, write, SHOTS } from './support/workbench-a';
 
 const COMMANDS = [
@@ -14,12 +15,21 @@ const COMMANDS = [
 ];
 
 let page: Page;
+let stub: StubModel;
 
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage({ baseURL: process.env.BASE_URL });
   await signIn(page, 'Owner');
+  stub = await startStubModel('read-file', { path: `docs/${NAME}-P2-Checklist.md` });
+  await ensureStubProvider(page, stub);
+  // A run left behind by an earlier aborted run would show as "running now" and hide the last-run cell.
+  run("UPDATE ProcessRun SET State='stopped', EndedUtc=datetime('now') WHERE State IN ('running','waiting') AND ProjectId=(SELECT ProjectId FROM Project WHERE Name=?)", NAME);
 });
-test.afterAll(async () => { await page.close(); });
+test.afterAll(async () => {
+  await removeStubProvider(page);
+  await stub.close();
+  await page.close();
+});
 test.beforeEach(async () => {
   test.setTimeout(120_000);
   resetFixture();
@@ -60,6 +70,7 @@ test('REQ-FN-050 start opens Process run for the selected project on its first s
   const vProject = query('SELECT ProjectId FROM Project WHERE Name=?', NAME);
   expect(vRows[0].ProjectId).toBe(vProject[0].ProjectId);
   // The start is remembered: Processes now shows when build-phase last ran.
+  await expect(page.getByTestId('run-state')).toContainText(/stopped|finished/, { timeout: 180_000 });
   await tab(page, 'Processes').click();
   await expect(page.getByTestId('last-build-phase')).not.toHaveText(/^\s*[-–—]?\s*$/, { timeout: 30_000 });
 });

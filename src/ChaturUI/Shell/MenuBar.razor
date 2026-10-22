@@ -167,7 +167,6 @@
             <MenubarTrigger data-testid="menu-help">Help</MenubarTrigger>
             <MenubarContent data-testid="menu-help-items">
                 <MenubarItem OnClick="ShowAboutAsync" data-testid="menu-help-about">About Chatur</MenubarItem>
-                <MenubarItem OnClick="@(() => OpenSecondary("/feedback"))" data-testid="menu-help-feedback">Send feedback…</MenubarItem>
                 @* The newer-build offer lives on Prerequisites (REQ-UI-018), so this opens it there. *@
                 <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-help-updates">Check for updates</MenubarItem>
             </MenubarContent>

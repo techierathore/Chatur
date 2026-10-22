@@ -65,14 +65,7 @@
                         </DataTableColumn>
                         <DataTableColumn TData="MeasurementStream" TValue="int" Property="@(s => s.Refused)" Header="Refused" Align="DataTableColumnAlign.End">
                             <CellTemplate Context="stream">
-                                @if (stream.Refused > 0)
-                                {
-                                    <Badge Variant="BadgeVariant.Warning" data-testid="@($"{StreamKey(stream.Name)}-refused")">@stream.Refused</Badge>
-                                }
-                                else
-                                {
-                                    <span class="text-muted-foreground" data-testid="@($"{StreamKey(stream.Name)}-refused")">@stream.Refused</span>
-                                }
+                                <span class="@(stream.Refused > 0 ? "text-alert-warning" : "text-muted-foreground")" data-testid="@($"{StreamKey(stream.Name)}-refused")">@stream.Refused</span>
                             </CellTemplate>
                         </DataTableColumn>
                         <DataTableColumn TData="MeasurementStream" TValue="string" Property="@(s => s.LastWriteFailed ? "failed" : "ok")" Header="Last write" Width="110px">

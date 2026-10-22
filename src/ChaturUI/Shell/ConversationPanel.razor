@@ -19,7 +19,7 @@
                         <LucideIcon Name="list" Size="14" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent Class="max-h-80 w-80 overflow-y-auto" data-testid="history-pop">
+                <DropdownMenuContent Class="max-h-80 w-80 overflow-y-auto" data-testid="history-pop" role="listbox">
                     <DropdownMenuLabel>Earlier on @(AppStateService.SelectedProject?.Name ?? "this project")</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     @if (objSessions.Count == 0)
@@ -30,7 +30,7 @@
                     {
                         @foreach (var vSession in objSessions)
                         {
-                            <DropdownMenuItem OnClick="() => SelectSession(vSession)" data-testid="@($"session-{vSession.SessionId}")">
+                            <DropdownMenuItem OnClick="() => SelectSession(vSession)" data-testid="@($"session-{vSession.SessionId}")" role="option">
                                 <span class="flex flex-1 flex-col">
                                     <span>@vSession.RoleName · @vSession.Mode</span>
                                     <span class="text-xs text-muted-foreground">@(AppStateService.SelectedProject?.Name) · @vSession.StartedUtc.ToLocalTime().ToString("d MMM, HH:mm") · @vSession.State</span>

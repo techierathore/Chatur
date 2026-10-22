@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -59,33 +60,37 @@ public sealed class AppManagerClient : IAppManagerClient
         return vEnvelope.Data.PublicKey;
     }
 
-    /// <inheritdoc />
-    public Task<AppManagerAuthResult> DeviceLoginAsync(string aEmail, string aEncryptedPassword, AppManagerDeviceInfo aDevice, CancellationToken aCt = default) =>
-        PostAuthAsync(
-            "AuthSvc/device-login",
-            new
-            {
-                email = aEmail,
-                encryptedPassword = aEncryptedPassword,
-                applicationId = objApplicationId,
-                deviceInfo = ToDeviceInfoBody(aDevice)
-            },
-            aCt);
+    private bool HasApiKey => objHttp.DefaultRequestHeaders.Contains("X-Api-Key");
 
     /// <inheritdoc />
-    public Task<AppManagerAuthResult> DeviceRegisterAsync(string aEmail, string aEncryptedPassword, string aFirstName, string aLastName, AppManagerDeviceInfo aDevice, CancellationToken aCt = default) =>
-        PostAuthAsync(
-            "AuthSvc/device-register",
-            new
-            {
-                email = aEmail,
-                encryptedPassword = aEncryptedPassword,
-                firstName = aFirstName,
-                lastName = aLastName,
-                applicationId = objApplicationId,
-                deviceInfo = ToDeviceInfoBody(aDevice)
-            },
-            aCt);
+    public Task<AppManagerAuthResult> DeviceLoginAsync(string aEmail, string aEncryptedPassword, AppManagerDeviceInfo aDevice, CancellationToken aCt = default)
+    {
+        var vBody = new Dictionary<string, object?>
+        {
+            ["email"] = aEmail,
+            ["encryptedPassword"] = aEncryptedPassword,
+            ["deviceInfo"] = ToDeviceInfoBody(aDevice)
+        };
+        if (!HasApiKey && objApplicationId.HasValue)
+            vBody["applicationId"] = objApplicationId.Value;
+        return PostAuthAsync("AuthSvc/device-login", vBody, aCt);
+    }
+
+    /// <inheritdoc />
+    public Task<AppManagerAuthResult> DeviceRegisterAsync(string aEmail, string aEncryptedPassword, string aFirstName, string aLastName, AppManagerDeviceInfo aDevice, CancellationToken aCt = default)
+    {
+        var vBody = new Dictionary<string, object?>
+        {
+            ["email"] = aEmail,
+            ["encryptedPassword"] = aEncryptedPassword,
+            ["firstName"] = aFirstName,
+            ["lastName"] = aLastName,
+            ["deviceInfo"] = ToDeviceInfoBody(aDevice)
+        };
+        if (!HasApiKey && objApplicationId.HasValue)
+            vBody["applicationId"] = objApplicationId.Value;
+        return PostAuthAsync("AuthSvc/device-register", vBody, aCt);
+    }
 
     /// <inheritdoc />
     public async Task<AppManagerAuthResult> RefreshAsync(string aRefreshToken, CancellationToken aCt = default)

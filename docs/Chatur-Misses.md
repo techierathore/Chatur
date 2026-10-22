@@ -3,16 +3,77 @@
 | | |
 |---|---|
 | App | Chatur |
-| Count | 600 logged: 348 open, 252 fixed, 0 will not fix |
+| Count | 675 logged: 423 open, 252 fixed, 0 will not fix |
 | Source | `docs/metrics/misses.jsonl`, one row per miss record. Rewritten by `tf-misses-md.sh` on every new record. Never edit it: a wrong row is corrected by a new record. |
-| Updated | 2026-10-21 |
+| Updated | 2026-10-22 |
 
 **Whose gap** answers the four questions of the miss protocol: **the app's spec** did not say it, so the checklist line is fixed; **the framework never said it**, so one requirement line and a check are added; **the check was too weak** (a review, or a script that did not fire), so the check is fixed; **said and ignored**, so the rule becomes a hook or is deleted. **not sorted** means the record predates the sort or nobody has answered yet; `bash .tfcore/utils/tf-emit.sh --amend <miss> sort <spec|unsaid|weak-check|ignored>` completes it.
 
-## Open (348)
+## Open (423)
 
 | Miss | Found | Whose gap | What went wrong |
 |---|---|---|---|
+| MISS-Chatur-20261022-38 | 2026-10-22 by agent-review | not sorted | OpenCode Go models stream reasoning_content before content and TechieRag drops those deltas, so each Go chat/completions model was probed with a one-line prompt; minimax-m3 was the first whose first delta carried content, and the test provider was switched to it. |
+| MISS-Chatur-20261022-37 (REQ-FN-046) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-36 (REQ-FN-045) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-35 (REQ-UI-041) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-34 (REQ-FN-044) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-33 (REQ-UI-040) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-32 (REQ-UI-039) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-31 (REQ-UI-036) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-30 (REQ-UI-035) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-29 (REQ-FN-042) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-28 (REQ-FN-041) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-27 (REQ-FN-040) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-26 (REQ-UI-034) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-25 (REQ-UI-033) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-24 (REQ-FN-036) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-23 (REQ-FN-035) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-22 (REQ-FN-034) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-21 (REQ-FN-033) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-20 (REQ-UI-032) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-19 (REQ-FN-032) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-18 (REQ-FN-031) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-17 (REQ-UI-031) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-16 (REQ-UI-024) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-15 (REQ-UI-023) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-14 (REQ-UI-022) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-13 (REQ-UI-021) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-12 (REQ-FN-027) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-11 (REQ-FN-026) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-10 (REQ-FN-025) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-09 (REQ-FN-024) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-08 (REQ-FN-010) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-07 (REQ-UI-016) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-06 (REQ-UI-014) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-05 (REQ-UI-013) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-04 (REQ-FN-009) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-03 (REQ-UI-010) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-02 (REQ-FN-008) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261022-01 (REQ-FN-007) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261021-99 (REQ-FN-035) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-98 (REQ-FN-034) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-97 (REQ-FN-033) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-96 (REQ-UI-032) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-95 (REQ-FN-032) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-94 (REQ-FN-031) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-93 (REQ-UI-031) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-92 (REQ-UI-024) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-91 (REQ-UI-023) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-90 (REQ-UI-022) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-89 (REQ-UI-021) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-88 (REQ-FN-027) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-87 (REQ-FN-026) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-86 (REQ-FN-025) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-85 (REQ-FN-024) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-84 (REQ-FN-010) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-83 (REQ-UI-016) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-82 (REQ-UI-014) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-81 (REQ-UI-013) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-80 (REQ-FN-009) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-79 (REQ-UI-010) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-78 (REQ-FN-008) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-77 (REQ-FN-007) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261021-76 (REQ-UI-074) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-75 (REQ-UI-073) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-74 (REQ-UI-074) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
@@ -78,7 +139,21 @@
 | MISS-Chatur-20261021-14 (REQ-FN-013) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-13 (REQ-FN-012) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-12 (REQ-UI-018) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261021-113 (REQ-FN-046) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-112 (REQ-FN-045) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-111 (REQ-UI-041) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-110 (REQ-FN-044) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261021-11 (REQ-UI-017) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261021-109 (REQ-UI-040) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-108 (REQ-UI-039) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-107 (REQ-UI-036) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-106 (REQ-UI-035) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-105 (REQ-FN-042) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-104 (REQ-FN-041) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-103 (REQ-FN-040) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-102 (REQ-UI-034) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-101 (REQ-UI-033) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261021-100 (REQ-FN-036) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261021-10 (REQ-FN-011) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-09 (REQ-UI-004) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-08 (REQ-FN-005) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |

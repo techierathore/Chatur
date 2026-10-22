@@ -81,6 +81,9 @@ public sealed class ThemeActions : IThemeActions
 
         await UpsertSettingAsync(vConnection, "Appearance.ThemeName", aThemeName, aCt).ConfigureAwait(false);
         await UpsertSettingAsync(vConnection, "Appearance.ThemeMode", aMode.ToString(), aCt).ConfigureAwait(false);
+        // Some acceptance tests read the raw boolean back from the Setting table.
+        var vIsDark = aMode == ThemeMode.Dark || (aMode == ThemeMode.FollowSystem && objAppState.IsSystemDark);
+        await UpsertSettingAsync(vConnection, "Appearance.IsDark", vIsDark ? "1" : "0", aCt).ConfigureAwait(false);
 
         // Every open window reads AppState, so this one write repaints all of them (REQ-UI-037).
         objAppState.SetTheme(aThemeName, aMode);

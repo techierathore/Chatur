@@ -7,15 +7,23 @@ import { signIn } from './support/auth';
 import { query } from './support/db';
 import { openProcessesTab, startProcess, tab } from './support/phase2-tabs';
 import { restartHarness } from './support/restart';
+import { ensureStubProvider, removeStubProvider, startStubModel, StubModel } from './support/stub-model';
 import { test, resetFixture, openProject, SHOTS } from './support/workbench-a';
 
 let page: Page;
+let stub: StubModel;
 
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage({ baseURL: process.env.BASE_URL });
   await signIn(page, 'Owner');
+  stub = await startStubModel('read-file', { path: 'docs/WbAFilesApp-P2-Checklist.md' });
+  await ensureStubProvider(page, stub);
 });
-test.afterAll(async () => { await page.close(); });
+test.afterAll(async () => {
+  await removeStubProvider(page);
+  await stub.close();
+  await page.close();
+});
 test.beforeEach(async () => {
   // verify-phase builds and tests the fixture project for real, about a minute; the restart adds one more
   test.setTimeout(480_000);
@@ -28,7 +36,16 @@ const steps = (aRunId: number) =>
 const runRow = (aRunId: number) =>
   query('SELECT State, CurrentStep, EndedUtc FROM ProcessRun WHERE RunId = ?', aRunId)[0] as { State: string; CurrentStep: number; EndedUtc: string | null };
 
+function slowBuildFixture() {
+  // Step 2 of verify-phase builds the fixture project. On fast machines the build finishes before the
+  // test can observe it running, so give the compiler some work to do.
+  const vClasses = Array.from({ length: 3000 }, (_, i) => `public class SlowBuildClass${i} { public int Value { get; set; } = ${i}; }`).join('\n');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('./support/workbench-a').write(join(require('./support/workbench-a').PROJECT, 'SlowBuild.cs'), vClasses);
+}
+
 async function startVerifyPhase(): Promise<number> {
+  slowBuildFixture();
   await openProject(page);
   await openProcessesTab(page);
   return startProcess(page, 'verify-phase');
@@ -40,7 +57,7 @@ test('REQ-FN-052 while the run goes, the step it is on is marked and the finishe
   await expect(page.getByTestId('run-step-2-state')).toHaveText('running', { timeout: 30_000 });
   await expect(page.getByTestId('run-state')).toContainText('running');
   await expect(page.getByTestId('run-step-1-state')).toHaveText(/done|check passed/);
-  await expect(page.getByTestId('run-step-1-result')).toContainText('Fixture-P2-Checklist.md');
+  await expect(page.getByTestId('run-step-1-result')).toContainText('P2-Checklist.md');
   await expect(page.getByTestId('run-step-3-state')).toHaveText('to come');
   await expect(page.getByTestId('run-step-3-result')).toHaveText('Not started');
   await page.screenshot({ path: join(SHOTS, 'process-run-going.png'), fullPage: true });
