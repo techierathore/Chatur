@@ -225,7 +225,7 @@ static async Task EnsureDefaultProviderAsync(IServiceProvider aServices)
             "SELECT last_insert_rowid();",
             new { Name = vProviderName, Connector = vConnector, BaseUrl = vBaseUrl, SecretName = vSecretName });
 
-        var vModels = new[] { "minimax-m3", "kimi-k2.7-code", "kimi-k2.5-code" };
+        var vModels = new[] { "kimi-k2.7-code", "kimi-k2.5-code" };
         for (var vIndex = 0; vIndex < vModels.Length; vIndex++)
         {
             // Tier 2 is the shipped "everyday work" tier; Routing's reset-tiers puts these in Tier 2.

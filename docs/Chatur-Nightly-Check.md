@@ -118,7 +118,7 @@ and each screen was opened in the Windows app. Test them by use all the same.
 | TR-021: a disabled menu item was not announced as disabled. **Fixed upstream 13 Oct**, same release | Until then screen readers read dimmed items as available. Re-checked here by the menu tests' `toBeDisabled()` after the upgrade | No |
 | TF-012: verify counted a row as tested when its id appeared in another test's sample data. Open; prompt below | REQ-FN-053 and REQ-FN-055 were Verified untested until 13 Oct; now tested for real | No |
 | The top bar says "Signed in" after a failed sign-in check | What the top bar tells you | No, but it is wrong |
-| TR-RAG-006: the small-model router. **Fixed upstream 9 Oct** in TechieRag 1.1.5, which Chatur uses | Automatic routing (REQ-FN-071, REQ-FN-072) has never run against a live model. Re-checked here by the entry's live run once a local or cheap small model is set up | Not tested live |
+| TR-RAG-006: the small-model router. **Fixed upstream 9 Oct** in TechieRag 1.1.5; Chatur now uses 1.1.7 | Automatic routing (REQ-FN-071, REQ-FN-072) has never run against a live model. Re-checked here by the entry's live run once a local or cheap small model is set up | Not tested live |
 | Nothing has been run on a Mac: Homebrew tools from Finder (REQ-FN-012) | The Mac build | Unknown until run on a Mac |
 | TF-010: Mac zoom reached only the last window opened. **Fixed upstream 12 Oct** | Mac zoom. Re-checked here by `tf-verify-zoom.sh` on a Mac head | Unknown until run on a Mac |
 | Test users Second and Yolo do not exist on production App Manager | Tests sign in as Owner | No |

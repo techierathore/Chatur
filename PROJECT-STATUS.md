@@ -25,17 +25,17 @@
 
 ---
 project: Chatur
-last_updated: 2026-10-22
-current_phase: Phase 1 of 4 (Workbench) · Build — 1 not built, 68 to fix, 25 of 98 verified
+last_updated: 2026-10-24
+current_phase: Phase 1 of 4 (Workbench) · Build — 68 to fix, 26 of 98 verified
 last_verified_build: PASS
-last_verified_date: 2026-10-22
+last_verified_date: 2026-10-24
 ---
 
 # Chatur — Status
 
 ## Where I am
 
-Phase 1 of 4 (Workbench). The OpenCode Go chat path now returns answers: all 11 chat-dependent acceptance tests passed on the web head. The rows remain Needs re-verify because pre-existing render and mockup-parity gaps still fail on Workbench, Settings/providers and Settings/routing. One row is still FAIL (REQ-UI-034) and one is Blocked (REQ-UI-017 desktop only).
+Phase 1 of 4 (Workbench). Chatur is on TechieRag 1.1.7 and the test model is Kimi K2.7 Code. A web verify on 24 Oct passed every chat test; REQ-UI-034 is now Verified (26 of 98). The other 72 rows fail render or mockup checks on Workbench, Routing, Repository and Settings. The Mac head can only measure Sign in (TF-016).
 
 ## Next command to run
 
@@ -58,9 +58,7 @@ Clear the render and mockup-parity gaps on Workbench and Settings so the 11 chat
 | Implemented | 0 |
 | Needs re-verify | 71 |
 | Blocked | 1 |
-| FAIL | 1 |
 
-- [ ] REQ-UI-034 — A correction is written down (FAIL)
 - [ ] REQ-UI-001 — Sign in with an account (Needs re-verify)
 - [ ] REQ-FN-001 — The password never leaves the machine as text (Needs re-verify)
 - [ ] REQ-UI-002 — A refused sign-in says why (Needs re-verify)
@@ -70,7 +68,7 @@ Clear the render and mockup-parity gaps on Workbench and Settings so the 11 chat
 - [ ] REQ-FN-005 — A weak password is caught before it is sent (Needs re-verify)
 - [ ] REQ-FN-007 — What the selected project is (Needs re-verify)
 - [ ] REQ-FN-008 — Straight into the work (Needs re-verify)
-- (63 more open rows in docs/Chatur-Checklist.md)
+- (62 more open rows in docs/Chatur-Checklist.md)
 
 ## Known blockers
 
@@ -83,16 +81,16 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 | Date | Phase | Result | Status table |
 |---|---|---|---|
-| 2026-10-21 | verify-phase --scope all --head web | 26/98 Verified | docs/Chatur-Checklist.md#requirements-status |
-| 2026-10-22 | verify-phase | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
+| 2026-10-24 | verify-phase --scope all --head web | 26/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 | 2026-10-22 | verify-phase --scope all --head web | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 | 2026-10-22 | verify-phase | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 | 2026-10-22 | verify-phase --scope REQ-FN-021,REQ-FN-026,REQ-FN-027,REQ-FN-033,REQ-FN-034,REQ-FN-035,REQ-FN-036,REQ-UI-019,REQ-UI-021,REQ-UI-022,REQ-UI-032 --head web | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
+| 2026-10-24 | fix-issues | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
 
 ## Library feedback summary
 
-- TechieFlow: 3 open · 2 fixed upstream, not yet re-checked (TF-008, TF-010) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
-- TechieRag: 2 open · 1 fixed upstream, not yet re-checked (TR-RAG-006) · 5 closed — docs/Chatur-TechieRag-Feedback.md
+- TechieFlow: 4 open · 2 fixed upstream, not yet re-checked (TF-008, TF-010) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
+- TechieRag: 2 open · 1 fixed upstream, not yet re-checked (TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
 - TrBlazeUI: 0 open · 21 closed — docs/Chatur-TrBlazeUI-Feedback.md
 
 ## Standards compliance

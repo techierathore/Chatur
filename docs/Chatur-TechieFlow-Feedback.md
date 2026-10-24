@@ -4,11 +4,11 @@
 |---|---|
 | App | Chatur |
 | Upstream | TechieFlow |
-| Updated | 2026-10-20 |
+| Updated | 2026-10-24 (TF-016 added) |
 
 ## Summary
 
-15 entries: 3 open (TF-013, TF-014, TF-015), 2 fixed upstream and not yet re-checked (TF-008, TF-010), 10 closed (TF-001 to TF-007, TF-009, TF-011, TF-012). TF-015 is blocking: it prevents the Mac Catalyst verifier from grading phases 2–4 when the first screen is unreachable.
+16 entries: 4 open (TF-013, TF-014, TF-015, TF-016), 2 fixed upstream and not yet re-checked (TF-008, TF-010), 10 closed (TF-001 to TF-007, TF-009, TF-011, TF-012). TF-015 is blocking: it prevents the Mac Catalyst verifier from grading phases 2–4 when the first screen is unreachable. TF-016 blocks nothing: the Mac head can measure only the Sign in screen, and the web head carries the rest.
 
 TF-007 was re-checked here on 2026-10-03: no list box on Start, Workbench, Prerequisites, Providers or Corrections reports "app carries an icon the mockup does not" at either width, and Start, Prerequisites, Providers and Corrections now pass mockup parity outright.
 
@@ -221,6 +221,18 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Encountered in:** `*verify-phase Chatur --scope all --head maccatalyst`, 2026-10-21
 - **Workaround:** none without editing `.tfcore/`; the phase-2..4 checklists remain ungraded.
 - **Suggested fix:** initialize `bad = []` before the `if scr.get("render") == "UNREACHABLE"` branch, or move the `anchors_not_measured` note inside the `else` branch.
+
+### TF-016 — The Mac Catalyst head cannot sign in, so only the Sign in screen is measurable
+
+- **Status:** open, filed 2026-10-24
+- **Severity:** major
+- **Blocks:** no — the web head graded the rows (2026-10-24). The Mac window stays not measured.
+- **Repro:** `tf-verify-boot.sh start --head maccatalyst`, then `tf-verify-screens.sh --list tests/.artifacts/verify/list.json --appium http://localhost:4723 --login-path /sign-in --user <owner> --password <pw>`. Dump the element tree with `tf-appium.mjs` (`s.source()`).
+- **Expected:** the head signs in, or reports every screen behind the sign-in as not measured, and no row is failed for it.
+- **Actual:** Appium mac2 shows the BlazorWebView's content as one empty element (an empty scroll view), so no field or button inside it can be found. The maccatalyst head has no sign-in step, and `--login-path`, `--user` and `--password` are ignored (`login: null` in `tf-verify-native.mjs`). Only Sign in is measurable: 1 screen OK, 11 `UNREACHABLE`. Typing by screen position would be global input, which hard rule 4 forbids, so it was not tried.
+- **Encountered in:** `*verify all Chatur --phase 1 --head maccatalyst`, 2026-10-24
+- **Workaround:** the 73 rows that were not Verified were graded on the web head. The 25 Verified rows were left as they were. The verdict was not applied from the Mac run, because unreachable screens would have failed them.
+- **Suggested fix:** when a head cannot sign in, write every screen behind the sign-in as not measured, never as a failed render, and say so in the Remark. Add a sign-in step for a web view head if it can be driven by the app's own window.
 
 ## Replies from TechieFlow
 

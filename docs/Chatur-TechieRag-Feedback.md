@@ -4,39 +4,53 @@
 |---|---|
 | App | Chatur |
 | Upstream | TechieRag |
-| Updated | 2026-09-30 (TR-RAG-003 added) |
+| Updated | 2026-10-24 (TR-RAG-007 closed, TR-RAG-008 re-checked on 1.1.7) |
 
 ## Summary
 
-8 entries: 2 open (TR-RAG-007 with Chatur workaround, TR-RAG-008 blocking), 1 fixed upstream and not yet fully re-checked (TR-RAG-006), 5 closed.
+Nothing is blocked. 9 entries: 2 open (TR-RAG-008 and TR-RAG-009, neither blocks on 1.1.7), 1 fixed upstream and not yet fully re-checked (TR-RAG-006), 6 closed (TR-RAG-007 closed 2026-10-24).
 
-Chatur is on 1.1.5 since 2026-10-11. REQ-FN-071 and REQ-FN-072 are built on `ModelChooser` and Verified (2026-10-11).
+Chatur is on 1.1.7 since 2026-10-24 (1.1.5 from 2026-10-11). REQ-FN-071 and REQ-FN-072 are built on `ModelChooser` and Verified (2026-10-11).
 
 ## Entries
 
 ### TR-RAG-007 — OpenCode Go needs `x-opencode-session`; the `OpenAICompatible` connector does not send it because `LlmConnectorCatalog.All` omits the endpoint
 
-- **Status:** open 2026-10-22 (worked around in Chatur)
+> ✅ **Closed 2026-10-24** — re-checked here: Re-checked on TechieRag 1.1.7 (2026-10-24), live against OpenCode Go with kimi-k2.7-code: LlmConnectorCatalog.All now lists opencode-go with endpoint https://opencode.ai/zen/go/v1 and sessionHeader x-opencode-session; UseOpenAICompatibleLlm with only that catalog header answered 200 (no MissingSessionID), and the opencode-go connector chat answered 200 (was 401). Chatur's SessionHeaderFor fallback removed.
+
+- **Status:** closed 2026-10-24 — fixed upstream by TechieRag 1.1.7; Chatur's `SessionHeaderFor` fallback is removed and the catalog entry is used
 - **Severity:** minor
 - **Blocks:** no — `TechieRagLlmProviderFactory.SessionHeaderFor` falls back to `x-opencode-session` for `opencode.ai/zen/go`, and the seeded provider uses `OpenAICompatible` with that base URL. We tried TechieRag's own `opencode-go` connector (`UseConnectorLlm`), but its `chat/completions` calls returned 401 while the model list worked, so the fallback path is kept.
 - **Repro:** `OpenAICompatible` + `https://opencode.ai/zen/go/v1` without the fallback → HTTP 400 `MissingSessionID`; `opencode-go` connector → model list 200, chat 401.
 - **Expected:** `LlmConnectorCatalog.All` lists OpenCode Go, or `UseConnectorLlm("opencode-go")` sends the same auth as `UseOpenAICompatibleLlm`.
 - **Actual:** `SessionHeaderFor` finds no catalog entry, so no `x-opencode-session` header is sent on the generic path; the dedicated connector answers model list but returns 401 on chat completions.
 - **Encountered in:** REQ-FN-021, REQ-FN-026, REQ-FN-027, REQ-FN-033–036, REQ-UI-021, REQ-UI-022, REQ-UI-032, REQ-UI-034
-- **Workaround:** Header fallback in `SessionHeaderFor`; provider seeded as `OpenAICompatible`.
+- **Workaround:** Removed 2026-10-24. `SessionHeaderFor` now reads only `LlmConnectorCatalog.All`; the seeded provider stays `OpenAICompatible` (the `opencode-go` connector would also work now).
 - **Suggested fix:** Add OpenCode Go to `LlmConnectorCatalog.All`, or fix `opencode-go` connector auth.
 
 ### TR-RAG-008 — TechieRag drops `reasoning_content` deltas, so reasoning models stream no visible text
 
-- **Status:** open 2026-10-22
-- **Severity:** blocker
-- **Blocks:** yes — conversation rows that need real replies fail when the model emits reasoning tokens before content. Only `content` deltas reach the caller; `reasoning_content` is silently dropped. A low `max_tokens` can then starve the answer entirely.
-- **Repro:** Stream `kimi-k2.7-code` with "say hello"; the first deltas carry `reasoning_content` and empty `content`, so TechieRag emits no text until the content phase.
-- **Expected:** Forward `reasoning_content` as a thinking stream (or include it in usage) and count those tokens.
-- **Actual:** Only `content` deltas reach the caller; `reasoning_content` is silently dropped, and `completion_tokens_details.reasoning_tokens` in usage is not surfaced.
+- **Status:** open 2026-10-22; re-checked on 1.1.7 on 2026-10-24, still open
+- **Severity:** blocker on 1.1.5; minor on 1.1.7
+- **Blocks:** no on 1.1.7 — the repro now returns the full answer. Yes on 1.1.5.
+- **Repro:** Stream `kimi-k2.7-code` with "say hello" through `ChatStreamEventsAsync`.
+- **Expected:** Forward `reasoning_content` as a thinking stream and count those tokens.
+- **Actual:** On 1.1.7, 9 `TextDelta` events, then `Completed`; the text is the answer only. There is still no reasoning event kind. The raw reply for the same request carries 22 `reasoning_content` chunks, so TechieRag still drops them. `TokenUsage.ReasoningTokens` is now filled (22 of 33 output tokens) and `LlmCompletionOptions.ReasoningEffort` exists. Answers completed with `max_tokens` 64 and 2000, so the starved answer did not show on this prompt.
 - **Encountered in:** REQ-FN-021, REQ-FN-026, REQ-FN-027, REQ-FN-033–036, REQ-UI-021, REQ-UI-022, REQ-UI-032, REQ-UI-034
-- **Workaround:** Switched the test model to `minimax-m3`, the first Go model whose first delta carried content.
-- **Suggested fix:** Add a `ReasoningContent`/`Thinking` event to the streaming API and include reasoning tokens in `TokenUsage`; expose `LlmCompletionOptions.ReasoningEffort`.
+- **Workaround:** None. The 1.1.5 workaround (test model `minimax-m3`) is gone; the web harness seeds `kimi-k2.7-code` and `kimi-k2.5-code`.
+- **Suggested fix:** Add a `ReasoningContent`/`Thinking` event kind to the streaming API.
+
+### TR-RAG-009 — OpenCode Go's minimax-m3 returns its reasoning as `<think>` text inside the answer
+
+- **Status:** open 2026-10-24
+- **Severity:** minor
+- **Blocks:** no — Chatur's test model is now `kimi-k2.7-code`.
+- **Repro:** TechieRag 1.1.7, `UseOpenAICompatibleLlm("https://opencode.ai/zen/go/v1", key, "minimax-m3", …)`, "say hello", `ChatAsync` and `ChatStreamEventsAsync`, with `ReasoningEffort` unset, `low`, and `max_tokens` 64.
+- **Expected:** The answer text holds the answer only.
+- **Actual:** Every run starts with `<think>…</think>` and then the answer, in two `TextDelta` events.
+- **Encountered in:** REQ-FN-021, REQ-FN-026, REQ-FN-027
+- **Workaround:** Test model changed to `kimi-k2.7-code`.
+- **Suggested fix:** Split a leading `<think>…</think>` block out of `content` into the reasoning stream, or document that a host must.
 
 ### TR-RAG-006 — No small-model router that chooses a model for a piece of work
 
