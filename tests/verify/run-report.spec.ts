@@ -12,7 +12,8 @@ import { query, run } from './support/db';
 import { ROOT as WB_ROOT, write, openProject } from './support/workbench-a';
 
 test.describe.configure({ mode: 'serial' });
-test.setTimeout(120_000);
+// The sign-in in beforeEach (up to 120 s on a slow App Manager) counts against the test's own budget.
+test.setTimeout(240_000);
 
 const ROOT = path.resolve('tests/.artifacts/verify/fixtures/run-report-spec/root');
 const PROJECT = path.join(ROOT, 'reportspec-proj');

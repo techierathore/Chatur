@@ -183,3 +183,18 @@ test('REQ-UI-057 every column and every action button is inside the queue tab at
   }
   await page.setViewportSize({ width: 1280, height: 720 });
 });
+
+test('REQ-FN-067 the Project menu on the Run queue screen lists the project\'s run targets, Debug ticked', async () => {
+  await openWithSeed((aProject) => {
+    const vGoing = seedGoingRun(aProject);
+    seedQueueRow(aProject, BRIEF, 'Started', vGoing);
+    seedQueueRow(aProject, 'Settings: providers and routing, to the mockup.', 'Queued', null);
+  });
+  await page.getByTestId('menu-project').click();
+  const vItems = page.getByTestId('menu-project-items');
+  await expect(vItems).toBeVisible({ timeout: 15_000 });
+  await expect(vItems.getByText(`${NAME} · Debug`)).toBeVisible({ timeout: 15_000 });
+  await expect(vItems.getByText(`${NAME} · Release`)).toBeVisible();
+  await page.screenshot({ path: join(SHOTS, 'run-queue-project-menu.png'), fullPage: true });
+  await page.keyboard.press('Escape');
+});

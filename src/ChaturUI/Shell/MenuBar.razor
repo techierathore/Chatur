@@ -126,10 +126,10 @@
                             {
                                 <LucideIcon Name="check" Size="14" />
                             }
-                            <span>@vTarget.Name</span>
+                            <span class="whitespace-nowrap">@vTarget.Name</span>
                             @if (!vTarget.IsAvailableOnThisMachine)
                             {
-                                <span class="ml-2 text-xs text-muted-foreground">needs another machine</span>
+                                <span class="ml-2 whitespace-nowrap text-xs text-muted-foreground">needs another machine</span>
                             }
                         </MenubarItem>
                     }

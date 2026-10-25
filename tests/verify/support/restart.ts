@@ -4,7 +4,7 @@
 // with it a fresh database. The new process is written into boot-<port>.json, so the boot script's own
 // stop still stops it.
 import { execFileSync, spawn } from 'child_process';
-import { openSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, openSync, readFileSync, writeFileSync } from 'fs';
 
 const ROOT = process.env.REPO || process.cwd();
 
@@ -37,7 +37,13 @@ function commandLine(aPid: number): string[] {
 export async function restartHarness(): Promise<void> {
   const vPort = port();
   const vUrl = `http://localhost:${vPort}/`;
-  const vStatePath = `${ROOT}/tests/.artifacts/verify/boot-${vPort}.json`;
+  // tf-verify-boot.sh writes boot-<port>.json for a keyed start and boot.json for an unkeyed one; take the
+  // one that describes this port, so a harness started either way can be restarted.
+  const vDir = `${ROOT}/tests/.artifacts/verify`;
+  const vKeyed = `${vDir}/boot-${vPort}.json`;
+  const vPlain = `${vDir}/boot.json`;
+  const vStatePath = existsSync(vKeyed) ? vKeyed : vPlain;
+  if (!existsSync(vStatePath)) throw new Error(`no boot state for port ${vPort}: expected ${vKeyed} or ${vPlain}; start the harness with tf-verify-boot.sh first.`);
   const vState = JSON.parse(readFileSync(vStatePath, 'utf8'));
   const vPid: number = vState.pids[0];
   const vArgs = commandLine(vPid);

@@ -55,6 +55,7 @@ def open_project(c, root):
     seeds' checklist and metrics records never land in a folder a spec reads."""
     path = os.path.join(root, "tests", ".artifacts", "verify", "fixtures", "screen-seed", "SeedOpenApp")
     os.makedirs(path, exist_ok=True)
+    write_run_target_projects(path)
     found = c.execute("SELECT ProjectId FROM Project WHERE Path = ?", (path,)).fetchone()
     if found is None:
         pid = c.execute("INSERT INTO Project (ProjectFolderId, Name, Path, Kind, LastOpenedUtc) VALUES (NULL, ?, ?, 'Folder', ?)",
@@ -64,8 +65,32 @@ def open_project(c, root):
         c.execute("UPDATE Project SET RemovedUtc = NULL, LastOpenedUtc = ? WHERE ProjectId = ?", (iso(now_utc()), pid))
     c.execute("INSERT INTO Setting (Key, Value) VALUES ('SelectedProjectId', ?) "
               "ON CONFLICT(Key) DO UPDATE SET Value = excluded.Value", (str(pid),))
+    # Targets found before the project files existed would stay cached; clear them so the Project menu rediscovers.
+    c.execute("DELETE FROM RunTarget WHERE ProjectId = ?", (pid,))
+    # File > Recent projects lists every project that has been opened, and the screen check clicks each item in that
+    # menu. A click on another project switches the selection to it and the Project menu is then read against a
+    # project that has no run targets, not against the open project the mockup draws. Only the open project is
+    # recent, so the click lands on itself.
+    c.execute("UPDATE Project SET LastOpenedUtc = NULL WHERE ProjectId <> ?", (pid,))
     c.commit()
     return pid, path
+
+
+def write_run_target_projects(path):
+    """Gives the seed project the three projects the mockups' Project menu draws run targets for (Mac Catalyst
+    Debug and Release, Web harness, Tests), the same files the web harness's default fixture holds."""
+    files = {
+        "SeedOpenApp.csproj": '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFrameworks>net10.0-maccatalyst</TargetFrameworks>'
+                              '<UseMaui>true</UseMaui></PropertyGroup></Project>',
+        "Web harness.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>',
+        "Tests.csproj": '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><IsPackable>false</IsPackable>'
+                        '</PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" /></ItemGroup></Project>',
+    }
+    for name, text in files.items():
+        f = os.path.join(path, name)
+        if not os.path.exists(f):
+            with open(f, "w") as fh:
+                fh.write(text)
 
 
 def hidden_project(c, root, name):
