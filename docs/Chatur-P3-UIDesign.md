@@ -4,7 +4,7 @@
 |---|---|
 | App | Chatur |
 | Kind | app |
-| Size | Small |
+| Size | Medium |
 | Phase | 3 of 4 |
 
 ## Screens
@@ -99,4 +99,5 @@ States: unchanged — the Rights panel's own empty, loading and error states app
 | The window, the theme and the design system | [phase 1 UI design](Chatur-UIDesign.md) |
 | The click-through flow across every phase | [phase 1 UI design](Chatur-UIDesign.md) |
 | The Settings screen whose routing tab this phase adds to | [phase 1 UI design](Chatur-UIDesign.md) |
+| The brand mark on every screen (BRD-190): the glyph on a fixed `#B45F14` 20 px square, not the theme colour | [chatur.css](mockups/chatur.css) `.logo`, [the glyph](mockups/brand/chatur-glyph.svg) |
 | This phase's requirements | [Chatur-P3-BRD.md](Chatur-P3-BRD.md) |

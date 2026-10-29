@@ -81,7 +81,10 @@ try
     // Routing and several acceptance tests need at least one connected provider with models in the
     // harness database. The harness never invents a real subscription, but a connected row with
     // sample models is enough for the UI to render the mockup's tier chains.
-    await EnsureDefaultProviderAsync(vApp.Services);
+    // The seeded provider's key is never written into this file. It comes from configuration —
+    // in Development the project's user secrets (UserSecretsId in Chatur.WebHarness.csproj), the same
+    // place Chatur:TestProvider:Model lives. Absent, the provider is seeded without a key.
+    await EnsureDefaultProviderAsync(vApp.Services, vBuilder.Configuration["Chatur:TestProvider:Key"]);
 
     vApp.MapHealthChecks("/healthz");
 
@@ -199,7 +202,7 @@ static async Task EnsureDefaultProjectAsync(IServiceProvider aServices)
     }
 }
 
-static async Task EnsureDefaultProviderAsync(IServiceProvider aServices)
+static async Task EnsureDefaultProviderAsync(IServiceProvider aServices, string? aProviderKey)
 {
     try
     {
@@ -234,8 +237,19 @@ static async Task EnsureDefaultProviderAsync(IServiceProvider aServices)
                 new { ProviderId = vProviderId, Identifier = vModels[vIndex] });
         }
 
-        var vSecretStore = vScope.ServiceProvider.GetRequiredService<ISecretStore>();
-        await vSecretStore.SaveAsync(vSecretName, "oc_sk_a75a9826cc0e_bPnUmaAdxt2ZdkZnveNQe4aZUGHsEQf9").ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(aProviderKey))
+        {
+            // One warning that names the setting, never its value (REQ-NFR-001). The harness still
+            // renders every provider-dependent screen; only a live model call would fail.
+            Log.Warning(
+                "Web harness configuration has no value for {SettingName}; the default provider is seeded without a key",
+                vSecretName);
+        }
+        else
+        {
+            var vSecretStore = vScope.ServiceProvider.GetRequiredService<ISecretStore>();
+            await vSecretStore.SaveAsync(vSecretName, aProviderKey).ConfigureAwait(false);
+        }
 
         Log.Information("Web harness seeded connected provider {ProviderId} with {ModelCount} model(s)", vProviderId, vModels.Length);
     }

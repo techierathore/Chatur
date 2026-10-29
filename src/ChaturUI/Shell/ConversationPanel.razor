@@ -203,6 +203,8 @@
                             }
                         </DropdownMenuItem>
                     }
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/settings/agents"))" data-testid="agent-settings-link">Agents…</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
             </span>

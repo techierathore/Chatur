@@ -25,55 +25,47 @@
 
 ---
 project: Chatur
-last_updated: 2026-10-24
-current_phase: Phase 1 of 4 (Workbench) · Build — 68 to fix, 26 of 98 verified
+last_updated: 2026-10-29
+current_phase: Phase 3 of 4 (End to end and unattended) · Verify — 11 to verify across phases 1, 2, 51 of 51 verified
 last_verified_build: PASS
-last_verified_date: 2026-10-24
+last_verified_date: 2026-10-29
 ---
 
 # Chatur — Status
 
 ## Where I am
 
-Phase 1 of 4 (Workbench). Chatur is on TechieRag 1.1.7 and the test model is Kimi K2.7 Code. A web verify on 24 Oct passed every chat test; REQ-UI-034 is now Verified (26 of 98). The other 72 rows fail render or mockup checks on Workbench, Routing, Repository and Settings. The Mac head can only measure Sign in (TF-016).
+Phase 3 of 4 (End to end and unattended). All 51 phase-3 rows are Verified, including the 19 End-to-end run, Run queue and Run report rows. Every check that ran passed: build, acceptance, render, assets, visual and mockup parity, on the web harness and, for the menu rows, the Windows app. 11 rows in phases 1 and 2 still wait for a verify.
 
 ## Next command to run
 
 Claude Code:
 ```
-/TechieFlow:agents:flow-master *build-phase Chatur
+/TechieFlow:agents:verifier *verify all Chatur --phase all
 ```
 OpenCode:
 ```
-/flow-master *build-phase Chatur
+/flow-verifier *verify all Chatur --phase all
 ```
-Clear the render and mockup-parity gaps on Workbench and Settings so the 11 chat rows can reach Verified.
+Why: 11 rows of other phases are built and not verified — phase 1: 3 (REQ-UI-008, REQ-FN-012, REQ-FN-013); phase 2: 8 (REQ-FN-053, REQ-UI-047, REQ-FN-054, REQ-UI-053 …). Phase 3 is ready for handoff once they are.
 
 ## Open requirements
 
 | Status | Count |
-|---|---|---|
+|---|---|
 | Not Started | 0 |
 | In Progress | 0 |
 | Implemented | 0 |
-| Needs re-verify | 71 |
-| Blocked | 1 |
+| Needs re-verify | 0 |
+| Blocked | 0 |
 
-- [ ] REQ-UI-001 — Sign in with an account (Needs re-verify)
-- [ ] REQ-FN-001 — The password never leaves the machine as text (Needs re-verify)
-- [ ] REQ-UI-002 — A refused sign-in says why (Needs re-verify)
-- [ ] REQ-FN-002 — The installation names its device (Needs re-verify)
-- [ ] REQ-FN-003 — Staying signed in (Needs re-verify)
-- [ ] REQ-FN-004 — Register an account (Needs re-verify)
-- [ ] REQ-FN-005 — A weak password is caught before it is sent (Needs re-verify)
-- [ ] REQ-FN-007 — What the selected project is (Needs re-verify)
-- [ ] REQ-FN-008 — Straight into the work (Needs re-verify)
-- (62 more open rows in docs/Chatur-Checklist.md)
+- None
 
 ## Known blockers
 
-- REQ-UI-017 is desktop-head only and remains blocked on the web harness.
-- The Workbench Project menu lacks the seeded fixture targets because the fixture project has not been built.
+- TF-018 (seen again in a new form): the boot kept the Windows-side web harness, which cannot read the WSL fixture paths the tests type. This pass ran the same published copy under WSL dotnet, and the ledger names that rung.
+- The test provider key in user secrets (Chatur:TestProvider, OpenCode Go) is refused with 401. The desktop chat test (phase-1 REQ-FN-025 to 027, REQ-UI-021) fails on it until the key is renewed.
+- The desktop head under test uses the owner's real database. This pass left one test message in the ChaturCheck chat and set its model picker to kimi-k2.7-code.
 
 ## Verification log
 
@@ -81,16 +73,16 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 | Date | Phase | Result | Status table |
 |---|---|---|---|
-| 2026-10-24 | verify-phase --scope all --head web | 26/98 Verified | docs/Chatur-Checklist.md#requirements-status |
-| 2026-10-22 | verify-phase --scope all --head web | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
-| 2026-10-22 | verify-phase | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
-| 2026-10-22 | verify-phase --scope REQ-FN-021,REQ-FN-026,REQ-FN-027,REQ-FN-033,REQ-FN-034,REQ-FN-035,REQ-FN-036,REQ-UI-019,REQ-UI-021,REQ-UI-022,REQ-UI-032 --head web | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
-| 2026-10-24 | fix-issues | 25/98 Verified | docs/Chatur-Checklist.md#requirements-status |
+| 2026-10-26 | fix-issues | 28/47 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-10-27 | amend-docs | 28/51 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-10-28 | build-phase | 32/51 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-10-29 | amend-docs | 32/51 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-10-29 | *verify all Chatur --phase 3 | 51/51 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
 
 ## Library feedback summary
 
-- TechieFlow: 4 open · 2 fixed upstream, not yet re-checked (TF-008, TF-010) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
-- TechieRag: 2 open · 1 fixed upstream, not yet re-checked (TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
+- TechieFlow: 2 open · 8 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
+- TechieRag: 0 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
 - TrBlazeUI: 0 open · 21 closed — docs/Chatur-TrBlazeUI-Feedback.md
 
 ## Standards compliance
@@ -99,7 +91,6 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 ## Deferred / future
 
-- Placeholder logo; owner supplies the real one.
 - No BRD row: account controls, hiding output, merging a process branch.
 - Submenus: TR-020 fixed upstream, in the release after 2.1.6.
 - A run cut off by closing Chatur resumes only when End-to-end run opens.
@@ -108,3 +99,5 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 - Owner reviews step wording for 11 processes.
 - Processes has no change or evidence field.
 - Appearance text size; routing's small model unnamed.
+- Sign out hangs on "Loading Chatur…" until reopened.
+- Anthropic tier 3 seeds invalid `claude-haiku-5`.

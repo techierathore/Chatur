@@ -1,7 +1,7 @@
 @* The main window's menu bar: File, Edit, View, Project, Tools, Help, with the signed-in user at
    the right (UI Design "Screen: Workbench", region `menubar`). Every item does its job (REQ-UI-073). *@
 <div class="flex h-9 flex-none items-center gap-1 border-b bg-card px-2" data-testid="menubar">
-    <span class="flex h-5 w-5 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground" data-testid="logo">C</span>
+    <BrandMark />
     <span class="mx-2 text-sm font-semibold" data-testid="wordmark">Chatur</span>
 
     @* The project switcher (REQ-UI-010): picking another project here updates AppState, which every
@@ -167,6 +167,7 @@
             <MenubarTrigger data-testid="menu-help">Help</MenubarTrigger>
             <MenubarContent data-testid="menu-help-items">
                 <MenubarItem OnClick="ShowAboutAsync" data-testid="menu-help-about">About Chatur</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/feedback"))" data-testid="menu-help-feedback">Send feedback…</MenubarItem>
                 @* The newer-build offer lives on Prerequisites (REQ-UI-018), so this opens it there. *@
                 <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-help-updates">Check for updates</MenubarItem>
             </MenubarContent>

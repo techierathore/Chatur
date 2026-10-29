@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Status</h1>
-    <div class="sub">Last rendered: 2026-10-24</div>
+    <div class="sub">Last rendered: 2026-10-29</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#where-i-am">Where I am</a></li>
@@ -121,10 +121,10 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Status</h1>
-    <div class="subtitle">Rendered 2026-10-24 &middot; source <code>PROJECT-STATUS.md</code></div>
+    <div class="subtitle">Rendered 2026-10-29 &middot; source <code>PROJECT-STATUS.md</code></div>
     <div class="cta-next" style="padding:20px; background:var(--cta-bg); border:2px solid var(--accent); border-radius:10px; margin:20px 0;">
       <div style="font-size:11px; color:var(--muted); letter-spacing:.5px;">NEXT COMMAND TO RUN</div>
-      <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:flow-master *build-phase Chatur</div>
+      <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:verifier *verify all Chatur --phase all</div>
     </div>
 
     <div class="toc-inline">
@@ -142,19 +142,19 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
     </div>
 <hr>
 <p>project: Chatur
-last_updated: 2026-10-24
-current_phase: Phase 1 of 4 (Workbench) · Build — 68 to fix, 26 of 98 verified
+last_updated: 2026-10-29
+current_phase: Phase 3 of 4 (End to end and unattended) · Verify — 11 to verify across phases 1, 2, 51 of 51 verified
 last_verified_build: PASS
-last_verified_date: 2026-10-24
+last_verified_date: 2026-10-29
 ---</p>
 <h2 id="where-i-am">Where I am<a class="anchor-link" href="#where-i-am">#</a></h2>
-<p>Phase 1 of 4 (Workbench). Chatur is on TechieRag 1.1.7 and the test model is Kimi K2.7 Code. A web verify on 24 Oct passed every chat test; REQ-UI-034 is now Verified (26 of 98). The other 72 rows fail render or mockup checks on Workbench, Routing, Repository and Settings. The Mac head can only measure Sign in (TF-016).</p>
+<p>Phase 3 of 4 (End to end and unattended). All 51 phase-3 rows are Verified, including the 19 End-to-end run, Run queue and Run report rows. Every check that ran passed: build, acceptance, render, assets, visual and mockup parity, on the web harness and, for the menu rows, the Windows app. 11 rows in phases 1 and 2 still wait for a verify.</p>
 <h2 id="next-command-to-run">Next command to run<a class="anchor-link" href="#next-command-to-run">#</a></h2>
 <p>Claude Code:</p>
-<pre><code>/TechieFlow:agents:flow-master *build-phase Chatur</code></pre>
+<pre><code>/TechieFlow:agents:verifier *verify all Chatur --phase all</code></pre>
 <p>OpenCode:</p>
-<pre><code>/flow-master *build-phase Chatur</code></pre>
-<p>Clear the render and mockup-parity gaps on Workbench and Settings so the 11 chat rows can reach Verified.</p>
+<pre><code>/flow-verifier *verify all Chatur --phase all</code></pre>
+<p>Why: 11 rows of other phases are built and not verified — phase 1: 3 (REQ-UI-008, REQ-FN-012, REQ-FN-013); phase 2: 8 (REQ-FN-053, REQ-UI-047, REQ-FN-054, REQ-UI-053 …). Phase 3 is ready for handoff once they are.</p>
 <h2 id="open-requirements">Open requirements<a class="anchor-link" href="#open-requirements">#</a></h2>
 <table>
 <thead><tr><th>Status</th><th>Count</th></tr></thead>
@@ -162,37 +162,21 @@ last_verified_date: 2026-10-24
 <tr><td>Not Started</td><td>0</td></tr>
 <tr><td>In Progress</td><td>0</td></tr>
 <tr><td>Implemented</td><td>0</td></tr>
-<tr><td>Needs re-verify</td><td>71</td></tr>
-<tr><td>Blocked</td><td>1</td></tr>
+<tr><td>Needs re-verify</td><td>0</td></tr>
+<tr><td>Blocked</td><td>0</td></tr>
 </tbody>
 </table>
 <ul>
-<li>[ ] REQ-UI-001 — Sign in with an account (Needs re-verify)
-</li>
-<li>[ ] REQ-FN-001 — The password never leaves the machine as text (Needs re-verify)
-</li>
-<li>[ ] REQ-UI-002 — A refused sign-in says why (Needs re-verify)
-</li>
-<li>[ ] REQ-FN-002 — The installation names its device (Needs re-verify)
-</li>
-<li>[ ] REQ-FN-003 — Staying signed in (Needs re-verify)
-</li>
-<li>[ ] REQ-FN-004 — Register an account (Needs re-verify)
-</li>
-<li>[ ] REQ-FN-005 — A weak password is caught before it is sent (Needs re-verify)
-</li>
-<li>[ ] REQ-FN-007 — What the selected project is (Needs re-verify)
-</li>
-<li>[ ] REQ-FN-008 — Straight into the work (Needs re-verify)
-</li>
-<li>(62 more open rows in docs/Chatur-Checklist.md)
+<li>None
 </li>
 </ul>
 <h2 id="known-blockers">Known blockers<a class="anchor-link" href="#known-blockers">#</a></h2>
 <ul>
-<li>REQ-UI-017 is desktop-head only and remains blocked on the web harness.
+<li>TF-018 (seen again in a new form): the boot kept the Windows-side web harness, which cannot read the WSL fixture paths the tests type. This pass ran the same published copy under WSL dotnet, and the ledger names that rung.
 </li>
-<li>The Workbench Project menu lacks the seeded fixture targets because the fixture project has not been built.
+<li>The test provider key in user secrets (Chatur:TestProvider, OpenCode Go) is refused with 401. The desktop chat test (phase-1 REQ-FN-025 to 027, REQ-UI-021) fails on it until the key is renewed.
+</li>
+<li>The desktop head under test uses the owner's real database. This pass left one test message in the ChaturCheck chat and set its model picker to kimi-k2.7-code.
 </li>
 </ul>
 <h2 id="verification-log">Verification log<a class="anchor-link" href="#verification-log">#</a></h2>
@@ -200,18 +184,18 @@ last_verified_date: 2026-10-24
 <table>
 <thead><tr><th>Date</th><th>Phase</th><th>Result</th><th>Status table</th></tr></thead>
 <tbody>
-<tr><td>2026-10-24</td><td>verify-phase --scope all --head web</td><td>26/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-22</td><td>verify-phase --scope all --head web</td><td>25/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-22</td><td>verify-phase</td><td>25/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-22</td><td>verify-phase --scope REQ-FN-021,REQ-FN-026,REQ-FN-027,REQ-FN-033,REQ-FN-034,REQ-FN-035,REQ-FN-036,REQ-UI-019,REQ-UI-021,REQ-UI-022,REQ-UI-032 --head web</td><td>25/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-10-24</td><td>fix-issues</td><td>25/98 Verified</td><td>docs/Chatur-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-26</td><td>fix-issues</td><td>28/47 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-27</td><td>amend-docs</td><td>28/51 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-28</td><td>build-phase</td><td>32/51 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-29</td><td>amend-docs</td><td>32/51 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-29</td><td>*verify all Chatur --phase 3</td><td>51/51 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 </tbody>
 </table>
 <h2 id="library-feedback-summary">Library feedback summary<a class="anchor-link" href="#library-feedback-summary">#</a></h2>
 <ul>
-<li>TechieFlow: 4 open · 2 fixed upstream, not yet re-checked (TF-008, TF-010) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
+<li>TechieFlow: 2 open · 8 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
 </li>
-<li>TechieRag: 2 open · 1 fixed upstream, not yet re-checked (TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
+<li>TechieRag: 0 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
 </li>
 <li>TrBlazeUI: 0 open · 21 closed — docs/Chatur-TrBlazeUI-Feedback.md
 </li>
@@ -223,8 +207,6 @@ last_verified_date: 2026-10-24
 </ul>
 <h2 id="deferred-future"><a id="deferred--future"></a>Deferred / future<a class="anchor-link" href="#deferred-future">#</a></h2>
 <ul>
-<li>Placeholder logo; owner supplies the real one.
-</li>
 <li>No BRD row: account controls, hiding output, merging a process branch.
 </li>
 <li>Submenus: TR-020 fixed upstream, in the release after 2.1.6.
@@ -240,6 +222,10 @@ last_verified_date: 2026-10-24
 <li>Processes has no change or evidence field.
 </li>
 <li>Appearance text size; routing's small model unnamed.
+</li>
+<li>Sign out hangs on "Loading Chatur…" until reopened.
+</li>
+<li>Anthropic tier 3 seeds invalid <code>claude-haiku-5</code>.
 </li>
 </ul>
   </main>

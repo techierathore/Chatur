@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
 <div class="win" data-testid="window">
 
  <div class="menubar" data-testid="menubar">
-  <a class="logo" href="index.html" data-testid="logo" title="Logo goes here — click for the list of screens">C</a>
+  <a class="logo" href="index.html" data-testid="logo" title="Chatur — click for the list of screens" aria-label="Chatur"></a>
   <span class="wordmark" data-testid="wordmark">Chatur</span>
 
   <div class="menu" data-testid="menu-file"><button onclick="menu(this,event)">File</button>
@@ -185,8 +185,8 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
     <button onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
-    <button onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
-    <button onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
+    <button data-tf-sample onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
+    <button data-tf-sample onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
     <hr>
     <a href="repository.html">Open the repository…</a>
    </div>
@@ -235,11 +235,11 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <div class="popwrap" data-testid="run-select" style="flex:1;min-width:230px">
         <button class="pick" style="width:100%;height:30px;border-radius:var(--r)" title="Run" onclick="pop(this,event)"><span data-value>AstroLyfe · 22 Sep 02:00 · finished</span><svg><use href="#i-chevron"/></svg></button>
         <div class="pop" data-testid="run-select-pop" data-tf-state="popup-open">
-         <button onclick="choose(this,'AstroLyfe · 22 Sep 02:00 · finished',event)"><span class="tick">✓</span>AstroLyfe · 22 Sep 02:00 · finished</button>
-         <button onclick="choose(this,'MyDiary · 21 Sep 19:12 · finished',event)"><span class="tick"></span>MyDiary · 21 Sep 19:12 · finished</button>
-         <button onclick="choose(this,'TfLens · 21 Sep 14:30 · stopped by you',event)"><span class="tick"></span>TfLens · 21 Sep 14:30 · stopped by you</button>
-         <button onclick="choose(this,'AstroLyfe · 20 Sep 09:05 · finished',event)"><span class="tick"></span>AstroLyfe · 20 Sep 09:05 · finished</button>
-         <button onclick="choose(this,'TfLens · 19 Sep 16:44 · finished',event)"><span class="tick"></span>TfLens · 19 Sep 16:44 · finished</button>
+         <button data-tf-sample onclick="choose(this,'AstroLyfe · 22 Sep 02:00 · finished',event)"><span class="tick">✓</span>AstroLyfe · 22 Sep 02:00 · finished</button>
+         <button data-tf-sample onclick="choose(this,'MyDiary · 21 Sep 19:12 · finished',event)"><span class="tick"></span>MyDiary · 21 Sep 19:12 · finished</button>
+         <button data-tf-sample onclick="choose(this,'TfLens · 21 Sep 14:30 · stopped by you',event)"><span class="tick"></span>TfLens · 21 Sep 14:30 · stopped by you</button>
+         <button data-tf-sample onclick="choose(this,'AstroLyfe · 20 Sep 09:05 · finished',event)"><span class="tick"></span>AstroLyfe · 20 Sep 09:05 · finished</button>
+         <button data-tf-sample onclick="choose(this,'TfLens · 19 Sep 16:44 · finished',event)"><span class="tick"></span>TfLens · 19 Sep 16:44 · finished</button>
         </div>
        </div>
        <button class="pick" onclick="say('Loads that run — every requirement it touched, every miss and every token.')" data-testid="open-run"><svg><use href="#i-refresh"/></svg>Open this run</button>
@@ -345,9 +345,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <button class="iconbtn" onclick="pop(this,event)" title="Earlier conversations"><svg><use href="#i-list"/></svg></button>
        <div class="pop right" data-testid="history-pop" data-tf-state="popup-open">
         <div class="note">Earlier on AstroLyfe</div>
-        <button onclick="say('Opens that conversation where it stopped.')">Four of 42 are not verified · today</button>
-        <button onclick="say('Opens that conversation where it stopped.')">What the run cost · today</button>
-        <button onclick="say('Opens that conversation where it stopped.')">The chip control with no disabled state · yesterday</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')">Four of 42 are not verified · today</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')">What the run cost · today</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')">The chip control with no disabled state · yesterday</button>
        </div>
       </div>
      </span>
@@ -370,11 +370,11 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <div class="popwrap" data-testid="model-pick">
         <button class="pick" onclick="pop(this,event)"><svg><use href="#i-sparkle"/></svg><span data-value>Claude Opus 5</span><svg><use href="#i-chevron"/></svg></button>
         <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop" data-tf-state="popup-open">
-         <button onclick="choose(this,'Claude Opus 5',event)"><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
-         <button onclick="choose(this,'Claude Sonnet 5',event)"><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
-         <button onclick="choose(this,'Claude Haiku 4.5',event)"><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
-         <button onclick="choose(this,'GPT-5',event)"><span class="tick"></span>GPT-5<span class="sub">tier 1</span></button>
-         <button onclick="choose(this,'Qwen3-30B',event)"><span class="tick"></span>Qwen3-30B<span class="sub">local</span></button>
+         <button data-tf-sample onclick="choose(this,'Claude Opus 5',event)"><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
+         <button data-tf-sample onclick="choose(this,'Claude Sonnet 5',event)"><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
+         <button data-tf-sample onclick="choose(this,'Claude Haiku 4.5',event)"><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
+         <button data-tf-sample onclick="choose(this,'GPT-5',event)"><span class="tick"></span>GPT-5<span class="sub">tier 1</span></button>
+         <button data-tf-sample onclick="choose(this,'Qwen3-30B',event)"><span class="tick"></span>Qwen3-30B<span class="sub">local</span></button>
          <hr>
          <a href="settings-routing.html">Which model does which work…</a>
         </div>

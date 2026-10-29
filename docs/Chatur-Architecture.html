@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Architecture</h1>
-    <div class="sub">Last rendered: 2026-09-30</div>
+    <div class="sub">Last rendered: 2026-10-27</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#stack-decisions">1. Stack decisions</a></li>
@@ -121,7 +121,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Architecture</h1>
-    <div class="subtitle">Rendered 2026-09-30 &middot; source <code>Chatur-Architecture.md</code></div>
+    <div class="subtitle">Rendered 2026-10-27 &middot; source <code>Chatur-Architecture.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -146,7 +146,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Date</td><td>2026-09-21</td></tr>
 </tbody>
 </table>
-<h2 id="stack-decisions">1. Stack decisions<a class="anchor-link" href="#stack-decisions">#</a></h2>
+<h2 id="stack-decisions"><a id="1-stack-decisions"></a>1. Stack decisions<a class="anchor-link" href="#stack-decisions">#</a></h2>
 <p>One row per stack question. "Source" says where the answer came from: the answer set, the owner, or the existing code.</p>
 <table>
 <thead><tr><th>Q</th><th>Topic</th><th>Decision</th><th>Source</th></tr></thead>
@@ -163,7 +163,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <p>Q9 (hosting) and Q10 (production secrets) are not yet asked; they are answered after user acceptance testing. Chatur ships as a download, so Q9 is about the release pipeline — see §6 and BRD-158 (<code>.github/workflows/release.yml</code>).</p>
-<h2 id="solution-structure">2. Solution structure<a class="anchor-link" href="#solution-structure">#</a></h2>
+<h2 id="solution-structure"><a id="2-solution-structure"></a>2. Solution structure<a class="anchor-link" href="#solution-structure">#</a></h2>
 <table>
 <thead><tr><th>Project</th><th>Kind</th><th>Purpose</th></tr></thead>
 <tbody>
@@ -175,7 +175,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td><code>Chatur.Tests</code></td><td>xUnit test project</td><td>Unit tests for <code>Chatur.Core</code> and every guard class; runs on macOS and on Windows.</td></tr>
 </tbody>
 </table>
-<h2 id="component-map">3. Component map<a class="anchor-link" href="#component-map">#</a></h2>
+<h2 id="component-map"><a id="3-component-map"></a>3. Component map<a class="anchor-link" href="#component-map">#</a></h2>
 <div class="diagram">
   <div class="dt">
     <button data-zout title="Zoom out">&minus;</button>
@@ -217,7 +217,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li>The screen shows the reply, the model that answered and the running token count, and the activity panel adds the step.
 </li>
 </ol>
-<h2 id="data-model">4. Data model<a class="anchor-link" href="#data-model">#</a></h2>
+<h2 id="data-model"><a id="4-data-model"></a>4. Data model<a class="anchor-link" href="#data-model">#</a></h2>
 <div class="diagram">
   <div class="dt">
     <button data-zout title="Zoom out">&minus;</button>
@@ -303,7 +303,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Installation</td><td><code>DeviceId</code>, <code>CreatedUtc</code></td><td>The identifier sent to App Manager at sign-in, generated once and kept.</td></tr>
 </tbody>
 </table>
-<h2 id="cross-cutting">5. Cross-cutting<a class="anchor-link" href="#cross-cutting">#</a></h2>
+<h2 id="cross-cutting"><a id="5-cross-cutting"></a>5. Cross-cutting<a class="anchor-link" href="#cross-cutting">#</a></h2>
 <ul>
 <li><strong>Identity:</strong> App Manager. The installation generates a <code>deviceId</code> once and keeps it; sign-in and registration send it, and the answer carries the device and any licence cap. The access and refresh tokens are written to the Keychain on the Mac and Credential Manager on Windows, never to the database. Sign-out sends the refresh token so only this device is signed out.
 </li>
@@ -320,7 +320,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li><strong>Measurements:</strong> <code>runs.jsonl</code>, <code>gates.jsonl</code>, <code>misses.jsonl</code>, <code>sessions.jsonl</code> and <code>commits.jsonl</code> in each project's <code>docs/metrics</code> folder, appended and never edited, with <code>chatur</code> as the name of the tool. Chatur's own schema lives in this repository and starts as a copy of TechieFlow's; it must keep matching in every field TfLens reads.
 </li>
 </ul>
-<h2 id="decisions-log">6. Decisions log<a class="anchor-link" href="#decisions-log">#</a></h2>
+<h2 id="decisions-log"><a id="6-decisions-log"></a>6. Decisions log<a class="anchor-link" href="#decisions-log">#</a></h2>
 <p>One row per decision. Every package added to the project has a row saying why.</p>
 <table>
 <thead><tr><th>Date</th><th>Decision</th><th>Why</th><th>Status</th></tr></thead>
@@ -352,10 +352,13 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>2026-09-30</td><td><code>.github/workflows/release.yml</code>: a <code>macos</code> job and a <code>windows</code> job, each building and zipping its app; a push to main replaces the <code>nightly</code> pre-release with both zips, a <code>v*</code> tag publishes a named release; the build is stamped with the version and commit that <code>PrerequisiteActions.OwnVersionAsync</code> reads and <code>GitHubReleaseClient</code> compares against</td><td>The release decision above had no requirement carrying it; BRD-158 does now</td><td>planned (BRD-158)</td></tr>
 <tr><td>2026-09-30</td><td>Package <code>TechieRag</code> 1.0.8, replacing 1.0.7</td><td>1.0.8 adds the ChatGPT subscription sign-in and typed streaming (<code>ChatStreamEventsAsync</code>: text, tool call, completed), which answer TR-RAG-001 and TR-RAG-002</td><td>planned (BRD-34, BRD-47)</td></tr>
 <tr><td>2026-09-30</td><td>ChatGPT subscription sign-in is TechieRag's device-code flow (<code>UseChatGptSubscriptionLlm</code>). Chatur supplies the callback that opens the browser and shows the code, and an <code>ISubscriptionSessionStore</code> over Keychain / Credential Manager. This replaces the local listener the technical decisions named</td><td>1.0.8 signs in by device code, so no listener is needed; the session must survive a restart and stay out of the database</td><td>planned (BRD-34)</td></tr>
+<tr><td>2026-10-27</td><td>Brand assets are copied byte for byte from the owner's brand folder (<code>MyAiChats/3-Resources/Brand/logos/</code>), never redrawn: <code>Chatur-appicon.svg</code> and <code>Chatur-appiconfg.svg</code> become <code>src/Chatur/Resources/AppIcon/appicon.svg</code> and <code>appiconfg.svg</code>, <code>Chatur-appiconfg.svg</code> also becomes <code>Resources/Splash/splash.svg</code>; MauiIcon colour <code>#B45F14</code>, splash colour stays <code>#1E1B16</code>; Resizetizer is the only thing that makes icon and splash sizes</td><td>One approved source for the mark; a hand-made size drifts from it and is never updated</td><td>planned (BRD-188, BRD-189)</td></tr>
+<tr><td>2026-10-27</td><td>The glyph SVG and the horizontal lockup ship in <code>ChaturUI</code> under <code>wwwroot/images/brand/</code>; every <code>data-testid="logo"</code> (StartLayout, BareLayout, MenuBar, SecondaryLayout) shows the glyph on a fixed brand-amber <code>#B45F14</code> rounded square in the existing 20 px box, not on the theme's <code>bg-primary</code></td><td>The mark must look the same under every theme; on indigo, teal or slate a theme-coloured square stops being the brand, and on dark amber <code>#F3AC51</code> the white glyph loses contrast</td><td>planned (BRD-190)</td></tr>
+<tr><td>2026-10-27</td><td><code>Chatur.WebHarness</code> gains a <code>wwwroot/</code> holding <code>favicon.ico</code> (32 px), <code>icon-192.png</code> and <code>icon-512.png</code>, written only by a repository script under <code>scripts/</code> (Python with Pillow, run with Windows <code>python.exe</code>, as the brand folder's <code>family-logo.py</code> is) from <code>Chatur.png</code>; <code>App.razor</code> links all three</td><td>Generated files can be made again exactly when the mark changes; a hand-exported icon cannot</td><td>planned (BRD-191)</td></tr>
 <tr><td>2026-09-30</td><td>The agent loop streams every turn through <code>ChatStreamEventsAsync</code>; a tool-call event goes through the guards as before. <code>PaceReplyAsync</code> is removed</td><td>Real streaming with tool calls is now in the library, so the workaround would hide nothing and cost a slower reply</td><td>planned (BRD-47)</td></tr>
 </tbody>
 </table>
-<h2 id="module-responsibilities">7. Module responsibilities<a class="anchor-link" href="#module-responsibilities">#</a></h2>
+<h2 id="module-responsibilities"><a id="7-module-responsibilities"></a>7. Module responsibilities<a class="anchor-link" href="#module-responsibilities">#</a></h2>
 <table>
 <thead><tr><th>Module</th><th>Responsibility</th><th>Depends on</th></tr></thead>
 <tbody>
@@ -372,7 +375,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Source control</td><td>Show changes, check in, push, pull, switch branches, and the run's own branch</td><td>Projects</td></tr>
 </tbody>
 </table>
-<h2 id="open-questions">8. Open questions<a class="anchor-link" href="#open-questions">#</a></h2>
+<h2 id="open-questions"><a id="8-open-questions"></a>8. Open questions<a class="anchor-link" href="#open-questions">#</a></h2>
 <ul>
 <li>Can Chatur be used with no internet, given that sign-in goes through App Manager? A stored token that is still valid would allow it; the answer decides whether a "work offline" state is needed.
 </li>

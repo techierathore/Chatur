@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Business Requirements — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-10-22 &middot; source <code>Chatur-P3-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-10-29 &middot; source <code>Chatur-P3-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -122,6 +122,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#what-done-means-for-each-process">What done means for each process</a></li>
         <li class="h3"><a href="#document-rights">Document rights</a></li>
         <li class="h3"><a href="#the-main-window-as-the-owner-uses-it">The main window, as the owner uses it</a></li>
+        <li class="h3"><a href="#brand-assets">Brand assets</a></li>
         <li><a href="#development-status">4. Development status</a></li>
         <li><a href="#where-the-rest-lives">5. Where the rest lives</a></li>
       </ol>
@@ -131,7 +132,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tbody>
 <tr><td>App</td><td>Chatur</td></tr>
 <tr><td>Kind</td><td>app</td></tr>
-<tr><td>Size</td><td>Small</td></tr>
+<tr><td>Size</td><td>Medium</td></tr>
 <tr><td>Phase</td><td>3 of 4</td></tr>
 <tr><td>Status</td><td>Draft</td></tr>
 <tr><td>Date</td><td>2026-09-21</td></tr>
@@ -493,18 +494,47 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
+<h3 id="brand-assets">Brand assets<a class="anchor-link" href="#brand-assets">#</a></h3>
+<p>Added 2026-10-27 on the owner's ask, once the Chatur logo set was approved (27 Oct, 13:20). The approved files live in the owner's brand folder, <code>MyAiChats/3-Resources/Brand/logos/</code>: <code>Chatur-appicon.svg</code> (the amber <code>#B45F14</code> tile with the white glyph), <code>Chatur-appiconfg.svg</code> (the glyph alone, on transparent), <code>Chatur-horizontal.svg</code> and <code>Chatur-horizontal.png</code> (glyph and wordmark), and <code>Chatur.png</code> (the tile at 1024 px). They are copied into the repository byte for byte and never redrawn. Resizetizer makes every icon and splash size; no PNG is made by hand under <code>Resources/</code>, and bin and obj are cleaned before the first build after the swap. The mark's square is always the brand amber <code>#B45F14</code>, whatever theme is chosen, because a brand mark that changes colour with the theme is no longer the brand. The menu bar's rules for a tight window (the wordmark hidden at 980 px and below, the logo at 600 px and below) are unchanged.</p>
+<ul>
+<li><strong>BRD-188</strong> — The app icon is the approved Chatur mark. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner starts the built Windows app on Start, then the taskbar and the title bar show the amber Chatur tile with its white glyph.
+</li>
+</ul>
+</li>
+<li><strong>BRD-189</strong> — The splash screen is the approved glyph. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the three icon and splash SVGs under Resources are compared with the brand folder's files, then each is byte-identical and the splash colour stays <code>#1E1B16</code>.
+</li>
+</ul>
+</li>
+<li><strong>BRD-190</strong> — The mark sits beside the wordmark. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens Start, a bare page, the main or the secondary window, then the logo is the white glyph on a 20 px amber square.
+</li>
+</ul>
+</li>
+<li><strong>BRD-191</strong> — The web harness carries the icon, made by a script. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the web harness page loads, then it links <code>favicon.ico</code> (32 px), <code>icon-192.png</code> and <code>icon-512.png</code>, each loads, and each is what the repository's script under <code>scripts/</code> renders from <code>Chatur.png</code>.
+</li>
+</ul>
+</li>
+</ul>
 <h2 id="development-status"><a id="4-development-status"></a>4. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-10-22.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-10-29.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>End-to-end run</td><td>10</td><td>0</td><td>10</td><td>In progress</td></tr>
-<tr><td>Run queue</td><td>5</td><td>0</td><td>5</td><td>In progress</td></tr>
-<tr><td>Run report</td><td>4</td><td>0</td><td>4</td><td>In progress</td></tr>
+<tr><td>End-to-end run</td><td>10</td><td>10</td><td>0</td><td>Done</td></tr>
+<tr><td>Run queue</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
+<tr><td>Run report</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
 <tr><td>Settings</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
 <tr><td>Process run</td><td>20</td><td>20</td><td>0</td><td>Done</td></tr>
-<tr><td>Workbench</td><td>3</td><td>1</td><td>2</td><td>Partial</td></tr>
+<tr><td>Workbench</td><td>3</td><td>3</td><td>0</td><td>Done</td></tr>
+<tr><td>Start</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
 </tbody>
 </table>
 <h2 id="where-the-rest-lives"><a id="5-where-the-rest-lives"></a>5. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
@@ -517,6 +547,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>The Settings screen whose routing tab this phase adds to</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
 <tr><td>The Process run screen whose handed steps this phase adds to</td><td><a href="Chatur-P2-BRD.html">phase 2 BRD</a></td></tr>
 <tr><td>The rights on Settings ▸ Agents (BRD-53, BRD-59) and on Agent workspace (BRD-114) that BRD-180 to BRD-183 add to</td><td><a href="Chatur-BRD.html">phase 1 BRD</a>, <a href="Chatur-P2-BRD.html">phase 2 BRD</a></td></tr>
+<tr><td>The Start screen whose logo BRD-188 to BRD-191 change</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
 <tr><td>Every phase, its screens and its BRD range</td><td><a href="Chatur-Phases.html">Chatur-Phases.md</a></td></tr>
 <tr><td>This phase's work list</td><td><a href="Chatur-P3-Checklist.md">Chatur-P3-Checklist.md</a></td></tr>
 </tbody>

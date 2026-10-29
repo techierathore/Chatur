@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | App | Chatur |
-| Count | 675 logged: 423 open, 252 fixed, 0 will not fix |
+| Count | 677 logged: 423 open, 254 fixed, 0 will not fix |
 | Source | `docs/metrics/misses.jsonl`, one row per miss record. Rewritten by `tf-misses-md.sh` on every new record. Never edit it: a wrong row is corrected by a new record. |
-| Updated | 2026-10-22 |
+| Updated | 2026-10-28 |
 
 **Whose gap** answers the four questions of the miss protocol: **the app's spec** did not say it, so the checklist line is fixed; **the framework never said it**, so one requirement line and a check are added; **the check was too weak** (a review, or a script that did not fire), so the check is fixed; **said and ignored**, so the rule becomes a hook or is deleted. **not sorted** means the record predates the sort or nobody has answered yet; `bash .tfcore/utils/tf-emit.sh --amend <miss> sort <spec|unsaid|weak-check|ignored>` completes it.
 
@@ -437,10 +437,12 @@
 | MISS-Chatur-20261002-02 | 2026-10-02 by agent-review | not sorted | The Start mockup draws four active Get started buttons, but the app keeps them disabled and no row says which is right. |
 | MISS-Chatur-20260930-36 (REQ-FN-012) | 2026-09-30 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 
-## Fixed (252)
+## Fixed (254)
 
 | Miss | Found | Closed | Whose gap | What went wrong |
 |---|---|---|---|---|
+| MISS-Chatur-20261028-01 | 2026-10-28 by agent-review | 2026-10-28 by amend-docs | the app's spec | The auto-run, run-queue and run-report mockups draw sample branches, chat titles, model names and earlier runs in the shared menus without marking them as sample data, so the render check fails all 19 screen rows on data no real project has. |
+| MISS-Chatur-20261026-01 (REQ-NFR-001) | 2026-10-26 by owner | 2026-10-26 by fix-issues | said and ignored | The web harness wrote a real provider key as a string literal into src/Chatur.WebHarness/Program.cs (the SaveAsync call under Chatur:TestProvider:Key); the file was in a public repository and the key had to be revoked. |
 | MISS-Chatur-20261013-56 (REQ-FN-053) | 2026-10-13 by agent-review | 2026-10-13 by fix-issues | the check was too weak | REQ-FN-053 and REQ-FN-055 were Verified on a unit test about reading ids from test names, whose sample data held their ids; neither had a test of its own (TF-012). |
 | MISS-Chatur-20261013-55 (REQ-UI-073) | 2026-10-13 by agent-review | 2026-10-13 by fix-issues | the check was too weak | Tools > Settings shows Ctrl+, as its shortcut but nothing handled the key, so pressing it did nothing. |
 | MISS-Chatur-20261013-54 (REQ-UI-023) | 2026-10-13 by owner | 2026-10-13 by fix-issues | the check was too weak | After a finished reply the conversation shows 'Stopped by the owner.' under it although nobody pressed Stop: the activity panel draws every activity step of the session beneath the newest reply instead of in time order, so a stop recorded on 12 Oct appears under today's answer (owner screenshots, ni |

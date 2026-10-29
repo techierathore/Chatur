@@ -17,7 +17,7 @@ The shell was settled on the owner's reviews of 2026-09-21 and 2026-09-22: one w
 |---|---|---|---|---|
 | 1 | Workbench | Sign in, Register, Start, Workbench, Prerequisites, Settings, Repository | BRD-1 to BRD-95, BRD-156 to BRD-158 | done |
 | 2 | Project workflow | Processes, Process run, Requirements board, Agent workspace | BRD-96 to BRD-117, BRD-187 to BRD-187 | done |
-| 3 | End to end and unattended | End-to-end run, Run queue, Run report | BRD-118 to BRD-136, BRD-159 to BRD-186 | done |
+| 3 | End to end and unattended | End-to-end run, Run queue, Run report | BRD-118 to BRD-136, BRD-159 to BRD-186, BRD-188 to BRD-191 | done |
 | 4 | More users | Feedback and issues, Licence, All projects, Worktrees, Integrations | BRD-137 to BRD-155 | planned |
 
 Phase 1 closed on 2026-10-06 with 97 of 98 rows Verified, the nightly download included. REQ-FN-012 (Homebrew tools found when Chatur starts from Finder on a Mac) stays open in the phase 1 checklist until a Mac can test it; the owner chose to move on to phase 2 rather than mark it N/A.

@@ -70,7 +70,7 @@ test('REQ-UI-073 File, Edit, View and Help each hold their items and none says N
     file: ['New project…', 'Open a solution…', 'Open a folder…', 'Clone a repository…', 'Recent projects', 'Save', 'Save all', 'Close project', 'Exit'],
     edit: ['Undo', 'Redo', 'Cut', 'Copy', 'Paste', 'Find in files…', 'Go to file…'],
     view: ['Files', 'Chat', 'Output', 'Prerequisites', 'Repository', 'Appearance…', 'Zoom in', 'Zoom out', 'Actual size'],
-    help: ['About Chatur', 'Check for updates'],
+    help: ['About Chatur', 'Send feedback…', 'Check for updates'],
   };
   for (const [vMenu, vItems] of Object.entries(vWanted)) {
     await openMenu(page, vMenu);
@@ -79,9 +79,6 @@ test('REQ-UI-073 File, Edit, View and Help each hold their items and none says N
     await page.keyboard.press('Escape');
   }
   for (const vMenu of ['file', 'edit', 'view', 'help', 'project', 'tools']) await noPlaceholder(page, vMenu);
-  // Send feedback is phase 4: no item, and no placeholder for it
-  await openMenu(page, 'help');
-  await expect(page.getByTestId('menu-help-items')).not.toContainText('Send feedback');
 });
 
 test('REQ-UI-073 File ▸ Open a folder opens the folder as the project', async () => {

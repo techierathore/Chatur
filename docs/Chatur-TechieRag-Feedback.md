@@ -4,11 +4,11 @@
 |---|---|
 | App | Chatur |
 | Upstream | TechieRag |
-| Updated | 2026-10-24 (TR-RAG-007 closed, TR-RAG-008 re-checked on 1.1.7) |
+| Updated | 2026-10-29 (TR-RAG-008 and TR-RAG-009 fixed upstream, next release after 1.1.7; thinking extended to every provider) |
 
 ## Summary
 
-Nothing is blocked. 9 entries: 2 open (TR-RAG-008 and TR-RAG-009, neither blocks on 1.1.7), 1 fixed upstream and not yet fully re-checked (TR-RAG-006), 6 closed (TR-RAG-007 closed 2026-10-24).
+Nothing is blocked. 9 entries: 0 open, 3 fixed upstream and not yet re-checked here (TR-RAG-006; TR-RAG-008 and TR-RAG-009, fixed 2026-10-29 for the next TechieRag release after 1.1.7), 6 closed (TR-RAG-007 closed 2026-10-24).
 
 Chatur is on 1.1.7 since 2026-10-24 (1.1.5 from 2026-10-11). REQ-FN-071 and REQ-FN-072 are built on `ModelChooser` and Verified (2026-10-11).
 
@@ -30,7 +30,7 @@ Chatur is on 1.1.7 since 2026-10-24 (1.1.5 from 2026-10-11). REQ-FN-071 and REQ-
 
 ### TR-RAG-008 — TechieRag drops `reasoning_content` deltas, so reasoning models stream no visible text
 
-- **Status:** open 2026-10-22; re-checked on 1.1.7 on 2026-10-24, still open
+- **Status:** fixed upstream 2026-10-29 (REQ-RAG-137, Verified: `LlmStreamEventKind.Thinking`, `LlmResponse.Thinking`), ships in the next TechieRag release after 1.1.7 — re-check from Chatur, then close
 - **Severity:** blocker on 1.1.5; minor on 1.1.7
 - **Blocks:** no on 1.1.7 — the repro now returns the full answer. Yes on 1.1.5.
 - **Repro:** Stream `kimi-k2.7-code` with "say hello" through `ChatStreamEventsAsync`.
@@ -42,7 +42,7 @@ Chatur is on 1.1.7 since 2026-10-24 (1.1.5 from 2026-10-11). REQ-FN-071 and REQ-
 
 ### TR-RAG-009 — OpenCode Go's minimax-m3 returns its reasoning as `<think>` text inside the answer
 
-- **Status:** open 2026-10-24
+- **Status:** fixed upstream 2026-10-29 (REQ-RAG-138, Verified: a leading `<think>` block is split into the thinking stream), ships in the next TechieRag release after 1.1.7 — re-check from Chatur, then close
 - **Severity:** minor
 - **Blocks:** no — Chatur's test model is now `kimi-k2.7-code`.
 - **Repro:** TechieRag 1.1.7, `UseOpenAICompatibleLlm("https://opencode.ai/zen/go/v1", key, "minimax-m3", …)`, "say hello", `ChatAsync` and `ChatStreamEventsAsync`, with `ReasoningEffort` unset, `low`, and `max_tokens` 64.
@@ -166,6 +166,52 @@ unreachable through TechieRag. Everything else about Chatur's provider/routing/m
 ## Replies from TechieRag
 
 <!-- The upstream team's answers, newest block first. Left in full: this is the record. -->
+
+### 2026-10-29 (later) — thinking now comes from every provider
+
+This fills the gap noted under "Not covered yet" in the reply below. It ships in the same release, the next one after 1.1.7 (REQ-RAG-139 to REQ-RAG-144). Nothing changes for OpenCode Go.
+
+| Provider | Thinking comes from | Reasoning token count |
+|---|---|---|
+| `OpenAICompatible` (OpenCode Go), LM Studio, Azure AI Foundry | `reasoning_content` / `reasoning`, or a leading `<think>` block (unchanged from the reply below) | yes |
+| Anthropic | its thinking blocks | 0: the service gives no separate figure |
+| Gemini | its thought parts | yes, and now included in `OutputTokens` |
+| Ollama | its `thinking` field, or a leading `<think>` block | 0: Ollama gives none |
+| Local model (`TechieRag.Local`) | a leading `<think>` block, with tools too | counted with the model's tokenizer |
+| ChatGPT subscription | its reasoning summary; the service never sends the full reasoning | yes |
+
+The rules are the same for all of them. Thinking never appears in `TextDelta` or `Content`. A call with no thinking sends no `Thinking` event. `Completed` is still last.
+
+**What Chatur may need to do:**
+- **Asking for thinking.** Anthropic, Gemini, Ollama and the ChatGPT subscription only think when the call sets `MaxReasoningTokens` or `ReasoningEffort` in `LlmCompletionOptions`. Without either, they behave as before. `DisableReasoning` now also reaches Gemini and Ollama.
+- **Anthropic tool turns.** With thinking on, Anthropic refuses a tool-use turn unless the earlier thinking is sent back. TechieRag keeps it in the new `ChatMessage.ProviderState` (also on `LlmResponse.ProviderState` and on the `Completed` event). `ToChatMessage()`, `AgentLoopRunner` and the `TechieRag.Agents` adapter carry it for you. If Chatur stores a conversation and rebuilds the messages itself, copy `ProviderState` with each assistant message; other providers ignore it.
+- **Anthropic with thinking on** leaves out `temperature` and `top_p`, because the service refuses them while it thinks.
+
+**Verify from here:** with an Anthropic key, stream a question through `ChatStreamEventsAsync` with `MaxReasoningTokens = 2048`. You should see `Thinking` events, then the answer. Then run a tool-using `AgentLoopRunner` turn with the same options; it should succeed. TechieRag tested every provider against recorded replies (tests named `REQ-RAG-139` to `REQ-RAG-143`). It has not run them against the live services: no keys or running models for them on the build machine on 2026-10-29. The per-provider table is in the AI reference section "Thinking text from reasoning models".
+
+### 2026-10-29 — TR-RAG-008 and TR-RAG-009 fixed
+
+**TR-RAG-008 (thinking while streaming), REQ-RAG-137.** New in TechieRag, shipping in the next release after 1.1.7:
+- `LlmStreamEventKind.Thinking`, with the fragment in `LlmStreamEvent.Text`. On `OpenAICompatible` (so OpenCode Go), LM Studio and Azure AI Foundry, every `reasoning_content` (or `reasoning`) fragment now arrives as a `Thinking` event. They come before the answer's `TextDelta` events.
+- `ChatAsync` returns the same text in the new `LlmResponse.Thinking`; `Content` is the answer only.
+- The count stays where 1.1.7 put it: `Usage.ReasoningTokens` on the `Completed` event.
+- `ChatStreamAsync` is unchanged: answer text only.
+- If a `switch` over the event kind sends everything except `TextDelta` and `ToolCall` to `default:` as the end of the stream, name `Completed` there instead. Otherwise a thinking event looks like the end.
+
+```csharp
+await foreach (var e in provider.ChatStreamEventsAsync(messages, options))
+{
+    if (e.Kind == LlmStreamEventKind.Thinking) thinking.Append(e.Text);       // show it folded
+    else if (e.Kind == LlmStreamEventKind.TextDelta) answer.Append(e.Text);
+    else if (e.Kind == LlmStreamEventKind.Completed) reasoningTokens = e.Usage!.ReasoningTokens;
+}
+```
+
+**TR-RAG-009 (minimax-m3 `<think>` in the answer), REQ-RAG-138.** TechieRag now splits it out for you. A `<think>…</think>` block at the start of the answer goes to `Thinking` events (and `LlmResponse.Thinking`), even when the tags arrive cut across chunks, and the answer starts at its first word. A `<think>` later in the answer is left alone. A block the model never closed (cut off by `max_tokens`) is all thinking. Nothing to do in Chatur.
+
+**Verify from here:** stream "say hello" with `kimi-k2.7-code` through `ChatStreamEventsAsync`. You should see `Thinking` events, then `TextDelta` events holding only the answer. Then do the same with `minimax-m3`: no `<think>` in any `TextDelta`, and the block arrives as `Thinking`. TechieRag tested both against the stream shapes in these entries (tests `REQ-RAG-137 ReasoningContentStreamsAsThinking` and `REQ-RAG-138 LeadingThinkBlockStreamsAsThinking`, on all three OpenAI-dialect providers). It has not yet run them against OpenCode Go itself, because no OpenCode Go key was set on the build machine on 2026-10-29.
+
+**Not covered yet:** Anthropic, Gemini, Ollama, the ChatGPT subscription and the local model do not send `Thinking` events yet.
 
 ### 2026-10-09 — TR-RAG-006 fixed
 

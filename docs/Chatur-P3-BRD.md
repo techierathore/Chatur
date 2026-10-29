@@ -4,7 +4,7 @@
 |---|---|
 | App | Chatur |
 | Kind | app |
-| Size | Small |
+| Size | Medium |
 | Phase | 3 of 4 |
 | Status | Draft |
 | Date | 2026-09-21 |
@@ -181,20 +181,34 @@ Added 2026-10-13 from the owner's test of the 12 Oct nightly (`docs/screenshots/
 - **BRD-186** — Settings and the other pages open from the main window. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When the owner picks Settings, a settings page, Prerequisites or Repository from the main window's menus, then the secondary window opens on that page.
 
+### Brand assets
+
+Added 2026-10-27 on the owner's ask, once the Chatur logo set was approved (27 Oct, 13:20). The approved files live in the owner's brand folder, `MyAiChats/3-Resources/Brand/logos/`: `Chatur-appicon.svg` (the amber `#B45F14` tile with the white glyph), `Chatur-appiconfg.svg` (the glyph alone, on transparent), `Chatur-horizontal.svg` and `Chatur-horizontal.png` (glyph and wordmark), and `Chatur.png` (the tile at 1024 px). They are copied into the repository byte for byte and never redrawn. Resizetizer makes every icon and splash size; no PNG is made by hand under `Resources/`, and bin and obj are cleaned before the first build after the swap. The mark's square is always the brand amber `#B45F14`, whatever theme is chosen, because a brand mark that changes colour with the theme is no longer the brand. The menu bar's rules for a tight window (the wordmark hidden at 980 px and below, the logo at 600 px and below) are unchanged.
+
+- **BRD-188** — The app icon is the approved Chatur mark. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the owner starts the built Windows app on Start, then the taskbar and the title bar show the amber Chatur tile with its white glyph.
+- **BRD-189** — The splash screen is the approved glyph. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the three icon and splash SVGs under Resources are compared with the brand folder's files, then each is byte-identical and the splash colour stays `#1E1B16`.
+- **BRD-190** — The mark sits beside the wordmark. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the owner opens Start, a bare page, the main or the secondary window, then the logo is the white glyph on a 20 px amber square.
+- **BRD-191** — The web harness carries the icon, made by a script. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the web harness page loads, then it links `favicon.ico` (32 px), `icon-192.png` and `icon-512.png`, each loads, and each is what the repository's script under `scripts/` renders from `Chatur.png`.
+
 ## 4. Development status
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-10-22.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
+**Snapshot as of 2026-10-29.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
-| End-to-end run | 10 | 0 | 10 | In progress |
-| Run queue | 5 | 0 | 5 | In progress |
-| Run report | 4 | 0 | 4 | In progress |
+| End-to-end run | 10 | 10 | 0 | Done |
+| Run queue | 5 | 5 | 0 | Done |
+| Run report | 4 | 4 | 0 | Done |
 | Settings | 5 | 5 | 0 | Done |
 | Process run | 20 | 20 | 0 | Done |
-| Workbench | 3 | 1 | 2 | Partial |
+| Workbench | 3 | 3 | 0 | Done |
+| Start | 4 | 4 | 0 | Done |
 
 ## 5. Where the rest lives
 
@@ -206,5 +220,6 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | The Settings screen whose routing tab this phase adds to | [phase 1 BRD](Chatur-BRD.md) |
 | The Process run screen whose handed steps this phase adds to | [phase 2 BRD](Chatur-P2-BRD.md) |
 | The rights on Settings ▸ Agents (BRD-53, BRD-59) and on Agent workspace (BRD-114) that BRD-180 to BRD-183 add to | [phase 1 BRD](Chatur-BRD.md), [phase 2 BRD](Chatur-P2-BRD.md) |
+| The Start screen whose logo BRD-188 to BRD-191 change | [phase 1 BRD](Chatur-BRD.md) |
 | Every phase, its screens and its BRD range | [Chatur-Phases.md](Chatur-Phases.md) |
 | This phase's work list | [Chatur-P3-Checklist.md](Chatur-P3-Checklist.md) |

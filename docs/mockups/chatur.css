@@ -85,7 +85,7 @@ svg{width:15px;height:15px;flex:none}
 
 /* ---------- menu bar ---------- */
 .menubar{height:34px;flex:none;display:flex;align-items:center;gap:1px;padding:0 10px;background:var(--card);border-bottom:1px solid var(--line);position:relative;z-index:40}
-.logo{width:20px;height:20px;border-radius:5px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.logo{width:20px;height:20px;border-radius:5px;background:#B45F14 url(brand/chatur-glyph.svg) center/100% 100% no-repeat;display:block;flex:none}
 .wordmark{font-size:13px;font-weight:600;letter-spacing:-.01em;margin:0 12px 0 8px}
 .menu{position:relative}
 .menu>button{height:24px;padding:0 10px;border-radius:5px;font-size:13px}
