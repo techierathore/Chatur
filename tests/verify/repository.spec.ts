@@ -5,6 +5,7 @@ import { test, expect as baseExpect, Page } from '@playwright/test';
 import { execFileSync } from 'child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync, unlinkSync, readFileSync } from 'fs';
 import * as path from 'path';
+import { tmpdir } from 'os';
 import { signIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
 
@@ -95,7 +96,7 @@ async function openRepository(aPage: Page): Promise<void> {
   await aPage.goto('/repository', { waitUntil: 'networkidle' });
   await expect(aPage.getByTestId('branch-row')).toBeVisible({ timeout: 30_000 });
   await expect(aPage.getByTestId('page-heading')).toContainText(REPO); // the selected project is the fixture
-  await expect(aPage.getByTestId('page-heading')).not.toContainText('…', { timeout: 60_000 }); // git has answered
+  await expect(aPage.getByTestId('page-heading')).toContainText('Changes on ', { timeout: 60_000 }); // git has answered
 }
 
 test.beforeAll(() => {
@@ -252,4 +253,47 @@ test('REQ-FN-048 an automatic check-in goes to its own branch', async () => {
       'Repository, so a browser cannot trigger or observe it. It is covered by the unit test ' +
       'RunBranchCheckInCommitsOnlyToTheRunsOwnBranch.',
   );
+});
+
+// A folder outside every repository (the fixtures above sit inside Chatur's own checkout, which git would find).
+const NO_REPO_ROOT = path.join(tmpdir(), 'chatur-repository-spec-norepo');
+const NO_REPO = path.join(NO_REPO_ROOT, 'norepo-proj');
+
+test('REQ-UI-042 a project folder that is not a git repository says so on Repository, with no error', async ({ page }) => {
+  rmSync(NO_REPO_ROOT, { recursive: true, force: true });
+  mkdirSync(path.join(NO_REPO, 'docs'), { recursive: true });
+  writeFileSync(path.join(NO_REPO, 'docs', 'brief.md'), '# Brief\n');
+  await page.goto('/start?all=1', { waitUntil: 'networkidle' });
+  const vDialog = await openFoldersDialog(page);
+  if ((await vDialog.getByText(NO_REPO_ROOT, { exact: true }).count()) === 0) {
+    await vDialog.getByTestId('new-folder-path').fill(NO_REPO_ROOT);
+    await vDialog.getByTestId('add-folder').click();
+    await expect(vDialog.getByText(NO_REPO_ROOT, { exact: true })).toBeVisible();
+  }
+  await vDialog.getByTestId('folders-dialog-close').click();
+  await page.getByTestId(/^project-\d+-name$/).filter({ hasText: /^norepo-proj$/ }).click();
+  await expect(page).not.toHaveURL(/\/start/);
+  await page.goto('/repository', { waitUntil: 'networkidle' });
+  await expect(page.getByTestId('not-a-repository')).toBeVisible();
+  await expect(page.getByTestId('not-a-repository')).toContainText('No git repository here');
+  await expect(page.getByTestId('page-heading')).toContainText(NO_REPO);
+  // No raw git error reaches the owner, and the controls that need a repository are not drawn.
+  await expect(page.getByText(/Could not read the repository|not a git repository/i)).toHaveCount(0);
+  await expect(page.getByTestId('push')).toHaveCount(0);
+  await page.screenshot({ path: `${SHOTS}/repository-norepo.png` });
+});
+
+test("REQ-FN-045 Open in the editor on Repository opens the changed file in the owner's editor", async ({ page }) => {
+  test.info().annotations.push({ type: 'skipped-clause', description: 'The editor opening is a native launch; the web harness launcher only logs it by design, so the request reaching the app is verified.' });
+  const vLog = path.resolve(`tests/.artifacts/verify/app-${new URL(process.env.BASE_URL ?? 'http://localhost:5280').port || '5280'}.log`);
+  const countIn = (aNeedle: string) => (existsSync(vLog) ? readFileSync(vLog, 'utf8').split(aNeedle).length - 1 : 0);
+  await openRepository(page);
+  await page.getByTestId('change-path-new-feature.txt').click();
+  await expect(page.getByTestId('diff-file')).toHaveText('new-feature.txt');
+  const vNeedle = `Would open ${path.join(REPO, 'new-feature.txt')} in the owner's editor`;
+  const vBefore = countIn(vNeedle);
+  await expect(page.getByTestId('diff-open')).toBeEnabled();
+  await page.getByTestId('diff-open').click();
+  await expect.poll(() => countIn(vNeedle), { timeout: 15_000 }).toBeGreaterThan(vBefore);
+  await expect(page.getByTestId('new-branch')).toHaveCount(0); // no button that only looks like one
 });

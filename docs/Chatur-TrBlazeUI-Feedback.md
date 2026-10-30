@@ -8,7 +8,7 @@
 
 ## Summary
 
-21 entries: nothing is blocked. 21 closed — TR-020 and TR-021 ship in 2.1.9, the rest closed on 2.1.6 or earlier.
+22 entries: nothing is blocked. 1 open (TR-022, filed 2026-10-30, worked around in `chatur.css`), 21 closed — TR-020 and TR-021 ship in 2.1.9, the rest closed on 2.1.6 or earlier.
 
 All ten were answered on 2026-09-22 and all ten have now been re-checked in Chatur against
 2.0.9. Six were fixed in code; four needed no code, because the control already existed. Each
@@ -301,6 +301,18 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 - **Encountered in:** REQ-UI-073 (File ▸ Save, Edit ▸ Redo)
 - **Workaround:** the verify spec reads the `pointer-events-none` class.
 - **Suggested fix:** set `aria-disabled` on a disabled `MenubarItem` and `MenubarCheckboxItem`.
+
+### TR-022 — A focused field's ring stands off its border and runs into the label above; menu items are tighter than the design
+
+- **Status:** open, filed 2026-10-30
+- **Severity:** minor
+- **Blocks:** no — Chatur overrides it in one shared stylesheet (`src/ChaturUI/wwwroot/chatur.css`) until a fix ships.
+- **Repro:** TrBlazeUI 2.1.6 `<Label>Project name</Label><Input />` inside a `Dialog`, then focus the input. `Input` carries `focus-visible:ring-2 focus-visible:ring-offset-2`, so a 4px band is drawn outside the border: it touches the label above and comes 4px closer to the dialog edge (the owner's screenshot `docs/screenshots/2026-10-29-first-use/New-Project-Incorrect-Paddings.png`). `DropdownMenuItem` / `MenubarItem` are `px-2 py-1.5` (8px across) and their content `p-1`, against shadcn-style designs that use 10px and 5px.
+- **Expected:** the ring sits on the border (`ring-offset-0`, or an inset ring), and a `Label` placed before a field keeps a gap of its own; menu items with 10px across.
+- **Actual:** the focused field looks as if it has no room around it, which the owner reported as missing padding on every dialog.
+- **Encountered in:** REQ-UI-080
+- **Workaround:** `chatur.css` sets `--tw-ring-offset-width: 0` on focused fields, a 6px gap after a label, and 5px / 6px 10px on menus and lists.
+- **Suggested fix:** drop `ring-offset-2` from `Input`, `Textarea` and `SelectTrigger` (or make it a parameter), and widen menu items to `px-2.5`.
 
 ## Replies from TrBlazeUI
 

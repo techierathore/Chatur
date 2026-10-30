@@ -226,20 +226,91 @@ test('REQ-UI-022 a file read by the agent appears in the activity panel as it ha
   expect(vSeenWhileBusy, 'the step was visible while the agent was still working').toBe(true);
 });
 
-test('REQ-UI-023 Stop stops the agent mid-reply, the activity panel says so, and no further step is taken', async ({ page }) => {
-  await modelSetup(page, 'analyst');
-  const vStoppedBefore = await step(page, /Stopped by the owner/).count();
-  await send(page, 'Write the numbers from 1 to 600, one per line, with no other text.');
-  await expect.poll(async () => (await agentSaid(page).innerText().catch(() => '')).length, { timeout: 60_000 }).toBeGreaterThan(0);
-  await page.getByTestId('stop-agent').click();
-  await expect(step(page, /Stopped by the owner/)).toHaveCount(vStoppedBefore + 1, { timeout: 10_000 });
-  await expect(page.getByTestId('ask-input')).toBeEnabled({ timeout: 15_000 });
-  const vLen = (await agentSaid(page).innerText()).length;
-  const vSteps = await page.getByTestId('activity-step').count();
-  await page.waitForTimeout(3000);
-  expect((await agentSaid(page).innerText()).length, 'the reply stopped growing').toBe(vLen);
-  expect(await page.getByTestId('activity-step').count(), 'no further step').toBe(vSteps);
-  expect(await agentSaid(page).innerText()).not.toMatch(/\b600\s*$/); // it did not run to the end
+test('REQ-UI-023 Stop is shown only while a reply runs, pressing it stops the reply, and it goes once nothing runs', async ({ page }) => {
+  // A slow local stand-in keeps the reply running long enough to press Stop (support/stub-model.ts); the agent
+  // loop, the stop and the activity panel are real. The reply is stopped while the model is still answering.
+  const vStub = await startStubModel('read-file', { path: 'notes.txt' });
+  try {
+    await ensureStubProvider(page, vStub);
+    await openWorkbench(page);
+    await page.getByTestId('new-chat').click();
+    await expect(thread(page).locator('.msg')).toHaveCount(0, { timeout: 15_000 });
+    await chooseStubModel(page);
+    // Nothing runs yet: there is no Stop to press.
+    await expect(page.getByTestId('stop-agent')).toHaveCount(0);
+    vStub.setDelay(30_000);
+    const vStoppedBefore = await step(page, /Stopped by the owner/).count();
+    await send(page, 'Read notes.txt and tell me what it says.');
+    // The reply is running: Stop appears, and pressing it ends the reply.
+    await expect(page.getByTestId('stop-agent')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('ask-input')).toBeDisabled();
+    await shot(page, 'REQ-UI-023-running');
+    await page.getByTestId('stop-agent').click();
+    await expect(step(page, /Stopped by the owner/)).toHaveCount(vStoppedBefore + 1, { timeout: 15_000 });
+    await expect(page.getByTestId('ask-input')).toBeEnabled({ timeout: 15_000 });
+    await expect(page.getByTestId('stop-agent')).toHaveCount(0);
+    // Stopped means stopped: no spinner left, and no step taken after the stop.
+    const vSteps = await page.getByTestId('activity-step').count();
+    await page.waitForTimeout(3000);
+    expect(await page.getByTestId('activity-step').count(), 'no further step').toBe(vSteps);
+    await expect(thread(page).locator('.animate-spin')).toHaveCount(0);
+    await shot(page, 'REQ-UI-023-stopped');
+  } finally {
+    vStub.setDelay(0);
+    await removeStubProvider(page);
+    await vStub.close();
+  }
+});
+
+test('REQ-FN-025 Enter sends the message and Shift+Enter starts a new line, as in other chat tools', async ({ page }) => {
+  const vStub = await startStubModel('read-file', { path: 'notes.txt' });
+  try {
+    await ensureStubProvider(page, vStub);
+    await openWorkbench(page);
+    await page.getByTestId('new-chat').click();
+    await expect(thread(page).locator('.msg')).toHaveCount(0, { timeout: 15_000 });
+    await chooseStubModel(page);
+    const vBox = page.getByTestId('ask-input').locator('xpath=descendant-or-self::textarea').first();
+    await vBox.click();
+    await vBox.pressSequentially('first line');
+    await vBox.press('Shift+Enter');
+    await vBox.pressSequentially('second line');
+    await expect(vBox).toHaveValue('first line\nsecond line');
+    await expect(thread(page).locator('.msg.me')).toHaveCount(0);
+    await vBox.press('Enter');
+    await expect(thread(page).locator('.msg.me .said').first()).toHaveText('first line\nsecond line', { timeout: 10_000 });
+    await expect(vBox).toHaveValue('', { timeout: 30_000 });
+    await expect(page.getByTestId('ask-input')).toBeEnabled({ timeout: 60_000 });
+  } finally {
+    await removeStubProvider(page);
+    await vStub.close();
+  }
+});
+
+test('REQ-UI-079 typing @ lists the project files, typing narrows them, and picking one puts its path in the message', async ({ page }) => {
+  const vBox = page.getByTestId('ask-input').locator('xpath=descendant-or-self::textarea').first();
+  await vBox.click();
+  await vBox.pressSequentially('Look at @');
+  const vPop = page.getByTestId('mention-pop');
+  await expect(vPop).toBeVisible({ timeout: 10_000 });
+  await expect(vPop.getByTestId('mention-notes.txt')).toBeVisible();
+  await expect(vPop.getByTestId('mention-README.md')).toBeVisible();
+  await vBox.pressSequentially('not');
+  await expect(vPop.getByTestId('mention-README.md')).toHaveCount(0);
+  await shot(page, 'REQ-UI-079');
+  await vBox.press('Enter'); // with the list open, Enter picks the file and does not send
+  await expect(vPop).toHaveCount(0);
+  await expect(vBox).toHaveValue('Look at @notes.txt ');
+  await expect(thread(page).locator('.msg.me').filter({ hasText: 'Look at @notes.txt' })).toHaveCount(0);
+  // A click picks too, and Escape closes the list without picking.
+  await vBox.pressSequentially('and @READ');
+  await vPop.getByTestId('mention-README.md').click();
+  await expect(vBox).toHaveValue('Look at @notes.txt and @README.md ');
+  await vBox.pressSequentially('@');
+  await expect(vPop).toBeVisible();
+  await vBox.press('Escape');
+  await expect(vPop).toHaveCount(0);
+  await vBox.fill('');
 });
 
 test('REQ-UI-024 the mode set on the session is kept with the session and shown while it runs', async ({ page }) => {

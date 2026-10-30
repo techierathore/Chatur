@@ -16,6 +16,7 @@ public partial class FilesPanel : IDisposable
     private int? objLoadedForProjectId;
     private string? objSelectedPath;
     private string? objBranchName;
+    private bool objIsRefreshing;
 
     /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
     [Inject]
@@ -50,6 +51,24 @@ public partial class FilesPanel : IDisposable
             await EnsureTreeLoadedAsync();
             StateHasChanged();
         });
+    }
+
+    /// <summary>
+    /// The header's Refresh (REQ-UI-039): reads the project's tree and branch from disk again, so a
+    /// file made or removed outside Chatur shows without reopening the project.
+    /// </summary>
+    private async Task RefreshAsync()
+    {
+        objIsRefreshing = true;
+        try
+        {
+            objLoadedForProjectId = null;
+            await EnsureTreeLoadedAsync();
+        }
+        finally
+        {
+            objIsRefreshing = false;
+        }
     }
 
     private async Task EnsureTreeLoadedAsync()

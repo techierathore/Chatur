@@ -1,4 +1,4 @@
-@* Edit ▸ Go to file… and Edit ▸ Find in files… (REQ-UI-073): type, see where it is, pick one and it
+@* Edit ▸ Go to file and Edit ▸ Find in files (REQ-UI-073): type, see where it is, pick one and it
    opens in the file view. Go to file lists as you type; Find in files searches when asked. *@
 <Dialog Open="Open" OpenChanged="OpenChanged">
     <DialogContent Class="max-w-2xl" data-testid="@(Mode == FileSearchMode.GoToFile ? "goto-dialog" : "find-dialog")">
@@ -25,7 +25,7 @@
             }
             else if (objIsBusy)
             {
-                <p class="text-sm text-muted-foreground" data-testid="search-busy">Searching…</p>
+                <p class="text-sm text-muted-foreground" data-testid="search-busy">Searching</p>
             }
             else if (objSearched && objHits.Count == 0)
             {

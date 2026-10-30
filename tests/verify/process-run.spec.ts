@@ -47,6 +47,8 @@ test('REQ-UI-047 the run shows its steps and stops where it must wait', async ()
   await expect(page.getByTestId('run-state')).toContainText('waiting for you', { timeout: 180_000 });
   await expect(page.getByTestId('question-panel')).toBeVisible();
   await expect(page.getByTestId('answer-yes')).toBeVisible();
+  // Core has no pause for a process run, so no Pause that can never be pressed is drawn.
+  await expect(page.getByTestId('pause-run')).toHaveCount(0);
   await page.screenshot({ path: join(SHOTS, 'process-run-waiting.png'), fullPage: true });
 });
 

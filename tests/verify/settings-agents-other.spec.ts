@@ -783,6 +783,14 @@ test('REQ-UI-037 picking a theme, or light or dark, changes every window at once
   }
 });
 
+test('REQ-UI-037 the preview\'s sample Run button is a picture of the theme, not a button that does nothing', async ({ page }) => {
+  await open(page, '/settings/appearance', 'theme-panel');
+  await expect(page.getByTestId('preview-button')).toBeVisible();
+  await expect(page.getByTestId('preview-controls')).toHaveAttribute('inert', /.*/);
+  const vFocused = await page.getByTestId('preview-button').evaluate((e: HTMLElement) => { e.focus(); return document.activeElement === e; });
+  expect(vFocused, 'the sample cannot take focus or be pressed').toBe(false);
+});
+
 test('REQ-UI-038 a theme file added on Settings joins the list and can be chosen without a new build', async ({ page }) => {
   run("DELETE FROM Theme WHERE Name = 'verifyui038'"); // left over only if an earlier run was killed
   const vSaved = appearanceSettings();

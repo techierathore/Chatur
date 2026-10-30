@@ -39,6 +39,7 @@ public partial class Repository
     private string objCheckInMessage = string.Empty;
     private string objCheckInAuthorLine = string.Empty;
     private bool objIsLoading;
+    private bool? objIsRepository;
     private bool objIsBusy;
 
     /// <summary>Whether the check-in button may be pressed right now.</summary>
@@ -77,6 +78,13 @@ public partial class Repository
         objIsLoading = true;
         try
         {
+            // A folder with no git repository is said to be so, rather than failing every read below (REQ-UI-042).
+            objIsRepository = await SourceControl.IsRepositoryAsync(objProject.ProjectId);
+            if (objIsRepository == false)
+            {
+                return;
+            }
+
             // The reads are independent and each one starts a git process (slow on a Windows drive),
             // so they run side by side and the page is complete after the slowest one, not the sum.
             var vProjectId = objProject.ProjectId;
@@ -221,6 +229,24 @@ public partial class Repository
             : vWhen.Date == vToday.AddDays(-1)
                 ? $"yesterday, {vWhen:HH:mm}"
                 : vWhen.ToString("d MMMM");
+    }
+
+    /// <summary>Opens the file whose difference is shown in the owner's own editor (REQ-FN-045).</summary>
+    private async Task OpenDiffFileAsync()
+    {
+        if (objProject is null || objCurrentDiffFile is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Files.OpenInEditorAsync(objProject.ProjectId, objCurrentDiffFile);
+        }
+        catch (Exception aEx) when (aEx is InvalidOperationException or IOException)
+        {
+            ToastService.Error(aEx.Message, "Could not open the file");
+        }
     }
 
     /// <summary>Shows the old and new text of one changed file (REQ-UI-042).</summary>

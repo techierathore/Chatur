@@ -1,7 +1,9 @@
 using Chatur.Core;
 using Chatur.Core.Actions;
 using Chatur.Core.Platform;
+using ChaturUI.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace ChaturUI.Shell;
 
@@ -46,6 +48,13 @@ public partial class ConversationPanel : IDisposable
     private SessionSummary? objResumeAfterFollow;
     private CancellationTokenSource? objFollowCts;
     private bool objShown = true;
+    private bool objStopping;
+    private ElementReference objComposerHost;
+    private string? objAttachedHostId;
+    private IJSObjectReference? objComposer;
+    private DotNetObjectReference<ConversationPanel>? objSelfRef;
+    private IReadOnlyList<FileSearchHit> objMentionHits = [];
+    private int objMentionIndex;
 
     /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
     [Inject]
@@ -67,6 +76,16 @@ public partial class ConversationPanel : IDisposable
     private IFileActions Files { get; set; } = default!;
 
     [Inject]
+    private IFileSearchActions FileSearch { get; set; } = default!;
+
+    /// <summary>Ends a handed step's session when the owner presses Stop while following it (REQ-UI-023).</summary>
+    [Inject]
+    private IStepAgentActions StepAgents { get; set; } = default!;
+
+    [Inject]
+    private ComposerInterop Composer { get; set; } = default!;
+
+    [Inject]
     private WorkbenchState Workbench { get; set; } = default!;
 
     [Inject]
@@ -74,6 +93,132 @@ public partial class ConversationPanel : IDisposable
 
     /// <summary>The model the owner chose, or <see langword="null"/> when the routing chooses.</summary>
     private ModelSummary? SelectedModel => objModels.FirstOrDefault(m => m.ModelId == objSelectedModelId);
+
+    /// <summary>Whether a reply is streaming or a handed step is being worked — the only time Stop is shown (REQ-UI-023).</summary>
+    private bool IsWorking => objSending || objFollowed is not null;
+
+    /// <summary>Hooks the chat box's keys to this panel each time the box is drawn anew (it is gone while the chat is closed).</summary>
+    protected override async Task OnAfterRenderAsync(bool aFirstRender)
+    {
+        if (!Workbench.ConversationVisible || objComposerHost.Id is null || objComposerHost.Id == objAttachedHostId)
+        {
+            return;
+        }
+
+        objAttachedHostId = objComposerHost.Id;
+        objSelfRef ??= DotNetObjectReference.Create(this);
+        await DisposeComposerAsync();
+        objComposer = await Composer.AttachAsync(objComposerHost, objSelfRef);
+    }
+
+    /// <summary>Enter in the chat box sends what it holds (REQ-FN-025); Shift+Enter never reaches here.</summary>
+    /// <param name="aText">The box's text as typed, which the binding may not have caught up with yet.</param>
+    [JSInvokable]
+    public async Task OnEnterToSend(string aText)
+    {
+        if (objCurrentSession is null || objSending || string.IsNullOrWhiteSpace(aText))
+        {
+            return;
+        }
+
+        // The send takes the text before its first await; only then is the box emptied, since emptying it
+        // reports a change that would otherwise reach the binding first and leave nothing to send.
+        objMessageText = aText;
+        var vSending = SendMessageAsync();
+        if (objComposer is not null)
+        {
+            await objComposer.InvokeVoidAsync("clear");
+        }
+
+        await vSending;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// The word after an <c>@</c> before the caret, as typed (REQ-UI-079): lists the project's files
+    /// that match it, or closes the list when the caret is no longer in such a word.
+    /// </summary>
+    /// <param name="aQuery">The text after the <c>@</c>, or <see langword="null"/> when there is none.</param>
+    [JSInvokable]
+    public async Task OnMentionQuery(string? aQuery)
+    {
+        var vHits = aQuery is null || ProjectId is not { } vProjectId
+            ? []
+            : await FileSearch.FindFilesAsync(vProjectId, aQuery, 20);
+        await ShowMentionsAsync(vHits);
+    }
+
+    /// <summary>The arrows move through the open file list, Enter or Tab picks the file, Escape closes it (REQ-UI-079).</summary>
+    /// <param name="aKey">The key's name, as the browser reports it.</param>
+    [JSInvokable]
+    public async Task OnMentionKey(string aKey)
+    {
+        if (objMentionHits.Count == 0)
+        {
+            return;
+        }
+
+        switch (aKey)
+        {
+            case "ArrowDown":
+                objMentionIndex = (objMentionIndex + 1) % objMentionHits.Count;
+                break;
+            case "ArrowUp":
+                objMentionIndex = (objMentionIndex + objMentionHits.Count - 1) % objMentionHits.Count;
+                break;
+            case "Enter" or "Tab":
+                await PickMentionAsync(objMentionHits[objMentionIndex].RelativePath);
+                return;
+            default:
+                await ShowMentionsAsync([]);
+                return;
+        }
+
+        StateHasChanged();
+    }
+
+    /// <summary>Puts the picked file's path in the message in place of the <c>@</c> word, and closes the list.</summary>
+    private async Task PickMentionAsync(string aRelativePath)
+    {
+        if (objComposer is not null)
+        {
+            await objComposer.InvokeVoidAsync("insertMention", aRelativePath);
+        }
+
+        await ShowMentionsAsync([]);
+    }
+
+    private async Task ShowMentionsAsync(IReadOnlyList<FileSearchHit> aHits)
+    {
+        objMentionHits = aHits;
+        objMentionIndex = 0;
+        if (objComposer is not null)
+        {
+            await objComposer.InvokeVoidAsync("setMentionOpen", aHits.Count > 0);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task DisposeComposerAsync()
+    {
+        if (objComposer is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await objComposer.InvokeVoidAsync("dispose");
+            await objComposer.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The window is closing; its listeners go with it.
+        }
+
+        objComposer = null;
+    }
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -607,7 +752,7 @@ public partial class ConversationPanel : IDisposable
         objMessages.Add(new DisplayMessage("user", vText, null, null, true, DateTime.Now));
         var vAssistantIndex = objMessages.Count;
         objMessages.Add(new DisplayMessage("assistant", string.Empty, null, null, false));
-        StateHasChanged();
+        await ShowMentionsAsync([]);
 
         try
         {
@@ -624,9 +769,26 @@ public partial class ConversationPanel : IDisposable
                 await InvokeAsync(StateHasChanged);
             }
         }
+        catch (OperationCanceledException)
+        {
+            // The owner pressed Stop (REQ-UI-023); what was shown so far stays.
+        }
         finally
         {
             objSending = false;
+
+            // A stopped reply ends without a final chunk: it stops spinning, and one with nothing said yet goes.
+            if (vAssistantIndex < objMessages.Count && !objMessages[vAssistantIndex].IsFinal)
+            {
+                if (objMessages[vAssistantIndex].Text.Length == 0)
+                {
+                    objMessages.RemoveAt(vAssistantIndex);
+                }
+                else
+                {
+                    objMessages[vAssistantIndex] = objMessages[vAssistantIndex] with { IsFinal = true };
+                }
+            }
         }
 
         await LoadProposedChangesAsync(vSession.SessionId);
@@ -651,12 +813,27 @@ public partial class ConversationPanel : IDisposable
         }
     }
 
-    /// <summary>Stops the agent's current work (REQ-UI-023).</summary>
+    /// <summary>
+    /// Stops what is running (REQ-UI-023, BRD-50): the reply being streamed, or the handed step being
+    /// followed. Once it has ended, Stop is no longer shown.
+    /// </summary>
     private async Task StopAsync()
     {
-        if (objCurrentSession is { } vSession)
+        objStopping = true;
+        try
         {
-            await Agent.StopAsync(vSession.SessionId);
+            if (objSending && objCurrentSession is { } vSession)
+            {
+                await Agent.StopAsync(vSession.SessionId);
+            }
+            else if (objFollowed is { } vFollowed)
+            {
+                await StepAgents.StopAsync(vFollowed.RunId);
+            }
+        }
+        finally
+        {
+            objStopping = false;
         }
     }
 
@@ -724,5 +901,7 @@ public partial class ConversationPanel : IDisposable
         Workbench.Changed -= OnWorkbenchChanged;
         objFollowCts?.Cancel();
         objActivityCts?.Cancel();
+        _ = DisposeComposerAsync();
+        objSelfRef?.Dispose();
     }
 }

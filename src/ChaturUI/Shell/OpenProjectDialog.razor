@@ -33,7 +33,7 @@
                         <Input Id="open-project-path" @bind-Value="objPath" Placeholder="@PathPlaceholder" Class="flex-1" data-testid="open-project-path" />
                         <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="BrowseAsync" data-testid="open-project-browse">
                             <LucideIcon Name="folder-open" Size="14" />
-                            Browse…
+                            Browse
                         </Button>
                     </div>
                 </FieldContent>
@@ -50,7 +50,7 @@
                 <Button Variant="ButtonVariant.Outline" data-testid="open-project-cancel">Cancel</Button>
             </DialogClose>
             <Button Disabled="@(objIsBusy || !CanSubmit)" OnClick="SubmitAsync" data-testid="open-project-go">
-                @(objIsBusy ? "Working…" : ActionLabel)
+                @(objIsBusy ? "Working" : ActionLabel)
             </Button>
         </DialogFooter>
     </DialogContent>

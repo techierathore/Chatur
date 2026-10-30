@@ -28,7 +28,7 @@
 
     @if (objThemes is null)
     {
-        <Empty Title="Reading themes…" Size="EmptySize.Small" />
+        <Empty Title="Reading themes" Size="EmptySize.Small" />
     }
     else
     {
@@ -100,7 +100,7 @@
                     <DialogTrigger AsChild>
                         <Button Variant="ButtonVariant.Outline" data-testid="add-theme">
                             <LucideIcon Name="upload" Size="14" />
-                            Add a theme from a file…
+                            Add a theme from a file
                         </Button>
                     </DialogTrigger>
                     <DialogContent data-testid="add-theme-dialog">
@@ -145,7 +145,8 @@
             <CardTitle>Preview<span class="ml-2"><Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent capitalize" data-testid="preview-theme">@State.ThemeName · @(State.IsDark ? "dark" : "light")</Badge></span></CardTitle>
         </CardHeader>
         <CardContent Class="flex flex-col gap-3">
-            <div class="flex items-center gap-2" data-testid="preview-controls">
+            @* A picture of the theme, not controls: `inert` so the sample Run button cannot be pressed or focused (REQ-UI-037). *@
+            <div class="flex items-center gap-2" inert data-testid="preview-controls">
                 @* The tint is drawn by the span around the badge: a Success badge paints its own tint too faintly for the pill to read as good news. *@
                 <span class="inline-flex rounded-full bg-alert-success-bg">
                     <Badge Variant="BadgeVariant.Success" Class="gap-1 rounded-full border-transparent bg-transparent text-alert-success" data-testid="preview-pill">

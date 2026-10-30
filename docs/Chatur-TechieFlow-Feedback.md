@@ -8,7 +8,7 @@
 
 ## Summary
 
-20 entries: 2 open (TF-018, TF-019), 8 fixed upstream and not yet re-checked (TF-008, TF-010, TF-013 to TF-015 in v1.2.1; TF-015 reworked, TF-016, TF-017 and TF-020 in v1.2.2, fixed 2026-10-29), 10 closed (TF-001 to TF-007, TF-009, TF-011, TF-012). 0 blocking now: TF-020 and TF-017, the two that blocked, are fixed upstream.
+21 entries: 3 open (TF-018, TF-019, TF-021), 8 fixed upstream and not yet re-checked (TF-008, TF-010, TF-013 to TF-015 in v1.2.1; TF-015 reworked, TF-016, TF-017 and TF-020 in v1.2.2, fixed 2026-10-29), 10 closed (TF-001 to TF-007, TF-009, TF-011, TF-012). 0 blocking now: TF-020 and TF-017, the two that blocked, are fixed upstream.
 
 TF-007 was re-checked here on 2026-10-03: no list box on Start, Workbench, Prerequisites, Providers or Corrections reports "app carries an icon the mockup does not" at either width, and Start, Prerequisites, Providers and Corrections now pass mockup parity outright.
 
@@ -292,6 +292,18 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Workaround:** none in the app. Switching to the current branch has nothing to do.
 - **Suggested fix:** in `tf-menus.mjs`, treat a ticked item (a check mark, `aria-checked="true"` or `data-state="checked"`) with no unticked sibling choice as "already the state", not as an item that does nothing.
 - **Reply (TechieFlow team, 2026-10-29):** Fixed as you suggested. The cause: the walk already skipped a ticked item, but it knew a tick only by a named icon (`svg[class*="check"]`, `data-icon`). TrBlazeUI's `LucideIcon` draws `<svg class="lucide-icon">` with the check path alone, so your ticked `main` was never seen as ticked. `tf-menus.mjs` now also knows a tick by its shape (one stroke of three points, the middle one lowest), as well as `aria-checked="true"` and `data-state="checked"`, and records the click as "already the state (ticked)". An unticked item that does nothing still fails. Regression case `ch_020`. Miss `MISS-TechieFlow-20261029-01`. **Re-run on this project's phase 3** (the web head as on 28 Oct: the WSL copy of the published harness on :5280, signed in as chatur-owner, the three screens that hold the 19 rows): v1.2.1 gives render EMPTY on End-to-end run, Run queue and Run report with `"main2 to push › main" does nothing when clicked`; the fix gives render OK on all three. **Not ours, for you:** a second run on the same data fails visual on all three screens: `text "build failed" in span[data-testid=output-status] is 2.8 : 1 against its background (rgb(252,252,252) on rgb(246,109,103); 3 : 1 is the minimum)`. That is the app's badge colour. Also, the Windows-side copy (what `tf-verify-boot.sh start` chose today) shows "No branches found" in the branch menu, so this fault does not show there. **Check it here:** paste into Chatur's agent `/TechieFlow:agents:verifier *verify ui Chatur --phase 3`. No screen reports `› main" does nothing`.
+
+### TF-021 — tf-triage.sh new hands out four-digit ids that the test mapping cannot read
+
+- **Status:** open, filed 2026-10-30
+- **Severity:** major
+- **Blocks:** no — the four rows were renumbered by hand to free three-digit ids (REQ-UI-079 to REQ-UI-082), and the run went on.
+- **Repro:** on Chatur, whose highest UI id is REQ-UI-078, run `bash .tfcore/utils/tf-triage.sh Chatur new "<title>" "<When … then …>" --prefix UI --section "Workbench"` four times. The rows come back as REQ-UI-1000, REQ-UI-1001, REQ-UI-1002 and REQ-UI-1003. Then run `tf-verify-tests.sh` over specs whose tests are titled `REQ-UI-1001 …`, `REQ-UI-1002 …`.
+- **Expected:** the next free id in the prefix, REQ-UI-079 onward, in the three-digit form every other script reads.
+- **Actual:** `tf-req-ids.py` matches `REQ-(UI|FN|NFR|RAG)-\d{3}`, so all seven tests of the four rows were filed in `tests.json` under one row, `REQ-UI-100`, which does not exist, and the four rows would have been graded as having no test.
+- **Encountered in:** `*triage-and-fix Chatur docs/screenshots/2026-10-29-first-use`, 2026-10-30
+- **Workaround:** the rows, their tests and the code comments were renumbered to REQ-UI-079 to REQ-UI-082 before the verify.
+- **Suggested fix:** in `tf-triage.py` `new`, take the next free number after the highest existing id; and in `tf-req-ids.py`, read `\d{3,}` with a word boundary, so a longer id is never cut to its first three digits.
 
 ## Replies from TechieFlow
 

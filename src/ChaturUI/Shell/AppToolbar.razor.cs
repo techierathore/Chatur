@@ -29,6 +29,9 @@ public partial class AppToolbar : IDisposable
     private IReadOnlyList<string> objBranches = [];
     private CancellationTokenSource? objWatchCts;
 
+    /// <summary>Whether the toolbar's Find in files dialog is open (REQ-UI-073).</summary>
+    private bool objFindOpen;
+
     /// <summary>Whether a build or run is in progress for the selected project — Build, Run and Stop share this one flag since they share one output slot per project.</summary>
     private bool IsBusy => Workbench.IsBuildRunBusy;
 

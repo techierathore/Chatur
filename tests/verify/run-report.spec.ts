@@ -108,9 +108,9 @@ test('REQ-UI-058 the report lists every requirement the run touched with the ver
   await expect(page.getByTestId('verdict-3')).toContainText('Blocked');
   await expect(page.getByTestId('req-row-3')).toContainText('Verifier');
   await expect(page.getByTestId('verdict-counts')).toContainText('1 Verified');
-  // The mockup's Help menu offers Send feedback… between About and Check for updates.
+  // The mockup's Help menu offers Send feedback between About and Check for updates.
   await page.getByTestId('menu-help').click();
-  await expect(page.getByTestId('menu-help-feedback').first()).toHaveText('Send feedback…');
+  await expect(page.getByTestId('menu-help-feedback').first()).toHaveText('Send feedback');
   await page.keyboard.press('Escape');
   await page.setViewportSize({ width: 1500, height: 2400 });
   await page.screenshot({ path: `${SHOTS}/run-report.png`, fullPage: true });

@@ -36,7 +36,7 @@
                 }
             }
             <DropdownMenuSeparator />
-            <DropdownMenuItem Href="/start?all=1">All projects…</DropdownMenuItem>
+            <DropdownMenuItem Href="/start?all=1">All projects</DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
 
@@ -45,10 +45,10 @@
             <MenubarTrigger @onpointerdown="LoadRecentAsync" data-testid="menu-file">File</MenubarTrigger>
             <MenubarContent data-testid="menu-file-items">
                 @* The four ways into a project open one dialog (REQ-UI-073); each ends with the project selected. *@
-                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.NewProject))" data-testid="menu-file-new">New project…</MenubarItem>
-                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Solution))" data-testid="menu-file-open-solution">Open a solution…</MenubarItem>
-                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="menu-file-open-folder">Open a folder…</MenubarItem>
-                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Clone))" data-testid="menu-file-clone">Clone a repository…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.NewProject))" data-testid="menu-file-new">New project</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Solution))" data-testid="menu-file-open-solution">Open a solution</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="menu-file-open-folder">Open a folder</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Clone))" data-testid="menu-file-clone">Clone a repository</MenubarItem>
                 <MenubarSeparator />
                 @if (objRecent.Count == 0)
                 {
@@ -81,8 +81,8 @@
                 <MenubarItem Disabled="@(Workbench.ActiveFile is null)" OnClick="@(() => EditAsync("copy"))" data-testid="menu-edit-copy">Copy</MenubarItem>
                 <MenubarItem Disabled="@(!CanEdit)" OnClick="PasteAsync" data-testid="menu-edit-paste">Paste</MenubarItem>
                 <MenubarSeparator />
-                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="@(() => OpenSearch(FileSearchMode.FindInFiles))" data-testid="menu-edit-find">Find in files…</MenubarItem>
-                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="@(() => OpenSearch(FileSearchMode.GoToFile))" data-testid="menu-edit-goto">Go to file…</MenubarItem>
+                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="@(() => OpenSearch(FileSearchMode.FindInFiles))" data-testid="menu-edit-find">Find in files</MenubarItem>
+                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="@(() => OpenSearch(FileSearchMode.GoToFile))" data-testid="menu-edit-goto">Go to file</MenubarItem>
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
@@ -96,7 +96,7 @@
                 <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-view-prerequisites">Prerequisites</MenubarItem>
                 <MenubarItem OnClick="@(() => OpenSecondary("/repository"))" data-testid="menu-view-repository">Repository</MenubarItem>
                 <MenubarSeparator />
-                <MenubarItem OnClick="@(() => OpenSecondary("/settings/appearance"))" data-testid="menu-view-appearance">Appearance…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/settings/appearance"))" data-testid="menu-view-appearance">Appearance</MenubarItem>
                 <MenubarSeparator />
                 <MenubarLabel>Zoom</MenubarLabel>
                 <MenubarItem OnClick="@(() => AppShell.ZoomBy(1))" data-testid="menu-view-zoom-in">Zoom in</MenubarItem>
@@ -136,23 +136,23 @@
                     <MenubarSeparator />
                 }
                 @* REQ-FN-106: these open the secondary window, never the main window's own route. *@
-                <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-project-prerequisites">Prerequisites…</MenubarItem>
-                <MenubarItem OnClick="@(() => OpenSecondary("/repository"))" data-testid="menu-project-repository">Repository…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-project-prerequisites">Prerequisites</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/repository"))" data-testid="menu-project-repository">Repository</MenubarItem>
                 @* Phase 2: each opens as a tab in this window, the conversation still on the right. *@
-                <MenubarItem OnClick="@(() => Workbench.OpenProcesses())" data-testid="menu-project-processes">Processes…</MenubarItem>
-                <MenubarItem OnClick="Workbench.OpenBoard" data-testid="menu-project-board">Board…</MenubarItem>
-                <MenubarItem OnClick="OpenAgentWorkspace" data-testid="menu-project-agents">Agent workspace…</MenubarItem>
+                <MenubarItem OnClick="@(() => Workbench.OpenProcesses())" data-testid="menu-project-processes">Processes</MenubarItem>
+                <MenubarItem OnClick="Workbench.OpenBoard" data-testid="menu-project-board">Board</MenubarItem>
+                <MenubarItem OnClick="OpenAgentWorkspace" data-testid="menu-project-agents">Agent workspace</MenubarItem>
                 @* Phase 3: the end-to-end run, its queue and its record, each a tab in this window. *@
-                <MenubarItem OnClick="Workbench.OpenAutoRun" data-testid="menu-project-auto">End-to-end run…</MenubarItem>
-                <MenubarItem OnClick="Workbench.OpenRunQueue" data-testid="menu-project-queue">Run queue…</MenubarItem>
-                <MenubarItem OnClick="Workbench.OpenRunReport" data-testid="menu-project-report">Run record…</MenubarItem>
+                <MenubarItem OnClick="Workbench.OpenAutoRun" data-testid="menu-project-auto">End-to-end run</MenubarItem>
+                <MenubarItem OnClick="Workbench.OpenRunQueue" data-testid="menu-project-queue">Run queue</MenubarItem>
+                <MenubarItem OnClick="Workbench.OpenRunReport" data-testid="menu-project-report">Run record</MenubarItem>
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
             <MenubarTrigger data-testid="menu-tools">Tools</MenubarTrigger>
             <MenubarContent data-testid="menu-tools-items">
                 <MenubarItem OnClick="@(() => OpenSecondary("/settings/providers"))" data-testid="menu-tools-settings">
-                    Settings…
+                    Settings
                     <MenubarShortcut>Ctrl+,</MenubarShortcut>
                 </MenubarItem>
                 <MenubarSeparator />
@@ -167,7 +167,7 @@
             <MenubarTrigger data-testid="menu-help">Help</MenubarTrigger>
             <MenubarContent data-testid="menu-help-items">
                 <MenubarItem OnClick="ShowAboutAsync" data-testid="menu-help-about">About Chatur</MenubarItem>
-                <MenubarItem OnClick="@(() => OpenSecondary("/feedback"))" data-testid="menu-help-feedback">Send feedback…</MenubarItem>
+                <MenubarItem OnClick="@(() => OpenSecondary("/feedback"))" data-testid="menu-help-feedback">Send feedback</MenubarItem>
                 @* The newer-build offer lives on Prerequisites (REQ-UI-018), so this opens it there. *@
                 <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-help-updates">Check for updates</MenubarItem>
             </MenubarContent>

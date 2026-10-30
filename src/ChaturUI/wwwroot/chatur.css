@@ -1,0 +1,35 @@
+/* Chatur — the shared spacing every screen's controls keep (REQ-UI-080), loaded after trblazeui.css by
+   both heads. One place, not one screen at a time. Each rule closes the gap logged as TR-022 in
+   docs/Chatur-TrBlazeUI-Feedback.md; remove it when TrBlazeUI ships the fix. */
+
+/* A focused field's ring hugs its own border instead of standing 2px off it, so it no longer runs into
+   the label above or the dialog's edge (docs/screenshots/2026-10-29-first-use/New-Project-Incorrect-Paddings.png). */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="combobox"]:focus-visible {
+    --tw-ring-offset-width: 0px !important;
+}
+
+/* A label sits clear of the field it names. */
+label + input,
+label + textarea,
+label + select,
+label + [role="combobox"] {
+    margin-top: 0.375rem;
+}
+
+/* Menus and pop-ups keep the mockup's spacing (docs/mockups/chatur.css `.drop`: 5px around, 6px 10px per item). */
+[role="menu"],
+[role="listbox"] {
+    padding: 5px !important;
+}
+
+/* Only the items inside an open menu or list: the menu bar's own File, Edit, View triggers are menu items too,
+   and keep their size so the bar still fits a 390px window. */
+[role="menu"] [role="menuitem"],
+[role="menu"] [role="menuitemradio"],
+[role="menu"] [role="menuitemcheckbox"],
+[role="listbox"] [role="option"] {
+    padding: 6px 10px !important;
+}

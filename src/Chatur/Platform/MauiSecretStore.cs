@@ -14,7 +14,12 @@ namespace Chatur.Platform;
 /// </summary>
 public sealed class MauiSecretStore : ISecretStore
 {
-    private const string TargetPrefix = "Chatur:";
+    // A test run's secrets carry their own prefix, so signing in or adding a provider in a test never
+    // replaces the owner's (REQ-NFR-010).
+    private static readonly string TargetPrefix =
+        TestDataGuard.IsUnderTest(Environment.GetEnvironmentVariable) ? "Chatur:" + TestDataGuard.SecretPrefix : "Chatur:";
+    private static readonly string KeyPrefix =
+        TestDataGuard.IsUnderTest(Environment.GetEnvironmentVariable) ? TestDataGuard.SecretPrefix : string.Empty;
 
     /// <inheritdoc />
     public Task SaveAsync(string aName, string aSecret, CancellationToken aCt = default)
@@ -23,7 +28,7 @@ public sealed class MauiSecretStore : ISecretStore
         WriteCredential(TargetPrefix + aName, aSecret);
         return Task.CompletedTask;
 #elif MACCATALYST
-        return SecureStorage.Default.SetAsync(aName, aSecret);
+        return SecureStorage.Default.SetAsync(KeyPrefix + aName, aSecret);
 #else
         throw new PlatformNotSupportedException("Chatur ships for Windows and Mac Catalyst only.");
 #endif
@@ -35,7 +40,7 @@ public sealed class MauiSecretStore : ISecretStore
 #if WINDOWS
         return Task.FromResult(ReadCredential(TargetPrefix + aName));
 #elif MACCATALYST
-        return SecureStorage.Default.GetAsync(aName);
+        return SecureStorage.Default.GetAsync(KeyPrefix + aName);
 #else
         throw new PlatformNotSupportedException("Chatur ships for Windows and Mac Catalyst only.");
 #endif
@@ -48,7 +53,7 @@ public sealed class MauiSecretStore : ISecretStore
         DeleteCredential(TargetPrefix + aName);
         return Task.CompletedTask;
 #elif MACCATALYST
-        SecureStorage.Default.Remove(aName);
+        SecureStorage.Default.Remove(KeyPrefix + aName);
         return Task.CompletedTask;
 #else
         throw new PlatformNotSupportedException("Chatur ships for Windows and Mac Catalyst only.");

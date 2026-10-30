@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Status</h1>
-    <div class="sub">Last rendered: 2026-10-29</div>
+    <div class="sub">Last rendered: 2026-10-30</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#where-i-am">Where I am</a></li>
@@ -121,7 +121,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Status</h1>
-    <div class="subtitle">Rendered 2026-10-29 &middot; source <code>PROJECT-STATUS.md</code></div>
+    <div class="subtitle">Rendered 2026-10-30 &middot; source <code>PROJECT-STATUS.md</code></div>
     <div class="cta-next" style="padding:20px; background:var(--cta-bg); border:2px solid var(--accent); border-radius:10px; margin:20px 0;">
       <div style="font-size:11px; color:var(--muted); letter-spacing:.5px;">NEXT COMMAND TO RUN</div>
       <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">/TechieFlow:agents:verifier *verify all Chatur --phase all</div>
@@ -142,19 +142,19 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
     </div>
 <hr>
 <p>project: Chatur
-last_updated: 2026-10-29
-current_phase: Phase 3 of 4 (End to end and unattended) · Verify — 11 to verify across phases 1, 2, 51 of 51 verified
+last_updated: 2026-10-30
+current_phase: Phase 3 of 4 (End to end and unattended) · Verify — 11 to verify across phases 1, 2, 56 of 56 verified
 last_verified_build: PASS
-last_verified_date: 2026-10-29
+last_verified_date: 2026-10-30
 ---</p>
 <h2 id="where-i-am">Where I am<a class="anchor-link" href="#where-i-am">#</a></h2>
-<p>Phase 3 of 4 (End to end and unattended). All 51 phase-3 rows are Verified, including the 19 End-to-end run, Run queue and Run report rows. Every check that ran passed: build, acceptance, render, assets, visual and mockup parity, on the web harness and, for the menu rows, the Windows app. 11 rows in phases 1 and 2 still wait for a verify.</p>
+<p>Phase 3 of 4 (End to end and unattended). All 56 phase-3 rows are Verified, five of them new from the owner's 29 Oct first use. The chat's Stop, Enter to send, Files Refresh and Repository on a folder without git pass their tests; those phase-1 rows stay Needs re-verify because the screen check needs the WSL harness. Tests now use their own database.</p>
 <h2 id="next-command-to-run">Next command to run<a class="anchor-link" href="#next-command-to-run">#</a></h2>
 <p>Claude Code:</p>
 <pre><code>/TechieFlow:agents:verifier *verify all Chatur --phase all</code></pre>
 <p>OpenCode:</p>
 <pre><code>/flow-verifier *verify all Chatur --phase all</code></pre>
-<p>Why: 11 rows of other phases are built and not verified — phase 1: 3 (REQ-UI-008, REQ-FN-012, REQ-FN-013); phase 2: 8 (REQ-FN-053, REQ-UI-047, REQ-FN-054, REQ-UI-053 …). Phase 3 is ready for handoff once they are.</p>
+<p>Why: 11 rows of other phases are built and not verified — phase 1: 3 (REQ-UI-008, REQ-FN-012, REQ-FN-013); phase 2: 8 (REQ-FN-053, REQ-UI-047, REQ-FN-054, REQ-UI-053 …); this phase alone would be: 56 of 56 verified (every row in this phase's scope is terminal and handoff has not run yet); working docs/Chatur-P3-Checklist.md.</p>
 <h2 id="open-requirements">Open requirements<a class="anchor-link" href="#open-requirements">#</a></h2>
 <table>
 <thead><tr><th>Status</th><th>Count</th></tr></thead>
@@ -172,11 +172,11 @@ last_verified_date: 2026-10-29
 </ul>
 <h2 id="known-blockers">Known blockers<a class="anchor-link" href="#known-blockers">#</a></h2>
 <ul>
-<li>TF-018 (seen again in a new form): the boot kept the Windows-side web harness, which cannot read the WSL fixture paths the tests type. This pass ran the same published copy under WSL dotnet, and the ledger names that rung.
+<li>TF-018: the screen check runs on the Windows-side harness, which cannot open the WSL fixture paths, so the Repository seed and the mockup's sample branches fail render on Workbench and Repository. Acceptance tests run under WSL dotnet (CHATUR_WSL_HARNESS_PORT).
 </li>
-<li>The test provider key in user secrets (Chatur:TestProvider, OpenCode Go) is refused with 401. The desktop chat test (phase-1 REQ-FN-025 to 027, REQ-UI-021) fails on it until the key is renewed.
+<li>TF-021: tf-triage.sh issued REQ-UI-1000 to 1003, which the test mapping cannot read; renumbered to REQ-UI-079 to 082.
 </li>
-<li>The desktop head under test uses the owner's real database. This pass left one test message in the ChaturCheck chat and set its model picker to kimi-k2.7-code.
+<li>The test provider key (Chatur:TestProvider, OpenCode Go) is refused with 401; the model-answer tests fail until it is renewed.
 </li>
 </ul>
 <h2 id="verification-log">Verification log<a class="anchor-link" href="#verification-log">#</a></h2>
@@ -184,20 +184,20 @@ last_verified_date: 2026-10-29
 <table>
 <thead><tr><th>Date</th><th>Phase</th><th>Result</th><th>Status table</th></tr></thead>
 <tbody>
-<tr><td>2026-10-26</td><td>fix-issues</td><td>28/47 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-27</td><td>amend-docs</td><td>28/51 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-28</td><td>build-phase</td><td>32/51 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-29</td><td>amend-docs</td><td>32/51 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-10-29</td><td>*verify all Chatur --phase 3</td><td>51/51 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-10-30</td><td>triage-and-fix</td><td>56/56 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 </tbody>
 </table>
 <h2 id="library-feedback-summary">Library feedback summary<a class="anchor-link" href="#library-feedback-summary">#</a></h2>
 <ul>
-<li>TechieFlow: 2 open · 8 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 10 closed — docs/Chatur-TechieFlow-Feedback.md
+<li>TechieFlow: 3 open · 7 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 11 closed — docs/Chatur-TechieFlow-Feedback.md
 </li>
 <li>TechieRag: 0 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
 </li>
-<li>TrBlazeUI: 0 open · 21 closed — docs/Chatur-TrBlazeUI-Feedback.md
+<li>TrBlazeUI: 1 open · 21 closed — docs/Chatur-TrBlazeUI-Feedback.md
 </li>
 </ul>
 <h2 id="standards-compliance">Standards compliance<a class="anchor-link" href="#standards-compliance">#</a></h2>
@@ -207,11 +207,11 @@ last_verified_date: 2026-10-29
 </ul>
 <h2 id="deferred-future"><a id="deferred--future"></a>Deferred / future<a class="anchor-link" href="#deferred-future">#</a></h2>
 <ul>
-<li>No BRD row: account controls, hiding output, merging a process branch.
+<li>No BRD row: account controls, hiding output, merging or creating a branch.
 </li>
 <li>Submenus: TR-020 fixed upstream, in the release after 2.1.6.
 </li>
-<li>A run cut off by closing Chatur resumes only when End-to-end run opens.
+<li>A run cut off by closing Chatur resumes when End-to-end run opens.
 </li>
 <li>With six tabs open, the newest can scroll out of view.
 </li>
@@ -223,7 +223,7 @@ last_verified_date: 2026-10-29
 </li>
 <li>Appearance text size; routing's small model unnamed.
 </li>
-<li>Sign out hangs on "Loading Chatur…" until reopened.
+<li>Sign out hangs on "Loading Chatur" until reopened.
 </li>
 <li>Anthropic tier 3 seeds invalid <code>claude-haiku-5</code>.
 </li>

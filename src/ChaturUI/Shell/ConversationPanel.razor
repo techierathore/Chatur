@@ -138,8 +138,25 @@
     <div class="flex-none border-t p-3" data-testid="composer">
         @* The mockup's `.box`: one bordered box that holds the borderless message field and the row of
            pickers and Send beneath it; the hint sits outside it. *@
-        <div class="flex flex-col gap-2 rounded-lg border bg-background p-3">
-        <Textarea Class="min-h-12 resize-y rounded-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0" Placeholder="Ask about the project…" @bind-Value="objMessageText" Disabled="@(objCurrentSession is null || objSending)" AriaLabel="Message" data-testid="ask-input" />
+        <div class="relative flex flex-col gap-2 rounded-lg border bg-background p-3">
+        @* Enter sends and Shift+Enter starts a new line (REQ-FN-025); @ lists the project's files to attach (REQ-UI-079). *@
+        <div @ref="objComposerHost">
+        <Textarea Class="min-h-12 resize-y rounded-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0" Placeholder="Ask about the project" @bind-Value="objMessageText" Disabled="@(objCurrentSession is null || objSending)" AriaLabel="Message" data-testid="ask-input" />
+        </div>
+        @if (objMentionHits.Count > 0)
+        {
+            <div class="absolute bottom-full left-3 right-3 mb-1 max-h-60 overflow-y-auto rounded-md border bg-popover p-1 text-sm shadow-md" role="listbox" data-testid="mention-pop">
+                @for (var vIndex = 0; vIndex < objMentionHits.Count; vIndex++)
+                {
+                    var vHit = objMentionHits[vIndex];
+                    <div class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 @(vIndex == objMentionIndex ? "bg-accent text-accent-foreground" : "")" role="option" aria-selected="@(vIndex == objMentionIndex)"
+                         @onmousedown="() => PickMentionAsync(vHit.RelativePath)" @onmousedown:preventDefault data-testid="@($"mention-{vHit.RelativePath}")">
+                        <LucideIcon Name="file" Size="14" />
+                        <span class="truncate">@vHit.RelativePath</span>
+                    </div>
+                }
+            </div>
+        }
         @* Wraps rather than overlapping: with a model and a role chosen the row is wider than the chat panel (REQ-UI-024). *@
         <div class="flex flex-wrap items-center gap-2">
             @* Choose which model answers (BRD-46, UI Design "Screen: Workbench" `Model`): any model a connected provider serves, or the routing's own choice. *@
@@ -177,7 +194,7 @@
                         </DropdownMenuItem>
                     }
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/settings/routing"))" data-testid="model-routing-link">Which model does which work…</DropdownMenuItem>
+                    <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/settings/routing"))" data-testid="model-routing-link">Which model does which work</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
             </span>
@@ -204,7 +221,7 @@
                         </DropdownMenuItem>
                     }
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/settings/agents"))" data-testid="agent-settings-link">Agents…</DropdownMenuItem>
+                    <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/settings/agents"))" data-testid="agent-settings-link">Agents</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
             </span>
@@ -217,10 +234,14 @@
             </ToggleGroup>
             <span class="flex-1"></span>
             <span class="font-mono text-xs text-muted-foreground" data-testid="cost">@(objTotalTokens is { } vTokens ? $"{vTokens:N0} tokens" : "—")</span>
-            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7" Disabled="@(objCurrentSession is null)" OnClick="StopAsync" data-testid="stop-agent">
-                <LucideIcon Name="square" Size="14" />
-                Stop
-            </Button>
+            @* Stop is there only while a reply or a handed step is running, and ends it (REQ-UI-023, BRD-50). *@
+            @if (IsWorking)
+            {
+                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7" Disabled="@objStopping" OnClick="StopAsync" data-testid="stop-agent">
+                    <LucideIcon Name="square" Size="14" />
+                    Stop
+                </Button>
+            }
             <Button Variant="ButtonVariant.Default" Size="ButtonSize.Small" Class="h-7 rounded-full" Disabled="@(objCurrentSession is null || objSending || string.IsNullOrWhiteSpace(objMessageText))" OnClick="SendMessageAsync" data-testid="send">
                 <LucideIcon Name="send" Size="14" />
                 Send

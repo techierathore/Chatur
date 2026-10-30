@@ -2,6 +2,7 @@
 @layout Layouts.SecondaryLayout
 @inject IProjectActions ProjectActions
 @inject ISourceControlActions SourceControl
+@inject IFileActions Files
 @inject IAccountActions Accounts
 @inject Chatur.Core.Platform.IClock Clock
 @inject ToastService ToastService
@@ -12,6 +13,21 @@
    run's own automatic check-in (REQ-FN-048) has no control on this screen — it runs by itself when
    an agent run finishes. *@
 <div class="flex flex-col gap-4">
+@if (objProject is not null && objIsRepository == false)
+{
+    @* A folder with no git repository has nothing to show here, and is said to be so plainly (REQ-UI-042). *@
+    <div data-testid="page-heading">
+        <h1 class="text-lg font-semibold">Repository</h1>
+        <p class="text-sm text-muted-foreground">
+            <span class="break-all font-mono">@objProject.Path</span> is not under source control.
+        </p>
+    </div>
+    <Card data-testid="not-a-repository">
+        <Empty Title="No git repository here" Description="This project's folder is not in a git repository, so there are no changes, branches or check-ins to show. Run git init in the folder, or clone the project with File ▸ Clone a repository, and they appear here." Size="EmptySize.Small" />
+    </Card>
+}
+else
+{
 
     <div class="flex flex-wrap items-start justify-between gap-3" data-testid="page-heading">
         @if (objProject is null)
@@ -24,7 +40,7 @@
         else
         {
             <div>
-                <h1 class="text-lg font-semibold">Changes on @(objStatus?.Branch ?? "…")</h1>
+                <h1 class="text-lg font-semibold">@(objStatus is null ? "Reading the repository" : $"Changes on {objStatus.Branch}")</h1>
                 <p class="text-sm text-muted-foreground">
                     Files in <span class="break-all font-mono">@objProject.Path</span> differ from the last check-in.
                 </p>
@@ -80,10 +96,6 @@
                 </DropdownMenuContent>
             </DropdownMenu>
             </div>
-            <Button Variant="ButtonVariant.Outline" Disabled="true" data-testid="new-branch">
-                <LucideIcon Name="plus" Size="14" />
-                New branch…
-            </Button>
         </div>
     }
 
@@ -155,7 +167,8 @@
             <CardContent Class="flex flex-col gap-2">
                 <div class="flex items-center justify-between gap-2" data-testid="diff">
                     <span class="font-mono text-sm" data-testid="diff-file">@objCurrentDiffFile</span>
-                    <Button Variant="ButtonVariant.Link" Disabled="true" data-testid="diff-open">Open in the editor</Button>
+                    @* Opens the changed file in the owner's own editor (REQ-FN-045). *@
+                    <Button Variant="ButtonVariant.Link" Disabled="@(objCurrentDiffFile is null)" OnClick="OpenDiffFileAsync" data-testid="diff-open">Open in the editor</Button>
                 </div>
                 <CodeBlock Language="diff" Code="@objCurrentDiff" />
             </CardContent>
@@ -298,7 +311,7 @@
                                 <CellTemplate Context="row">
                                     <Button Variant="ButtonVariant.Outline" OnClick="@(() => ExplainMerge(row))" data-testid="@($"process-branch-merge-{NumberOf(row)}")">
                                         <LucideIcon Name="git-merge" Size="14" />
-                                        Merge into @(objMainBranch)…
+                                        Merge into @(objMainBranch)
                                     </Button>
                                 </CellTemplate>
                             </DataTableColumn>
@@ -317,4 +330,5 @@
         </span>
     </div>
 
+}
 </div>

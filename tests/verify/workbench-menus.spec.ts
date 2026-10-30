@@ -67,15 +67,16 @@ async function submitProjectDialog(aPage: Page, aFields: { path: string; name?: 
 
 test('REQ-UI-073 File, Edit, View and Help each hold their items and none says Nothing to do yet', async () => {
   const vWanted: Record<string, string[]> = {
-    file: ['New project…', 'Open a solution…', 'Open a folder…', 'Clone a repository…', 'Recent projects', 'Save', 'Save all', 'Close project', 'Exit'],
-    edit: ['Undo', 'Redo', 'Cut', 'Copy', 'Paste', 'Find in files…', 'Go to file…'],
-    view: ['Files', 'Chat', 'Output', 'Prerequisites', 'Repository', 'Appearance…', 'Zoom in', 'Zoom out', 'Actual size'],
-    help: ['About Chatur', 'Send feedback…', 'Check for updates'],
+    file: ['New project', 'Open a solution', 'Open a folder', 'Clone a repository', 'Recent projects', 'Save', 'Save all', 'Close project', 'Exit'],
+    edit: ['Undo', 'Redo', 'Cut', 'Copy', 'Paste', 'Find in files', 'Go to file'],
+    view: ['Files', 'Chat', 'Output', 'Prerequisites', 'Repository', 'Appearance', 'Zoom in', 'Zoom out', 'Actual size'],
+    help: ['About Chatur', 'Send feedback', 'Check for updates'],
   };
   for (const [vMenu, vItems] of Object.entries(vWanted)) {
     await openMenu(page, vMenu);
     const vPop = page.getByTestId(`menu-${vMenu}-items`);
     for (const vItem of vItems) await expect(vPop).toContainText(vItem);
+    await expect(vPop, 'no menu item ends in an ellipsis (owner, 2026-10-29)').not.toContainText('…');
     await page.keyboard.press('Escape');
   }
   for (const vMenu of ['file', 'edit', 'view', 'help', 'project', 'tools']) await noPlaceholder(page, vMenu);
@@ -280,6 +281,22 @@ test('REQ-UI-073 Edit ▸ Find in files finds the text and opens the file at the
   await vDialog.getByTestId('search-go').click();
   await expect(vDialog.getByTestId('search-none')).toBeVisible({ timeout: 20_000 });
   await vDialog.getByTestId('search-close').click();
+});
+
+test('REQ-UI-073 the toolbar Find opens Find in files and the hit opens the file', async () => {
+  const vDialog = page.getByTestId('find-dialog');
+  await expect(page.getByTestId('find')).toBeEnabled({ timeout: 20_000 });
+  await expect(async () => {
+    if (!(await vDialog.isVisible())) await page.getByTestId('find').click();
+    await expect(vDialog).toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 30_000 });
+  await vDialog.getByTestId('search-input').fill('WBA tick');
+  await vDialog.getByTestId('search-go').click();
+  const vHit = vDialog.getByTestId('search-hit').filter({ hasText: 'Program.cs' }).first();
+  await expect(vHit).toBeVisible({ timeout: 20_000 });
+  await vHit.click();
+  await expect(vDialog).toBeHidden();
+  await expect(tabs(page)).toContainText('Program.cs');
 });
 
 test('REQ-UI-073 Edit ▸ Go to file lists files by name and opens the one picked', async () => {

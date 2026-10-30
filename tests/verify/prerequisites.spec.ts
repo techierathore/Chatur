@@ -42,7 +42,7 @@ async function openPrerequisites(aPage: Page): Promise<void> {
   await aPage.goto('/prerequisites', { waitUntil: 'networkidle' });
   await expect(aPage.getByTestId('page-heading')).toBeVisible({ timeout: 30_000 });
   // The probe runs on open; wait until it has either listed tools or shown its honest empty state.
-  await expect(aPage.getByText('Checking…')).toHaveCount(0, { timeout: 30_000 });
+  await expect(aPage.getByText('Checking', { exact: true })).toHaveCount(0, { timeout: 30_000 });
 }
 
 async function openFixtureAsProject(aPage: Page): Promise<void> {
@@ -128,7 +128,7 @@ test.describe('Prerequisites', () => {
     await openFixtureAsProject(page);
     await page.goto('/prerequisites', { waitUntil: 'networkidle' });
     await expect(page.getByTestId('page-heading')).toContainText('MauiFixture');
-    await expect(page.getByText('Checking…')).toHaveCount(0, { timeout: 30_000 });
+    await expect(page.getByText('Checking', { exact: true })).toHaveCount(0, { timeout: 30_000 });
 
     const vRows = toolRows(page);
     await expect(vRows.first()).toBeVisible({ timeout: 30_000 });

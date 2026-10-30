@@ -24,7 +24,7 @@ public partial class Start
     private ProjectOpenMode objOpenProjectMode;
 
     /// <summary>
-    /// Set by the menu bar's "All projects…" (<c>/start?all=1</c>): the owner deliberately came to
+    /// Set by the menu bar's "All projects" (<c>/start?all=1</c>): the owner deliberately came to
     /// the project list, so Start must show it even though a project is selected (REQ-UI-010).
     /// </summary>
     [SupplyParameterFromQuery(Name = "all")]

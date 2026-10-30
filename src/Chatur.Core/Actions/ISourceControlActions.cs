@@ -8,6 +8,14 @@ namespace Chatur.Core.Actions;
 /// </summary>
 public interface ISourceControlActions
 {
+    /// <summary>
+    /// Whether the project's folder is in a git repository at all (REQ-UI-042). A folder that is not
+    /// has nothing to show on Repository, and every other read here would fail on it.
+    /// </summary>
+    /// <param name="aProjectId">The project to check.</param>
+    /// <param name="aCt">A token that cancels the read.</param>
+    Task<bool> IsRepositoryAsync(int aProjectId, CancellationToken aCt = default);
+
     /// <summary>Every file that differs from the last check-in (REQ-UI-042).</summary>
     /// <param name="aProjectId">The project to read changes for.</param>
     /// <param name="aCt">A token that cancels the read.</param>

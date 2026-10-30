@@ -2,8 +2,12 @@
    `files-panel`). IFileActions.TreeAsync feeds the tree (REQ-UI-039); selecting a file reads and
    opens it into a tab (REQ-UI-040). ISourceControlActions for the branch row is not cluster H's row. *@
 <Card Class="flex w-60 flex-none flex-col overflow-hidden" data-testid="files-panel">
-    <div class="flex h-8 flex-none items-center border-b px-3 text-xs font-medium uppercase text-muted-foreground" data-testid="files-head">
-        Files
+    <div class="flex h-8 flex-none items-center justify-between border-b pl-3 pr-1 text-xs font-medium uppercase text-muted-foreground" data-testid="files-head">
+        <span>Files</span>
+        @* Reads the tree from disk again, so files made outside Chatur show (REQ-UI-039). *@
+        <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" Class="h-7 w-7" Disabled="@(AppStateService.SelectedProject is null || objIsRefreshing)" OnClick="RefreshAsync" AriaLabel="Refresh the files" title="Reads the project's files from disk again, so files made outside Chatur show." data-testid="files-refresh">
+            <LucideIcon Name="refresh-cw" Size="14" />
+        </Button>
     </div>
     <div class="flex-1 overflow-auto" data-testid="file-tree">
         @if (AppStateService.SelectedProject is null)

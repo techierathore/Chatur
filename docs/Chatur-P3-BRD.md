@@ -198,7 +198,7 @@ Added 2026-10-27 on the owner's ask, once the Chatur logo set was approved (27 O
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-10-29.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
+**Snapshot as of 2026-10-30.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
@@ -207,7 +207,7 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | Run report | 4 | 4 | 0 | Done |
 | Settings | 5 | 5 | 0 | Done |
 | Process run | 20 | 20 | 0 | Done |
-| Workbench | 3 | 3 | 0 | Done |
+| Workbench | 8 | 8 | 0 | Done |
 | Start | 4 | 4 | 0 | Done |
 
 ## 5. Where the rest lives

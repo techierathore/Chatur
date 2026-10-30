@@ -24,7 +24,7 @@
 
     @if (objBoard is null)
     {
-        <Empty Title="Reading the checklists…" Size="EmptySize.Small" data-testid="board-loading" />
+        <Empty Title="Reading the checklists" Size="EmptySize.Small" data-testid="board-loading" />
     }
     else if (objBoard.MissingFolder is not null)
     {
@@ -84,7 +84,7 @@
                     </SelectContent>
                 </Select>
             </div>
-            <Input Value="@Search" ValueChanged="OnSearchChangedAsync" Placeholder="Search id or title…" MaxLength="@RequirementFilter.MaxSearchLength" AriaLabel="Search requirements" Class="min-w-44 flex-1" data-testid="filter-search" />
+            <Input Value="@Search" ValueChanged="OnSearchChangedAsync" Placeholder="Search id or title" MaxLength="@RequirementFilter.MaxSearchLength" AriaLabel="Search requirements" Class="min-w-44 flex-1" data-testid="filter-search" />
             <Button Variant="ButtonVariant.Outline" OnClick="ResetAsync" data-testid="filter-reset">
                 <LucideIcon Name="refresh-cw" Size="14" />
                 Reset

@@ -18,24 +18,24 @@ async function fromProjectMenu(aPage: Page, aItemId: string, aTab: string | RegE
   }).toPass({ timeout: 30_000 });
 }
 
-/** Project ▸ Processes… */
+/** Project ▸ Processes */
 export async function openProcessesTab(aPage: Page): Promise<void> {
   await fromProjectMenu(aPage, 'menu-project-processes', 'Processes');
   await expect(aPage.getByTestId('process-table')).toBeVisible({ timeout: 30_000 });
 }
 
-/** Project ▸ Board… */
+/** Project ▸ Board */
 export async function openBoardTab(aPage: Page): Promise<void> {
   await fromProjectMenu(aPage, 'menu-project-board', 'Board');
   await expect(aPage.getByTestId('board-table')).toBeVisible({ timeout: 30_000 });
 }
 
-/** Project ▸ Board… without waiting for the table, for a project whose board has none to show. */
+/** Project ▸ Board without waiting for the table, for a project whose board has none to show. */
 export async function openBoardTabAnyState(aPage: Page): Promise<void> {
   await fromProjectMenu(aPage, 'menu-project-board', 'Board');
 }
 
-/** Project ▸ Agent workspace… */
+/** Project ▸ Agent workspace */
 export async function openAgentsTab(aPage: Page): Promise<void> {
   await fromProjectMenu(aPage, 'menu-project-agents', 'Agents');
   await expect(aPage.getByTestId('workspace-heading')).toBeVisible({ timeout: 30_000 });

@@ -1,6 +1,6 @@
 @* The Project folders dialog (REQ-UI-005, REQ-UI-009): names the folders Chatur searches for
-   projects, and removes one. Opened from Start, either from "Project folders…" in the header or
-   from the empty state's "Name a folder…" (REQ-UI-008). Owned by cluster E — no mockup shows this
+   projects, and removes one. Opened from Start, either from "Project folders" in the header or
+   from the empty state's "Name a folder" (REQ-UI-008). Owned by cluster E — no mockup shows this
    dialog directly; mockups/start.html only says "Settings ▸ Account holds them", so its shape
    follows the same Dialog + Item patterns every other list-management dialog in the app uses. *@
 <Dialog Open="Open" OpenChanged="OpenChanged">
@@ -51,7 +51,7 @@
                                data-testid="new-folder-path" />
                         <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="BrowseAsync" data-testid="browse-folder">
                             <LucideIcon Name="folder-open" Size="14" />
-                            Browse…
+                            Browse
                         </Button>
                     </div>
                 </FieldContent>

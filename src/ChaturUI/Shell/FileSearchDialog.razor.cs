@@ -8,10 +8,10 @@ namespace ChaturUI.Shell;
 /// <summary>Which search the <see cref="FileSearchDialog"/> runs.</summary>
 public enum FileSearchMode
 {
-    /// <summary>Edit ▸ Go to file…: files by name, listed as the owner types.</summary>
+    /// <summary>Edit ▸ Go to file: files by name, listed as the owner types.</summary>
     GoToFile,
 
-    /// <summary>Edit ▸ Find in files…: lines of text, searched when asked.</summary>
+    /// <summary>Edit ▸ Find in files: lines of text, searched when asked.</summary>
     FindInFiles
 }
 

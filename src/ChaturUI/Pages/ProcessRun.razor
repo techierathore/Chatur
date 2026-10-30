@@ -17,7 +17,7 @@
     {
         <div class="flex items-center gap-2 text-sm text-muted-foreground" data-testid="run-loading">
             <Spinner />
-            <span>Starting the run…</span>
+            <span>Starting the run</span>
         </div>
     }
     else if (objRun is null)
@@ -49,18 +49,8 @@
                 <LucideIcon Name="chevron-left" Size="14" />
                 All processes
             </Button>
-            @if (objRun.State == ProcessRunState.Stopped)
-            {
-                <Button Variant="ButtonVariant.Outline" OnClick="BackToProcesses" data-testid="pause-run">Back to Processes</Button>
-            }
-            else
-            {
-                @* Chatur.Core has no pause: a run holds only at an owner stop. The control is shown, switched off. *@
-                <Button Variant="ButtonVariant.Outline" Disabled="true" data-testid="pause-run">
-                    <LucideIcon Name="pause" Size="14" />
-                    Pause
-                </Button>
-            }
+            @* No Pause here: Chatur.Core has no pause for a process run (it holds only at an owner stop), and a
+               button that is never enabled is not drawn. A stopped run already has All processes beside it. *@
             <Button Variant="ButtonVariant.Outline" Disabled="@(objRun.State is ProcessRunState.Stopped or ProcessRunState.Finished || objIsBusy)"
                     OnClick="AskToStop" data-testid="stop-run">
                 <LucideIcon Name="square" Size="14" />

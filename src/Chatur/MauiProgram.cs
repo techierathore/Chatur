@@ -102,7 +102,8 @@ public static class MauiProgram
     /// </summary>
     private static void ConfigureLogging()
     {
-        var vLogFolder = Path.Combine(FileSystem.AppDataDirectory, "logs");
+        // A test run logs under its own folder too, never the owner's (REQ-NFR-010).
+        var vLogFolder = Path.Combine(MauiAppPaths.DataFolder, "logs");
         Directory.CreateDirectory(vLogFolder);
 
         Log.Logger = new LoggerConfiguration()

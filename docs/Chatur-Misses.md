@@ -3,16 +3,24 @@
 | | |
 |---|---|
 | App | Chatur |
-| Count | 677 logged: 423 open, 254 fixed, 0 will not fix |
+| Count | 690 logged: 427 open, 263 fixed, 0 will not fix |
 | Source | `docs/metrics/misses.jsonl`, one row per miss record. Rewritten by `tf-misses-md.sh` on every new record. Never edit it: a wrong row is corrected by a new record. |
-| Updated | 2026-10-28 |
+| Updated | 2026-10-29 |
 
 **Whose gap** answers the four questions of the miss protocol: **the app's spec** did not say it, so the checklist line is fixed; **the framework never said it**, so one requirement line and a check are added; **the check was too weak** (a review, or a script that did not fire), so the check is fixed; **said and ignored**, so the rule becomes a hook or is deleted. **not sorted** means the record predates the sort or nobody has answered yet; `bash .tfcore/utils/tf-emit.sh --amend <miss> sort <spec|unsaid|weak-check|ignored>` completes it.
 
-## Open (423)
+## Open (427)
 
 | Miss | Found | Whose gap | What went wrong |
 |---|---|---|---|
+| MISS-Chatur-20261029-13 (REQ-UI-042) | 2026-10-29 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261029-12 (REQ-UI-039) | 2026-10-29 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261029-11 (REQ-UI-023) | 2026-10-29 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261029-10 (REQ-FN-025) | 2026-10-29 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261029-04 (REQ-UI-039) | 2026-10-29 by owner | the check was too weak | The Files panel has no Refresh button, so files made outside Chatur do not show. |
+| MISS-Chatur-20261029-03 (REQ-UI-042) | 2026-10-29 by owner | the check was too weak | The Repository page gives an error on the ChaturCheck project (a folder with no git repository). |
+| MISS-Chatur-20261029-02 (REQ-FN-025) | 2026-10-29 by owner | the check was too weak | Pressing Enter in the chat box goes to the next line instead of sending; the box should behave like Cursor or Claude Code (Enter sends, Shift+Enter is a new line). |
+| MISS-Chatur-20261029-01 (REQ-UI-023) | 2026-10-29 by owner | the check was too weak | The chat's Stop button is always visible and does nothing; it must show only while a reply or an agent step runs, stop it, and disappear after. |
 | MISS-Chatur-20261022-38 | 2026-10-22 by agent-review | not sorted | OpenCode Go models stream reasoning_content before content and TechieRag drops those deltas, so each Go chat/completions model was probed with a one-line prompt; minimax-m3 was the first whose first delta carried content, and the test provider was switched to it. |
 | MISS-Chatur-20261022-37 (REQ-FN-046) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261022-36 (REQ-FN-045) | 2026-10-22 by gate | not sorted | no sentence recorded (partial-implementation, src) |
@@ -75,9 +83,7 @@
 | MISS-Chatur-20261021-78 (REQ-FN-008) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261021-77 (REQ-FN-007) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261021-76 (REQ-UI-074) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
-| MISS-Chatur-20261021-75 (REQ-UI-073) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-74 (REQ-UI-074) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
-| MISS-Chatur-20261021-73 (REQ-UI-073) | 2026-10-21 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261021-72 (REQ-FN-091) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-71 (REQ-FN-089) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261021-70 (REQ-UI-061) | 2026-10-21 by gate | not sorted | no sentence recorded (partial-implementation, src) |
@@ -176,7 +182,6 @@
 | MISS-Chatur-20261020-79 (REQ-UI-040) | 2026-10-20 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261020-78 (REQ-UI-039) | 2026-10-20 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261020-77 (REQ-UI-038) | 2026-10-20 by gate | not sorted | no sentence recorded (partial-implementation, src) |
-| MISS-Chatur-20261020-76 (REQ-UI-037) | 2026-10-20 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261020-75 (REQ-UI-036) | 2026-10-20 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261020-74 (REQ-UI-035) | 2026-10-20 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261020-73 (REQ-FN-043) | 2026-10-20 by gate | not sorted | no sentence recorded (partial-implementation, src) |
@@ -310,7 +315,6 @@
 | MISS-Chatur-20261019-44 (REQ-UI-040) | 2026-10-19 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261019-43 (REQ-UI-039) | 2026-10-19 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261019-42 (REQ-UI-038) | 2026-10-19 by gate | not sorted | no sentence recorded (regression, src) |
-| MISS-Chatur-20261019-41 (REQ-UI-037) | 2026-10-19 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261019-40 (REQ-UI-036) | 2026-10-19 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261019-39 (REQ-UI-035) | 2026-10-19 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261019-38 (REQ-FN-043) | 2026-10-19 by gate | not sorted | no sentence recorded (regression, src) |
@@ -437,12 +441,21 @@
 | MISS-Chatur-20261002-02 | 2026-10-02 by agent-review | not sorted | The Start mockup draws four active Get started buttons, but the app keeps them disabled and no row says which is right. |
 | MISS-Chatur-20260930-36 (REQ-FN-012) | 2026-09-30 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 
-## Fixed (254)
+## Fixed (263)
 
 | Miss | Found | Closed | Whose gap | What went wrong |
 |---|---|---|---|---|
+| MISS-Chatur-20261029-09 (REQ-NFR-010) | 2026-10-29 by owner | 2026-10-29 by fix-issues | the app's spec | Tests never touch the owner's database |
+| MISS-Chatur-20261029-08 (REQ-UI-082) | 2026-10-29 by owner | 2026-10-29 by fix-issues | the app's spec | Every button does something |
+| MISS-Chatur-20261029-07 (REQ-UI-081) | 2026-10-29 by owner | 2026-10-29 by fix-issues | the app's spec | Labels carry no trailing dots |
+| MISS-Chatur-20261029-06 (REQ-UI-080) | 2026-10-29 by owner | 2026-10-29 by fix-issues | the app's spec | Controls keep the mockup's inner spacing |
+| MISS-Chatur-20261029-05 (REQ-UI-079) | 2026-10-29 by owner | 2026-10-29 by fix-issues | the app's spec | Type @ to attach a project file in the chat |
 | MISS-Chatur-20261028-01 | 2026-10-28 by agent-review | 2026-10-28 by amend-docs | the app's spec | The auto-run, run-queue and run-report mockups draw sample branches, chat titles, model names and earlier runs in the shared menus without marking them as sample data, so the render check fails all 19 screen rows on data no real project has. |
 | MISS-Chatur-20261026-01 (REQ-NFR-001) | 2026-10-26 by owner | 2026-10-26 by fix-issues | said and ignored | The web harness wrote a real provider key as a string literal into src/Chatur.WebHarness/Program.cs (the SaveAsync call under Chatur:TestProvider:Key); the file was in a public repository and the key had to be revoked. |
+| MISS-Chatur-20261021-75 (REQ-UI-073) | 2026-10-21 by gate | 2026-10-29 by fix-issues | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261021-73 (REQ-UI-073) | 2026-10-21 by gate | 2026-10-29 by fix-issues | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261020-76 (REQ-UI-037) | 2026-10-20 by gate | 2026-10-29 by fix-issues | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261019-41 (REQ-UI-037) | 2026-10-19 by gate | 2026-10-29 by fix-issues | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261013-56 (REQ-FN-053) | 2026-10-13 by agent-review | 2026-10-13 by fix-issues | the check was too weak | REQ-FN-053 and REQ-FN-055 were Verified on a unit test about reading ids from test names, whose sample data held their ids; neither had a test of its own (TF-012). |
 | MISS-Chatur-20261013-55 (REQ-UI-073) | 2026-10-13 by agent-review | 2026-10-13 by fix-issues | the check was too weak | Tools > Settings shows Ctrl+, as its shortcut but nothing handled the key, so pressing it did nothing. |
 | MISS-Chatur-20261013-54 (REQ-UI-023) | 2026-10-13 by owner | 2026-10-13 by fix-issues | the check was too weak | After a finished reply the conversation shows 'Stopped by the owner.' under it although nobody pressed Stop: the activity panel draws every activity step of the session beneath the newest reply instead of in time order, so a stop recorded on 12 Oct appears under today's answer (owner screenshots, ni |

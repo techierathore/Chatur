@@ -85,7 +85,7 @@ public partial class ProcessRun : IDisposable
         if (objHandedStep is { Work: { State: ProcessStepWorkState.Working } vWork } vStep)
         {
             objAnnouncedSessionId = vWork.SessionId;
-            WorkbenchTabs.ShowHandedSession(new HandedSession(vWork.SessionId, vWork.AgentName, vWork.ModelName, $"{objRun.ProcessCode} run {objRun.RunId}, step {vStep.Position}"));
+            WorkbenchTabs.ShowHandedSession(new HandedSession(vWork.SessionId, vWork.AgentName, vWork.ModelName, $"{objRun.ProcessCode} run {objRun.RunId}, step {vStep.Position}", objRun.RunId));
         }
         else if (objAnnouncedSessionId is { } vEnded)
         {

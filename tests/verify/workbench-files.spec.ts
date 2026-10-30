@@ -1,7 +1,7 @@
 // Verification of the Workbench project/files/editor/conversation-start rows (verify-phase step 4).
 // Black-box: drives the running web harness only; one signed-in page is shared by the tests in this file.
 import { Page, expect } from '@playwright/test';
-import { readFileSync } from 'fs';
+import { readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { signIn } from './support/auth';
 import {
@@ -88,6 +88,27 @@ test('REQ-UI-039 the files card shows the solution and folders, and a folder ope
   await expect(tree(page, 'Notes/notes.txt')).toBeVisible();
   await setFolder(page, 'Notes', false);
   await expect(tree(page, 'Notes/notes.txt')).toBeHidden();
+});
+
+test('REQ-UI-039 Refresh in the files header shows a file made on disk outside Chatur', async () => {
+  await openProject(page);
+  const vTree = page.getByTestId('file-tree');
+  await expect(vTree.getByText('Program.cs', { exact: true })).toBeVisible({ timeout: 20_000 });
+  const vName = `made-outside-${Date.now()}.txt`;
+  const vPath = join(PROJECT, vName);
+  writeFileSync(vPath, 'made outside Chatur\n');
+  try {
+    await expect(vTree.getByText(vName, { exact: true })).toHaveCount(0);
+    const vRefresh = page.getByTestId('files-refresh');
+    await expect(vRefresh).toHaveAttribute('aria-label', /\S/);
+    await expect(vRefresh).toHaveAttribute('title', /\S/);
+    await expect(async () => {
+      await vRefresh.click();
+      await expect(vTree.getByText(vName, { exact: true })).toBeVisible({ timeout: 2_500 });
+    }).toPass({ timeout: 30_000 });
+  } finally {
+    rmSync(vPath, { force: true });
+  }
 });
 
 test('REQ-UI-040 opening a file from the tree shows its text in a new tab named after the file', async () => {

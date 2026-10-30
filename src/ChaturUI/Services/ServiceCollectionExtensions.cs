@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
         aServices.AddScoped<BrowserInterop>();
         aServices.AddScoped<EditorInterop>();
         aServices.AddScoped<ShortcutInterop>();
+        aServices.AddScoped<ComposerInterop>();
         aServices.AddScoped<WorkbenchState>();
         return aServices;
     }

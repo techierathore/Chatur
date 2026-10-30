@@ -5,11 +5,41 @@
 // test here is skipped, never passed. The web harness's own specs carry each row's acceptance line;
 // these carry what the browser cannot show: that the desktop app reaches the screen at all.
 import { test, expect, chromium, Browser, Page } from '@playwright/test';
+import { execSync } from 'child_process';
+import { existsSync, statSync } from 'fs';
+import * as path from 'path';
 import { testProvider } from './support/provider';
+import { credentials } from './support/auth';
+import { ROOT as FIXTURE_ROOT, NAME as FIXTURE_PROJECT, resetFixture } from './support/workbench-a';
+
+// A desktop head started for the tests keeps its own database under tests/.artifacts/app-data/desktop, never the
+// owner's application-data database (REQ-NFR-010): it starts signed out with no project, so the run signs in and
+// opens a fixture project itself.
+const TEST_DB = path.resolve('tests/.artifacts/app-data/desktop/chatur.db');
+
+/** The owner's own database on this Windows machine, read through cmd.exe; undefined when it cannot be found. */
+function ownerDatabase(): string | undefined {
+  try {
+    const vLocal = execSync('cmd.exe /c echo %LOCALAPPDATA%', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    const vPath = execSync(`wslpath -u "${vLocal}"`, { encoding: 'utf8' }).trim();
+    const vDb = path.join(vPath, 'Techie Rathore', 'com.techierathore.chatur', 'Data', 'chatur.db');
+    return existsSync(vDb) ? vDb : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** A WSL path under /mnt/<drive>/ as Windows writes it, for the desktop app's own fields. */
+const windowsPath = (aPath: string): string =>
+  aPath.replace(/^\/mnt\/([a-z])\//, (_m, aDrive: string) => `${aDrive.toUpperCase()}:\\`).replace(/\//g, '\\');
+
+let objOwnerDbTime: number | undefined;
 
 const CDP_URL = process.env.CDP_URL ?? '';
 test.skip(!CDP_URL, 'desktop head only — boot it with tf-verify-boot.sh --head windows');
-test.describe.configure({ mode: 'serial', timeout: 180_000 });
+// Run in file order on one worker (playwright.config.ts) but not serial: a test that fails on the provider's key
+// must not skip the checks after it, REQ-NFR-010's among them.
+test.describe.configure({ timeout: 180_000 });
 
 let browser: Browser;
 
@@ -42,7 +72,40 @@ async function secondaryOn(aMain: Page, aRoute: string): Promise<Page> {
 
 test.beforeAll(async () => {
   browser = await chromium.connectOverCDP(CDP_URL);
+  const vOwnerDb = ownerDatabase();
+  objOwnerDbTime = vOwnerDb ? statSync(vOwnerDb).mtimeMs : undefined;
+  await ensureMainWindow();
 });
+
+/** Signs in on the start window and opens the fixture project, unless the main window is already up. */
+async function ensureMainWindow(): Promise<void> {
+  const onMain = () => views().some((aPage) => new URL(aPage.url()).pathname === '/');
+  if (onMain()) return;
+  const vStart = views()[0];
+  const vEmail = vStart.getByTestId('input-email');
+  if (await vEmail.isVisible({ timeout: 15_000 }).catch(() => false)) {
+    const { email, password } = credentials('Owner');
+    await vEmail.fill(email);
+    await vStart.getByTestId('input-password').fill(password);
+    await vStart.locator('[data-testid=signin-form] button[type=submit]').first().click();
+  }
+  resetFixture();
+  const vList = vStart.getByTestId('recent-list');
+  await expect(vStart.getByTestId('manage-folders').or(vStart.getByTestId('name-a-folder')).first()).toBeVisible({ timeout: 60_000 });
+  if ((await vList.getByText(FIXTURE_PROJECT, { exact: true }).count()) === 0) {
+    const vDialog = vStart.getByTestId('folders-dialog');
+    await expect(async () => {
+      if (!(await vDialog.isVisible())) await vStart.getByTestId('manage-folders').or(vStart.getByTestId('name-a-folder')).first().click();
+      await expect(vDialog).toBeVisible({ timeout: 2_500 });
+    }).toPass({ timeout: 30_000 });
+    await vStart.getByTestId('new-folder-path').fill(windowsPath(FIXTURE_ROOT));
+    await vStart.getByTestId('add-folder').click();
+    await vStart.getByTestId('folders-dialog-close').click();
+  }
+  await vList.getByText(FIXTURE_PROJECT, { exact: true }).click({ timeout: 30_000 });
+  await expect.poll(onMain, { timeout: 60_000 }).toBe(true);
+  await expect(mainWindow().getByTestId('menubar')).toBeVisible({ timeout: 30_000 });
+}
 
 const PAGES: { ids: string; menu: string; item: string; route: string; title: string }[] = [
   { ids: 'REQ-FN-011 REQ-UI-017 REQ-UI-018 REQ-FN-012 REQ-FN-013', menu: 'menu-project', item: 'menu-project-prerequisites', route: '/prerequisites', title: 'Prerequisites' },
@@ -126,5 +189,15 @@ test('REQ-UI-073 REQ-FN-007 REQ-FN-044 no menu of the desktop app shows "Nothing
     await expect(vItems).not.toContainText('Nothing to do yet');
     expect((await vItems.innerText()).trim().length).toBeGreaterThan(0);
     await vMain.keyboard.press('Escape');
+  }
+});
+
+test('REQ-NFR-010 the desktop head under test keeps its database under tests/.artifacts and leaves the owner database alone', async () => {
+  // Runs last: the chat test above has written a message and chosen a model by now.
+  expect(existsSync(TEST_DB), `the test database ${TEST_DB} exists`).toBe(true);
+  expect(statSync(TEST_DB).size).toBeGreaterThan(0);
+  const vOwnerDb = ownerDatabase();
+  if (vOwnerDb && objOwnerDbTime !== undefined) {
+    expect(statSync(vOwnerDb).mtimeMs, 'the owner database was not written during the run').toBe(objOwnerDbTime);
   }
 });

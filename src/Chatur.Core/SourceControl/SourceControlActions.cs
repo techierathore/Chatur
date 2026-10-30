@@ -40,6 +40,20 @@ public sealed partial class SourceControlActions : ISourceControlActions
     }
 
     /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">The project is unknown.</exception>
+    public async Task<bool> IsRepositoryAsync(int aProjectId, CancellationToken aCt = default)
+    {
+        var vWorkingDirectory = await ResolveWorkingDirectoryAsync(aProjectId, aCt).ConfigureAwait(false);
+        if (!Directory.Exists(vWorkingDirectory))
+        {
+            return false;
+        }
+
+        var vResult = await RunGitAsync(vWorkingDirectory, aCt, "rev-parse", "--is-inside-work-tree").ConfigureAwait(false);
+        return vResult.ExitCode == 0 && vResult.StandardOutput.Trim() == "true";
+    }
+
+    /// <inheritdoc />
     /// <exception cref="InvalidOperationException">The project is unknown, or git refused the command.</exception>
     public async Task<IReadOnlyList<ChangedFile>> ChangesAsync(int aProjectId, CancellationToken aCt = default)
     {

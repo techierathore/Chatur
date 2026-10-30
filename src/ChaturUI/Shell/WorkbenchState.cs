@@ -474,7 +474,8 @@ public sealed record ConversationStart(int SessionId, int? RoleId, string? Messa
 /// <param name="AgentName">The agent, shown as the speaker's name.</param>
 /// <param name="ModelName">The model the session uses, when known.</param>
 /// <param name="StepLabel">Which step it works on, e.g. <c>build-phase run 43, step 4</c>.</param>
-public sealed record HandedSession(int SessionId, string AgentName, string? ModelName, string StepLabel);
+/// <param name="RunId">The process run that handed the step out, which the chat's Stop ends the step of (REQ-UI-023).</param>
+public sealed record HandedSession(int SessionId, string AgentName, string? ModelName, string StepLabel, int RunId);
 
 /// <summary>One open tab: a file's path,the text on disk when it was opened, and the editor's current text.</summary>
 public sealed class OpenFile

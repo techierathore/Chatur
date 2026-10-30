@@ -61,7 +61,7 @@
                     @(string.IsNullOrEmpty(objBranchStatus?.Branch) ? "—" : objBranchStatus.Branch)
                     @if (objBranchStatus is { Ahead: > 0 } vStatus)
                     {
-                        <Badge Variant="BadgeVariant.Outline" data-testid="toolbar-ahead">@vStatus.Ahead to push</Badge>
+                        <Badge Variant="BadgeVariant.Outline" Class="hidden sm:inline-flex" data-testid="toolbar-ahead">@vStatus.Ahead to push</Badge>
                     }
                     <LucideIcon Name="chevron-down" Size="14" />
                 </Button>
@@ -85,14 +85,18 @@
                     }
                 }
                 <DropdownMenuSeparator />
-                <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/repository"))" data-testid="toolbar-open-repository">Open the repository…</DropdownMenuItem>
+                <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/repository"))" data-testid="toolbar-open-repository">Open the repository</DropdownMenuItem>
                 <DropdownMenuLabel>Your uncommitted changes stay where they are when you switch.</DropdownMenuLabel>
             </DropdownMenuContent>
         </DropdownMenu>
     </div>
     <span class="flex-1"></span>
-    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7" Disabled="true" data-testid="find">
+    @* Opens the same Find in files as Edit ▸ Find in files (REQ-UI-073). *@
+    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null)" OnClick="@(() => objFindOpen = true)" AriaLabel="Find" data-testid="find">
         <LucideIcon Name="search" Size="14" />
-        Find
+        @* On a narrow window the icon alone, so the toolbar fits without scrolling sideways. *@
+        <span class="hidden sm:inline">Find</span>
     </Button>
 </div>
+
+<FileSearchDialog @bind-Open="objFindOpen" Mode="FileSearchMode.FindInFiles" />

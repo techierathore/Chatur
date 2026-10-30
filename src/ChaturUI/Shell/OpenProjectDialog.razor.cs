@@ -7,16 +7,16 @@ namespace ChaturUI.Shell;
 /// <summary>Which way into a project the <see cref="OpenProjectDialog"/> is asking for.</summary>
 public enum ProjectOpenMode
 {
-    /// <summary>File ▸ New project…</summary>
+    /// <summary>File ▸ New project</summary>
     NewProject,
 
-    /// <summary>File ▸ Open a solution…</summary>
+    /// <summary>File ▸ Open a solution</summary>
     Solution,
 
-    /// <summary>File ▸ Open a folder…</summary>
+    /// <summary>File ▸ Open a folder</summary>
     Folder,
 
-    /// <summary>File ▸ Clone a repository…</summary>
+    /// <summary>File ▸ Clone a repository</summary>
     Clone
 }
 

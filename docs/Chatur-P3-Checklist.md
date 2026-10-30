@@ -58,13 +58,18 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 | REQ-FN-104 | The Analyst, the Architect and the Verifier hold it | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-104 every source-file right is as before(aRole: "arch` | [view](#d-req-fn-104) |
 | REQ-UI-072 | The right is shown where rights are listed | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-072 Settings > Agents lists "Writes documents" among ` | [view](#d-req-ui-072) |
 | REQ-FN-105 | A handed step writes its documents but not source | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-105 a handed step writes its documents but a source w` | [view](#d-req-fn-105) |
-| REQ-UI-073 | The menu bar's menus do their jobs | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-073 File, Edit, View and Help each hold their items a` | [d](#d-req-ui-073) |
+| REQ-UI-073 | The menu bar's menus do their jobs | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-073 File, Edit, View and Help each hold their items a` | [d](#d-req-ui-073) |
 | REQ-UI-074 | Close the conversation and bring it back | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-074 closing the conversation gives the file view the ` | [d](#d-req-ui-074) |
 | REQ-FN-106 | Settings and the other pages open from the main window | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-106 REQ-FN-011 REQ-UI-017 REQ-UI-018 REQ-FN-012 REQ-F` | [d](#d-req-fn-106) |
 | REQ-NFR-007 | The app icon is the approved Chatur mark | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-NFR-007 icon colour is brand amber and splash colour sta` | [view](#d-req-nfr-007) |
 | REQ-NFR-008 | The splash screen is the approved glyph | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-NFR-008 icon and splash SVGs are byte-identical to the b` | [view](#d-req-nfr-008) |
 | REQ-UI-078 | The mark sits beside the wordmark | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-078 the mark is the white glyph on a 20 px amber squa` | [view](#d-req-ui-078) |
 | REQ-NFR-009 | The web harness carries the icon, made by a script | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-NFR-009 App.razor links favicon.ico, icon-192.png and ic` | [view](#d-req-nfr-009) |
+| REQ-UI-079 | Type @ to attach a project file in the chat | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-079 typing @ lists the project files, typing narrows ` | [d](#d-req-ui-079) |
+| REQ-UI-080 | Controls keep the mockup's inner spacing | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-080 a focused field on New project keeps its text ins` | [d](#d-req-ui-080) |
+| REQ-UI-081 | Labels carry no trailing dots | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-081 no menu, button, label or placeholder on any scre` | [d](#d-req-ui-081) |
+| REQ-UI-082 | Every button does something | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-082 the toolbar Find, once always greyed out, opens F` | [d](#d-req-ui-082) |
+| REQ-NFR-010 | Tests never touch the owner's database | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-NFR-010 the desktop head under test keeps its database u` | [d](#d-req-nfr-010) |
 
 **Status values:** `Not Started` · `In Progress` · `Implemented` · `Verified` · `Done (pre-existing)` · `Needs re-verify` · `PARTIAL` · `FAIL` · `Blocked` · `Owner-UAT` · `N/A`.
 
@@ -267,6 +272,21 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 - <a id="d-req-fn-106"></a> **REQ-FN-106** — Settings and the other pages open from the main window. *BRD:* BRD-186 · *Mockup:* mockups/main.html
   - *Acceptance:* When the owner picks Settings, a settings page, Prerequisites or Repository from the main window's menus, then the secondary window opens on that page.
 
+- <a id="d-req-ui-079"></a> **REQ-UI-079** (BRD-pending) Type @ to attach a project file in the chat · *Mockup:* mockups/main.html
+  - *Acceptance:* When the owner types @ in the chat box on Workbench, then the project's files are listed, narrowing as they type, and a pick puts its path in the message.
+
+- <a id="d-req-ui-080"></a> **REQ-UI-080** (BRD-pending) Controls keep the mockup's inner spacing · *Mockup:* mockups/main.html
+  - *Acceptance:* When the owner opens any dialog or page, then every input, button and list row keeps the mockup's inner padding and no text or control touches its border.
+
+- <a id="d-req-ui-081"></a> **REQ-UI-081** (BRD-pending) Labels carry no trailing dots · *Mockup:* mockups/main.html
+  - *Acceptance:* When the owner opens any menu, button or label in Chatur, then its text ends without three dots.
+
+- <a id="d-req-ui-082"></a> **REQ-UI-082** (BRD-pending) Every button does something · *Mockup:* mockups/main.html
+  - *Acceptance:* When the owner presses any enabled button on any screen, then it does its job; no button exists only for looks.
+
+- <a id="d-req-nfr-010"></a> **REQ-NFR-010** (BRD-pending) Tests never touch the owner's database
+  - *Acceptance:* When the desktop or web tests run, then the app keeps its database under tests/.artifacts and refuses the owner's application-data database.
+
 ## Page: Start
 
 <a id="d-req-nfr-007"></a>
@@ -298,4 +318,3 @@ e glyph.
 <a id="d-req-nfr-009"></a>
 - **REQ-NFR-009** — The web harness carries the icon, made by a script. *BRD:* BRD-191 · *Mockup:* mockups/start.html
   - *Acceptance:* When the web harness page loads, then it links `favicon.ico` (32 px), `icon-192.png` and `icon-512.png`, each loads, and each is what the repository's script under `scripts/` renders from `Chatur.png`.
-

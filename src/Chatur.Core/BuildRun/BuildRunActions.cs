@@ -143,7 +143,7 @@ public sealed class BuildRunActions : IBuildRunActions
     {
         if (objRunStates.TryGetValue(aProjectId, out var vState))
         {
-            vState.Publish(vState.CurrentGeneration, new OutputLine("Stopping — ending every process the run started…", false));
+            vState.Publish(vState.CurrentGeneration, new OutputLine("Stopping — ending every process the run started", false));
             vState.Stop();
         }
 

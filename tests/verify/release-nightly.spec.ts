@@ -20,7 +20,7 @@ test('REQ-NFR-006 the published nightly opens and Prerequisites shows the releas
   try {
     const vPage = vBrowser.contexts()[0].pages().find((p) => !p.url().startsWith('devtools')) ?? vBrowser.contexts()[0].pages()[0];
     // The app must get past its loading screen to either Sign in or a signed-in screen.
-    await expect(vPage.locator('body'), 'the published build leaves "Loading Chatur…"').not.toHaveText(/^\s*Loading Chatur…\s*$/, { timeout: 60_000 });
+    await expect(vPage.locator('body'), 'the published build leaves "Loading Chatur"').not.toHaveText(/^\s*Loading Chatur\s*$/, { timeout: 60_000 });
     if ((await vPage.locator('input[type=password]').count()) > 0) {
       const vSecrets = JSON.parse(readFileSync(process.env.CHATUR_SECRETS_FILE ?? '', 'utf8'));
       await vPage.locator('input[type=email], input[name*=mail i]').first().fill('chatur-owner@techierathore.com');

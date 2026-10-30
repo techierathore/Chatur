@@ -52,7 +52,7 @@ public partial class RunReport : IDisposable
         {
             if (objReport is null)
             {
-                return objIsLoading ? "Reading the record…" : "Pick a run to read its report.";
+                return objIsLoading ? "Reading the record" : "Pick a run to read its report.";
             }
 
             var vRun = objReport.Run;
