@@ -1,32 +1,13 @@
 // Connects the owner's model (decision 1, option A: OpenCode Go) through the real Add a provider
-// dialog, once per app database. The key is read from Chatur's user secrets and never printed.
+// dialog, once per app database. The key is read from tests/verify/test-settings.json and never printed.
 import { Page, expect } from '@playwright/test';
-import { readFileSync } from 'fs';
-import * as path from 'path';
 import { run } from './db';
+import { testSettings } from './settings';
 
-const SECRETS_ID = 'chatur-3f1c9a52-0d4e-4b7a-9c1e-5a8e2b7d6f10';
-
-function defaultSecretsPath(): string {
-  if (process.env.CHATUR_SECRETS) return process.env.CHATUR_SECRETS;
-  const home = process.env.HOME ?? process.env.USERPROFILE;
-  if (home) {
-    return path.join(home, '.microsoft', 'usersecrets', SECRETS_ID, 'secrets.json');
-  }
-  return `C:\\Users\\srkra\\AppData\\Roaming\\Microsoft\\UserSecrets\\${SECRETS_ID}\\secrets.json`;
-}
-
-const SECRETS_PATH = defaultSecretsPath();
-
-/** The test provider's name, address, model and key from user secrets (`Chatur:TestProvider:*`). */
+/** The test provider's name, address, model and key from tests/verify/test-settings.json (`testProvider`). */
 export function testProvider(): { name: string; baseUrl: string; model: string; key: string } {
-  const vS = JSON.parse(readFileSync(SECRETS_PATH, 'utf8').replace(/^﻿/, ''));
-  return {
-    name: vS['Chatur:TestProvider:Name'] ?? 'OpenCode Go',
-    baseUrl: vS['Chatur:TestProvider:BaseUrl'],
-    model: vS['Chatur:TestProvider:Model'],
-    key: vS['Chatur:TestProvider:Key'],
-  };
+  const vP = testSettings().testProvider;
+  return { name: vP.name ?? 'OpenCode Go', baseUrl: vP.baseUrl, model: vP.model, key: vP.key };
 }
 
 const field = (aPage: Page, aId: string) => aPage.locator(`input[data-testid=${aId}], [data-testid=${aId}] input`).first();

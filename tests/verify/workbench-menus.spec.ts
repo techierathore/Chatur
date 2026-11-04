@@ -44,10 +44,20 @@ async function pick(aPage: Page, aMenu: string, aItem: string): Promise<void> {
   await aPage.getByTestId(`menu-${aMenu}-${aItem}`).click();
 }
 
-/** MenubarItem draws Disabled as `pointer-events-none opacity-50` (it sets no aria-disabled), so that is what "off" is. */
-const OFF = /pointer-events-none/;
-const expectOff = (aItem: ReturnType<Page['getByTestId']>) => expect(aItem).toHaveClass(OFF);
-const expectOn = (aItem: ReturnType<Page['getByTestId']>) => expect(aItem).not.toHaveClass(OFF);
+/** A disabled MenubarItem renders aria-disabled="true" since TrBlazeUI 2.1.9 (TR-021), so "off" is what a screen reader hears. */
+const expectOff = (aItem: ReturnType<Page['getByTestId']>) => expect(aItem).toBeDisabled();
+const expectOn = (aItem: ReturnType<Page['getByTestId']>) => expect(aItem).toBeEnabled();
+
+/** Opens a ▸ submenu of an open menu (File ▸ Recent projects, View ▸ Zoom; TR-020) and returns its list. */
+async function openSub(aPage: Page, aMenu: string, aSub: string): Promise<ReturnType<Page['getByTestId']>> {
+  await openMenu(aPage, aMenu);
+  const vList = aPage.getByTestId(`menu-${aMenu}-${aSub}-list`);
+  await expect(async () => {
+    if (!(await vList.isVisible())) await aPage.getByTestId(`menu-${aMenu}-${aSub}`).click();
+    await expect(vList).toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 30_000 });
+  return vList;
+}
 
 const noPlaceholder = async (aPage: Page, aMenu: string) => {
   await openMenu(aPage, aMenu);
@@ -69,7 +79,7 @@ test('REQ-UI-073 File, Edit, View and Help each hold their items and none says N
   const vWanted: Record<string, string[]> = {
     file: ['New project', 'Open a solution', 'Open a folder', 'Clone a repository', 'Recent projects', 'Save', 'Save all', 'Close project', 'Exit'],
     edit: ['Undo', 'Redo', 'Cut', 'Copy', 'Paste', 'Find in files', 'Go to file'],
-    view: ['Files', 'Chat', 'Output', 'Prerequisites', 'Repository', 'Appearance', 'Zoom in', 'Zoom out', 'Actual size'],
+    view: ['Files', 'Chat', 'Output', 'Prerequisites', 'Repository', 'Appearance', 'Zoom'],
     help: ['About Chatur', 'Send feedback', 'Check for updates'],
   };
   for (const [vMenu, vItems] of Object.entries(vWanted)) {
@@ -80,6 +90,45 @@ test('REQ-UI-073 File, Edit, View and Help each hold their items and none says N
     await page.keyboard.press('Escape');
   }
   for (const vMenu of ['file', 'edit', 'view', 'help', 'project', 'tools']) await noPlaceholder(page, vMenu);
+  // View ▸ Zoom ▸ holds its three items in a list of its own (TR-020).
+  const vZoom = await openSub(page, 'view', 'zoom');
+  for (const vItem of ['Zoom in', 'Zoom out', 'Actual size']) await expect(vZoom).toContainText(vItem);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+});
+
+test('REQ-UI-073 File ▸ Recent projects ▸ and View ▸ Zoom ▸ are submenus the keyboard opens and closes (TR-020)', async () => {
+  for (const [vMenu, vSub] of [['file', 'recent'], ['view', 'zoom']] as const) {
+    await openMenu(page, vMenu);
+    const vRow = page.getByTestId(`menu-${vMenu}-${vSub}`);
+    const vList = page.getByTestId(`menu-${vMenu}-${vSub}-list`);
+    await expect(vRow).toHaveAttribute('aria-haspopup', 'menu');
+    await expect(vRow).toContainText('▸');
+    await expect(vList).toHaveCount(0); // the list is in the page only while it is open
+    // A keyboard user reaches the ▸ row with ArrowDown (the menu tracks the focus itself, so the row is not
+    // focused from outside). TR-023: the arrow order puts a ▸ row after the plain items, so this walks until
+    // the row has the focus rather than counting rows.
+    const active = () => page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? '');
+    for (let vStep = 0; vStep < 20 && (await active()) !== `menu-${vMenu}-${vSub}`; vStep++) await page.keyboard.press('ArrowDown');
+    expect(await active()).toBe(`menu-${vMenu}-${vSub}`);
+    // ArrowRight opens its list and puts the focus on the list's first item; ArrowLeft closes only the list.
+    await page.keyboard.press('ArrowRight');
+    await expect(vList).toBeVisible({ timeout: 5_000 });
+    await expect(vRow).toHaveAttribute('aria-expanded', 'true');
+    await expect.poll(active).toMatch(new RegExp(`^menu-${vMenu}-${vSub}-`));
+    await page.keyboard.press('ArrowLeft');
+    await expect(vList).toHaveCount(0);
+    await expect(page.getByTestId(`menu-${vMenu}-items`)).toBeVisible();
+    await expect.poll(active).toBe(`menu-${vMenu}-${vSub}`);
+    // Escape closes one level: first the list, then the menu.
+    await page.keyboard.press('ArrowRight');
+    await expect(vList).toBeVisible({ timeout: 5_000 });
+    await page.keyboard.press('Escape');
+    await expect(vList).toHaveCount(0);
+    await expect(page.getByTestId(`menu-${vMenu}-items`)).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId(`menu-${vMenu}-items`)).toBeHidden();
+  }
 });
 
 test('REQ-UI-073 File ▸ Open a folder opens the folder as the project', async () => {
@@ -150,8 +199,7 @@ test('REQ-UI-073 File ▸ Recent projects lists what was opened and switching to
   await pick(page, 'file', 'open-folder');
   await submitProjectDialog(page, { path: vFolder });
   await expect(projectName(page)).toHaveText(`MenuRecent${STAMP}`, { timeout: 20_000 });
-  await openMenu(page, 'file');
-  const vPop = page.getByTestId('menu-file-items');
+  const vPop = await openSub(page, 'file', 'recent');
   await expect(vPop).toContainText(NAME);
   await vPop.getByText(NAME, { exact: true }).click();
   await expect(projectName(page)).toHaveText(NAME, { timeout: 20_000 });
@@ -358,13 +406,14 @@ test('REQ-UI-073 Ctrl+, opens Settings, as Tools ▸ Settings shows, even while 
 
 test('REQ-UI-073 View ▸ Zoom in, Zoom out and Actual size change the size of everything', async () => {
   const vZoom = () => page.evaluate(() => document.documentElement.style.zoom || '1');
-  await pick(page, 'view', 'zoom-in');
+  const zoom = async (aItem: string) => { await openSub(page, 'view', 'zoom'); await page.getByTestId(`menu-view-${aItem}`).click(); };
+  await zoom('zoom-in');
   await expect.poll(vZoom).toBe('1.1');
-  await pick(page, 'view', 'zoom-in');
+  await zoom('zoom-in');
   await expect.poll(vZoom).toBe('1.2');
-  await pick(page, 'view', 'zoom-out');
+  await zoom('zoom-out');
   await expect.poll(vZoom).toBe('1.1');
-  await pick(page, 'view', 'zoom-reset');
+  await zoom('zoom-reset');
   await expect.poll(vZoom).toBe('1');
 });
 

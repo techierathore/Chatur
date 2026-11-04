@@ -6,7 +6,7 @@
 //   NIGHTLY_COMMIT  the commit the release was built from (full sha)
 // Without NIGHTLY_CDP there is no published build to drive, and the test skips with that reason.
 import { test, expect, chromium } from '@playwright/test';
-import { readFileSync } from 'fs';
+import { testUser } from './support/settings';
 
 const CDP = process.env.NIGHTLY_CDP ?? '';
 const VERSION = process.env.NIGHTLY_VERSION ?? '';
@@ -22,9 +22,9 @@ test('REQ-NFR-006 the published nightly opens and Prerequisites shows the releas
     // The app must get past its loading screen to either Sign in or a signed-in screen.
     await expect(vPage.locator('body'), 'the published build leaves "Loading Chatur"').not.toHaveText(/^\s*Loading Chatur\s*$/, { timeout: 60_000 });
     if ((await vPage.locator('input[type=password]').count()) > 0) {
-      const vSecrets = JSON.parse(readFileSync(process.env.CHATUR_SECRETS_FILE ?? '', 'utf8'));
-      await vPage.locator('input[type=email], input[name*=mail i]').first().fill('chatur-owner@techierathore.com');
-      await vPage.locator('input[type=password]').first().fill(vSecrets['Chatur:TestUsers:Owner']);
+      const vOwner = testUser('Owner'); // tests/verify/test-settings.json, never an environment variable
+      await vPage.locator('input[type=email], input[name*=mail i]').first().fill(vOwner.email);
+      await vPage.locator('input[type=password]').first().fill(vOwner.password);
       await vPage.locator('button[type=submit]').first().click();
       // The UsageGuide test users live on the development App Manager; the published build signs in to
       // the live one. A refused test account is a missing test account there, not a fault in the build.

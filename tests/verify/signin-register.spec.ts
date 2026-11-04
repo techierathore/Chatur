@@ -1,8 +1,15 @@
 // Acceptance tests: Sign in and Register (REQ-UI-001..004, REQ-FN-001..005). Black-box, web harness.
 import { test, expect, Page } from '@playwright/test';
 import { credentials } from './support/auth';
+import { testUser } from './support/settings';
 
 // The harness keeps the signed-in session in one server-side store; run with --workers=1 for stable results.
+//
+// Owner rule, 2026-11-01: a verify test NEVER creates an account on the shared App Manager. No address is
+// built at run time; the Register tests type test user 1 (docs/Chatur-UsageGuide.md "Test users", read from
+// tests/verify/test-settings.json), and a Register submit happens only after that same address has signed
+// in successfully earlier in the same test (provenBySignIn). If the sign-in is refused, the test stops
+// without submitting. "Register creates the account" is a hand step in the checklist, not an automated one.
 
 const STRONG = 'Tflens2026!';
 
@@ -30,6 +37,52 @@ async function signIn(aPage: Page, aUser: 'Owner' | 'Second' | 'Yolo'): Promise<
   await aPage.getByTestId('input-password').fill(password);
   await aPage.locator('[data-testid=signin-form] button[type=submit]').first().click();
   await expect(aPage).not.toHaveURL(/\/sign-in/, { timeout: 30_000 });
+}
+
+/** Signs out through the account menu, so Register opens as it does for a new visitor. */
+async function signOut(aPage: Page): Promise<void> {
+  await openInteractive(aPage, '/');
+  await expect(async () => {
+    if (!(await aPage.getByTestId('account-pop').isVisible())) await aPage.getByTestId('account').click();
+    await expect(aPage.getByTestId('sign-out')).toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 30_000 });
+  await aPage.getByTestId('sign-out').click();
+  await expect(aPage).toHaveURL(/\/sign-in/, { timeout: 30_000 });
+}
+
+/**
+ * The guard every Register submit sits behind: signs in as test user 1 through the real Sign in screen and
+ * returns that user's address only when the sign-in succeeded (the account exists, so a Register submit with
+ * it can never create one). Signs out again afterwards. When App Manager refuses the sign-in it returns null
+ * and the caller stops without submitting anything.
+ */
+async function provenBySignIn(aPage: Page): Promise<string | null> {
+  const { email, password } = testUser('Owner');
+  await openInteractive(aPage, '/sign-in');
+  if (!/\/sign-in/.test(aPage.url())) {
+    await signOut(aPage); // a session left by an earlier test is not a sign-in made by this one
+    await openInteractive(aPage, '/sign-in');
+  }
+  await aPage.getByTestId('input-email').fill(email);
+  await aPage.getByTestId('input-password').fill(password);
+  await aPage.locator('[data-testid=signin-form] button[type=submit]').first().click();
+  const vOutcome = await Promise.race([
+    aPage.waitForURL((aUrl) => !/\/sign-in/.test(aUrl.pathname), { timeout: 45_000 }).then(() => 'in' as const),
+    aPage.getByTestId('signin-error').waitFor({ state: 'visible', timeout: 45_000 }).then(() => 'refused' as const),
+  ]).catch(() => 'refused' as const);
+  if (vOutcome !== 'in') return null;
+  await signOut(aPage);
+  return email;
+}
+
+/** Runs the guard and stops the test, without submitting anything, when the sign-in was refused. */
+async function provenOrStop(aPage: Page): Promise<string> {
+  const vEmail = await provenBySignIn(aPage);
+  test.skip(
+    vEmail === null,
+    'Test user 1 could not sign in on the production App Manager, so no Register submit is made (owner rule 2026-11-01).',
+  );
+  return vEmail!;
 }
 
 async function fillRegister(aPage: Page, aEmail: string, aPassword: string, aConfirm = aPassword): Promise<void> {
@@ -92,11 +145,32 @@ test('REQ-FN-003 reopening Chatur while signed in opens Projects without a passw
   await vContext.close();
 });
 
-test('REQ-FN-004 register with a valid password creates the account and opens Projects', async ({ page }) => {
-  const vEmail = `chatur-verify-${Date.now()}@techierathore.com`;
+test('REQ-FN-004 the Register form checks what is typed and refuses an address that already has an account', async ({ page }) => {
+  // The submit that creates a new account is a hand step (checklist REQ-FN-004, 2026-11-04): a test never
+  // creates an account on the shared App Manager. This test signs in as test user 1 first, then checks the
+  // form's own validation and the "already in use" path with that same, existing address.
+  const vEmail = await provenOrStop(page);
+
+  // A weak password is refused on the screen; nothing is sent.
+  await fillRegister(page, vEmail, 'weak');
+  await page.getByTestId('register-submit').click();
+  await expect(page.getByTestId('password-error')).toBeVisible({ timeout: 15_000 });
+  await expect(page).toHaveURL(/\/register/);
+
+  // A confirm that does not match is refused on the screen; nothing is sent.
+  await fillRegister(page, vEmail, STRONG, `${STRONG}x`);
+  await page.getByTestId('register-submit').click();
+  await expect(page.getByTestId('register-error')).toContainText('do not match', { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/register/);
+
+  // A valid form with an address that already has an account is refused by App Manager: no new account,
+  // no Projects screen, the reason under the email field.
   await fillRegister(page, vEmail, STRONG);
   await page.getByTestId('register-submit').click();
-  await expectProjects(page);
+  await expect(page.getByTestId('email-error')).toBeVisible({ timeout: 30_000 });
+  await expect(page).toHaveURL(/\/register/);
+  await expect(page.getByTestId('recent-side')).toHaveCount(0);
+  await page.screenshot({ path: 'tests/.artifacts/verify/signin-register-fn004.png' });
 });
 
 test('REQ-UI-003 password rule shows which parts are met while typing', async ({ page }) => {
@@ -134,19 +208,21 @@ test('REQ-UI-003 password rule shows which parts are met while typing', async ({
 });
 
 test('REQ-FN-005 weak password is refused and the field is marked', async ({ page }) => {
-  const vEmail = `chatur-verify-weak-${Date.now()}@techierathore.com`;
+  // An existing address (test user 1, signed in first) and a weak password: never a valid registration.
+  const vEmail = await provenOrStop(page);
   await fillRegister(page, vEmail, 'weak');
   await page.getByTestId('register-submit').click();
   await expect(page.getByTestId('password-error')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId('field-password')).toBeVisible();
   await expect(page).toHaveURL(/\/register/);
-  // It was refused before being sent, so no account exists: signing in with it must not be offered a session.
+  // It was refused before being sent: App Manager never answered, so there is no "already in use" message.
   await expect(page.getByTestId('email-error')).toBeHidden();
   await page.screenshot({ path: 'tests/.artifacts/verify/signin-register-fn005.png' });
 });
 
 test('REQ-UI-004 email already in use shows the server message and keeps what was typed', async ({ page }) => {
-  const vEmail = 'chatur-owner@techierathore.com';
+  // Test user 1 signs in first, so the address is known to exist and the submit cannot create an account.
+  const vEmail = await provenOrStop(page);
   await fillRegister(page, vEmail, STRONG);
   await page.getByTestId('register-submit').click();
   const vError = page.getByTestId('email-error');

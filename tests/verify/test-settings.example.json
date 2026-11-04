@@ -1,0 +1,30 @@
+{
+  "_about": "Settings for the verify tests (tests/verify). Read by tests/verify/support/settings.ts only; never from environment variables or a .env file. The real file, test-settings.json, holds passwords and is not committed; test-settings.example.json shows its shape.",
+  "testUsers": {
+    "Owner": {
+      "number": 1,
+      "email": "chatur-owner@techierathore.com",
+      "password": "<password of test user 1, user secrets Chatur:TestUsers:Owner>",
+      "onAppManager": true
+    },
+    "Second": {
+      "number": 2,
+      "email": "chatur-second@techierathore.com",
+      "password": "<password>",
+      "onAppManager": false
+    },
+    "Yolo": {
+      "number": 3,
+      "email": "chatur-yolo-tester@techierathore.com",
+      "password": "<password>",
+      "onAppManager": false
+    }
+  },
+  "testProvider": {
+    "name": "OpenCode Go",
+    "connector": "<connector>",
+    "baseUrl": "<provider address>",
+    "model": "<model id>",
+    "key": "<provider key>"
+  }
+}

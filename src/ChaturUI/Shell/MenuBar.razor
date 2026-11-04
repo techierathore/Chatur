@@ -50,18 +50,16 @@
                 <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="menu-file-open-folder">Open a folder</MenubarItem>
                 <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Clone))" data-testid="menu-file-clone">Clone a repository</MenubarItem>
                 <MenubarSeparator />
-                @if (objRecent.Count == 0)
-                {
-                    <MenubarItem Disabled="true" data-testid="menu-file-recent">Recent projects</MenubarItem>
-                }
-                else
-                {
-                    <MenubarLabel data-testid="menu-file-recent">Recent projects</MenubarLabel>
-                    @foreach (var vRecent in objRecent)
-                    {
-                        <MenubarItem OnClick="@(() => SwitchToAsync(vRecent.ProjectId))" data-testid="@($"menu-file-recent-{vRecent.ProjectId}")">@vRecent.Name</MenubarItem>
-                    }
-                }
+                @* File ▸ Recent projects ▸ opens its own list beside the menu, as mockups/main.html draws it (TR-020, TrBlazeUI 2.2.2). *@
+                <MenubarSub>
+                    <MenubarSubTrigger Disabled="@(objRecent.Count == 0)" data-testid="menu-file-recent">Recent projects</MenubarSubTrigger>
+                    <MenubarSubContent data-testid="menu-file-recent-list">
+                        @foreach (var vRecent in objRecent)
+                        {
+                            <MenubarItem OnClick="@(() => SwitchToAsync(vRecent.ProjectId))" data-testid="@($"menu-file-recent-{vRecent.ProjectId}")">@vRecent.Name</MenubarItem>
+                        }
+                    </MenubarSubContent>
+                </MenubarSub>
                 <MenubarSeparator />
                 <MenubarItem Disabled="@(!CanSave)" OnClick="SaveAsync" data-testid="menu-file-save">Save</MenubarItem>
                 <MenubarItem Disabled="@(!CanSaveAll)" OnClick="SaveAllAsync" data-testid="menu-file-save-all">Save all</MenubarItem>
@@ -98,10 +96,15 @@
                 <MenubarSeparator />
                 <MenubarItem OnClick="@(() => OpenSecondary("/settings/appearance"))" data-testid="menu-view-appearance">Appearance</MenubarItem>
                 <MenubarSeparator />
-                <MenubarLabel>Zoom</MenubarLabel>
-                <MenubarItem OnClick="@(() => AppShell.ZoomBy(1))" data-testid="menu-view-zoom-in">Zoom in</MenubarItem>
-                <MenubarItem OnClick="@(() => AppShell.ZoomBy(-1))" data-testid="menu-view-zoom-out">Zoom out</MenubarItem>
-                <MenubarItem OnClick="@(() => AppShell.ResetZoom())" data-testid="menu-view-zoom-reset">Actual size</MenubarItem>
+                @* View ▸ Zoom ▸ opens its own list beside the menu, as mockups/main.html draws it (TR-020, TrBlazeUI 2.2.2). *@
+                <MenubarSub>
+                    <MenubarSubTrigger data-testid="menu-view-zoom">Zoom</MenubarSubTrigger>
+                    <MenubarSubContent data-testid="menu-view-zoom-list">
+                        <MenubarItem OnClick="@(() => AppShell.ZoomBy(1))" data-testid="menu-view-zoom-in">Zoom in</MenubarItem>
+                        <MenubarItem OnClick="@(() => AppShell.ZoomBy(-1))" data-testid="menu-view-zoom-out">Zoom out</MenubarItem>
+                        <MenubarItem OnClick="@(() => AppShell.ResetZoom())" data-testid="menu-view-zoom-reset">Actual size</MenubarItem>
+                    </MenubarSubContent>
+                </MenubarSub>
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>

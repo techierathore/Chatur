@@ -8,7 +8,7 @@
 
 ## Summary
 
-21 entries: 3 open (TF-018, TF-019, TF-021), 8 fixed upstream and not yet re-checked (TF-008, TF-010, TF-013 to TF-015 in v1.2.1; TF-015 reworked, TF-016, TF-017 and TF-020 in v1.2.2, fixed 2026-10-29), 10 closed (TF-001 to TF-007, TF-009, TF-011, TF-012). 0 blocking now: TF-020 and TF-017, the two that blocked, are fixed upstream.
+22 entries: 1 open (TF-022, filed 2026-11-04), 10 fixed upstream and not yet re-checked (TF-008, TF-010, TF-013 to TF-019, TF-021), 11 closed (TF-001 to TF-007, TF-009, TF-011, TF-012, TF-020). 0 blocking.
 
 TF-007 was re-checked here on 2026-10-03: no list box on Start, Workbench, Prerequisites, Providers or Corrections reports "app carries an icon the mockup does not" at either width, and Start, Prerequisites, Providers and Corrections now pass mockup parity outright.
 
@@ -305,6 +305,18 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Workaround:** the rows, their tests and the code comments were renumbered to REQ-UI-079 to REQ-UI-082 before the verify.
 - **Suggested fix:** in `tf-triage.py` `new`, take the next free number after the highest existing id; and in `tf-req-ids.py`, read `\d{3,}` with a word boundary, so a longer id is never cut to its first three digits.
 
+### TF-022 — The menu walk reports a submenu row (▸) as "does nothing when clicked"
+
+- **Status:** open, filed 2026-11-04
+- **Severity:** minor
+- **Blocks:** no — REQ-UI-073 and REQ-UI-080 have no screen in the UIDesign and are graded by their tests, so this finding reaches no verdict; it would fail the render check of any row on the main window once one is graded there.
+- **Repro:** TrBlazeUI 2.2.2, Chatur's main window with File ▸ Recent projects ▸ and View ▸ Zoom ▸ built as `MenubarSub` (TR-020). Run `bash .tfcore/utils/tf-mockup-parity.sh --base http://localhost:5280 --screen main=/ --mockup-dir docs/mockups --login-path /sign-in --user chatur-owner@techierathore.com --password <pw> --json-out tests/.artifacts/verify/parity-main.json`.
+- **Expected:** a row with `aria-haspopup="menu"` that opens a list (`aria-expanded` goes to `true`, a `role="menu"` appears beside it) is an item that did its job, and the walk goes on into that list.
+- **Actual:** `"File › Recent projects ▸" does nothing when clicked` and `"View › Zoom ▸" does nothing when clicked`. A probe on the same app shows a mouse click on either row opens its list at once and keeps it open (`aria-expanded="true"`, the list in the page after 100 ms, 400 ms and 1 s).
+- **Encountered in:** `*fix-issues Chatur` (TR-020 re-check), 2026-11-04
+- **Workaround:** none needed in the app; the TR-020 re-check reads the menus' item counts (File 9 of 9, View 7 of 7 against the mockup) and the REQ-UI-073 keyboard and click tests instead.
+- **Suggested fix:** in `tf-menus.mjs`, count `aria-expanded` turning `true` on an `aria-haspopup` item as an effect, and walk the list it opened as a nested menu.
+
 ## Replies from TechieFlow
 
 ### Resolution status (TechieFlow team, 2026-10-02)
@@ -378,3 +390,14 @@ Ships in **TechieFlow v1.2.2**, the next release after v1.2.1. Already in this p
 | TF-015 | Fixed upstream. The reply is under the entry. | on the Mac, `*verify all Chatur --phase all --head maccatalyst`: phases 2 to 4 get a verdict table, and no row behind Sign in is RENDER-FAIL. |
 | TF-013 | Fixed upstream. The reply is under the entry. | `/TechieFlow:agents:verifier *verify all Chatur --phase 4`. The 19 rows go back to Not Started with the 404 reason, and no miss is written. |
 | TF-014 | Fixed upstream. The reply is under the entry. | run your two repro commands outside a build or fix: neither is blocked. |
+
+### Resolution status (TechieFlow team, 2026-11-01)
+
+Ships in **TechieFlow v1.2.4**, the next release after v1.2.3; already in this project's `.tfcore/` through the framework update of 2026-11-01. Each fix has a regression case in `tests/regression/run.sh` that fails against the v1.2.3 script and passes now.
+
+| ID | Fix | Check it here |
+|---|---|---|
+| TF-018 | Fixed upstream in `tf-verify-boot.sh`, `tf-build.sh` and `tf-verify-tests.sh`. On WSL a web project with no MAUI target of its own is published and run on WSL, so the tests can hand it WSL paths. `TF_BOOT_RUNNER=wsl|windows` forces a side. `tf-verify-boot.sh adopt --port N [--pid P]` gives a head started by hand a boot record with its pid. `--merge` with no part files refuses. The `/proc/undefined` read is in your `tests/verify/support/restart.ts` (`pids[0]` of a record without pids); with a real or adopted record it does not happen. The desktop head's real database is only partly answered: `--env` reaches the Windows head, but the app must name its data-folder variable. Case `ch_018`. | After the framework update: `bash .tfcore/utils/tf-verify-boot.sh start`: expect `BOOTED … side=wsl` and the fixture projects opening. |
+| TF-019 | Fixed upstream in `tf-login.mjs`. The sign-in tries the path it was given, then `/login`, `/sign-in`, `/signin` and `/account/login`, and says which worked: "LOGIN signed in at /sign-in: /login has no sign-in form". Case `ch_019`. | After the framework update: the screen check with `--login-path /login`: expect "LOGIN signed in at /sign-in" and the screens driven. |
+| TF-021 | Fixed upstream in `tf-checklist-edit.py` and `tf-req-ids.py`. `tests/verify/process-run.spec.ts` holds `REQ-UI-999` as sample data; the TechieRag TF-008 scan counted it into the highest id, so the next was 1000. Ids in code and tests now only rule an id out and never raise the count, and a four-digit id is read whole. On a copy of your repo: `REQ-UI-1000` → `REQ-UI-083`. Case `ch_021`. | After the framework update: `bash .tfcore/utils/tf-triage.sh Chatur new …` on a copy: expect the next three-digit id. |
+

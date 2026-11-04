@@ -19,6 +19,8 @@ Chatur signs in through the production App Manager at https://appmgrapi.techiera
 
 Where the settings come from:
 
+- The verify tests read the test users' addresses and passwords (and the test model provider) only from `tests/verify/test-settings.json`, beside the tests. That file is not committed; `tests/verify/test-settings.example.json` shows its shape, and its values are the user secrets keys in this table. Never from environment variables or a `.env` file (owner rule, 2026-11-04). A verify test never registers an account on App Manager: Register is submitted only with test user 1, after that user has signed in in the same test (owner rule, 2026-11-01).
+
 - `AppManager:BaseUrl` (`https://appmgrapi.techierathore.com`) and `AppManager:ApplicationId` (`1`) are in each host's `appsettings.json`; the client sends the application id on every sign-in and registration, so App Manager scopes the account to Chatur.
 - `AppManager:ApiKey` is the owner's key for application 1 on the production App Manager. On a developer machine it lives in user secrets (the `secrets.json` behind Visual Studio's **Manage User Secrets**, id `chatur-3f1c9a52-0d4e-4b7a-9c1e-5a8e2b7d6f10`); the nightly gets its installed-app key (`pk_live_…`) from the repository secret `CHATUR_APPMANAGER_KEY`. A key that belongs to another application is refused by App Manager with `APP_ID_MISMATCH`, never silently used.
 - The RSA public key is fetched fresh for every sign-in; it is never cached.

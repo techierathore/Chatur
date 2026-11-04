@@ -58,7 +58,7 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 | REQ-FN-104 | The Analyst, the Architect and the Verifier hold it | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-104 every source-file right is as before(aRole: "arch` | [view](#d-req-fn-104) |
 | REQ-UI-072 | The right is shown where rights are listed | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-072 Settings > Agents lists "Writes documents" among ` | [view](#d-req-ui-072) |
 | REQ-FN-105 | A handed step writes its documents but not source | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-105 a handed step writes its documents but a source w` | [view](#d-req-fn-105) |
-| REQ-UI-073 | The menu bar's menus do their jobs | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-073 File, Edit, View and Help each hold their items a` | [d](#d-req-ui-073) |
+| REQ-UI-073 | The menu bar's menus do their jobs | Verified | 100% | 2026-11-04 verify: PASS — test `REQ-UI-073 File, Edit, View and Help each hold their items a` | [d](#d-req-ui-073) |
 | REQ-UI-074 | Close the conversation and bring it back | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-074 closing the conversation gives the file view the ` | [d](#d-req-ui-074) |
 | REQ-FN-106 | Settings and the other pages open from the main window | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-106 REQ-FN-011 REQ-UI-017 REQ-UI-018 REQ-FN-012 REQ-F` | [d](#d-req-fn-106) |
 | REQ-NFR-007 | The app icon is the approved Chatur mark | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-NFR-007 icon colour is brand amber and splash colour sta` | [view](#d-req-nfr-007) |
@@ -66,7 +66,7 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 | REQ-UI-078 | The mark sits beside the wordmark | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-078 the mark is the white glyph on a 20 px amber squa` | [view](#d-req-ui-078) |
 | REQ-NFR-009 | The web harness carries the icon, made by a script | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-NFR-009 App.razor links favicon.ico, icon-192.png and ic` | [view](#d-req-nfr-009) |
 | REQ-UI-079 | Type @ to attach a project file in the chat | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-079 typing @ lists the project files, typing narrows ` | [d](#d-req-ui-079) |
-| REQ-UI-080 | Controls keep the mockup's inner spacing | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-080 a focused field on New project keeps its text ins` | [d](#d-req-ui-080) |
+| REQ-UI-080 | Controls keep the mockup's inner spacing | Verified | 100% | 2026-11-04 verify: PASS — test `REQ-UI-080 a focused field on New project keeps its text ins` | [d](#d-req-ui-080) |
 | REQ-UI-081 | Labels carry no trailing dots | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-081 no menu, button, label or placeholder on any scre` | [d](#d-req-ui-081) |
 | REQ-UI-082 | Every button does something | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-082 the toolbar Find, once always greyed out, opens F` | [d](#d-req-ui-082) |
 | REQ-NFR-010 | Tests never touch the owner's database | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-NFR-010 the desktop head under test keeps its database u` | [d](#d-req-nfr-010) |

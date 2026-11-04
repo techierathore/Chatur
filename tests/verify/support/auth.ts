@@ -1,51 +1,22 @@
-// Shared sign-in for the acceptance tests (verify-phase step 4). Passwords are read from Chatur's
-// user secrets (Visual Studio ▸ Manage User Secrets; UsageGuide "Test users") and never printed.
+// Shared sign-in for the acceptance tests (verify-phase step 4). Addresses and passwords are read from
+// tests/verify/test-settings.json (support/settings.ts; UsageGuide "Test users") and never printed.
 import { Page, expect } from '@playwright/test';
-import { readFileSync } from 'fs';
-import * as path from 'path';
+import { TestUser, testUser } from './settings';
 
-const SECRETS_ID = 'chatur-3f1c9a52-0d4e-4b7a-9c1e-5a8e2b7d6f10';
-
-function defaultSecretsPath(): string {
-  if (process.env.CHATUR_SECRETS) return process.env.CHATUR_SECRETS;
-  const home = process.env.HOME ?? process.env.USERPROFILE;
-  if (home) {
-    return path.join(home, '.microsoft', 'usersecrets', SECRETS_ID, 'secrets.json');
-  }
-  // Legacy Windows path kept as a last-resort fallback for the original dev box.
-  return `C:\\Users\\srkra\\AppData\\Roaming\\Microsoft\\UserSecrets\\${SECRETS_ID}\\secrets.json`;
-}
-
-const SECRETS_PATH = defaultSecretsPath();
-
-export type TestUser = 'Owner' | 'Second' | 'Yolo';
-
-const EMAILS: Record<TestUser, string> = {
-  Owner: 'chatur-owner@techierathore.com',
-  Second: 'chatur-second@techierathore.com',
-  Yolo: 'chatur-yolo-tester@techierathore.com',
-};
+export type { TestUser } from './settings';
 
 /**
- * The test users that have an account on the production App Manager (Chatur is application 1 there;
- * UsageGuide "Test users"). Second and Yolo are not registered there yet, so a test asking for one
- * of them signs in as Owner, and says so, rather than failing at the Sign in screen.
+ * The email and password of one UsageGuide test user. A user with no account on the production App
+ * Manager yet (`onAppManager: false` in the settings file) is signed in as Owner, and the test says so,
+ * rather than failing at the Sign in screen.
  */
-const ON_PRODUCTION: TestUser[] = (process.env.CHATUR_PRODUCTION_USERS ?? 'Owner').split(',') as TestUser[];
-
-function available(aUser: TestUser): TestUser {
-  if (ON_PRODUCTION.includes(aUser)) return aUser;
-  console.warn(`Test user ${aUser} has no account on the production App Manager yet; signing in as Owner.`);
-  return 'Owner';
-}
-
-/** The email and password of one UsageGuide test user. */
 export function credentials(aRequested: TestUser): { email: string; password: string } {
-  const aUser = available(aRequested);
-  const vSecrets = JSON.parse(readFileSync(SECRETS_PATH, 'utf8').replace(/^﻿/, ''));
-  const vPassword = vSecrets[`Chatur:TestUsers:${aUser}`];
-  if (!vPassword) throw new Error(`No password for Chatur:TestUsers:${aUser} in user secrets.`);
-  return { email: EMAILS[aUser], password: vPassword };
+  let vUser = testUser(aRequested);
+  if (!vUser.onAppManager) {
+    console.warn(`Test user ${aRequested} has no account on the production App Manager yet; signing in as Owner.`);
+    vUser = testUser('Owner');
+  }
+  return { email: vUser.email, password: vUser.password };
 }
 
 /**

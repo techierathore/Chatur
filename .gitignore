@@ -28,3 +28,6 @@ obj/
 TestResults/
 .vs/
 .idea/
+
+# Verify-test settings with real passwords and keys (tests/verify/test-settings.example.json is the committed shape)
+tests/verify/test-settings.json
