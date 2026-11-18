@@ -9,7 +9,7 @@
             <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Light or dark" OnClick="ToggleDarkModeAsync" data-testid="theme-toggle">
                 <LucideIcon Name="@(AppState.IsDark ? "moon" : "sun")" Size="16" />
             </Button>
-            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="CyclePaletteAsync" data-testid="palette">
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="CyclePaletteAsync" data-testid="palette">
                 @ThemeDisplayName
             </Button>
         </div>

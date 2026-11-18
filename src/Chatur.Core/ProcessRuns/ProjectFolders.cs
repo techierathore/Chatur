@@ -35,6 +35,37 @@ public sealed class ProjectFolders
             .FirstOrDefault();
     }
 
+    /// <summary>
+    /// Every checklist of the newest phase directly under a project's <c>docs</c> folder, project-relative,
+    /// in name order; empty when there is none. A project may carry two checklists of one phase (a split,
+    /// or one left beside it); each holds its own rows, so a verdict goes into the one that holds its row
+    /// (REQ-UI-048).
+    /// </summary>
+    /// <param name="aFolder">The project's folder.</param>
+    public static IReadOnlyList<string> NewestPhaseChecklists(string aFolder)
+    {
+        var vDocs = Path.Combine(aFolder, "docs");
+        if (!Directory.Exists(vDocs))
+        {
+            return [];
+        }
+
+        var vAll = Directory.EnumerateFiles(vDocs, "*Checklist*.md")
+            .Select(aPath => "docs/" + Path.GetFileName(aPath))
+            .Where(ProcessDocumentGuard.IsDocumentName)
+            .ToList();
+        if (vAll.Count == 0)
+        {
+            return [];
+        }
+
+        var vNewest = vAll.Max(ChecklistDocument.PhaseOf);
+        return vAll
+            .Where(aName => ChecklistDocument.PhaseOf(aName) == vNewest)
+            .OrderBy(aName => aName, StringComparer.Ordinal)
+            .ToList();
+    }
+
     /// <summary>The project's folder: its path, or the folder holding it when the path is a solution or project file; <see langword="null"/> when it is not on disk.</summary>
     /// <param name="aProjectId">The project.</param>
     /// <param name="aCt">A token that cancels the read.</param>

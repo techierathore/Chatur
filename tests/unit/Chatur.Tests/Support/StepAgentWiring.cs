@@ -23,18 +23,32 @@ public static class StepAgentWiring
     /// <param name="aProvider">The scripted model every session talks to.</param>
     /// <param name="aProjectFolder">Where the agent's files go.</param>
     public static StepAgentActions StepAgents(IDbConnectionFactory aConnections, ILlmProvider aProvider, string aProjectFolder) =>
-        new(aConnections, Agent(aConnections, aProvider, aProjectFolder), new SystemClock());
+        new(aConnections, Agent(aConnections, aProvider, aProjectFolder), new SystemClock(), new RoutingActions(aConnections));
+
+    /// <summary>The hand-over over the real agent path, recording every model the agent path builds a provider for.</summary>
+    /// <param name="aConnections">The test database.</param>
+    /// <param name="aFactory">Builds the provider for each model the agent path calls, and records which.</param>
+    /// <param name="aProjectFolder">Where the agent's files go.</param>
+    public static StepAgentActions StepAgents(IDbConnectionFactory aConnections, RecordingProviderFactory aFactory, string aProjectFolder) =>
+        new(aConnections, Agent(aConnections, aFactory, aProjectFolder), new SystemClock(), new RoutingActions(aConnections));
 
     /// <summary>The real agent path with real guards.</summary>
     /// <param name="aConnections">The test database.</param>
     /// <param name="aProvider">The scripted model.</param>
     /// <param name="aProjectFolder">The folder file edits are written under.</param>
     public static AgentActions Agent(IDbConnectionFactory aConnections, ILlmProvider aProvider, string aProjectFolder) =>
+        Agent(aConnections, new RecordingProviderFactory(aProvider), aProjectFolder);
+
+    /// <summary>The real agent path with real guards, over a given provider factory.</summary>
+    /// <param name="aConnections">The test database.</param>
+    /// <param name="aFactory">Builds the provider for each model the agent path calls.</param>
+    /// <param name="aProjectFolder">The folder file edits are written under.</param>
+    public static AgentActions Agent(IDbConnectionFactory aConnections, IAgentLlmProviderFactory aFactory, string aProjectFolder) =>
         new(
             aConnections,
             new AgentSessionRegistry(),
             new GuardPipeline([new RoleRightsGuard(aConnections), new AskMeFirstGuard(aConnections), new SourceControlRefusalGuard()]),
-            new SingleProviderFactory(aProvider),
+            aFactory,
             new DiskFileActions(aConnections, aProjectFolder),
             new SucceedingLauncher(),
             new CorrectionActions(aConnections),
@@ -100,14 +114,6 @@ public static class StepAgentWiring
         public string LogFolder => Path.Combine(AppDataFolder, "logs");
     }
 
-    private sealed class SingleProviderFactory : IAgentLlmProviderFactory
-    {
-        private readonly ILlmProvider objProvider;
-
-        public SingleProviderFactory(ILlmProvider aProvider) => objProvider = aProvider;
-
-        public Task<ILlmProvider> CreateAsync(ConnectedModel aModel, CancellationToken aCt = default) => Task.FromResult(objProvider);
-    }
 
     private sealed class SucceedingLauncher : IProcessLauncher
     {
@@ -120,6 +126,27 @@ public static class StepAgentWiring
             aOnOutputLine("Build succeeded.");
             return Task.FromResult(0);
         }
+    }
+}
+
+/// <summary>Hands every model the one scripted provider, and records which models the agent path asked for, in order.</summary>
+public sealed class RecordingProviderFactory : IAgentLlmProviderFactory
+{
+    private readonly ILlmProvider objProvider;
+    private readonly List<string> objModels = [];
+
+    /// <summary>Creates the factory over one provider.</summary>
+    /// <param name="aProvider">The scripted model every call talks to.</param>
+    public RecordingProviderFactory(ILlmProvider aProvider) => objProvider = aProvider;
+
+    /// <summary>The identifiers of the models a provider was built for, in order.</summary>
+    public IReadOnlyList<string> Models => objModels;
+
+    /// <inheritdoc />
+    public Task<ILlmProvider> CreateAsync(ConnectedModel aModel, CancellationToken aCt = default)
+    {
+        objModels.Add(aModel.ModelIdentifier);
+        return Task.FromResult(objProvider);
     }
 }
 

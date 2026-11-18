@@ -1,5 +1,6 @@
 using System.Reflection;
 using Chatur.Core;
+using Chatur.Core.Data;
 using Chatur.Core.Platform;
 using Chatur.Platform;
 using Chatur.Services;
@@ -84,6 +85,14 @@ public static class MauiProgram
         aServices.AddChaturUI();
 
         aServices.AddSingleton<IAppPaths, MauiAppPaths>();
+
+        // Each account's own database file is migrated the first time that account signs in, with DbUp's
+        // own lines in the head's log (Architecture §6, 2026-11-17).
+        aServices.AddSingleton<IDatabaseMigrator>(aProvider =>
+        {
+            var vLogger = aProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(ChaturDbMigrator));
+            return new DelegateDatabaseMigrator(aPath => ChaturDbMigrator.Migrate($"Data Source={aPath}", vLogger).Successful);
+        });
         aServices.AddSingleton<IClock, SystemClock>();
         aServices.AddSingleton<ISecretStore, MauiSecretStore>();
         aServices.AddSingleton<IFolderPicker, MauiFolderPicker>();

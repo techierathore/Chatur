@@ -23,6 +23,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 BASE="${TF_BASE:?TF_BASE is not set: run this from tf-verify-screens.sh or set it to the app address}"
 PORT="$(sed -E 's#.*:([0-9]+)/?.*#\1#' <<<"$BASE")"
 DB="$ROOT/tests/.artifacts/verify/run-$PORT/harness-data/chatur.db"
+# Each account has its own database (BRD-210): seed the file of whoever signed in last, named by
+# harness-data/accounts/current.txt, or the install's own before anyone has signed in.
+POINTER="$(dirname "$DB")/accounts/current.txt"
+if [ -s "$POINTER" ]; then DB="$(dirname "$DB")/accounts/$(tr -d '\r\n' < "$POINTER")/chatur.db"; fi
 [[ -f "$DB" ]] || { echo "no database for the app at $BASE (looked for $DB)"; exit 1; }
 case "$DB" in
   "$ROOT/tests/.artifacts/"*) ;;
@@ -55,4 +59,19 @@ c.execute("INSERT INTO RefusedWrite (ProjectId, StreamName, Reason, CreatedUtc) 
           (project_id, "misses.jsonl", "Write failed: No space left on device", now))
 c.commit()
 print(f"project {project_id}: one refused write on misses.jsonl, dated {now}")
+
+# The Sister projects card (REQ-UI-086) draws two sisters with their run counts. Two fixture folders under
+# tests/.artifacts/ each hold a docs/metrics/runs.jsonl, and are named as sisters unless already named.
+sisters_root = os.path.join(root, "tests", ".artifacts", "verify", "fixtures", "sisters")
+for name, runs in (("Sevak", 4), ("TechieBlog", 3)):
+    sister = os.path.join(sisters_root, name)
+    metrics = os.path.join(sister, "docs", "metrics")
+    os.makedirs(metrics, exist_ok=True)
+    with open(os.path.join(metrics, "runs.jsonl"), "w", encoding="utf-8") as f:
+        for i in range(runs):
+            f.write('{"v":"1","ts":"2026-11-0%dT10:00:00Z","app":"%s","cmd":"build-phase","reqs":["REQ-FN-00%d"],"tokens_out":2000,"duration_s":300}\n' % (i + 1, name, i + 1))
+    if not c.execute("SELECT 1 FROM SisterProject WHERE Path = ?", (sister,)).fetchone():
+        c.execute("INSERT INTO SisterProject (Path, AddedUtc) VALUES (?, ?)", (sister, now))
+c.commit()
+print("sister projects: Sevak (4 runs) and TechieBlog (3 runs) named")
 PY

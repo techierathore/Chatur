@@ -167,6 +167,43 @@ public sealed class RunVerdictTests : MigratedDatabaseFixture
     }
 
     /// <summary>
+    /// When the project carries two phase-2 checklists, one of which sorts first by name ("Another-P2"
+    /// before "App-P2"), then an approved run grades the rows of both and writes each verdict into the
+    /// checklist that holds its row: REQ-FN-001 into App-P2, REQ-FN-010 into Another-P2, never both into
+    /// the first file; and the step's result names each file it wrote (REQ-UI-048, owner 2026-11-10).
+    /// Before the fix only the first file by name was read, so REQ-FN-001 got no verdict at all.
+    /// </summary>
+    [Fact(DisplayName = "REQ-UI-048 with two phase 2 checklists each verdict goes into the checklist that holds the row")]
+    public async Task TwoChecklistsOfOnePhaseEachGetTheirOwnVerdicts()
+    {
+        const string vOtherPath = "docs/Another-P2-Checklist.md";
+        const string vOther =
+            "# Another P2 checklist\r\n\r\n## Requirements Status\r\n\r\n" +
+            "| Req ID | Title | Status | % | Remarks | Detail |\r\n|---|---|---|---|---|---|\r\n" +
+            "| REQ-FN-010 | Tenth | Implemented | 75% | [REQ-FN-010] built. | [view](#d-10) |\r\n";
+        FixtureDotNetProject.Write(objProjectPath);
+        WriteChecklist(Checklist);
+        File.WriteAllText(Path.Combine(objProjectPath, vOtherPath), vOther);
+        var vActions = CreateActions();
+        var vRunId = StartRun(CreateProject("P", objProjectPath));
+        await vActions.AdvanceAsync(vRunId);
+
+        var vAfter = await vActions.AnswerAsync(vRunId, ProcessAnswer.Yes);
+        var vVerdicts = (await vActions.VerdictsAsync(vRunId)).ToDictionary(aVerdict => aVerdict.RequirementId);
+
+        Assert.Equal(ProcessRunState.Finished, vAfter!.State);
+        Assert.Equal(ChecklistPath, vVerdicts["REQ-FN-001"].ChecklistFile);
+        Assert.Equal(vOtherPath, vVerdicts["REQ-FN-010"].ChecklistFile);
+        Assert.Contains("| REQ-FN-001 | First | Verified | 100% |", ReadChecklist(), StringComparison.Ordinal);
+        Assert.DoesNotContain("REQ-FN-010", ReadChecklist(), StringComparison.Ordinal);
+        var vOtherAfter = File.ReadAllText(Path.Combine(objProjectPath, vOtherPath));
+        Assert.Contains("| REQ-FN-010 | Tenth | Needs re-verify |", vOtherAfter, StringComparison.Ordinal);
+        Assert.DoesNotContain("REQ-FN-001", vOtherAfter, StringComparison.Ordinal);
+        Assert.Contains($"into {ChecklistPath}:", vAfter.Steps[6].Result, StringComparison.Ordinal);
+        Assert.Contains($"into {vOtherPath}:", vAfter.Steps[6].Result, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// When the tests run past their time limit, then they are stopped, the step records the limit,
     /// and every requirement is Needs re-verify "tests could not run" (REQ-UI-048).
     /// </summary>

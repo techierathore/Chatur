@@ -4,12 +4,15 @@ import { test, expect, Page } from '@playwright/test';
 import { signIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
 import { ensureTestProvider, testProvider } from './support/provider';
+import { startStubModel, ensureStubProvider, restoreOtherProviders, removeStubProvider } from './support/stub-model';
 import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 
 const STAMP = Date.now();
-const DEAD = 'http://localhost:59999';
+// 127.0.0.2, not localhost: under WSL mirrored networking a closed port on 127.0.0.1 hangs until the client
+// times out instead of refusing, which races the app's own 30-second limit. 127.0.0.2 refuses at once.
+const DEAD = 'http://127.0.0.2:59999';
 const FAKE_KEY = `sk-verify-${STAMP}-SECRETVALUE`;
 const created: string[] = [];
 let createdReal = false; // true only when this run added the real provider, so only then is it removed
@@ -36,8 +39,13 @@ async function openProviders(aPage: Page): Promise<void> {
 }
 
 async function openDialog(aPage: Page): Promise<void> {
-  await aPage.getByTestId('add-provider').click();
-  await expect(aPage.getByTestId('add-provider-dialog')).toBeVisible();
+  // The harness prerenders the page: a click made before the circuit attaches is lost, so it is repeated until
+  // the dialog shows (the same retry as support/start.ts openFoldersDialog).
+  const vDialog = aPage.getByTestId('add-provider-dialog');
+  await expect(async () => {
+    if (!(await vDialog.isVisible())) await aPage.getByTestId('add-provider').click();
+    await expect(vDialog).toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 30_000 });
 }
 
 async function pick(aPage: Page, aButton: string, aItem: string): Promise<void> {
@@ -232,6 +240,12 @@ test('REQ-FN-019 the owner can set a kind of work to a tier on the Routing page'
 test('REQ-FN-020 the owner can reorder the models in a tier on the Routing page', async ({ page }) => {
   test.setTimeout(120_000);
   await ensureReal(page);
+  // Reordering needs two models in one tier. The owner's test provider may list only one (test-settings.json
+  // names one model), so the local stub model is connected beside it as a second provider; no model is called.
+  const vStub = await startStubModel('read-file', { path: 'notes.txt' });
+  try {
+  await ensureStubProvider(page, vStub);
+  await restoreOtherProviders();
   await openRouting(page);
   await expect(page.getByTestId('tier-1-add')).toBeVisible({ timeout: 5_000 });
   await expect(page.getByTestId('tier-3-add')).toBeVisible({ timeout: 2_000 });
@@ -274,6 +288,10 @@ test('REQ-FN-020 the owner can reorder the models in a tier on the Routing page'
   // Moving it down once more and then Reset the tiers also gives the shipped order again.
   await moveUntil('tier-2-down-1', async () => (await modelAt(1)) === vSecond);
   await moveUntil('reset-tiers', async () => (await modelAt(1)) === vFirst);
+  } finally {
+    await removeStubProvider(page);
+    await vStub.close();
+  }
 });
 
 const FIXTURE_ROOT = resolve(__dirname, '../.artifacts/verify/fixtures/workbench-routing-root');

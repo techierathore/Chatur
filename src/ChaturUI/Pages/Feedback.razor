@@ -20,7 +20,7 @@
                 <FieldLabel For="feedback-kind">Kind</FieldLabel>
                 <FieldContent>
                     <Select TValue="string" Value="objKind" ValueChanged="v => objKind = v" Class="w-64" data-testid="feedback-kind">
-                        <SelectTrigger>
+                        <SelectTrigger Class="rounded-full">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -37,7 +37,7 @@
                 </FieldContent>
             </Field>
             <div class="flex items-center gap-2">
-                <Button OnClick="SendAsync" Disabled="@(!CanSend)" data-testid="feedback-send">Send</Button>
+                <Button Class="rounded-full" OnClick="SendAsync" Disabled="@(!CanSend)" data-testid="feedback-send">Send</Button>
                 <span class="text-xs text-muted-foreground" data-testid="feedback-offline-note">Feedback is kept and sent when the network returns.</span>
             </div>
         </CardContent>

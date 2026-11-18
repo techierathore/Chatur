@@ -110,10 +110,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
     <hr>
     <div class="grouplbl">Run target</div>
-    <button onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
-    <button onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
+    <button data-tf-sample onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
+    <button data-tf-sample onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
+    <button data-tf-sample onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
+    <button data-tf-sample onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
     <hr>
     <a href="prerequisites.html">Prerequisites…</a>
     <a href="repository.html">Repository…</a>
@@ -176,10 +176,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="popwrap" data-testid="target">
    <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="target-pop" data-tf-state="popup-open">
-    <button onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
-    <button onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
+    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
+    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
+    <button data-tf-sample onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
+    <button data-tf-sample onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
     <div class="note">Only what this machine can build. A Windows head needs the Windows machine.</div>
    </div>
   </div>
@@ -187,9 +187,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="popwrap" data-testid="branch-pick">
    <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
-    <button onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
-    <button onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
-    <button onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
+    <button data-tf-sample onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
+    <button data-tf-sample onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
+    <button data-tf-sample onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
     <hr>
     <a href="repository.html">Open the repository…</a>
    </div>
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
  <div class="body">
 
   <div class="panel files" data-testid="files-panel">
-   <div class="ph" data-testid="files-head">Files</div>
+   <div class="ph" style="justify-content:space-between" data-testid="files-head"><span>Files</span><button class="iconbtn" onclick="say('Reads the project\'s files from disk again, so files made outside Chatur show.')" title="Refresh the files" data-testid="files-refresh"><svg><use href="#i-refresh"/></svg></button></div>
    <div class="tree" data-testid="file-tree">
     <a href="main.html" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
     <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
@@ -261,6 +261,46 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       </div>
      </div>
 
+     <div class="panel" data-testid="estimate-panel" data-tf-state="estimate-before-start">
+      <div class="ph"><svg><use href="#i-clock"/></svg><span>Before build-phase starts — what it should cost</span><span class="grow"></span><span class="pill" data-testid="estimate-rows">12 rows · phase 2</span></div>
+      <div style="padding:12px 14px 4px;display:flex;flex-direction:column;gap:7px">
+       <div class="row" style="flex-wrap:wrap"><span class="dim sm" style="width:112px">Made for</span><span data-testid="estimate-model">Claude Opus 5 · tier 1</span><span class="dim sm">the model routed to the Flow master for this step</span><a class="xs" href="settings-routing.html" style="color:var(--accent)" data-testid="estimate-change-tier">Change the tier in Routing</a></div>
+       <div class="sm dim" data-testid="estimate-how">Worked out from TfLens's own run records, row kind by row kind: the middle half of what earlier runs spent per row. No model is asked.</div>
+      </div>
+      <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px" data-testid="estimate-table">
+       <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 9px;font-weight:500">Line of work</th><th style="padding:8px 9px;font-weight:500">Output tokens — low · middle · high</th><th style="padding:8px 9px;font-weight:500">Time — low · middle · high</th><th style="padding:8px 9px;font-weight:500">From</th></tr></thead>
+       <tbody>
+        <tr style="border-top:1px solid var(--line2)" data-testid="estimate-row-build" data-tf-state="sample-data" data-tf-sample><td style="padding:9px 9px;white-space:nowrap">Build</td><td class="mono" style="padding:9px 9px;white-space:nowrap" data-testid="estimate-tokens-build">41,000 · 62,000 · 88,000</td><td class="mono" style="padding:9px 9px;white-space:nowrap" data-testid="estimate-time-build">1 h 05 m · 1 h 38 m · 2 h 21 m</td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="estimate-basis-build">this project · 14 runs</td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="estimate-row-qa" data-tf-state="sample-data" data-tf-sample><td style="padding:9px 9px;white-space:nowrap">Machine QA (verify + fix)</td><td class="mono" style="padding:9px 9px;white-space:nowrap" data-testid="estimate-tokens-qa">18,000 · 27,000 · 39,000</td><td class="mono" style="padding:9px 9px;white-space:nowrap" data-testid="estimate-time-qa">34 m · 52 m · 1 h 16 m</td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="estimate-basis-qa">sister projects Sevak, TechieBlog · 9 runs — fewer than three here</td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="estimate-row-triage" data-tf-state="sample-data" data-tf-sample><td style="padding:9px 9px;white-space:nowrap">After handoff (triage)</td><td style="padding:9px 9px;white-space:nowrap"><span class="pill warn" data-testid="estimate-tokens-triage">no precedent</span></td><td style="padding:9px 9px;white-space:nowrap"><span class="pill warn" data-testid="estimate-time-triage">no precedent</span></td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="estimate-basis-triage">1 run here, none in the sister projects</td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="estimate-row-owner" data-tf-state="sample-data" data-tf-sample><td style="padding:9px 9px;white-space:nowrap">Your own testing</td><td style="padding:9px 9px;white-space:nowrap"><span class="dim" data-testid="estimate-tokens-owner">not measured</span></td><td style="padding:9px 9px;white-space:nowrap"><span class="dim" data-testid="estimate-time-owner">not measured</span></td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="estimate-basis-owner">Chatur does not time it</td></tr>
+       </tbody>
+      </table>
+      </div>
+      <div style="padding:8px 14px 12px;display:flex;flex-direction:column;gap:8px">
+       <details data-testid="estimate-per-row"><summary class="sm" style="cursor:pointer;color:var(--accent)">Each of the 12 rows</summary>
+      <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px" data-testid="estimate-row-table">
+       <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 9px;font-weight:500">Row</th><th style="padding:8px 9px;font-weight:500">Build — tokens</th><th style="padding:8px 9px;font-weight:500">Build — time</th><th style="padding:8px 9px;font-weight:500">Machine QA — tokens</th><th style="padding:8px 9px;font-weight:500">Machine QA — time</th></tr></thead>
+       <tbody>
+        <tr style="border-top:1px solid var(--line2)" data-testid="estimate-req-1" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 9px;white-space:nowrap">REQ-UI-021</td><td class="mono" style="padding:9px 9px;white-space:nowrap">4,100 · 5,200 · 7,400</td><td class="mono" style="padding:9px 9px;white-space:nowrap">6 m · 8 m · 12 m</td><td class="mono" style="padding:9px 9px;white-space:nowrap">1,500 · 2,200 · 3,300</td><td class="mono" style="padding:9px 9px;white-space:nowrap">3 m · 4 m · 6 m</td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="estimate-req-2" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 9px;white-space:nowrap">REQ-FN-030</td><td class="mono" style="padding:9px 9px;white-space:nowrap">3,600 · 5,000 · 6,900</td><td class="mono" style="padding:9px 9px;white-space:nowrap">5 m · 9 m · 13 m</td><td class="mono" style="padding:9px 9px;white-space:nowrap">1,600 · 2,400 · 3,200</td><td class="mono" style="padding:9px 9px;white-space:nowrap">3 m · 5 m · 7 m</td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="estimate-req-3" data-tf-state="sample-data" data-tf-sample><td class="mono" style="padding:9px 9px;white-space:nowrap">REQ-NFR-004</td><td style="padding:9px 9px;white-space:nowrap"><span class="pill warn" data-testid="estimate-req-3-build">no precedent</span></td><td style="padding:9px 9px;white-space:nowrap"></td><td class="mono" style="padding:9px 9px;white-space:nowrap">1,400 · 2,000 · 2,900</td><td class="mono" style="padding:9px 9px;white-space:nowrap">2 m · 4 m · 6 m</td></tr>
+       </tbody>
+      </table>
+      </div>
+       </details>
+       <div class="sm dim" data-testid="estimate-left-out">2 rows have no precedent for build and are left out of the phase figure: it covers 10 of 12 rows.</div>
+       <div class="row" style="gap:8px;flex-wrap:wrap"><a class="send" href="process-run.html" data-testid="estimate-confirm"><svg><use href="#i-play"/></svg>Start build-phase</a><button class="pick" onclick="say('Closes the estimate. Nothing is started and nothing is written.')" data-testid="estimate-cancel">Cancel</button></div>
+      </div>
+     </div>
+
+     <div class="row" style="align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r2);color:var(--dim)" data-testid="estimate-none-yet" data-tf-state="no-run-records">
+      <svg style="margin-top:2px"><use href="#i-clock"/></svg>
+      <span class="sm">No estimate yet. This project has no run records, so there is nothing to work one out from. The first runs make one.</span>
+     </div>
+
      <div class="panel" data-testid="steps-panel">
       <div class="ph"><span>verify-phase, step by step</span><span class="grow"></span><span class="pill" data-testid="steps-count">7 steps · 4 checks · 1 owner stop</span></div>
       <div style="overflow-x:auto">
@@ -308,9 +348,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <button class="iconbtn" onclick="pop(this,event)" title="Earlier conversations"><svg><use href="#i-list"/></svg></button>
        <div class="pop right" data-testid="history-pop" data-tf-state="popup-open">
         <div class="note">Earlier on TfLens</div>
-        <button onclick="say('Opens that conversation where it stopped.')">Which processes stop and ask · today</button>
-        <button onclick="say('Opens that conversation where it stopped.')">verify-phase, step by step · yesterday</button>
-        <button onclick="say('Opens that conversation where it stopped.')">Why refresh-status runs straight through · Friday</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')">Which processes stop and ask · today</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')">verify-phase, step by step · yesterday</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')">Why refresh-status runs straight through · Friday</button>
        </div>
       </div>
      </span>
@@ -333,24 +373,24 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <div class="popwrap" data-testid="model-pick">
         <button class="pick" onclick="pop(this,event)"><svg><use href="#i-sparkle"/></svg><span data-value>Claude Opus 5</span><svg><use href="#i-chevron"/></svg></button>
         <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="model-pop" data-tf-state="popup-open">
-         <button onclick="choose(this,'Claude Opus 5',event)"><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
-         <button onclick="choose(this,'Claude Sonnet 5',event)"><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
-         <button onclick="choose(this,'Claude Haiku 4.5',event)"><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
-         <button onclick="choose(this,'GPT-5',event)"><span class="tick"></span>GPT-5<span class="sub">tier 1</span></button>
-         <button onclick="choose(this,'Qwen3-30B',event)"><span class="tick"></span>Qwen3-30B<span class="sub">local</span></button>
+         <button onclick="choose(this,'Claude Opus 5',event)" data-tf-sample><span class="tick">✓</span>Claude Opus 5<span class="sub">tier 1</span></button>
+         <button onclick="choose(this,'Claude Sonnet 5',event)" data-tf-sample><span class="tick"></span>Claude Sonnet 5<span class="sub">tier 2</span></button>
+         <button onclick="choose(this,'Claude Haiku 4.5',event)" data-tf-sample><span class="tick"></span>Claude Haiku 4.5<span class="sub">tier 3</span></button>
+         <button onclick="choose(this,'GPT-5',event)" data-tf-sample><span class="tick"></span>GPT-5<span class="sub">tier 1</span></button>
+         <button onclick="choose(this,'Qwen3-30B',event)" data-tf-sample><span class="tick"></span>Qwen3-30B<span class="sub">local</span></button>
          <hr>
-         <a href="settings-routing.html">Which model does which work…</a>
+         <a href="settings-routing.html" data-tf-state="sample-data">Which model does which work…</a>
         </div>
        </div>
        <div class="popwrap" data-testid="agent-pick">
         <button class="pick" onclick="pop(this,event)"><span data-value>Flow master</span><svg><use href="#i-chevron"/></svg></button>
         <div class="pop" style="top:auto;bottom:calc(100% + 5px)" data-testid="agent-pop" data-tf-state="popup-open">
-         <button onclick="choose(this,'No agent',event)"><span class="tick"></span>No agent — the model itself</button>
+         <button onclick="choose(this,'No agent',event)" data-tf-sample><span class="tick"></span>No agent — the model itself</button>
          <hr>
-         <button onclick="choose(this,'Analyst',event)"><span class="tick"></span>Analyst</button>
-         <button onclick="choose(this,'Architect',event)"><span class="tick"></span>Architect</button>
-         <button onclick="choose(this,'Flow master',event)"><span class="tick">✓</span>Flow master</button>
-         <button onclick="choose(this,'Verifier',event)"><span class="tick"></span>Verifier</button>
+         <button onclick="choose(this,'Analyst',event)" data-tf-sample><span class="tick"></span>Analyst</button>
+         <button onclick="choose(this,'Architect',event)" data-tf-sample><span class="tick"></span>Architect</button>
+         <button onclick="choose(this,'Flow master',event)" data-tf-sample><span class="tick">✓</span>Flow master</button>
+         <button onclick="choose(this,'Verifier',event)" data-tf-sample><span class="tick"></span>Verifier</button>
          <div class="note">Chatur suggested the Flow master — it owns the processes on this screen.</div>
          <hr>
          <a href="settings-agents.html">Agents…</a>

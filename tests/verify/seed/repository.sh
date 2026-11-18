@@ -37,6 +37,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 BASE_URL="${TF_BASE:?TF_BASE is not set: run this from tf-verify-screens.sh or set it to the app address}"
 PORT="$(sed -E 's#.*:([0-9]+)/?.*#\1#' <<<"$BASE_URL")"
 DB="$ROOT/tests/.artifacts/verify/run-$PORT/harness-data/chatur.db"
+# Each account has its own database (BRD-210): seed the file of whoever signed in last, named by
+# harness-data/accounts/current.txt, or the install's own before anyone has signed in.
+POINTER="$(dirname "$DB")/accounts/current.txt"
+if [ -s "$POINTER" ]; then DB="$(dirname "$DB")/accounts/$(tr -d '\r\n' < "$POINTER")/chatur.db"; fi
 [[ -f "$DB" ]] || { echo "no database for the app at $BASE_URL (looked for $DB)"; exit 1; }
 
 REPO="$(python3 - "$DB" <<'PY'
@@ -57,8 +61,17 @@ export GIT_COMMITTER_NAME="Verify Seed" GIT_COMMITTER_EMAIL="verify-seed@example
 
 # Another spec may have left a plain fixture folder open (the metrics fixture is not a repository). The screen
 # draws a repository, so make this fixture one: one initial check-in of what is there, on main.
-if [[ ! -d "$REPO/.git" ]]; then
+#
+# "Is a repository" means git names THIS folder as the top one. A .git folder that has lost its objects, refs or
+# config (the 7-day artifact sweep deletes old files one at a time) is skipped by git, which then finds the
+# repository above the fixture: Chatur's own. On 2026-11-13 that happened, and this seed put its four empty hand
+# check-ins on the owner's main branch. A folder test (-d .git) cannot see that, so git itself is asked, a broken
+# .git is made again, and the seed stops rather than write anywhere else.
+own_repo() { [[ "$(git -C "$REPO" rev-parse --show-toplevel 2>/dev/null)" == "$(cd "$REPO" && pwd -P)" ]]; }
+if ! own_repo; then
+  rm -rf "$REPO/.git"
   git -C "$REPO" init -q --initial-branch=main
+  own_repo || { echo "refusing to write: $REPO is not a git repository of its own after git init"; exit 1; }
   git -C "$REPO" add -A
   git -C "$REPO" commit -q --allow-empty -m "initial" --no-gpg-sign
 fi
@@ -120,7 +133,11 @@ H2="$(commit_at "$BASE_TREE" "$H4" "$T_H2" "$MARKER Fix a typo by hand")"
 H1="$(commit_at "$BASE_TREE" "$H2" "$T_H1" "$MARKER Update the readme by hand")"
 git -C "$REPO" update-ref "$BRANCH_REF" "$H1"
 
-# The Repository mockup also shows a plain feature branch in the branch picker.
-git -C "$REPO" branch -f feature/board "$H6"
+# The Repository mockup also shows a plain feature branch in the branch picker. Moved with update-ref, as the
+# run branches are: `git branch -f` refuses the branch that is checked out, and an earlier menu walk can leave
+# the fixture on feature/board (2026-11-14). When it is the open branch it already holds the hand check-ins.
+if [[ "$BRANCH_REF" != "refs/heads/feature/board" ]]; then
+  git -C "$REPO" update-ref refs/heads/feature/board "$H6"
+fi
 
 echo "seeded the hand check-ins on ${BRANCH_REF#refs/heads/}: tip ${H1:0:7} in $REPO"

@@ -12,6 +12,10 @@ public partial class SettingsMeasurements
 {
     private IReadOnlyList<MeasurementStream>? objStreams;
     private MeasurementFolder? objFolder;
+    private IReadOnlyList<SisterProject> objSisters = [];
+    private string objSisterPath = string.Empty;
+    private string? objSisterError;
+    private bool objIsSisterBusy;
     private bool objIsLoading;
 
 
@@ -33,10 +37,55 @@ public partial class SettingsMeasurements
             var vProjectId = State.SelectedProject.ProjectId;
             objStreams = await MeasurementActions.StreamsAsync(vProjectId);
             objFolder = await MeasurementActions.FolderAsync(vProjectId);
+            objSisters = await EstimateActions.SistersAsync();
         }
         finally
         {
             objIsLoading = false;
+        }
+    }
+
+    /// <summary>"2 projects".</summary>
+    private string SisterCountText => $"{objSisters.Count} project{(objSisters.Count == 1 ? "" : "s")}";
+
+    private static string RunsText(int aCount) => $"{aCount} run{(aCount == 1 ? "" : "s")}";
+
+    /// <summary>Names the typed folder as a sister project; a refused folder shows its reason (REQ-UI-086).</summary>
+    private async Task AddSisterAsync()
+    {
+        objIsSisterBusy = true;
+        objSisterError = null;
+        try
+        {
+            await EstimateActions.AddSisterAsync(objSisterPath.Trim());
+            objSisterPath = string.Empty;
+            objSisters = await EstimateActions.SistersAsync();
+        }
+        catch (ArgumentException aEx)
+        {
+            objSisterError = aEx.Message;
+        }
+        finally
+        {
+            objIsSisterBusy = false;
+        }
+    }
+
+    /// <summary>Takes a sister project off the list; its files are not touched.</summary>
+    /// <param name="aSister">The sister project.</param>
+    private async Task RemoveSisterAsync(SisterProject aSister)
+    {
+        objIsSisterBusy = true;
+        objSisterError = null;
+        try
+        {
+            await EstimateActions.RemoveSisterAsync(aSister.SisterProjectId);
+            objSisters = await EstimateActions.SistersAsync();
+            Toast.Success($"{aSister.Name} is no longer used for estimates.");
+        }
+        finally
+        {
+            objIsSisterBusy = false;
         }
     }
 
@@ -82,6 +131,9 @@ public partial class SettingsMeasurements
         }
     }
 
+    /// <summary>The Estimator's stream: a row in the streams table, no tile, and no empty-field count (mockups/settings-measurements.html).</summary>
+    private const string EstimatesStream = "estimates.jsonl";
+
     /// <summary>A display name for a stream, from its file name (REQ-UI-036).</summary>
     private static string Label(string aStreamName) =>
         aStreamName switch
@@ -89,6 +141,7 @@ public partial class SettingsMeasurements
             "runs.jsonl" => "Runs",
             "gates.jsonl" => "Gates",
             "misses.jsonl" => "Misses",
+            EstimatesStream => "Estimates",
             "sessions.jsonl" => "Sessions",
             "commits.jsonl" => "Commits",
             _ => aStreamName

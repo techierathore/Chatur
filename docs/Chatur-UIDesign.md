@@ -66,7 +66,7 @@
 
 ### Screen: Start (`/start?all=1`)
 
-**Mockup:** [mockups/start.html](mockups/start.html) · **Roles:** Owner · **BRD:** BRD-10 to BRD-15
+**Mockup:** [mockups/start.html](mockups/start.html), and for an account that has opened nothing [mockups/start-empty.html](mockups/start-empty.html) · **Roles:** Owner · **BRD:** BRD-10 to BRD-15, BRD-210, BRD-214, BRD-215
 
 Reached on purpose at `/start?all=1` (the project switcher's "All projects…"). The bare `/start`, where Chatur lands after sign-in, forwards straight to the Workbench when a project is already chosen (BRD-13), so it shows this screen only when nothing is chosen yet (amended 2026-10-01).
 
@@ -80,6 +80,7 @@ A window of its own, the one that opens first. It carries no menu bar, no file t
 | `forget` | Button | drops a project from the list; the folder on disk is untouched |
 | `clone-repo` | Button | clones from GitHub, or any address pasted, and opens it |
 | `open-solution` / `open-folder` | Button ×2 | a `.sln` with its projects read, or any folder as it is |
+| `open-file` | Button | any file, opened with the folder that holds it (BRD-215) |
 | `new-project` | Button | a solution from a template |
 | `new-blank` | Button | an empty folder and an agent, for thinking something through before there is code |
 
@@ -90,7 +91,7 @@ A window of its own, the one that opens first. It carries no menu bar, no file t
 
 **Dialogs opened here:** Clone a repository · Open a solution · Open a folder · New project — each the machine's own picker or a small form
 
-**States:** empty: nothing opened yet — the recent list gives way to a line saying so, and the ways in stay where they are · loading: a clone shows its progress in place of the list, and the buttons wait · error: a folder that has moved keeps its row, marked, and offers to forget it
+**States:** empty, for an account that has opened nothing (`start-empty.html`): `empty-start` shows three ways on, `way-open-folder`, `way-open-solution`, `way-open-file`, and a quiet `manage-folders` · loading: a clone shows its progress in place of the list, and the buttons wait · error: a folder that has moved keeps its row, marked, and offers to forget it
 
 ### Screen: Workbench (`/`)
 

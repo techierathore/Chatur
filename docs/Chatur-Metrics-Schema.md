@@ -16,7 +16,7 @@ from Chatur rather than from Claude Code or OpenCode running the framework direc
 
 `docs/metrics/` inside **the project Chatur is working in** — not inside Chatur's own repository.
 Five files, one per stream: `runs.jsonl`, `gates.jsonl`, `sessions.jsonl`, `commits.jsonl`,
-`misses.jsonl`. JSONL — one JSON object per line, append-only. Never rewritten, never compacted,
+`misses.jsonl`, and since 2026-11-10 a sixth, `estimates.jsonl` (below). JSONL — one JSON object per line, append-only. Never rewritten, never compacted,
 never sorted in place (REQ-FN-040). The moment any measurement activity starts for a project, all
 five files exist, even ones that stay empty of records for a while — an agent session working in a
 project the owner just opened should not have to hunt for which of the five files Chatur has
@@ -96,6 +96,32 @@ is logged and never stops the work").
 | `found_gate`, `failure_class` | Same closed lists as `gates.jsonl` `gate` / `failure_class` |
 | `sort` | `spec` \| `unsaid` \| `weak-check` \| `ignored` |
 | `verdict_after` | `Verified` \| `Needs re-verify` \| `FAIL` \| `deferred` \| `wont-fix` |
+
+## `estimates.jsonl` — `kind: "estimate"` (added 2026-11-10, BRD-205)
+
+The one stream that does **not** follow the all-string rule above, `at` or `tool`. It is written in exactly the shape of TechieFlow's schema §2.8, so TfLens reads Chatur's estimates and TechieFlow's on one page: native JSON numbers and objects, `ts`, and `harness: "chatur"`. Written only by the Estimator, one batch per confirmed start or queue entry, every record of a batch carrying the same `ts`.
+
+```json
+{"v":1,"ts":"2026-11-10T11:16:00Z","kind":"estimate","app":"Fixture","phase":2,"req_id":"REQ-FN-301","cmd":"build-phase",
+ "tokens_out":{"low":2000,"mid":3000,"high":4000},"duration_s":{"low":240,"mid":300,"high":360},
+ "basis":"repo","basis_runs":5,"model":"claude-opus-5-5","tier":1,"harness":"chatur"}
+```
+
+| Field | Values |
+|---|---|
+| `kind` | `estimate` |
+| `app`, `phase` | the project's name; the phase whose checklist was estimated |
+| `req_id` | the row, or `null` on a phase total |
+| `cmd` | `build-phase` \| `verify-phase` \| `fix-issues` \| `triage`; machine QA is shown as verify plus fix and never stored added |
+| `tokens_out`, `duration_s` | `{"low","mid","high"}` per row (on a total, the sum of the rows that had one), or `null` with `basis` `none` |
+| `basis`, `basis_runs` | `repo` \| `family` \| `none`, and how many runs it rests on |
+| `model` | the model that will run the step: the first model of the tier routing gives it, also when automatic routing is on (owner, 10 Nov 2026). In the framework's records this field is the estimating model; Chatur's estimate is made by no model |
+| `tier` | optional, a JSON number 1 to 3: the routing tier the step is set to. Chatur's one field beyond the framework's §2.8 (owner, 10 Nov 2026); absent when the step's tier is not known |
+| `harness` | always `chatur` |
+| `rows_n`, `rows_no_precedent_n` | phase totals only |
+| `basis_note` | `retro` only, when runs on the phase's own rows already existed |
+
+Refused, as in the framework: a figure with `basis` `none`, a `null` figure without it, and low > mid or mid > high. An estimate is never written to `runs.jsonl`, never added to, averaged with or divided by a measurement (framework schema §6, fourth separation).
 
 ## What is not carried over from TechieFlow's schema
 

@@ -1,0 +1,97 @@
+@* A batch of estimates beside what the runs measured (REQ-FN-113 display, REQ-UI-088, REQ-UI-089; mockups/process-run.html
+   "handoff-estimate", mockups/run-report.html "estimate-actual-panel"). Tokens and time are judged apart; nothing is
+   divided by anything. Presentation only: the figures come from IEstimateActions. *@
+<Card data-testid="@($"{TestId}-panel")" data-tf-state="estimate-against-actual">
+    <CardHeader>
+        <div class="flex flex-wrap items-center gap-2">
+            <LucideIcon Name="clock" Size="16" Class="text-muted-foreground" />
+            <CardTitle Class="text-sm">@Title</CardTitle>
+            <span class="grow"></span>
+            @if (MadeText is not null)
+            {
+                <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="estimate-made">@MadeText</Badge>
+            }
+            @if (Actual.Retro)
+            {
+                <Badge Variant="BadgeVariant.Warning" data-testid="@($"{TestId}-retro")">estimated after the fact</Badge>
+            }
+        </div>
+    </CardHeader>
+    <CardContent Class="flex flex-col gap-3">
+        <DataTable TData="ActualLine" Data="@objLines" ShowPagination="false" Class="text-xs" Density="DataTableDensity.Compact"
+                   RowAttributes="@(aLine => new Dictionary<string, object> { ["data-testid"] = $"{TestId}-{aLine.Key}", ["class"] = "border-t" })"
+                   data-testid="@($"{TestId}-table")">
+            <Columns>
+                <DataTableColumn TData="ActualLine" TValue="string" Property="@(aLine => aLine.Label)" Header="Line of work" HeaderClass="px-1.5 py-2 text-xs" CellClass="px-1.5 py-2 text-xs" />
+                <DataTableColumn TData="ActualLine" TValue="string" Property="@(aLine => aLine.EstimateTokens)" Header="Estimate — low · middle · high" HeaderClass="px-1.5 py-2 text-xs" CellClass="px-1.5 py-2 text-xs">
+                    <CellTemplate Context="aLine">
+                        @if (aLine.NotMeasured)
+                        {
+                            <span class="text-muted-foreground" data-testid="@($"{TestId}-{aLine.Key}-estimate")">@aLine.ActualTokens</span>
+                        }
+                        else if (aLine.NoPrecedent)
+                        {
+                            <Badge Variant="BadgeVariant.Warning" data-testid="@($"{TestId}-{aLine.Key}-estimate")">no precedent</Badge>
+                        }
+                        else
+                        {
+                            <div class="font-mono" data-testid="@($"{TestId}-{aLine.Key}-estimate")">
+                                <div>@(aLine.EstimateTokens ?? "no precedent") tokens</div>
+                                <div class="text-xs text-muted-foreground">@(aLine.EstimateTime ?? "no precedent")</div>
+                            </div>
+                        }
+                    </CellTemplate>
+                </DataTableColumn>
+                <DataTableColumn TData="ActualLine" TValue="string" Property="@(aLine => aLine.ActualTokens)" Header="Actual" HeaderClass="px-1.5 py-2 text-xs" CellClass="px-1.5 py-2 text-xs">
+                    <CellTemplate Context="aLine">
+                        @if (aLine.NotMeasured)
+                        {
+                            <span class="text-muted-foreground" data-testid="@($"{TestId}-{aLine.Key}-actual")">@aLine.ActualTokens</span>
+                        }
+                        else
+                        {
+                            <div class="font-mono" data-testid="@($"{TestId}-{aLine.Key}-actual")">
+                                <div data-testid="@($"{TestId}-{aLine.Key}-actual-tokens")">@aLine.ActualTokens</div>
+                                <div class="text-xs text-muted-foreground" data-testid="@($"{TestId}-{aLine.Key}-actual-time")">@aLine.ActualTime</div>
+                                @if (aLine.Apportioned)
+                                {
+                                    <div class="text-xs text-muted-foreground" data-testid="@($"{TestId}-{aLine.Key}-apportioned")">apportioned</div>
+                                }
+                            </div>
+                        }
+                    </CellTemplate>
+                </DataTableColumn>
+                <DataTableColumn TData="ActualLine" TValue="string" Property="@(aLine => aLine.TokensWhere)" Header="Where it fell" HeaderClass="px-1.5 py-2 text-xs" CellClass="px-1.5 py-2 text-xs">
+                    <CellTemplate Context="aLine">
+                        @if (aLine.TokensWhere is null && aLine.TimeWhere is null)
+                        {
+                            <span class="text-muted-foreground">—</span>
+                        }
+                        else
+                        {
+                            <div class="flex flex-col gap-1">
+                                @if (aLine.TokensWhere is not null)
+                                {
+                                    <Badge Variant="@PositionVariant(aLine.TokensWhere)" Class="w-fit" data-testid="@($"{TestId}-{aLine.Key}-where")">@aLine.TokensWhere</Badge>
+                                }
+                                @if (aLine.TimeWhere is not null)
+                                {
+                                    <span class="text-xs text-muted-foreground" data-testid="@($"{TestId}-{aLine.Key}-where-time")">time: @aLine.TimeWhere</span>
+                                }
+                            </div>
+                        }
+                    </CellTemplate>
+                </DataTableColumn>
+            </Columns>
+        </DataTable>
+
+        @foreach (var vNote in objRowlessNotes)
+        {
+            <p class="text-sm" data-testid="@($"{TestId}-no-row")">@vNote</p>
+        }
+
+        <p class="text-sm text-muted-foreground" data-testid="@($"{TestId}-note")">
+            Within means the actual fell between low and high. Tokens and time are judged apart: the first line in each cell is tokens, the second is time. The two columns are never put into one figure.
+        </p>
+    </CardContent>
+</Card>

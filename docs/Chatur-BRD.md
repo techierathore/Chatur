@@ -121,13 +121,13 @@ What the window holds before a project is open: where the owner was, what Chatur
 - **BRD-10** — Name the folders Chatur searches. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
   - *Acceptance:* When the owner adds a folder in the Project folders dialog, then it appears in the folder list on Projects.
 - **BRD-11** — Chatur lists what it found. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
-  - *Acceptance:* When a named folder holds projects on Start, then Projects lists each one with its name, path and when it was last opened.
+  - *Acceptance:* When a folder the signed-in account named holds projects on Start, then Projects lists each with its name, path and last-opened time, and nothing of another account's.
 - **BRD-12** — Choose the project to work on. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
   - *Acceptance:* When the owner opens a project from the list, then the Workbench opens on it and it becomes the selected project.
 - **BRD-13** — The choice survives a restart. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
-  - *Acceptance:* When Chatur is closed and opened again on Start, then the same project is still selected.
-- **BRD-14** — Nothing named yet says what to do. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
-  - *Acceptance:* When no folder has been named on Start, then Projects shows an empty state with a button that opens the Project folders dialog.
+  - *Acceptance:* When the same account closes Chatur and opens it again on Start, then the same project is still selected; another account is never given it.
+- **BRD-14** — A new account starts empty, with three ways on. *Screen:* Start · *Mockup:* [mockup](mockups/start-empty.html)
+  - *Acceptance:* When an account with nothing opened signs in on Start, then it shows no project, file or chat, and offers Open a folder, Open a solution and Open a file.
 - **BRD-15** — Remove a folder. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
   - *Acceptance:* When the owner removes a folder in the dialog, then its projects leave the list and the folder is gone after a restart.
 
@@ -138,7 +138,7 @@ The top bar of the one working screen: which project, which branch, and the way 
 - **BRD-16** — What the selected project is. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When a project is selected on Workbench, then the toolbar names it and its branch, and its files are listed down the left.
 - **BRD-17** — Straight into the work. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When a project opens, then the conversation with a role is already there, with no further step to reach it.
+  - *Acceptance:* When a project opens on Workbench, then the signed-in account's own conversation is already there; an account that never chatted there starts an empty one.
 - **BRD-18** — Change project without going back. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When the owner picks another project in the top bar, then the Workbench and every other screen show the new project.
 - **BRD-19** — Sign out. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
@@ -190,7 +190,7 @@ The first tab: where the model sources are connected, and where their secrets ar
   - *Acceptance:* When the owner chooses subscription sign-in, then the browser opens, Chatur shows the sign-in code, and after he enters it the provider is listed as connected.
   - *Built on (amended 2026-09-30):* TechieRag 1.0.8's `UseChatGptSubscriptionLlm`, a device-code sign-in. Chatur supplies the callback that opens the browser and shows the code, and a session store over the operating system's secret store.
 - **BRD-35** — Secrets go to the machine's own store. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-providers.html)
-  - *Acceptance:* When a key or token is saved on Settings, then it is in the operating system's store and Chatur's database holds only the name it is stored under.
+  - *Acceptance:* When a key or token is saved on Settings, then it is in the operating system's store under a name carrying the account, and the database holds only that name.
 - **BRD-36** — Check that a source answers. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-providers.html)
   - *Acceptance:* When the owner tests a provider on Settings, then its row shows whether it answered, and the message when it did not.
 - **BRD-37** — Remove a source. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-providers.html)
@@ -377,18 +377,18 @@ The owner's own hand on check-in, push and branches.
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-11-04.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
+**Snapshot as of 2026-11-18.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
-| Sign in | 5 | 0 | 5 | In progress |
-| Register | 4 | 2 | 2 | Partial |
-| Start | 6 | 5 | 1 | Partial |
-| Workbench | 34 | 0 | 34 | In progress |
-| Prerequisites | 5 | 2 | 3 | Partial |
-| Settings | 33 | 14 | 19 | Partial |
-| Repository | 5 | 0 | 5 | In progress |
-| Non-functional | 6 | 6 | 0 | Done |
+| Sign in | 5 | 3 | 2 | Partial |
+| Register | 4 | 4 | 0 | Done |
+| Start | 6 | 6 | 0 | Done |
+| Workbench | 34 | 34 | 0 | Done |
+| Prerequisites | 5 | 3 | 2 | Partial |
+| Settings | 33 | 24 | 9 | Partial |
+| Repository | 5 | 4 | 1 | Partial |
+| Non-functional | 6 | 5 | 1 | Partial |
 
 ## 8. Context diagram
 

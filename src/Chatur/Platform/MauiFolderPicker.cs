@@ -56,4 +56,15 @@ public sealed class MauiFolderPicker : IFolderPicker
         throw new PlatformNotSupportedException("Chatur ships for Windows and Mac Catalyst only.");
 #endif
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// MAUI's own <see cref="FilePicker"/>, which is the operating system's file dialog on Windows and
+    /// on Mac Catalyst (BRD-215). It must be shown from the main thread.
+    /// </remarks>
+    public async Task<string?> PickFileAsync(string aTitle, CancellationToken aCt = default)
+    {
+        var vResult = await MainThread.InvokeOnMainThreadAsync(() => FilePicker.Default.PickAsync(new PickOptions { PickerTitle = aTitle }));
+        return vResult?.FullPath;
+    }
 }

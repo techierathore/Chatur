@@ -48,11 +48,11 @@ else
             <div class="flex flex-wrap items-center gap-2">
                 <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="ahead">@(objStatus?.Ahead ?? 0) to push</Badge>
                 <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="behind">@(objStatus?.Behind ?? 0) to pull</Badge>
-                <Button Variant="ButtonVariant.Outline" OnClick="PullChangesAsync" Disabled="objIsBusy" data-testid="pull">
+                <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="PullChangesAsync" Disabled="objIsBusy" data-testid="pull">
                     <LucideIcon Name="arrow-down" Size="16" />
                     Pull
                 </Button>
-                <Button OnClick="PushChangesAsync" Disabled="objIsBusy" data-testid="push">
+                <Button Class="rounded-full" OnClick="PushChangesAsync" Disabled="objIsBusy" data-testid="push">
                     <LucideIcon Name="arrow-up" Size="16" />
                     Push
                 </Button>
@@ -62,21 +62,22 @@ else
 
     @if (objProject is not null)
     {
-        <div class="flex flex-wrap items-center gap-2" data-testid="branch-row">
+        <div class="flex flex-wrap items-center gap-2" data-testid="branch-row" aria-busy="@(objIsLoading ? "true" : null)">
             <span class="text-sm text-muted-foreground">Branch</span>
             <div data-testid="branch-pick">
             <DropdownMenu>
                 <DropdownMenuTrigger AsChild>
-                    <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" data-testid="branch-current">
+                    @* While the reads are running the branches are not known yet, so the menu is not offered (REQ-FN-047). *@
+                    <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="objIsBusy || objIsLoading" data-testid="branch-current">
                         <LucideIcon Name="git-branch" Size="14" />
                         @(objStatus?.Branch ?? "—")
                         <LucideIcon Name="chevron-down" Size="14" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent data-testid="branch-pop">
+                <DropdownMenuContent Class="max-h-80 overflow-y-auto" data-testid="branch-pop">
                     @if (objBranches.Count == 0)
                     {
-                        <DropdownMenuItem Disabled="true">No branches found</DropdownMenuItem>
+                        <DropdownMenuItem Disabled="true">@(objIsLoading ? "Reading the branches…" : "No branches found")</DropdownMenuItem>
                     }
                     else
                     {
@@ -168,7 +169,7 @@ else
                 <div class="flex items-center justify-between gap-2" data-testid="diff">
                     <span class="font-mono text-sm" data-testid="diff-file">@objCurrentDiffFile</span>
                     @* Opens the changed file in the owner's own editor (REQ-FN-045). *@
-                    <Button Variant="ButtonVariant.Link" Disabled="@(objCurrentDiffFile is null)" OnClick="OpenDiffFileAsync" data-testid="diff-open">Open in the editor</Button>
+                    <Button Class="rounded-full" Variant="ButtonVariant.Link" Disabled="@(objCurrentDiffFile is null)" OnClick="OpenDiffFileAsync" data-testid="diff-open">Open in the editor</Button>
                 </div>
                 <CodeBlock Language="diff" Code="@objCurrentDiff" />
             </CardContent>
@@ -190,7 +191,7 @@ else
             <div class="flex flex-wrap items-center gap-2">
                 <span class="text-sm text-muted-foreground" data-testid="checkin-author">@objCheckInAuthorLine</span>
                 <span class="flex-1"></span>
-                <Button OnClick="CheckInChosenAsync" Disabled="@(!CanCheckIn)" data-testid="checkin-submit">
+                <Button Class="rounded-full" OnClick="CheckInChosenAsync" Disabled="@(!CanCheckIn)" data-testid="checkin-submit">
                     <LucideIcon Name="check" Size="16" />
                     Check in @objChosen.Count file(s)
                 </Button>
@@ -309,7 +310,7 @@ else
                             </DataTableColumn>
                             <DataTableColumn TData="ProcessBranch" TValue="string" Property="@(b => b.Name)" Header="" Align="DataTableColumnAlign.End">
                                 <CellTemplate Context="row">
-                                    <Button Variant="ButtonVariant.Outline" OnClick="@(() => ExplainMerge(row))" data-testid="@($"process-branch-merge-{NumberOf(row)}")">
+                                    <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="@(() => ExplainMerge(row))" data-testid="@($"process-branch-merge-{NumberOf(row)}")">
                                         <LucideIcon Name="git-merge" Size="14" />
                                         Merge into @(objMainBranch)
                                     </Button>

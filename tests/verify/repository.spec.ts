@@ -133,6 +133,43 @@ test('REQ-UI-042 every changed file is listed with its state and choosing one sh
   await expect(vPanel).toContainText('beta');
 });
 
+test('REQ-FN-047 the branch menu never says there are no branches while the screen is still reading the repository', async ({ page }) => {
+  // MISS of 2026-11-16: opened while the git reads were still running, the menu said "No branches found" with
+  // every item disabled, and listed the branches a moment later. Git is made slow here (a file-watch hook that
+  // sleeps before every status), the menu is opened as often as the screen lets it be, and what it says is kept.
+  test.setTimeout(300_000);
+  await openFixtureAsProject(page);
+  await openRepository(page);
+  const vHook = path.join(FIXTURES, 'repository-spec', 'slow-git-hook.sh');
+  writeFileSync(vHook, '#!/bin/sh\nsleep 4\nexit 1\n', { mode: 0o755 });
+  git(REPO, 'config', 'core.fsmonitor', vHook);
+  try {
+    await page.goto('/repository', { waitUntil: 'commit' });
+    const vSeen: string[] = [];
+    let vListed = false;
+    const vEnd = Date.now() + 60_000;
+    while (Date.now() < vEnd && !vListed) {
+      const vTrigger = page.getByTestId('branch-current');
+      if ((await vTrigger.isVisible().catch(() => false)) && (await vTrigger.isEnabled().catch(() => false))) {
+        const vPop = page.getByTestId('branch-pop');
+        if (!(await vPop.isVisible().catch(() => false))) await vTrigger.click({ timeout: 1_000 }).catch(() => undefined);
+        if (await vPop.waitFor({ state: 'visible', timeout: 1_500 }).then(() => true, () => false)) {
+          const vText = (await vPop.innerText().catch(() => '')).trim();
+          vSeen.push(vText.split('\n')[0]);
+          vListed = vText.includes('feature/board');
+          await page.keyboard.press('Escape');
+          await vPop.waitFor({ state: 'hidden', timeout: 1_500 }).catch(() => undefined);
+        }
+      }
+      await page.waitForTimeout(100);
+    }
+    baseExpect(vListed, `the menu never listed the branches; it showed: ${vSeen.join(' | ')}`).toBe(true);
+    baseExpect(vSeen.filter((aText) => /No branches found/i.test(aText)), `what the menu showed, in order: ${vSeen.join(' | ')}`).toEqual([]);
+  } finally {
+    git(REPO, 'config', '--unset', 'core.fsmonitor');
+  }
+});
+
 test('REQ-UI-043 checking in chosen files with a message commits them and empties the list of them', async ({ page }) => {
   await openFixtureAsProject(page);
   await openRepository(page);

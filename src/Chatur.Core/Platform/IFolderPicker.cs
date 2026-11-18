@@ -14,4 +14,14 @@ public interface IFolderPicker
     /// <param name="aCt">A token that cancels the wait.</param>
     /// <returns>The chosen folder's absolute path, or <see langword="null"/> when the owner cancelled.</returns>
     Task<string?> PickFolderAsync(string aTitle, CancellationToken aCt = default);
+
+    /// <summary>
+    /// Opens the machine's file picker and waits for the person to choose a file or cancel (BRD-215).
+    /// A head with no native dialog (the web harness) returns <see langword="null"/>, and the caller
+    /// lets the person type the path instead.
+    /// </summary>
+    /// <param name="aTitle">The dialog's title.</param>
+    /// <param name="aCt">A token that cancels the wait.</param>
+    /// <returns>The chosen file's absolute path, or <see langword="null"/> when cancelled or unavailable.</returns>
+    Task<string?> PickFileAsync(string aTitle, CancellationToken aCt = default) => Task.FromResult<string?>(null);
 }

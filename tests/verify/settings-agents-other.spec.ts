@@ -14,6 +14,7 @@ import { openFoldersDialog } from './support/start';
 import { ensureTestProvider, chooseTestModel } from './support/provider';
 import { startStubModel, ensureStubProvider, chooseStubModel, removeStubProvider } from './support/stub-model';
 import { query, run, snapshot, restore, ROLE_TABLES, Snapshot } from './support/db';
+import { APP_LOG } from './support/workbench-a';
 
 // Tests are independent (each restores what it changed); run with --workers=1 because the harness has one session store.
 
@@ -663,11 +664,33 @@ test('REQ-FN-042 a number that was not measured is written empty, never a guess'
   expect(vEmpty, 'at least one figure this turn did not measure and is left empty').toBeGreaterThan(0);
 });
 
-test('REQ-FN-043 a record with an unknown field or value is refused and the reason is logged', async () => {
-  test.skip(
-    true,
-    'Not observable through the UI: every record Chatur writes is built by its own code from known fields, so no UI action can offer the schema an unknown field or value (covered by unit tests AppendAsyncRefusesAnUnknownField / AppendAsyncRefusesAnUnknownEnumValue).',
-  );
+/**
+ * No screen can offer the measurement writer an unknown field (every record is built by Chatur's own code), so the
+ * web harness's Development-only route /test/measurements/unknown-field hands the real writer, as the app wires it,
+ * one runs record carrying a field the schema does not know. The proof is on the app: Settings ▸ Measurements shows
+ * one more refused write for runs.jsonl, the file on disk is unchanged, and the app log names the reason.
+ */
+test('REQ-FN-043 a record with an unknown field or value is refused and the reason is logged', async ({ page }) => {
+  freshProject('RefuseApp');
+  await startProject(page, 'RefuseApp');
+  await openMeasurements(page);
+  const vRefused = page.getByTestId('runs-refused');
+  const vBefore = Number((await vRefused.textContent())?.trim() ?? '0');
+  const vRunsFile = `${metricsDir('RefuseApp')}/runs.jsonl`;
+  const vLinesBefore = lines(vRunsFile).length;
+  const vLog = existsSync(APP_LOG) ? readFileSync(APP_LOG, 'utf8').length : 0;
+
+  const vResponse = await page.request.post('/test/measurements/unknown-field');
+  expect(vResponse.status(), 'the harness handed the writer the record').toBe(200);
+  expect(await vResponse.text()).toContain('RefuseApp');
+
+  await openMeasurements(page);
+  await expect(vRefused, 'the refused write is counted on Settings ▸ Measurements').toHaveText(String(vBefore + 1), { timeout: 20_000 });
+  expect(lines(vRunsFile).length, 'nothing was appended to runs.jsonl').toBe(vLinesBefore);
+  await expect
+    .poll(() => (existsSync(APP_LOG) ? readFileSync(APP_LOG, 'utf8').slice(vLog) : ''), { timeout: 15_000 })
+    .toMatch(/Measurement write refused for \W*runs\.jsonl\W*: .*not_in_the_schema/);
+  await shot(page, 'FN-043-refused');
 });
 
 test('REQ-UI-036 each stream shows how many records it holds and the newest one\'s time', async ({ page }) => {

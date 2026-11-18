@@ -1,5 +1,6 @@
 @implements IDisposable
 @inject IRunQueueActions RunQueueActions
+@inject IEstimateActions EstimateActions
 @inject WorkbenchState WorkbenchTabs
 @inject ToastService ToastService
 
@@ -15,8 +16,8 @@
         </div>
         <span class="flex-1"></span>
         <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="queue-count">@CountText</Badge>
-        <Button Variant="ButtonVariant.Outline" OnClick="OpenAutoRun" data-testid="go-auto-run">Running now</Button>
-        <Button OnClick="OpenQueueDialog" data-testid="queue-a-run">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="OpenAutoRun" data-testid="go-auto-run">Running now</Button>
+        <Button Class="rounded-full" OnClick="OpenQueueDialog" data-testid="queue-a-run">
             <LucideIcon Name="plus" Size="14" />
             Queue a run
         </Button>
@@ -72,6 +73,8 @@
                         <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.BriefShort)" Header="Brief" CellClass="max-w-16 px-1 py-2" HeaderClass="px-1">
                             <CellTemplate Context="row">
                                 <span class="block truncate" title="@row.Brief" data-testid="@($"queue-brief-{RowNumber(row)}")">@row.BriefShort</span>
+                                @* REQ-UI-085: the estimate the run was queued with, under its brief so the queue still fits its card. *@
+                                <span class="block truncate font-mono text-muted-foreground" title="@EstimateTitleOf(row)" data-testid="@($"queue-estimate-{RowNumber(row)}")">@EstimateTextOf(row)</span>
                             </CellTemplate>
                         </DataTableColumn>
                         <DataTableColumn TData="RunQueueItem" TValue="string" Property="@(aRow => aRow.State.ToString())" Header="State" CellClass="whitespace-nowrap px-1 py-2" HeaderClass="px-1">

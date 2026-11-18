@@ -93,6 +93,9 @@ public partial class Repository
             var vBranchesTask = ReadOrDefaultAsync(SourceControl.BranchesAsync(vProjectId), Array.Empty<string>());
             var vHistoryTask = LoadHistoryAsync();
 
+            // Shown together, once all three have answered: a header that names the branch over a menu that
+            // cannot list it yet reads as "No branches found" (REQ-FN-047, miss of 2026-11-16).
+            await Task.WhenAll(vChangesTask, vStatusTask, vBranchesTask);
             objChanges = await vChangesTask;
             objChosen = Array.Empty<ChangedFile>();
             objStatus = await vStatusTask;
@@ -387,7 +390,7 @@ public partial class Repository
     private static BadgeVariant StateVariant(string aState) => aState switch
     {
         "added" => BadgeVariant.Success,
-        "deleted" => BadgeVariant.Destructive,
+        "deleted" => BadgeVariant.Danger,
         _ => BadgeVariant.Secondary,
     };
 

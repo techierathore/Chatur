@@ -56,6 +56,7 @@ def open_project(c, root):
     path = os.path.join(root, "tests", ".artifacts", "verify", "fixtures", "screen-seed", "SeedOpenApp")
     os.makedirs(path, exist_ok=True)
     write_run_target_projects(path)
+    ensure_own_repository(path)
     found = c.execute("SELECT ProjectId FROM Project WHERE Path = ?", (path,)).fetchone()
     if found is None:
         pid = c.execute("INSERT INTO Project (ProjectFolderId, Name, Path, Kind, LastOpenedUtc) VALUES (NULL, ?, ?, 'Folder', ?)",
@@ -74,6 +75,35 @@ def open_project(c, root):
     c.execute("UPDATE Project SET LastOpenedUtc = NULL WHERE ProjectId <> ?", (pid,))
     c.commit()
     return pid, path
+
+
+def is_own_repository(path):
+    """True when git, asked from inside path, answers with path itself as the repository's top folder."""
+    import subprocess
+    done = subprocess.run(["git", "-C", path, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    return done.returncode == 0 and os.path.realpath(done.stdout.strip()) == os.path.realpath(path)
+
+
+def ensure_own_repository(path):
+    """Makes the fixture folder a git repository OF ITS OWN, or stops.
+
+    The fixtures live inside Chatur's own working copy. A fixture with no .git folder, or with one that has lost
+    its objects, refs or config (the 7-day artifact sweep deletes old files one at a time, and did so on
+    2026-11-13), is not a repository to git, which then walks up and finds Chatur's own repository. Every git
+    command the app or a seed ran for the fixture then ran on the owner's repository: the Repository seed put four
+    empty check-ins on its main branch (MISS of 2026-11-16, REQ-FN-047). So a broken .git is removed and made
+    again, and nothing goes on until git names the fixture itself as the top folder."""
+    import shutil, subprocess
+    if is_own_repository(path):
+        return
+    shutil.rmtree(os.path.join(path, ".git"), ignore_errors=True)
+    env = dict(os.environ, GIT_AUTHOR_NAME="Verify Seed", GIT_AUTHOR_EMAIL="verify-seed@example.com",
+               GIT_COMMITTER_NAME="Verify Seed", GIT_COMMITTER_EMAIL="verify-seed@example.com")
+    subprocess.run(["git", "init", "-q", "--initial-branch=main", path], check=True, env=env)
+    if not is_own_repository(path):
+        raise SystemExit(f"refusing to go on: {path} is not a git repository of its own after git init")
+    subprocess.run(["git", "-C", path, "add", "-A"], check=True, env=env)
+    subprocess.run(["git", "-C", path, "commit", "-q", "--allow-empty", "-m", "initial", "--no-gpg-sign"], check=True, env=env)
 
 
 def write_run_target_projects(path):

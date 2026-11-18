@@ -5,7 +5,7 @@
    whose list stays mounted (a Select or DropdownMenu unmounts its list while closed, so the mockup's
    agent-* anchors would never be on the page — the same choice Settings ▸ Agents makes). Start and
    the command buttons open the session in the conversation and send the first message there. *@
-        <div class="flex min-h-0 flex-1 flex-col gap-4" data-testid="agent-workspace">
+        <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-auto" data-testid="agent-workspace">
             @if (ProjectId is null)
             {
                 <Empty Title="No project is open" Description="Open a project and its agents' workspaces show here." Size="EmptySize.Small" data-testid="no-project" />
@@ -35,7 +35,7 @@
                 <div class="flex flex-wrap items-start gap-3" data-testid="agent-picker-row">
                     <Collapsible @bind-Open="objPickerOpen" Class="flex flex-col gap-1" data-testid="agent-picker">
                         <CollapsibleTrigger AsChild>
-                            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="agent-picker-button">
+                            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="rounded-full" data-testid="agent-picker-button">
                                 <span class="text-muted-foreground">Agent</span>
                                 @objView.Agent.Name
                                 <LucideIcon Name="chevron-down" Size="14" />
@@ -57,6 +57,12 @@
                                 </Button>
                             }
                             <div class="px-2 py-1 text-xs text-muted-foreground">Moving to another agent leaves the @objView.Agent.Name’s sessions open.</div>
+                            @* The mockup's last row: the way to the agents' own settings (agent-workspace.html "Agents…"; no trailing dots, REQ-UI-081). *@
+                            <Separator Class="my-1" />
+                            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="justify-start" OnClick="OpenAgentSettings" aria-hidden="@(objPickerOpen ? null : "true")" data-testid="agent-settings-link">
+                                <span class="inline-block w-4"></span>
+                                Agents
+                            </Button>
                         </CollapsibleContent>
                     </Collapsible>
                     <span class="pt-1.5 text-xs text-muted-foreground">One agent at a time — the @objView.Agents.Count Chatur knows on @ProjectName.</span>
@@ -132,7 +138,7 @@
                                     </DataTableColumn>
                                     <DataTableColumn TData="RequirementItem" TValue="string" Property="@(r => r.Id)" Header="">
                                         <CellTemplate Context="item">
-                                            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(objBusyKey is not null)" OnClick="() => StartRequirementAsync(item)" data-testid="@($"start-{item.Id}")">
+                                            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(objBusyKey is not null)" OnClick="() => StartRequirementAsync(item)" data-testid="@($"start-{item.Id}")">
                                                 <LucideIcon Name="play" Size="14" />
                                                 Start
                                             </Button>
@@ -152,9 +158,9 @@
                         @foreach (var vCommand in objView.Commands)
                         {
                             <div class="flex flex-wrap items-start gap-3" data-testid="@($"command-{vCommand.Command}")">
-                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="w-40 justify-center" Disabled="@(objBusyKey is not null)" OnClick="() => StartCommandAsync(vCommand)" data-testid="@($"run-{vCommand.Command}")">
+                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="w-40 justify-center rounded-full" Disabled="@(objBusyKey is not null)" OnClick="() => StartCommandAsync(vCommand)" data-testid="@($"run-{vCommand.Command}")">
                                     <LucideIcon Name="play" Size="14" />
-                                    <span class="font-mono">@vCommand.Command</span>
+                                    <span class="font-mono leading-5">@vCommand.Command</span>
                                 </Button>
                                 <span class="min-w-48 flex-1 pt-1 text-xs text-muted-foreground">@vCommand.Description</span>
                             </div>

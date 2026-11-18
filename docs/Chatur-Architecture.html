@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Architecture</h1>
-    <div class="sub">Last rendered: 2026-10-27</div>
+    <div class="sub">Last rendered: 2026-11-18</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#stack-decisions">1. Stack decisions</a></li>
@@ -121,7 +121,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Architecture</h1>
-    <div class="subtitle">Rendered 2026-10-27 &middot; source <code>Chatur-Architecture.md</code></div>
+    <div class="subtitle">Rendered 2026-11-18 &middot; source <code>Chatur-Architecture.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -153,7 +153,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tbody>
 <tr><td>Q1</td><td>Configuration</td><td>Non-secret settings live in <code>appsettings.json</code>, layered by <code>appsettings.{Environment}.json</code>. No second settings mechanism is created. Per-machine choices the owner makes in the app (project folders, selected project, run target) are rows in the database, not settings files.</td><td>answer set: dotnet</td></tr>
 <tr><td>Q2</td><td>Secrets in development</td><td>Project user secrets (<code>dotnet user-secrets</code>) on the developer machine. <code>appsettings.Development.json</code> is committed and never holds a real secret. <code>secrets.example.json</code> lists every key the application reads. At run time on a real machine, model keys and sign-in tokens are in the operating system's store — see Q4 and §5.</td><td>answer set: dotnet</td></tr>
-<tr><td>Q3</td><td>Database</td><td><strong>Override of the answer set.</strong> SQLite, one file in the user's application-data folder, never beside the program. Dapper for data access, DbUp for migrations, no EF Core. A migration that has shipped in a nightly build is never edited; a new one is added.</td><td>owner, day-1 (<code>docs/Chatur-Technical-Decisions.md</code>)</td></tr>
+<tr><td>Q3</td><td>Database</td><td><strong>Override of the answer set.</strong> SQLite, one file per signed-in account plus one for the install, in the user's application-data folder, never beside the program (amended 2026-11-17, §6). Dapper for data access, DbUp for migrations, no EF Core. A migration that has shipped in a nightly build is never edited; a new one is added.</td><td>owner, day-1 (<code>docs/Chatur-Technical-Decisions.md</code>)</td></tr>
 <tr><td>Q4</td><td>Authentication</td><td>App Manager, as <code>docs/AppManager-api-usage-guide.md</code> describes: <code>POST /AuthSvc/device-register</code> and <code>POST /AuthSvc/device-login</code> with a <code>deviceId</code> generated once per installation and kept, passwords RSA-encrypted with the key from <code>GET /AuthSvc/public-key</code>. Tokens live in the Keychain on the Mac and Credential Manager on Windows. Feedback, issues, licences and feature control use App Manager in phase 4.</td><td>answer set: dotnet (Q4 asked) + owner, day-1</td></tr>
 <tr><td>Q5</td><td>Logging</td><td>Serilog, wired at startup before anything else can fail. A log file under the application-data folder beside the database on a real machine, and under <code>bin/</code> in development.</td><td>answer set: dotnet (file path adjusted for a desktop app, owner day-1)</td></tr>
 <tr><td>Q6</td><td>Tests</td><td>xUnit, from day one, running on macOS and on Windows. Unit tests for <code>Chatur.Core</code> and every guard class; Playwright tests against <code>Chatur.WebHarness</code> for the screens; the Windows app window is driven by the Windows test bridge, the Mac app window by Appium once the Mac is registered in <code>core-config.yaml</code>.</td><td>answer set: dotnet + owner, day-1</td></tr>
@@ -200,7 +200,10 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   Data --&gt; DB[("SQLite in application data")]
   Act --&gt; AM["App Manager API"]
   Act --&gt; Secrets["Keychain / Credential Manager"]
-  Metrics --&gt; Files["The project's docs/metrics files"]</pre>
+  Metrics --&gt; Files["The project's docs/metrics files"]
+  Act --&gt; Est["Estimator"]
+  Est --&gt; Files
+  Est --&gt; Sister["Sister projects' runs.jsonl (read only)"]</pre>
 </div>
 <p><strong>How a request travels</strong> (one typical request, in words; per-screen detail is in the DevGuide):</p>
 <ol>
@@ -319,6 +322,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </li>
 <li><strong>Measurements:</strong> <code>runs.jsonl</code>, <code>gates.jsonl</code>, <code>misses.jsonl</code>, <code>sessions.jsonl</code> and <code>commits.jsonl</code> in each project's <code>docs/metrics</code> folder, appended and never edited, with <code>chatur</code> as the name of the tool. Chatur's own schema lives in this repository and starts as a copy of TechieFlow's; it must keep matching in every field TfLens reads.
 </li>
+<li><strong>Estimates (BRD-192 to BRD-209):</strong> a sixth file, <code>estimates.jsonl</code>, written by the Estimator in <code>Chatur.Core</code> and by nothing else. It is a pure function of run records: it reads the project's <code>runs.jsonl</code> and the sister projects' (read only, never written), filters by line of work, row kind and the model routing gives the step, and returns low, middle and high per row and per phase with the framework's arithmetic (quartiles interpolated between neighbours, half-to-even rounding, fewer than three runs is no precedent). It makes no model call and reads no TechieFlow script or task file. Its records keep TechieFlow's own shape (framework schema §2.8): native JSON numbers and objects, <code>ts</code>, <code>harness: "chatur"</code>, so TfLens reads both on one page. That is the one stream not written through the all-string <code>AppendAsync</code> (see the decisions log). A batch is written when the owner confirms a start or a queue entry, never on display, and the run keeps the batch it started with. The reconciliation (Process run so far, Run report, handoff) reads <code>estimates.jsonl</code> and <code>runs.jsonl</code> side by side and never stores a figure made from both.
+</li>
 </ul>
 <h2 id="decisions-log"><a id="6-decisions-log"></a>6. Decisions log<a class="anchor-link" href="#decisions-log">#</a></h2>
 <p>One row per decision. Every package added to the project has a row saying why.</p>
@@ -356,6 +361,12 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>2026-10-27</td><td>The glyph SVG and the horizontal lockup ship in <code>ChaturUI</code> under <code>wwwroot/images/brand/</code>; every <code>data-testid="logo"</code> (StartLayout, BareLayout, MenuBar, SecondaryLayout) shows the glyph on a fixed brand-amber <code>#B45F14</code> rounded square in the existing 20 px box, not on the theme's <code>bg-primary</code></td><td>The mark must look the same under every theme; on indigo, teal or slate a theme-coloured square stops being the brand, and on dark amber <code>#F3AC51</code> the white glyph loses contrast</td><td>planned (BRD-190)</td></tr>
 <tr><td>2026-10-27</td><td><code>Chatur.WebHarness</code> gains a <code>wwwroot/</code> holding <code>favicon.ico</code> (32 px), <code>icon-192.png</code> and <code>icon-512.png</code>, written only by a repository script under <code>scripts/</code> (Python with Pillow, run with Windows <code>python.exe</code>, as the brand folder's <code>family-logo.py</code> is) from <code>Chatur.png</code>; <code>App.razor</code> links all three</td><td>Generated files can be made again exactly when the mark changes; a hand-exported icon cannot</td><td>planned (BRD-191)</td></tr>
 <tr><td>2026-09-30</td><td>The agent loop streams every turn through <code>ChatStreamEventsAsync</code>; a tool-call event goes through the guards as before. <code>PaceReplyAsync</code> is removed</td><td>Real streaming with tool calls is now in the library, so the workaround would hide nothing and cost a slower reply</td><td>planned (BRD-47)</td></tr>
+<tr><td>2026-11-10</td><td>An Estimator in <code>Chatur.Core</code> reimplements <code>tf-estimate.sh</code>'s rule in C#: per-row output tokens and seconds from live runs of the same process and row kind, first quartile, median and third quartile by linear interpolation, <code>Math.Round</code> half to even, three runs minimum, sister projects added below three, never a run that touched the phase's own rows</td><td>Owner, 10 Nov 2026: native in Chatur, no script called and no task file read at run time; the same arithmetic means TfLens shows the same figure whichever tool made it</td><td>planned (BRD-195, BRD-196, BRD-198, BRD-199, BRD-209)</td></tr>
+<tr><td>2026-11-10</td><td><code>estimates.jsonl</code> is written with native JSON types and the field <code>ts</code>, not through the all-string <code>AppendAsync</code> and not with <code>at</code> or <code>tool</code>; it carries <code>harness: "chatur"</code></td><td>The owner asked for exactly the framework's record shape so TfLens reads Chatur's and TechieFlow's estimates together; the all-string rule exists for streams Chatur defined itself</td><td>planned (BRD-205)</td></tr>
+<tr><td>2026-11-10</td><td>The estimate's history is narrowed to runs on the model routing gives the step, so a tier change moves the figure; the record's <code>model</code> is that model, not a model that made the estimate (none does)</td><td>Owner, 10 Nov 2026, point 3. This departs from the framework, where <code>model</code> is the estimating model and history is pooled across models; open question 4 below</td><td>planned (BRD-200, BRD-201)</td></tr>
+<tr><td>2026-11-10</td><td>Sister projects are a list of folders on Settings ▸ Measurements, stored in Chatur's database; their <code>runs.jsonl</code> is read, never written</td><td>Owner, 10 Nov 2026, point 2: "the sister projects the owner names in settings"</td><td>planned (BRD-197)</td></tr>
+<tr><td>2026-11-10</td><td>Replaces the "same model only" part of the row above it: the history falls back in a fixed order, the first pool with three runs winning: own runs on the step's model, plus sister projects' on that model, own runs on any model ("from all models"), plus sister projects' on any model. The record's <code>model</code> is the step's model and a new optional <code>tier</code> (JSON number, 1 to 3) is the step's tier. With automatic routing on, the step's model is still the first of its tier's chain</td><td>Owner's answers to the five open points, 10 Nov 2026</td><td>planned (BRD-200, BRD-201, BRD-205, BRD-208)</td></tr>
+<tr><td>2026-11-17</td><td>One SQLite file per account: <code>accounts/&lt;App Manager user id&gt;/chatur.db</code> under the application-data folder, migrated by DbUp the first time that account signs in. The install's own <code>chatur.db</code> keeps only what belongs to the machine (the device identifier, BRD-4) and, untouched, whatever was kept before this change. <code>SqliteConnectionFactory</code> opens the signed-in account's file, and the install's file only when nobody is signed in; <code>OpenInstallConnection</code> always opens the install's. Work that outlives the screen that started it (an end-to-end run, a build or run) is pinned to the account that started it. Provider and subscription secrets are filed under <code>chatur.account.&lt;user id&gt;.…</code>; App Manager's own tokens stay the install's</td><td>Owner, 17 Nov 2026: a new account opened another account's project, chat and project list, because no table and no secret name carried the account. A file per account cannot leak through a missed <code>WHERE</code> clause, keeps every query and seed unchanged, and leaves the old data where it is, belonging to nobody, with nothing deleted. Rejected: an owner column on every table — every query and every test seed would change, and one missed filter leaks again</td><td>planned (BRD-210 to BRD-216)</td></tr>
 </tbody>
 </table>
 <h2 id="module-responsibilities"><a id="7-module-responsibilities"></a>7. Module responsibilities<a class="anchor-link" href="#module-responsibilities">#</a></h2>
@@ -371,6 +382,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Roles and rules</td><td>Read, edit and version roles, rights, commands, rules and step wording; correct them and log the correction</td><td>Data access</td></tr>
 <tr><td>Changes</td><td>Hold proposed edits, apply or discard them</td><td>Agent loop</td></tr>
 <tr><td>Measurements</td><td>Append the five streams to the project's <code>docs/metrics</code> folder</td><td>Projects</td></tr>
+<tr><td>Estimator</td><td>Work out low, middle and high per row and per phase from run records, for the model routing gives each step; write <code>estimates.jsonl</code> on a confirmed start; set estimate beside actual for Process run, Run report and handoff</td><td>Measurements, Models (routing only, no call), Projects</td></tr>
 <tr><td>Accounts</td><td>Sign in, register, sign out, tokens, devices, licence</td><td>App Manager, Secret store</td></tr>
 <tr><td>Source control</td><td>Show changes, check in, push, pull, switch branches, and the run's own branch</td><td>Projects</td></tr>
 </tbody>
@@ -382,6 +394,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <li>Which App Manager server address and application identity does Chatur use, and where do its API key and secret live on a real machine?
 </li>
 <li>Which run targets belong in step 1 beyond web, Mac and Windows: an Android emulator, an iOS simulator, plain .NET and Node programs?
+</li>
+<li><s>(2026-11-10, BRD-200) Should an estimate record's <code>model</code> hold the model the step will run on, and should the tier go in the record?</s> Answered by the owner on 10 Nov 2026: the step's model, and <code>tier</code> as one optional field (decisions log).
 </li>
 </ul>
   </main>

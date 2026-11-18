@@ -167,7 +167,7 @@ public partial class Board
     {
         BoardStatuses.Verified => BadgeVariant.Success,
         BoardStatuses.InProgress => BadgeVariant.Warning,
-        BoardStatuses.Blocked => BadgeVariant.Destructive,
+        BoardStatuses.Blocked => BadgeVariant.Danger,
         _ => BadgeVariant.Secondary
     };
 

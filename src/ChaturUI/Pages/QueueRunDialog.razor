@@ -1,5 +1,7 @@
 @inject IProjectActions ProjectActions
 @inject IRunQueueActions RunQueueActions
+@inject IEstimateActions EstimateActions
+@inject ToastService ToastService
 
 @* The "Queue a run" brief form on Run queue (mockups/run-queue.html, button data-testid="queue-a-run"):
    a project and what should be true when the run finishes. The same two rules as the brief on Auto run. *@
@@ -13,7 +15,7 @@
             <Field>
                 <FieldLabel For="queue-project">Project</FieldLabel>
                 <FieldContent>
-                    <Select TValue="string" @bind-Value="ProjectKey" Class="w-full" data-testid="queue-project">
+                    <Select TValue="string" Value="@objProjectKey" ValueChanged="OnProjectChangedAsync" Class="w-full" data-testid="queue-project">
                         <SelectTrigger Id="queue-project">
                             <SelectValue Placeholder="Pick a project" />
                         </SelectTrigger>
@@ -29,10 +31,32 @@
             <Field>
                 <FieldLabel For="queue-brief">Brief</FieldLabel>
                 <FieldContent>
-                    <Textarea Id="queue-brief" @bind-Value="Brief" Class="h-32" data-testid="queue-brief" />
+                    <Textarea Id="queue-brief" Value="@objBrief" ValueChanged="OnBriefChangedAsync" Class="h-32" data-testid="queue-brief" />
                     <FieldDescription>What should be true when the run finishes.</FieldDescription>
                 </FieldContent>
             </Field>
+            @if (objEstimateError is not null)
+            {
+                <Alert Variant="AlertVariant.Warning" data-testid="queue-estimate-error">
+                    <AlertDescription>The estimate could not be worked out. @objEstimateError The run can still be queued.</AlertDescription>
+                </Alert>
+            }
+            @if (objEstimate is { } vEstimate)
+            {
+                @if (vEstimate.NoChecklist)
+                {
+                    <div class="flex items-start gap-2 rounded-md border px-3 py-2.5 text-muted-foreground" data-testid="queue-estimate-no-checklist">
+                        <LucideIcon Name="clock" Size="16" Class="mt-0.5" />
+                        <span class="text-sm">No checklist yet. The run works out its estimate when it reaches the build step, and does not stop for it.</span>
+                    </div>
+                }
+                else
+                {
+                    <div data-testid="queue-estimate-panel">
+                        <EstimateLines Estimate="vEstimate" Title="@EstimateTitle" ShowPerRow="false" />
+                    </div>
+                }
+            }
             @if (objErrorMessage is not null)
             {
                 <Alert Variant="AlertVariant.Danger" data-testid="queue-run-error">

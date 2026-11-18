@@ -23,12 +23,12 @@
                 </span>
                 <span class="flex gap-1">
                     @* Opens the file in the file view beside the conversation, where it stays read-only until this change is settled. *@
-                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => OnOpen.InvokeAsync(vChange)" data-testid="change-open">Open</Button>
-                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Default" OnClick="() => OnApprove.InvokeAsync(vChange)" data-testid="change-approve">
+                    <Button Class="rounded-full" Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => OnOpen.InvokeAsync(vChange)" data-testid="change-open">Open</Button>
+                    <Button Class="rounded-full" Size="ButtonSize.Small" Variant="ButtonVariant.Default" OnClick="() => OnApprove.InvokeAsync(vChange)" data-testid="change-approve">
                         <LucideIcon Name="check" Size="14" />
                         Approve
                     </Button>
-                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => OnReject.InvokeAsync(vChange)" data-testid="change-reject">Reject</Button>
+                    <Button Class="rounded-full" Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => OnReject.InvokeAsync(vChange)" data-testid="change-reject">Reject</Button>
                 </span>
             </div>
             <DiffView Before="@vChange.Before" After="@vChange.After" ShowHeader="false" />

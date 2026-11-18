@@ -24,7 +24,8 @@ public interface IRunVerdictWriter
 }
 
 /// <summary>
-/// <see cref="IRunVerdictWriter"/> over the newest-phase checklist in the project's docs folder.
+/// <see cref="IRunVerdictWriter"/> over the newest-phase checklists in the project's docs folder; each
+/// verdict goes into the checklist that holds its row (REQ-UI-048).
 /// Nothing is written unless the owner approved at the owner stop before the write step. Each
 /// requirement waiting for a verdict (status <c>Implemented</c> or <c>Needs re-verify</c>, a recorded
 /// defect included) is graded by <see cref="VerdictPlanner"/> from the tests the run really ran:
@@ -72,38 +73,51 @@ public sealed class RunVerdictWriter : IRunVerdictWriter
         }
 
         var vFolder = await objFolders.FolderAsync(aRun.ProjectId, aCt).ConfigureAwait(false);
-        var vFile = vFolder is null ? null : ProjectFolders.NewestChecklist(vFolder);
-        if (vFolder is null || vFile is null)
+        var vFiles = vFolder is null ? [] : ProjectFolders.NewestPhaseChecklists(vFolder);
+        if (vFolder is null || vFiles.Count == 0)
         {
             await ClearAsync(aRun.RunId, aCt).ConfigureAwait(false);
             return "The project has no checklist in its docs folder, so no verdict was written.";
         }
 
-        return await GradeAsync(aRun, vFolder, vFile, aCt).ConfigureAwait(false);
+        return await GradeAsync(aRun, vFolder, vFiles, aCt).ConfigureAwait(false);
     }
 
-    private async Task<string> GradeAsync(ProcessRunView aRun, string aFolder, string aFile, CancellationToken aCt)
+    /// <summary>
+    /// Grades every checklist of the newest phase and writes each verdict into the file that holds its
+    /// row (REQ-UI-048); a file with nothing waiting is left untouched. The result names each file written.
+    /// </summary>
+    private async Task<string> GradeAsync(ProcessRunView aRun, string aFolder, IReadOnlyList<string> aFiles, CancellationToken aCt)
     {
-        var vFullPath = Path.Combine(aFolder, aFile);
-        var vHasBom = HasBom(vFullPath);
-        var vText = await File.ReadAllTextAsync(vFullPath, aCt).ConfigureAwait(false);
         var vEvidence = await objEvidence.TestEvidenceAsync(aRun.RunId, aCt).ConfigureAwait(false);
-        var vPlan = VerdictPlanner.Plan(ChecklistDocument.Parse(vText, aFile, ChecklistDocument.PhaseOf(aFile)), vEvidence, aRun.RunId, aRun.ProcessCode, objClock.UtcNow);
-        foreach (var vVerdict in vPlan)
+        var vWritten = new List<(string File, PlannedVerdict Verdict)>();
+        var vSentences = new List<string>();
+        foreach (var vFile in aFiles)
         {
-            vText = ChecklistDocument.WithVerdict(vText, vVerdict.RequirementId, vVerdict.Status, vVerdict.Percent, vVerdict.Remark);
+            var vFullPath = Path.Combine(aFolder, vFile);
+            var vHasBom = HasBom(vFullPath);
+            var vText = await File.ReadAllTextAsync(vFullPath, aCt).ConfigureAwait(false);
+            var vPlan = VerdictPlanner.Plan(ChecklistDocument.Parse(vText, vFile, ChecklistDocument.PhaseOf(vFile)), vEvidence, aRun.RunId, aRun.ProcessCode, objClock.UtcNow);
+            if (vPlan.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var vVerdict in vPlan)
+            {
+                vText = ChecklistDocument.WithVerdict(vText, vVerdict.RequirementId, vVerdict.Status, vVerdict.Percent, vVerdict.Remark);
+                vWritten.Add((vFile, vVerdict));
+            }
+
+            await objProcesses.WriteDocumentAsync(aRun.ProjectId, vFile, (vHasBom ? "\uFEFF" : string.Empty) + vText, aCt).ConfigureAwait(false);
+            var vVerified = vPlan.Count(aVerdict => aVerdict.Status == VerdictPlanner.VerifiedStatus);
+            vSentences.Add($"Wrote {vPlan.Count} verdict{(vPlan.Count == 1 ? string.Empty : "s")} into {vFile}: {vVerified} Verified by passing tests, {vPlan.Count - vVerified} Needs re-verify.");
         }
 
-        if (vPlan.Count > 0)
-        {
-            await objProcesses.WriteDocumentAsync(aRun.ProjectId, aFile, (vHasBom ? "\uFEFF" : string.Empty) + vText, aCt).ConfigureAwait(false);
-        }
-
-        await RecordAsync(aRun.RunId, aFile, vPlan, aCt).ConfigureAwait(false);
-        var vVerified = vPlan.Count(aVerdict => aVerdict.Status == VerdictPlanner.VerifiedStatus);
-        return vPlan.Count == 0
-            ? $"No requirement in {aFile} was waiting for a verdict, so none was written."
-            : $"Wrote {vPlan.Count} verdict{(vPlan.Count == 1 ? string.Empty : "s")} into {aFile}: {vVerified} Verified by passing tests, {vPlan.Count - vVerified} Needs re-verify.";
+        await RecordAsync(aRun.RunId, vWritten, aCt).ConfigureAwait(false);
+        return vSentences.Count == 0
+            ? $"No requirement in {string.Join(" or ", aFiles)} was waiting for a verdict, so none was written."
+            : string.Join(" ", vSentences);
     }
 
     private static bool HasBom(string aPath)
@@ -114,16 +128,16 @@ public sealed class RunVerdictWriter : IRunVerdictWriter
     }
 
     private async Task ClearAsync(int aRunId, CancellationToken aCt) =>
-        await RecordAsync(aRunId, string.Empty, [], aCt).ConfigureAwait(false);
+        await RecordAsync(aRunId, [], aCt).ConfigureAwait(false);
 
-    private async Task RecordAsync(int aRunId, string aFile, IReadOnlyList<PlannedVerdict> aVerdicts, CancellationToken aCt)
+    private async Task RecordAsync(int aRunId, IReadOnlyList<(string File, PlannedVerdict Verdict)> aVerdicts, CancellationToken aCt)
     {
         using var vConnection = objConnections.OpenConnection();
         await vConnection.ExecuteAsync(new CommandDefinition(
             "DELETE FROM ProcessRunVerdict WHERE RunId = @aRunId",
             new { aRunId },
             cancellationToken: aCt)).ConfigureAwait(false);
-        foreach (var vVerdict in aVerdicts)
+        foreach (var (vFile, vVerdict) in aVerdicts)
         {
             await vConnection.ExecuteAsync(new CommandDefinition(
                 """
@@ -134,7 +148,7 @@ public sealed class RunVerdictWriter : IRunVerdictWriter
                 {
                     aRunId,
                     vVerdict.RequirementId,
-                    ChecklistFile = aFile,
+                    ChecklistFile = vFile,
                     vVerdict.Status,
                     vVerdict.Percent,
                     vVerdict.Remark,

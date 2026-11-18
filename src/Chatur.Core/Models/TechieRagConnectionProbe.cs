@@ -14,7 +14,7 @@ public sealed class TechieRagConnectionProbe : ILlmConnectionProbe
     /// <summary>The connectors this probe knows how to reach, and each one's default probe model.</summary>
     private static readonly IReadOnlyDictionary<string, string> DefaultModelByConnector = new Dictionary<string, string>
     {
-        ["Anthropic"] = "claude-sonnet-5",
+        ["Anthropic"] = "claude-sonnet-5-5",
         ["OpenAI"] = "gpt-5",
         ["Google"] = "gemini-2.5-flash",
         ["Ollama"] = "llama3.2"

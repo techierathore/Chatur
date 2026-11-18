@@ -17,14 +17,15 @@ public sealed class MeasurementActionsTests : MigratedDatabaseFixture
     /// zero records rather than the page crashing (REQ-UI-036).
     /// </summary>
     [Fact]
-    public async Task StreamsAsyncReturnsAllFiveStreamsEvenWithNothingWritten()
+    public async Task StreamsAsyncReturnsAllSixStreamsEvenWithNothingWritten()
     {
         var vProjectId = CreateProject("Empty", objProjectPath);
         var vActions = new MeasurementActions(CreateFactory(), NullLogger<MeasurementActions>.Instance);
 
         var vStreams = await vActions.StreamsAsync(vProjectId);
 
-        Assert.Equal(5, vStreams.Count);
+        Assert.Equal(6, vStreams.Count);
+        Assert.Contains(vStreams, s => s.Name == "estimates.jsonl");
         Assert.All(vStreams, s => Assert.Equal(0, s.RecordCount));
         Assert.All(vStreams, s => Assert.Null(s.NewestUtc));
         Assert.All(vStreams, s => Assert.False(s.LastWriteFailed));

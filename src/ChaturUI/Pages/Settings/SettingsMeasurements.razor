@@ -1,6 +1,7 @@
 @page "/settings/measurements"
 @layout Layouts.SecondaryLayout
 @inject IMeasurementActions MeasurementActions
+@inject IEstimateActions EstimateActions
 @inject AppState State
 @inject BrowserInterop Browser
 @inject ToastService Toast
@@ -12,9 +13,9 @@
     <div class="flex items-center justify-between" data-testid="measurements-heading">
         <div>
             <h1 class="text-lg font-semibold">Measurements</h1>
-            <p class="text-sm text-muted-foreground">The five files Chatur writes as it works, and what is in each one.</p>
+            <p class="text-sm text-muted-foreground">The six files Chatur writes as it works, and what is in each one.</p>
         </div>
-        <Button Variant="ButtonVariant.Outline" OnClick="LoadAsync" Disabled="objIsLoading" data-testid="recount">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="LoadAsync" Disabled="objIsLoading" data-testid="recount">
             <LucideIcon Name="refresh-cw" Size="14" />
             Count again
         </Button>
@@ -31,7 +32,7 @@
     else
     {
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5" data-testid="stream-tiles">
-            @foreach (var vStream in objStreams)
+            @foreach (var vStream in objStreams.Where(aStream => aStream.Name != EstimatesStream))
             {
                 <Card Class="px-3 py-3" data-testid="@($"tile-{StreamKey(vStream.Name)}")">
                     <div class="flex flex-col gap-0.5">
@@ -45,7 +46,7 @@
 
         <Card data-testid="streams-panel">
             <CardHeader>
-                <CardTitle>The five streams</CardTitle>
+                <CardTitle>The six streams</CardTitle>
             </CardHeader>
             <CardContent>
                 <DataTable TData="MeasurementStream" Data="@objStreams" ShowPagination="false" MinWidth="620px" RowAttributes="@RowHooks" data-testid="streams-table">
@@ -60,7 +61,7 @@
                         <DataTableColumn TData="MeasurementStream" TValue="string" Property="@(s => s.NewestUtc.HasValue ? s.NewestUtc.Value.ToLocalTime().ToString("d MMM HH:mm") : "—")" Header="Newest" CellClass="whitespace-nowrap text-xs text-muted-foreground" />
                         <DataTableColumn TData="MeasurementStream" TValue="int" Property="@(s => s.FieldsEmpty)" Header="Fields empty" Align="DataTableColumnAlign.End">
                             <CellTemplate Context="stream">
-                                <span class="text-muted-foreground" data-testid="@($"{StreamKey(stream.Name)}-empty")">@stream.FieldsEmpty</span>
+                                <span class="text-muted-foreground" data-testid="@($"{StreamKey(stream.Name)}-empty")">@(stream.Name == EstimatesStream ? "—" : stream.FieldsEmpty.ToString(System.Globalization.CultureInfo.InvariantCulture))</span>
                             </CellTemplate>
                         </DataTableColumn>
                         <DataTableColumn TData="MeasurementStream" TValue="int" Property="@(s => s.Refused)" Header="Refused" Align="DataTableColumnAlign.End">
@@ -125,20 +126,66 @@
                     <div class="flex flex-col gap-2">
                         <div class="flex items-start gap-2" data-testid="rule-empty">
                             <LucideIcon Name="check" Size="16" Class="mt-0.5 text-muted-foreground" />
-                            <span class="text-sm">A number that was not measured is left empty. It is never guessed and never filled in later from something else.</span>
+                            <span style="font-size:12.5px">A number that was not measured is left empty. It is never guessed and never filled in later from something else.</span>
                         </div>
                         <div class="flex items-start gap-2" data-testid="rule-unknown">
                             <LucideIcon Name="ban" Size="16" Class="mt-0.5 text-muted-foreground" />
-                            <span class="text-sm">A record carrying a field the stream does not know is refused whole, and the reason is written to the log.</span>
+                            <span style="font-size:12.5px">A record carrying a field the stream does not know is refused whole, and the reason is written to the log.</span>
+                        </div>
+                        @* REQ-FN-114, REQ-FN-115: where estimates are kept, and that they never mix with a measurement. *@
+                        <div class="flex items-start gap-2" data-testid="rule-estimate">
+                            <LucideIcon Name="ban" Size="16" Class="mt-0.5 text-muted-foreground" />
+                            <span style="font-size:12.5px">An estimate is kept in estimates.jsonl, in the same shape TechieFlow writes, and is never added to, averaged with or divided by a measurement.</span>
                         </div>
                         <div class="flex items-start gap-2" data-testid="rule-money">
                             <LucideIcon Name="bar-chart-3" Size="16" Class="mt-0.5 text-muted-foreground" />
-                            <span class="text-sm">Money is worked out when a report is made, from the tokens and the price of the day. It is never stored in the record.</span>
+                            <span style="font-size:12.5px">Money is worked out when a report is made, from the tokens and the price of the day. It is never stored in the record.</span>
                         </div>
                     </div>
                 </CardContent>
             </Card>
         }
+
+        <Card data-testid="sister-panel">
+            <CardHeader>
+                <div class="flex flex-wrap items-center gap-2">
+                    <CardTitle>Sister projects for estimates</CardTitle>
+                    <span class="grow"></span>
+                    <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="sister-count">@SisterCountText</Badge>
+                </div>
+            </CardHeader>
+            <CardContent Class="flex flex-col gap-3">
+                <p class="text-sm text-muted-foreground" data-testid="sister-rule">Used only where this project has fewer than three runs of a kind, and the estimate then says it borrowed them. Chatur reads their run records and never writes to them.</p>
+                @foreach (var vSister in objSisters)
+                {
+                    <div class="flex flex-wrap items-center gap-2" data-testid="@($"sister-{vSister.SisterProjectId}")">
+                        <LucideIcon Name="folder" Size="16" Class="text-muted-foreground" />
+                        <span>@vSister.Name</span>
+                        <code class="font-mono text-xs text-muted-foreground break-all">@vSister.Path</code>
+                        <span class="grow"></span>
+                        <span class="text-xs text-muted-foreground" data-testid="@($"sister-runs-{vSister.SisterProjectId}")">@RunsText(vSister.RunCount)</span>
+                        <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@($"Remove {vSister.Name}")" title="Remove"
+                                Disabled="objIsSisterBusy" OnClick="@(() => RemoveSisterAsync(vSister))" data-testid="@($"sister-remove-{vSister.SisterProjectId}")">
+                            <LucideIcon Name="x" Size="14" />
+                        </Button>
+                    </div>
+                }
+                <div class="flex flex-wrap items-center gap-2" data-testid="sister-add-row">
+                    <Input Value="@objSisterPath" ValueChanged="@(aValue => objSisterPath = aValue)" Placeholder="A project folder that has a docs/metrics run record"
+                           AriaLabel="Sister project folder" Class="min-w-64 flex-1" data-testid="sister-path" />
+                    <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="@(objIsSisterBusy || string.IsNullOrWhiteSpace(objSisterPath))" OnClick="AddSisterAsync" data-testid="sister-add">
+                        <LucideIcon Name="plus" Size="14" />
+                        Add a sister project
+                    </Button>
+                </div>
+                @if (objSisterError is not null)
+                {
+                    <Alert Variant="AlertVariant.Danger" data-testid="sister-error">
+                        <AlertDescription>@objSisterError</AlertDescription>
+                    </Alert>
+                }
+            </CardContent>
+        </Card>
 
         var vFailed = objStreams.Any(s => s.LastWriteFailed);
         @* The mockup draws the failed write as a bordered note with warning-coloured text, not a tinted alert; the calm state is the same note in the neutral colour. *@

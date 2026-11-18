@@ -15,7 +15,7 @@
             <h1 class="text-lg font-semibold">Appearance</h1>
             <p class="text-sm text-muted-foreground">How Chatur looks. A theme is a named set of colour values, so more can be added.</p>
         </div>
-        <Button Variant="ButtonVariant.Outline" OnClick="ResetAsync" data-testid="reset-appearance">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="ResetAsync" data-testid="reset-appearance">
             <LucideIcon Name="undo-2" Size="14" />
             Reset
         </Button>
@@ -75,7 +75,7 @@
         </CardHeader>
         <CardContent>
             <Select Value="@ModeValue" ValueChanged="OnModeChangedAsync" TValue="string" Class="w-64" data-testid="mode-choices">
-                <SelectTrigger data-testid="mode-button">
+                <SelectTrigger Class="rounded-full" data-testid="mode-button">
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent data-testid="mode-pop">
@@ -98,7 +98,7 @@
             <div class="flex flex-wrap items-center gap-2" data-testid="theme-source-actions">
                 <Dialog Open="objAddDialogOpen" OpenChanged="@((bool v) => objAddDialogOpen = v)">
                     <DialogTrigger AsChild>
-                        <Button Variant="ButtonVariant.Outline" data-testid="add-theme">
+                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" data-testid="add-theme">
                             <LucideIcon Name="upload" Size="14" />
                             Add a theme from a file
                         </Button>
@@ -132,7 +132,7 @@
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-                <Button Variant="ButtonVariant.Outline" OnClick="ExportAsync" Disabled="@(CurrentTheme is null)" data-testid="export-theme">
+                <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="ExportAsync" Disabled="@(CurrentTheme is null)" data-testid="export-theme">
                     <LucideIcon Name="download" Size="14" />
                     Export this theme
                 </Button>
@@ -147,16 +147,14 @@
         <CardContent Class="flex flex-col gap-3">
             @* A picture of the theme, not controls: `inert` so the sample Run button cannot be pressed or focused (REQ-UI-037). *@
             <div class="flex items-center gap-2" inert data-testid="preview-controls">
-                @* The tint is drawn by the span around the badge: a Success badge paints its own tint too faintly for the pill to read as good news. *@
-                <span class="inline-flex rounded-full bg-alert-success-bg">
-                    <Badge Variant="BadgeVariant.Success" Class="gap-1 rounded-full border-transparent bg-transparent text-alert-success" data-testid="preview-pill">
-                        <LucideIcon Name="check" Size="11" />
-                        verified
-                    </Badge>
-                </span>
+                @* The mockup's `pill ok`: the Success badge's own tint (--alert-success-bg, 16%) and the green text, on one element. *@
+                <Badge Variant="BadgeVariant.Success" Class="gap-1 rounded-full border-transparent" data-testid="preview-pill">
+                    <LucideIcon Name="check" Size="11" />
+                    verified
+                </Badge>
                 <Badge Variant="BadgeVariant.Warning" Class="rounded-full border-transparent">2 to push</Badge>
                 <span class="flex-1"></span>
-                <Button data-testid="preview-button">
+                <Button Class="rounded-full" data-testid="preview-button">
                     <LucideIcon Name="play" Size="14" />
                     Run
                 </Button>

@@ -1,6 +1,7 @@
 @inject IProjectActions ProjectActions
 @inject IProcessActions ProcessActionsService
 @inject IProcessRunActions ProcessRuns
+@inject IEstimateActions EstimateActions
 @inject WorkbenchState WorkbenchTabs
 @inject ToastService ToastService
 
@@ -19,16 +20,29 @@
             </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <Button Variant="ButtonVariant.Outline" Disabled="objLastRun is null" OnClick="OpenLastRun" data-testid="open-last-run">
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="objLastRun is null" OnClick="OpenLastRun" data-testid="open-last-run">
                 <LucideIcon Name="clock" Size="14" />
                 Last run
             </Button>
-            <Button Variant="ButtonVariant.Outline" Disabled="objIsLoading" OnClick="ReloadAsync" data-testid="reload-processes">
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="objIsLoading" OnClick="ReloadAsync" data-testid="reload-processes">
                 <LucideIcon Name="refresh-cw" Size="14" />
                 Reload
             </Button>
         </div>
     </div>
+
+    @if (objEstimate is not null && objEstimateCode is not null)
+    {
+        <EstimateLines Estimate="objEstimate" Title="@($"Before {objEstimateCode} starts — what it should cost")">
+            <Actions>
+                <Button Class="rounded-full" Disabled="objIsBusy" OnClick="ConfirmEstimateAsync" data-testid="estimate-confirm">
+                    <LucideIcon Name="play" Size="14" />
+                    Start @objEstimateCode
+                </Button>
+                <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="CancelEstimate" data-testid="estimate-cancel">Cancel</Button>
+            </Actions>
+        </EstimateLines>
+    }
 
     @if (objError is not null)
     {
@@ -98,7 +112,7 @@
                                 <CellTemplate Context="row">
                                     @if (row.IsRunning && row.RunningRunId is not null)
                                     {
-                                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => WatchRun(row.RunningRunId.Value, row.Code))"
+                                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => WatchRun(row.RunningRunId.Value, row.Code))"
                                                 data-testid="@($"start-{row.Code}")">
                                             <LucideIcon Name="play" Size="14" />
                                             Watch
@@ -106,7 +120,7 @@
                                     }
                                     else
                                     {
-                                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(objProject is null || objIsBusy)"
+                                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(objProject is null)"
                                                 OnClick="@(() => StartAsync(row.Code))" data-testid="@($"start-{row.Code}")">
                                             <LucideIcon Name="play" Size="14" />
                                             Start

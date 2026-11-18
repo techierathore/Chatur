@@ -76,6 +76,8 @@ public sealed record ProcessRunStepView(
 /// <param name="EndedUtc">When the run finished or stopped; <see langword="null"/> while it has not.</param>
 /// <param name="CurrentPosition">The step the run is on: the running or waiting one, or the one a check failed on; <see langword="null"/> when the run finished.</param>
 /// <param name="Steps">Every step, in order.</param>
+/// <param name="TokensOutSoFar">The output tokens the run's handed steps have spent so far, counted after every model call (REQ-UI-087).</param>
+/// <param name="TokensInSoFar">The input tokens the run's handed steps have spent so far, counted after every model call (REQ-UI-087).</param>
 public sealed record ProcessRunView(
     int RunId,
     int ProjectId,
@@ -84,7 +86,9 @@ public sealed record ProcessRunView(
     DateTime StartedUtc,
     DateTime? EndedUtc,
     int? CurrentPosition,
-    IReadOnlyList<ProcessRunStepView> Steps);
+    IReadOnlyList<ProcessRunStepView> Steps,
+    long TokensOutSoFar = 0,
+    long TokensInSoFar = 0);
 
 /// <summary>One line of a project's run history, for the "Earlier on this project" list.</summary>
 /// <param name="RunId">The run's id.</param>

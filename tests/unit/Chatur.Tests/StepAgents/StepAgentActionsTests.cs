@@ -115,6 +115,66 @@ public sealed class StepAgentActionsTests : MigratedDatabaseFixture
     }
 
     /// <summary>
+    /// When a build-phase step's first model call returns 1,500 output tokens and the agent is still working on its
+    /// second call, then the run already reads 1,500 output tokens spent so far; when the second call returns 3,000
+    /// more, then it reads 4,500 (REQ-UI-087, MISS-Chatur-20261110-07).
+    /// </summary>
+    [Fact(DisplayName = "REQ-UI-087 a running process records the tokens each model call returns, 1,500 while working and 4,500 after")]
+    public async Task RunningProcessRecordsTokensSoFar()
+    {
+        var vRunId = StartRun("build-phase", 4);
+        InsertConnectedModel(1, "tier-one-model");
+        var vGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var vModel = new ScriptedModel(
+            new TechieRag.Models.LlmResponse
+            {
+                ToolCalls = [new TechieRag.Models.ToolCall { Id = "c1", Name = "read-file", ArgumentsJson = """{"path":"README.md"}""" }],
+                Usage = new TechieRag.Models.TokenUsage { InputTokens = 200, OutputTokens = 1500 }
+            },
+            new TechieRag.Models.LlmResponse { Content = "Built the rows.", Usage = new TechieRag.Models.TokenUsage { InputTokens = 300, OutputTokens = 3000 } })
+        { Gate = vGate };
+        var vSteps = StepAgentWiring.StepAgents(CreateFactory(), vModel, objProjectPath);
+        var vRuns = StepAgentWiring.Engine(CreateFactory(), Path.Combine(objProjectPath, ".app"), vModel, objProjectPath);
+
+        var vHanding = vSteps.HandAsync(vRunId, 4);
+        await WaitUntilAsync(async () => vModel.Calls == 2);
+        var vWhileWorking = await vRuns.GetAsync(vRunId);
+        vGate.SetResult();
+        await vHanding;
+        var vAfter = await vRuns.GetAsync(vRunId);
+
+        Assert.Equal(1500, vWhileWorking!.TokensOutSoFar);
+        Assert.Equal(4500, vAfter!.TokensOutSoFar);
+        Assert.Equal(500, vAfter.TokensInSoFar);
+    }
+
+    /// <summary>
+    /// When Settings ▸ Routing sets the build work (write-code) to tier 2 and orders tier 2's chain with the higher model id
+    /// first, then a build-phase step runs on that first model of tier 2's chain, not on its agent's own tier or the
+    /// lowest model id, and it is the model and tier the estimate's rule names (REQ-FN-111, MISS-Chatur-20261110-06).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-111 a handed step runs on the work tier and chain order Routing names, the model the estimate names")]
+    public async Task HandedStepRunsOnTheModelRoutingNames()
+    {
+        var vRunId = StartRun("build-phase", 4);
+        InsertConnectedModel(1, "role-tier-model");
+        var vLowestId = InsertConnectedModel(2, "tier-two-lowest-id");
+        var vChainFirst = InsertConnectedModel(2, "tier-two-chain-first");
+        var vRouting = new Chatur.Core.Routing.RoutingActions(CreateFactory());
+        await vRouting.ReorderChainAsync(2, [vChainFirst, vLowestId]);
+        await vRouting.SetWorkTierAsync("write-code", 2);
+        var vFactory = new RecordingProviderFactory(new ScriptedModel(ScriptedModel.Say("Built it.")));
+        var vEstimateRule = await new Chatur.Core.Routing.StepRoutes(CreateFactory(), vRouting).ForProcessAsync("build-phase");
+
+        var vWork = await StepAgentWiring.StepAgents(CreateFactory(), vFactory, objProjectPath).HandAsync(vRunId, 4);
+
+        Assert.Equal("tier-two-chain-first", vFactory.Models[0]);
+        Assert.Equal(2, vWork.Tier);
+        Assert.Equal("tier-two-chain-first", vEstimateRule.Model);
+        Assert.Equal(vEstimateRule.Tier, vWork.Tier);
+    }
+
+    /// <summary>
     /// When a handed step's agent has not finished, then the step is still working; when it finishes, then the step ends
     /// recording the files it wrote, the commands it ran and its final message (REQ-FN-087).
     /// </summary>
@@ -279,15 +339,15 @@ public sealed class StepAgentActionsTests : MigratedDatabaseFixture
             new { vProjectId, aProcess, aStep, Started = DateTime.UtcNow.ToString("O") });
     }
 
-    private void InsertConnectedModel(int aTier, string aIdentifier)
+    private int InsertConnectedModel(int aTier, string aIdentifier)
     {
         using var vConnection = new SqliteConnection(ConnectionString);
         vConnection.Open();
         var vProviderId = vConnection.ExecuteScalar<long>(
             "INSERT INTO Provider (Name, Connector, SignInMethod, BaseUrl, SecretName, State) VALUES (@aIdentifier, 'Fake', 'Key', 'http://localhost', NULL, 'Connected'); SELECT last_insert_rowid();",
             new { aIdentifier });
-        vConnection.Execute(
-            "INSERT INTO Model (ProviderId, Tier, Identifier) VALUES (@vProviderId, @aTier, @aIdentifier)",
+        return (int)vConnection.ExecuteScalar<long>(
+            "INSERT INTO Model (ProviderId, Tier, Identifier) VALUES (@vProviderId, @aTier, @aIdentifier); SELECT last_insert_rowid();",
             new { vProviderId, aTier, aIdentifier });
     }
 

@@ -5,6 +5,7 @@ import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { signIn as sharedSignIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
+import { run, snapshot, restore } from './support/db';
 
 /** The shared sign-in, retried once: App Manager sign-in is occasionally slower than its 30 s wait. */
 async function signIn(aPage: Page, aUser: 'Owner'): Promise<void> {
@@ -139,19 +140,30 @@ test('REQ-UI-006 a named folder with projects lists each with name, path and las
   await clearOwnFolders(page);
 });
 
-test('REQ-UI-008 with no folder named Projects shows an empty state whose button opens the dialog', async ({ page }) => {
+/**
+ * REQ-UI-008 (amended 2026-11-17, BRD-14): an account that has opened nothing gets the empty start — no
+ * project, no file, no chat — with three plainly labelled ways on, and a quiet Project folders link. The
+ * state is made in the signed-in account's own database file (support/db.ts follows the account), checked
+ * on the screen, and put back exactly as it was for the groups after it. accounts.spec.ts carries the
+ * three ways themselves.
+ */
+test('REQ-UI-008 an account that has opened nothing gets the empty start, and its Project folders link opens the dialog', async ({ page }) => {
   await freshSignedIn(page);
-  await openStart(page);
-  await openDialog(page);
-  const vOthers = await page.locator('[data-testid^="folder-row-"]').count();
-  await closeDialog(page);
-  test.skip(vOthers > 0, 'Other test groups have named folders in the shared app database, so "no folder named" cannot be produced without deleting their data.');
-  await expect(page.getByTestId('recent-subtitle')).toContainText('No folders have been named yet');
-  await expect(page.getByTestId('project-list')).toHaveCount(0);
-  const vButton = page.getByTestId('name-a-folder');
-  await expect(vButton).toBeVisible();
-  await openFoldersDialog(page, 'name-a-folder');
-  await page.screenshot({ path: resolve(FIXTURES, 'ui-008.png') });
+  const vSaved = snapshot(['ProjectFolder', 'Project', 'Setting']);
+  try {
+    run("DELETE FROM Setting WHERE Key = 'SelectedProjectId'");
+    run("UPDATE Project SET ProjectFolderId = NULL, RemovedUtc = '2026-11-17T00:00:00.0000000Z'");
+    run('DELETE FROM ProjectFolder');
+    await page.goto('/start', { waitUntil: 'networkidle' });
+    await expect(page.getByTestId('empty-start')).toBeVisible({ timeout: 30_000 });
+    for (const vWay of ['way-open-folder', 'way-open-solution', 'way-open-file']) await expect(page.getByTestId(vWay)).toBeVisible();
+    await expect(page.getByTestId('project-list')).toHaveCount(0);
+    await openFoldersDialog(page, 'manage-folders');
+    await page.screenshot({ path: resolve(FIXTURES, 'ui-008.png') });
+    await closeDialog(page);
+  } finally {
+    restore(vSaved);
+  }
 });
 
 test('REQ-UI-009 removing a folder drops its projects and the folder stays gone after a restart', async ({ browser }) => {

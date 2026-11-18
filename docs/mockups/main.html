@@ -27,7 +27,7 @@
 <symbol id="i-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></symbol>
 <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3"/><circle cx="12" cy="4" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="14" cy="20" r="2"/></symbol>
-<symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"/></symbol><symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
 </defs></svg>
 <script>
 function say(m){alert(m);}
@@ -105,10 +105,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
     <hr>
     <div class="grouplbl">Run target</div>
-    <button onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
-    <button onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
+    <button data-tf-sample onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
+    <button data-tf-sample onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
+    <button data-tf-sample onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
+    <button data-tf-sample onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
     <hr>
     <a href="prerequisites.html">Prerequisites…</a>
     <a href="repository.html">Repository…</a>
@@ -171,10 +171,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="popwrap" data-testid="target">
    <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="target-pop" data-tf-state="popup-open">
-    <button onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
-    <button onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
+    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
+    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
+    <button data-tf-sample onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
+    <button data-tf-sample onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
     <div class="note">Only what this machine can build. A Windows head needs the Windows machine.</div>
    </div>
   </div>
@@ -182,9 +182,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="popwrap" data-testid="branch-pick">
    <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
-    <button onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
-    <button onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
-    <button onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
+    <button data-tf-sample onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
+    <button data-tf-sample onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
+    <button data-tf-sample onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
     <hr>
     <a href="repository.html">Open the repository…</a>
    </div>
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
  <div class="body">
 
   <div class="panel files" data-testid="files-panel">
-   <div class="ph" data-testid="files-head">Files</div>
+   <div class="ph" style="justify-content:space-between" data-testid="files-head"><span>Files</span><button class="iconbtn" onclick="say('Reads the project\'s files from disk again, so files made outside Chatur show.')" title="Refresh the files" data-testid="files-refresh"><svg><use href="#i-refresh"/></svg></button></div>
    <div class="tree" data-testid="file-tree">
     <a href="main.html" data-tf-state="sample-data"><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
     <a href="main.html" class="d1" data-tf-state="sample-data"><svg><use href="#i-folder-open"/></svg>src</a>
@@ -232,9 +232,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <button class="iconbtn" onclick="pop(this,event)" title="Earlier conversations"><svg><use href="#i-list"/></svg></button>
        <div class="pop right" data-testid="history-pop" data-tf-state="popup-open">
         <div class="note">Earlier on TfLens</div>
-        <button onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Paging on the coverage table · today</button>
-        <button onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Why the sync test is flaky · yesterday</button>
-        <button onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Split the BRD for phase 2 · Friday</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Paging on the coverage table · today</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Why the sync test is flaky · yesterday</button>
+        <button data-tf-sample onclick="say('Opens that conversation where it stopped.')" data-tf-sample>Split the BRD for phase 2 · Friday</button>
        </div>
       </div>
      </span>

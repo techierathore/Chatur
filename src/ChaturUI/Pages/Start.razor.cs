@@ -54,6 +54,13 @@ public partial class Start
     private bool ShowAll => !string.IsNullOrEmpty(All);
 
     /// <summary>
+    /// Whether the signed-in account has opened nothing and named no folder: Start then shows the empty
+    /// start, with three ways on and nothing else (BRD-14, BRD-210). Everything Start lists is the
+    /// signed-in account's own, read from its own database.
+    /// </summary>
+    private bool IsEmptyStart => !objIsLoading && objProjects.Count == 0 && objFolders.Count == 0;
+
+    /// <summary>
     /// Reopens whatever project survived the restart (REQ-FN-006): when
     /// <see cref="IProjectActions.SelectedProjectAsync"/> still names one, Start sends the owner
     /// straight into the Workbench for it — the same place choosing it from the recent list would

@@ -1,6 +1,7 @@
 @implements IDisposable
 @inject IRunReportActions Reports
 @inject IProjectActions ProjectActions
+@inject IEstimateActions EstimateActions
 @inject IFileActions Files
 @inject WorkbenchState WorkbenchTabs
 @inject ToastService Toast
@@ -16,25 +17,34 @@
             <div class="text-sm text-muted-foreground" data-testid="report-subtitle">@Subtitle</div>
         </div>
         <span class="flex-1"></span>
-        <Button Variant="ButtonVariant.Outline" OnClick="OpenQueue" data-testid="go-queue">Queue</Button>
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="OpenQueue" data-testid="go-queue">Queue</Button>
     </div>
 
     <Card data-testid="run-picker">
         <CardContent Class="flex flex-wrap items-center gap-3 p-3">
             <span class="text-sm text-muted-foreground">Run</span>
             <div class="min-w-56 flex-1" data-testid="run-select">
-                <Select TValue="string" Value="@objSelectedKey" ValueChanged="OnPickedAsync" DisplayTextSelector="@(v => LabelOf(v))"
-                        Disabled="@(objIsLoading || objRuns.Count == 0)" Class="w-full">
-                    <SelectTrigger AriaLabel="Run" data-testid="run-select-button"><SelectValue Placeholder="@(objRuns.Count == 0 ? "No run on record" : "Pick a run")" /></SelectTrigger>
-                    <SelectContent data-testid="run-select-pop">
+                <DropdownMenu>
+                    <DropdownMenuTrigger AsChild>
+                        <Button Variant="ButtonVariant.Outline" Class="w-full justify-between font-normal" AriaLabel="Run"
+                                Disabled="@(objIsLoading || objRuns.Count == 0)" data-testid="run-select-button">
+                            <span class="truncate">@(objRuns.Count == 0 ? "No run on record" : objSelectedKey.Length == 0 ? "Pick a run" : LabelOf(objSelectedKey))</span>
+                            <LucideIcon Name="chevron-down" Size="14" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent Class="max-h-80 min-w-56 overflow-y-auto" data-testid="run-select-pop">
                         @foreach (var vRun in objRuns)
                         {
-                            <SelectItem TValue="string" Value="@vRun.Key" Text="@LabelOf(vRun)">@LabelOf(vRun)</SelectItem>
+                            var vKey = vRun.Key;
+                            <DropdownMenuItem OnClick="@(() => OnPickedAsync(vKey))" data-testid="@($"run-option-{vKey}")">
+                                <span class="w-4 shrink-0 text-center">@(vKey == objSelectedKey ? "✓" : "")</span>
+                                <span class="ml-2">@LabelOf(vRun)</span>
+                            </DropdownMenuItem>
                         }
-                    </SelectContent>
-                </Select>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
-            <Button Variant="ButtonVariant.Outline" OnClick="OpenPickedAsync" Disabled="@(objIsLoading || objSelectedKey.Length == 0)" data-testid="open-run">
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="OpenPickedAsync" Disabled="@(objIsLoading || objSelectedKey.Length == 0)" data-testid="open-run">
                 <LucideIcon Name="refresh-cw" Size="14" />
                 Open this run
             </Button>
@@ -214,6 +224,18 @@
             }
         </CardContent>
     </Card>
+
+    @if (objAgainst is not null)
+    {
+        <EstimateActualTable Actual="objAgainst" TestId="estimate-actual" Title="Estimate and actual" MadeText="@EstimateMadeText" />
+    }
+    else if (objKeptWithoutBatch)
+    {
+        <div class="flex items-start gap-2 rounded-md border p-3 text-muted-foreground" data-testid="estimate-actual-none">
+            <LucideIcon Name="clock" Size="16" Class="mt-0.5 flex-none" />
+            <span class="text-sm">This run was started before the project had a checklist, so no estimate was written to set beside what it cost. Your own testing: @EstimateSteps.OwnerTestingText.</span>
+        </div>
+    }
 
     @if (objReport?.WaitedSeconds is { } vWaited)
     {

@@ -22,6 +22,16 @@ public interface IProjectOpenActions
     /// <exception cref="InvalidOperationException">The folder does not exist.</exception>
     Task<ProjectSummary> OpenFolderAsync(string aPath, CancellationToken aCt = default);
 
+    /// <summary>
+    /// Opens a file (BRD-215): the project is the nearest folder above it that holds a solution or a
+    /// repository, or else the file's own folder, and the file is the one to show first.
+    /// </summary>
+    /// <param name="aPath">The file's absolute path.</param>
+    /// <param name="aCt">A token that cancels the open.</param>
+    /// <returns>The project, now selected, and the file's path relative to it.</returns>
+    /// <exception cref="InvalidOperationException">There is no file at that path.</exception>
+    Task<ProjectFileOpened> OpenFileAsync(string aPath, CancellationToken aCt = default);
+
     /// <summary>Starts a new, empty solution in a new folder named after it, and opens it.</summary>
     /// <param name="aParentFolder">The folder the new project's folder is made in.</param>
     /// <param name="aName">The new solution's name.</param>
@@ -42,3 +52,8 @@ public interface IProjectOpenActions
     /// <param name="aCt">A token that cancels the close.</param>
     Task CloseProjectAsync(CancellationToken aCt = default);
 }
+
+/// <summary>What <see cref="IProjectOpenActions.OpenFileAsync"/> opened (BRD-215).</summary>
+/// <param name="Project">The project that holds the file, now selected.</param>
+/// <param name="RelativePath">The file's path relative to the project's folder, with <c>/</c> between parts, as the files panel names it.</param>
+public sealed record ProjectFileOpened(ProjectSummary Project, string RelativePath);

@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — UI Design — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-10-27 &middot; source <code>Chatur-P3-UIDesign.md</code></div>
+    <div class="subtitle">Rendered 2026-11-10 &middot; source <code>Chatur-P3-UIDesign.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -147,13 +147,42 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <p>States: unchanged — the Rights panel's own empty, loading and error states apply to the new line.</p>
+<p><strong>Added to Processes, a phase 2 screen (2026-11-10, BRD-192, BRD-195 to BRD-200, BRD-205, BRD-208, BRD-209).</strong> Mockup: <a href="mockups/processes.html">mockups/processes.html</a>. Start on build-phase, verify-phase or fix-issues now opens an estimate first. Every estimate table in Chatur has the same columns: line of work, model and tier where steps differ, output tokens low · middle · high, time low · middle · high, and where the runs came from. Start writes the estimate batch; Cancel writes nothing.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>estimate-panel</code></td><td>Card + DataTable + Details + Button ×2</td><td>opens when Start is pressed on build-phase, verify-phase or fix-issues: the model and tier it was made for with a link to Routing, the phase total per line of work, each row's figures under "Each of the rows", how many rows have no precedent and are left out, "estimated after the fact" when runs on these rows already exist, and Start or Cancel</td></tr>
+<tr><td><code>estimate-none-yet</code></td><td>Alert (info)</td><td>"No estimate yet" when no usable run exists anywhere it may look; Start still works</td></tr>
+</tbody>
+</table>
+<p>States of the estimate: empty: "No estimate yet", never an error · loading: the table header with dashes while run records are read; Start stays enabled, since an estimate never holds a run up · error: an unreadable run record is skipped and counted under the table; a sister folder that has gone is left out and named</p>
+<p><strong>Added to Process run, a phase 2 screen (2026-11-10, BRD-202, BRD-204, BRD-207).</strong> Mockup: <a href="mockups/process-run.html">mockups/process-run.html</a>. The estimate the run started with, beside what it has spent.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>run-against-estimate</code></td><td>Card + DataTable</td><td>tokens and time so far beside the estimate the run started with, for the model running the step; two columns, never combined</td></tr>
+<tr><td><code>handoff-estimate</code></td><td>Card + DataTable</td><td>on handoff-phase: per line of work the estimate's middle and range beside the actual, apportioned where runs also worked rows outside the phase, "insufficient data (n=…)" under three runs, your own testing "not measured", and the runs that named no row counted apart and never shared out</td></tr>
+</tbody>
+</table>
+<p>States of the estimate: empty: a run started before estimates existed shows "no estimate for this run" · loading: dashes in the So far column · error: a run record half written marks the actual partial</p>
+<p><strong>Added to Settings ▸ Measurements and Settings ▸ Routing, phase 1 screens (2026-11-10, BRD-197, BRD-201).</strong> Mockups: <a href="mockups/settings-measurements.html">mockups/settings-measurements.html</a>, <a href="mockups/settings-routing.html">mockups/settings-routing.html</a>. A sister project must hold <code>docs/metrics/runs.jsonl</code> and is refused with the reason otherwise; Add opens a folder picker.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>sister-panel</code> (Measurements)</td><td>Card + list + Button</td><td>sister projects by name, folder and run count, Remove on each, and Add a sister project</td></tr>
+<tr><td><code>stream-estimates</code>, <code>rule-estimate</code> (Measurements)</td><td>DataTable row + text</td><td>the sixth stream, <code>estimates.jsonl</code>, counted like the others, and the rule that an estimate never mixes with a measurement</td></tr>
+<tr><td><code>routing-estimate-note</code> (Routing)</td><td>Alert (info)</td><td>a tier change changes the estimate shown before the next run; a started run keeps its own</td></tr>
+</tbody>
+</table>
+<p>States of the estimate: empty: "No sister projects" with Add · loading: the list with dashes for run counts · error: a folder that has gone shows as missing, with Remove</p>
 <h3 id="screen-end-to-end-run-auto">Screen: End-to-end run (<code>/auto</code>)<a class="anchor-link" href="#screen-end-to-end-run-auto">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/auto-run.html">mockups/auto-run.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-118 to BRD-125</p>
 <table>
 <thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
 <tbody>
 <tr><td><code>brief-panel</code></td><td>Card + Select + Textarea + Button</td><td>the project and the brief the run begins from, with a line saying step-by-step working is untouched</td></tr>
-<tr><td><code>running-now</code></td><td>Card + Progress + Button ×2</td><td>the agent working, the process, the step, the requirement, how long, how far, Pause and Stop</td></tr>
+<tr><td><code>run-estimate-panel</code> (BRD-193)</td><td>Card + DataTable</td><td>before Start: each line of work with its model and tier, tokens and time as low · middle · high, and the runs' source; "no precedent" and "not measured" where they apply</td></tr>
+<tr><td><code>running-now</code></td><td>Card + Progress + Button ×2</td><td>the agent working, the process, the step, the requirement, how long, how far, Pause and Stop; <code>running-against-estimate</code> sets the tokens and time so far beside the estimate's low · middle · high (BRD-202)</td></tr>
 <tr><td><code>chain-panel</code></td><td>DataTable</td><td>the eight processes with the agent that runs each — four finished, one running, three to come, one marked as retried</td></tr>
 <tr><td><code>limit-note</code></td><td>Alert (info)</td><td>the usage limit at 11:40, the 22 minutes waited, and the run carrying on by itself</td></tr>
 <tr><td><code>retry-note</code></td><td>Alert (warning)</td><td>step 4 stalled once and was retried, and the retry is in the run record</td></tr>
@@ -177,6 +206,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td><code>queue-heading</code></td><td>Badge + Button</td><td>one running and three waiting, Queue a run, and the way across to the run going now</td></tr>
 <tr><td><code>queue-table</code></td><td>DataTable</td><td>five rows: position, project, the brief in short, the state, when it started, how long, and Pause, Resume and Remove</td></tr>
 <tr><td><code>queue-legend</code></td><td>text</td><td>which action applies to which state, so a disabled button is never a mystery</td></tr>
+<tr><td><code>queue-estimate-panel</code> (BRD-194)</td><td>Card + DataTable + Button ×2</td><td>before a run joins the queue: the same estimate table as End-to-end run, with Queue it and Cancel; a waiting run keeps the estimate it was queued with</td></tr>
 <tr><td><code>how-queue-behaves</code></td><td>Card</td><td>one at a time; a paused run carries on from its step; a resumed run takes the open requirement furthest from verified</td></tr>
 <tr><td><code>removed-note</code></td><td>Panel</td><td>a removed run is never started, and what it already did stays in its report</td></tr>
 </tbody>
@@ -199,6 +229,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td><code>requirements-table</code></td><td>DataTable</td><td>eight of the forty-two: id, title, agent, verdict and when, with the counts in the footer</td></tr>
 <tr><td><code>misses-table</code></td><td>DataTable</td><td>what it was, whose gap it was, the requirement it happened on, and whether it was fixed; a library miss goes to that library's feedback file</td></tr>
 <tr><td><code>cost-table</code></td><td>DataTable</td><td>model, tier, calls, tokens in, tokens out and time, with a total row</td></tr>
+<tr><td><code>estimate-actual-panel</code> (BRD-203, BRD-206, BRD-207)</td><td>DataTable</td><td>beside What it cost: per line of work, the model and tier, the estimate as low · middle · high and the actual in two columns, tokens over time, each marked within, above or below; no ratio and no percentage; your own testing reads "not measured" in both</td></tr>
 <tr><td><code>waiting-note</code></td><td>Panel</td><td>the 22 minutes spent waiting on a usage limit cost nothing and are not in the total</td></tr>
 </tbody>
 </table>

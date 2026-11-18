@@ -17,7 +17,7 @@ The shell was settled on the owner's reviews of 2026-09-21 and 2026-09-22: one w
 |---|---|---|---|---|
 | 1 | Workbench | Sign in, Register, Start, Workbench, Prerequisites, Settings, Repository | BRD-1 to BRD-95, BRD-156 to BRD-158 | done |
 | 2 | Project workflow | Processes, Process run, Requirements board, Agent workspace | BRD-96 to BRD-117, BRD-187 to BRD-187 | done |
-| 3 | End to end and unattended | End-to-end run, Run queue, Run report | BRD-118 to BRD-136, BRD-159 to BRD-186, BRD-188 to BRD-191 | done |
+| 3 | End to end and unattended | End-to-end run, Run queue, Run report | BRD-118 to BRD-136, BRD-159 to BRD-186, BRD-188 to BRD-209, BRD-210 to BRD-216 | building |
 | 4 | More users | Feedback and issues, Licence, All projects, Worktrees, Integrations | BRD-137 to BRD-155 | planned |
 
 Phase 1 closed on 2026-10-06 with 97 of 98 rows Verified, the nightly download included. REQ-FN-012 (Homebrew tools found when Chatur starts from Finder on a Mac) stays open in the phase 1 checklist until a Mac can test it; the owner chose to move on to phase 2 rather than mark it N/A.
@@ -29,3 +29,5 @@ Phase 3 carries two ranges. On 2026-10-08 the owner chose to hand every process 
 Phase 3 closed on 2026-10-09 with 42 of 44 rows Verified, every process step handed to the agent that owns it. Automatic routing (REQ-FN-071, REQ-FN-072) stays Blocked until TechieRag publishes its small-model router (TR-RAG-006).
 
 On 2026-10-13 the owner's test of the 12 Oct nightly found the main window mostly a shell: placeholder menus, Settings never opening, a chat that could not answer or close. Verify had loaded routes directly and never clicked a menu (TF-011). 50 phase 1 rows and 1 phase 2 row were reopened, BRD-184 to BRD-186 added to phase 3 and BRD-187 to phase 2; all were fixed and verified the same day.
+
+On 2026-11-10 the owner's estimate feature reopened phase 3: BRD-192 to BRD-209, 18 rows. The phase now holds 69 requirements, inside the 100 a phase may carry.

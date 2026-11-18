@@ -44,8 +44,14 @@ export async function openAgentsTab(aPage: Page): Promise<void> {
 /** Presses Start on a process in the open Processes tab and returns the id of the run tab it opens. */
 export async function startProcess(aPage: Page, aCode: string): Promise<number> {
   const vRunTab = tab(aPage, new RegExp(`^${aCode} · run \\d+$`));
+  // Since REQ-UI-083, Start on build-phase, verify-phase and fix-issues opens the estimate and nothing runs until the
+  // owner confirms it; the estimate panel's Start is that confirmation. Other processes start at once, as before.
+  const vConfirm = aPage.getByTestId('estimate-confirm');
   await expect(async () => {
-    if (!(await vRunTab.first().isVisible())) await aPage.getByTestId(`start-${aCode}`).click({ timeout: 2_500 });
+    if (!(await vRunTab.first().isVisible())) {
+      if (await vConfirm.isVisible()) await vConfirm.click({ timeout: 2_500 });
+      else await aPage.getByTestId(`start-${aCode}`).click({ timeout: 2_500 });
+    }
     await expect(vRunTab.first()).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   const vText = (await vRunTab.first().innerText()).trim();

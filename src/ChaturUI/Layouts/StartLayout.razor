@@ -1,6 +1,6 @@
 @inherits LayoutComponentBase
 
-<div class="flex min-h-screen flex-col bg-background sm:h-screen" data-testid="start-window">
+<div class="flex h-screen flex-col bg-background" data-testid="start-window">
     <div class="flex h-11 flex-none items-center gap-2 border-b bg-card px-4" data-testid="startbar">
         <BrandMark />
         <span class="text-sm font-semibold" data-testid="wordmark">Chatur</span>
@@ -14,9 +14,12 @@
            never stacked, so below 640px `get-started` held its own 384px and squeezed `recent-side`
            down to a sliver — every word in it wrapped to its own line (UIDesign "Rules": a panel
            scrolls inside itself, no window scrolls sideways). Stacked below 640px instead.
-           [fix 2026-10-02] Below 640px the window itself grows and scrolls (min-h-screen), so no box in
-           it is cut off against the mockup; from 640px up each panel scrolls inside itself. *@
-        <div class="flex flex-1 flex-col sm:min-h-0 sm:flex-row sm:overflow-hidden">
+           [fix 2026-10-02] Below 640px the window itself grew and scrolled (min-h-screen), so no box in
+           it was cut off against the mockup; from 640px up each panel scrolls inside itself.
+           [fix 2026-11-17] Below 640px the stacked panels now scroll inside the window's own body, never
+           the document: with Open a file added (BRD-215) the stacked page outgrew a phone-height window
+           and the document itself scrolled, outside the app shell's scroll container. *@
+        <div class="flex min-h-0 flex-1 flex-col overflow-y-auto sm:flex-row sm:overflow-hidden">
             @Body
         </div>
     </AuthGate>

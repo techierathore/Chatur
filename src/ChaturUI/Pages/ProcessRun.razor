@@ -1,6 +1,7 @@
 @implements IDisposable
 @inject IProcessRunActions Runs
 @inject IProjectActions ProjectActions
+@inject IEstimateActions EstimateActions
 @inject NavigationManager Nav
 @inject WorkbenchState WorkbenchTabs
 @inject Chatur.Core.Platform.IClock Clock
@@ -24,7 +25,7 @@
     {
         <Empty Title="No such run" Description="This run is not in Chatur's database. Start the process again from Processes." Size="EmptySize.Small" data-testid="run-missing" />
         <div>
-            <Button Variant="ButtonVariant.Outline" OnClick="BackToProcesses" data-testid="back-to-processes">All processes</Button>
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="BackToProcesses" data-testid="back-to-processes">All processes</Button>
         </div>
     }
     else
@@ -41,17 +42,17 @@
                 <div class="text-sm text-muted-foreground">
                     <span data-testid="run-project">@(objProjectName ?? "Project")</span>
                     · started <span data-testid="run-started">@FormatStarted(objRun.StartedUtc)</span>
-                    · @(objRun.EndedUtc is null ? "running for" : "ran for") <span data-testid="run-elapsed">@Elapsed</span>
+                    · @(objRun.EndedUtc is null ? "running for" : "ran for") <span class="whitespace-nowrap" data-testid="run-elapsed">@Elapsed</span>
                 </div>
             </div>
             <span class="flex-1"></span>
-            <Button Variant="ButtonVariant.Outline" OnClick="BackToProcesses" data-testid="back-to-processes">
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="BackToProcesses" data-testid="back-to-processes">
                 <LucideIcon Name="chevron-left" Size="14" />
                 All processes
             </Button>
             @* No Pause here: Chatur.Core has no pause for a process run (it holds only at an owner stop), and a
                button that is never enabled is not drawn. A stopped run already has All processes beside it. *@
-            <Button Variant="ButtonVariant.Outline" Disabled="@(objRun.State is ProcessRunState.Stopped or ProcessRunState.Finished || objIsBusy)"
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="@(objRun.State is ProcessRunState.Stopped or ProcessRunState.Finished || objIsBusy)"
                     OnClick="AskToStop" data-testid="stop-run">
                 <LucideIcon Name="square" Size="14" />
                 Stop
@@ -85,6 +86,61 @@
                 </Stepper>
             </CardContent>
         </Card>
+
+        @if (objStepTotal is not null)
+        {
+            @* REQ-UI-087, REQ-UI-089: the run's actual so far beside the estimate it was started with, uncombined. *@
+            <Card data-testid="run-against-estimate">
+                <CardHeader>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <LucideIcon Name="clock" Size="16" />
+                        <CardTitle>So far, against the estimate</CardTitle>
+                        <span class="flex-1"></span>
+                        @if (SoFarModelText is not null)
+                        {
+                            <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="run-against-model">@SoFarModelText</Badge>
+                        }
+                    </div>
+                </CardHeader>
+                <CardContent Class="flex flex-col gap-3">
+                    <DataTable TData="SoFarLine" Data="@SoFarLines" ShowPagination="false" MinWidth="480px" Density="DataTableDensity.Compact"
+                               RowAttributes="@(aLine => new Dictionary<string, object> { ["data-testid"] = $"run-against-{aLine.Key}", ["class"] = "border-t" })"
+                               data-testid="run-against-table">
+                        <Columns>
+                            <DataTableColumn TData="SoFarLine" TValue="string" Property="@(aLine => aLine.Label)" Header="" CellClass="whitespace-nowrap" />
+                            <DataTableColumn TData="SoFarLine" TValue="string" Property="@(aLine => aLine.SoFar)" Header="So far">
+                                <CellTemplate Context="aLine">
+                                    <span class="font-mono whitespace-nowrap" data-testid="@($"so-far-{aLine.Key}")">@aLine.SoFar</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="SoFarLine" TValue="string" Property="@(aLine => aLine.Estimate)" Header="Estimate — low · middle · high">
+                                <CellTemplate Context="aLine">
+                                    @if (aLine.Estimate is null)
+                                    {
+                                        @* border-none: the mockup draws this cell without a border; the warning tint stays (parity 2026-11-18). *@
+                                        <Badge Variant="BadgeVariant.Warning" Class="border-none" data-testid="@($"estimate-{aLine.Key}")">no precedent</Badge>
+                                    }
+                                    else
+                                    {
+                                        <span class="font-mono whitespace-nowrap" data-testid="@($"estimate-{aLine.Key}")">@aLine.Estimate</span>
+                                    }
+                                </CellTemplate>
+                            </DataTableColumn>
+                        </Columns>
+                    </DataTable>
+                    <div class="flex flex-wrap items-baseline gap-x-3 text-sm" data-testid="run-against-owner">
+                        <span class="text-muted-foreground">Your own testing</span>
+                        <span class="text-muted-foreground" data-testid="run-against-owner-value">@EstimateSteps.OwnerTestingText</span>
+                    </div>
+                    <p class="text-sm text-muted-foreground" data-testid="run-against-note">@SoFarNote</p>
+                </CardContent>
+            </Card>
+        }
+
+        @if (objHandoff is not null)
+        {
+            <EstimateActualTable Actual="objHandoff" TestId="handoff" Title="@($"At handoff — phase {objHandoff.Phase}, estimate against actual")" />
+        }
 
         @if (objHandedStep is { Work: { } vWork } vHandedStep)
         {
@@ -139,7 +195,7 @@
                     @if (vWork.State == ProcessStepWorkState.Working)
                     {
                         <div class="flex flex-wrap gap-2">
-                            <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy && objIsStopDialogOpen" OnClick="AskToStop" data-testid="handed-step-stop">
+                            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="objIsBusy && objIsStopDialogOpen" OnClick="AskToStop" data-testid="handed-step-stop">
                                 <LucideIcon Name="square" Size="14" />
                                 Stop
                             </Button>
@@ -162,15 +218,15 @@
                 <CardContent Class="flex flex-col gap-3">
                     <div class="text-sm" data-testid="question-text">@objWaiting.Wording</div>
                     <div class="flex flex-wrap items-center gap-2" data-testid="question-actions">
-                        <Button OnClick="@(() => AnswerAsync(ProcessAnswer.Yes))" Disabled="objIsBusy" data-testid="answer-yes">
+                        <Button Class="rounded-full" OnClick="@(() => AnswerAsync(ProcessAnswer.Yes))" Disabled="objIsBusy" data-testid="answer-yes">
                             <LucideIcon Name="check" Size="16" />
                             Yes
                         </Button>
-                        <Button Variant="ButtonVariant.Outline" OnClick="@(() => AnswerAsync(ProcessAnswer.No))" Disabled="objIsBusy" data-testid="answer-no">
+                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="@(() => AnswerAsync(ProcessAnswer.No))" Disabled="objIsBusy" data-testid="answer-no">
                             <LucideIcon Name="x" Size="16" />
                             No
                         </Button>
-                        <Button Variant="ButtonVariant.Outline" OnClick="@(() => AnswerAsync(ProcessAnswer.Later))" Disabled="objIsBusy" data-testid="answer-later">
+                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="@(() => AnswerAsync(ProcessAnswer.Later))" Disabled="objIsBusy" data-testid="answer-later">
                             <LucideIcon Name="clock" Size="16" />
                             Answer later
                         </Button>
@@ -202,7 +258,7 @@
                 <AlertDescription>
                     <span data-testid="failed-check-detail">Run @objEarlierRunId, @FormatStarted(objEarlierStartedUtc) — step @objEarlierFailure.Position, <b>@objEarlierFailure.Wording</b>. @objEarlierFailure.Result</span>
                     <div class="mt-2">
-                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="OpenEarlierRun" data-testid="@($"open-run-{objEarlierRunId}")">Open run @objEarlierRunId</Button>
+                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="OpenEarlierRun" data-testid="@($"open-run-{objEarlierRunId}")">Open run @objEarlierRunId</Button>
                     </div>
                 </AlertDescription>
             </Alert>
@@ -274,7 +330,7 @@
                     </div>
                 </div>
                 <div>
-                    <Button Variant="ButtonVariant.Outline" OnClick="OpenMeasurements" data-testid="open-measurements">See every record Chatur keeps</Button>
+                    <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="OpenMeasurements" data-testid="open-measurements">See every record Chatur keeps</Button>
                 </div>
             </CardContent>
         </Card>

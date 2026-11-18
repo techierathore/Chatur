@@ -14,6 +14,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 BASE="${TF_BASE:?TF_BASE is not set: run this from tf-verify-screens.sh or set it to the app address}"
 PORT="$(sed -E 's#.*:([0-9]+)/?.*#\1#' <<<"$BASE")"
 DB="$ROOT/tests/.artifacts/verify/run-$PORT/harness-data/chatur.db"
+# Each account has its own database (BRD-210): seed the file of whoever signed in last, named by
+# harness-data/accounts/current.txt, or the install's own before anyone has signed in.
+POINTER="$(dirname "$DB")/accounts/current.txt"
+if [ -s "$POINTER" ]; then DB="$(dirname "$DB")/accounts/$(tr -d '\r\n' < "$POINTER")/chatur.db"; fi
 [[ -f "$DB" ]] || { echo "no database for the app at $BASE (looked for $DB)"; exit 1; }
 
 python3 - "$DB" <<'PY'

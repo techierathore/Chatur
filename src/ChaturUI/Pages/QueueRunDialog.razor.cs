@@ -16,6 +16,9 @@ public partial class QueueRunDialog
     private string? objErrorMessage;
     private bool objIsBusy;
     private bool objWasOpen;
+    private PhaseEstimate? objEstimate;
+    private int? objEstimateProjectId;
+    private string? objEstimateError;
 
     /// <summary>Whether the dialog is showing.</summary>
     [Parameter]
@@ -29,16 +32,64 @@ public partial class QueueRunDialog
     [Parameter]
     public EventCallback<RunQueueAdded> OnQueued { get; set; }
 
-    private string ProjectKey
+    private bool IsBriefFilled => objBrief.Trim().Length >= AutoRunBrief.MinLength;
+
+    private string EstimateTitle =>
+        $"Before {objProjects.FirstOrDefault(aProject => aProject.ProjectId.ToString() == objProjectKey)?.Name ?? "the run"} joins the queue — what it should cost";
+
+    private async Task OnProjectChangedAsync(string aValue)
     {
-        get => objProjectKey;
-        set => objProjectKey = value ?? string.Empty;
+        objProjectKey = aValue ?? string.Empty;
+        objEstimate = null;
+        objEstimateProjectId = null;
+        await LoadEstimateAsync();
     }
 
-    private string Brief
+    private async Task OnBriefChangedAsync(string? aValue)
     {
-        get => objBrief;
-        set => objBrief = value ?? string.Empty;
+        objBrief = aValue ?? string.Empty;
+        await LoadEstimateAsync();
+    }
+
+    /// <summary>Works out the estimate once the run is filled in (a project and a brief); it depends on the project, so typing on does not ask again.</summary>
+    private async Task LoadEstimateAsync()
+    {
+        if (!IsBriefFilled || !int.TryParse(objProjectKey, out var vProjectId) || (objEstimateProjectId == vProjectId && objEstimate is not null))
+        {
+            return;
+        }
+
+        try
+        {
+            objEstimate = await EstimateActions.EstimateAsync(vProjectId);
+            objEstimateProjectId = vProjectId;
+            objEstimateError = null;
+        }
+        catch (Exception aEx) when (aEx is not OperationCanceledException)
+        {
+            objEstimate = null;
+            objEstimateProjectId = null;
+            objEstimateError = aEx.Message;
+        }
+    }
+
+    /// <summary>Keeps the estimate the owner was shown with the queued run. A failure is shown and never undoes the queueing.</summary>
+    private async Task KeepEstimateAsync(int aProjectId, RunQueueAdded aAdded)
+    {
+        try
+        {
+            var vEstimate = objEstimateProjectId == aProjectId && objEstimate is not null
+                ? objEstimate
+                : await EstimateActions.EstimateAsync(aProjectId);
+            if (vEstimate is not null)
+            {
+                await EstimateActions.ConfirmAsync(aProjectId, vEstimate, EstimateRunKinds.Queue, aAdded.Item.QueueItemId);
+            }
+        }
+        catch (Exception aEx) when (aEx is not OperationCanceledException)
+        {
+            ToastService.Error(aEx.Message, "The run is queued but its estimate was not kept");
+        }
     }
 
     /// <inheritdoc />
@@ -48,6 +99,9 @@ public partial class QueueRunDialog
         {
             objErrorMessage = null;
             objBrief = string.Empty;
+            objEstimate = null;
+            objEstimateProjectId = null;
+            objEstimateError = null;
             try
             {
                 objProjects = await ProjectActions.ScanAsync();
@@ -83,6 +137,7 @@ public partial class QueueRunDialog
         try
         {
             var vAdded = await RunQueueActions.QueueAsync(vProjectId, objBrief);
+            await KeepEstimateAsync(vProjectId, vAdded);
             await OnQueued.InvokeAsync(vAdded);
         }
         catch (ArgumentException aEx)

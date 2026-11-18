@@ -43,11 +43,18 @@ public sealed class AppState
     }
 
     /// <summary>
-    /// Records who is signed in.
+    /// Records who is signed in. When the account changes — a sign-out, or another account signing in —
+    /// the selected project is dropped too: it belonged to the account that chose it, and the next one
+    /// reads its own from its own database (BRD-210, BRD-216).
     /// </summary>
     /// <param name="aUser">The signed-in owner, or <see langword="null"/> after sign-out.</param>
     public void SetCurrentUser(CurrentUser? aUser)
     {
+        if (!string.Equals(CurrentUser?.UserId, aUser?.UserId, StringComparison.Ordinal))
+        {
+            SelectedProject = null;
+        }
+
         CurrentUser = aUser;
         RaiseChanged();
     }

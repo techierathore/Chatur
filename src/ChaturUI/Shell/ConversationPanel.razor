@@ -96,7 +96,7 @@
                         </span>
                         <div class="body flex min-w-0 flex-1 flex-col gap-2">
                             <span class="name flex items-center gap-2 text-xs font-semibold">
-                                @(vIsTask ? $"Task for {objCurrentSession!.RoleName}" : vIsMe ? "You" : objCurrentSession!.RoleName)
+                                @(vIsTask ? $"Task for {objCurrentSession!.RoleName}" : vIsMe ? "You" : vMessage.RoleName ?? objCurrentSession!.RoleName)
                                 @if (vIsTask)
                                 {
                                     <span class="model text-xs font-normal text-muted-foreground">@objFollowed!.StepLabel</span>
@@ -165,7 +165,8 @@
                 <DropdownMenuTrigger AsChild>
                     <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7 shrink-0 whitespace-nowrap rounded-full bg-card" Disabled="@(objCurrentSession is null)">
                         <LucideIcon Name="sparkles" Size="14" />
-                        <span class="max-w-40 truncate">@(SelectedModel?.Identifier ?? "Automatic")</span>
+                        @* leading-5: the label sits on the mockup's 20 px line (main.html `model-pick`, parity 2026-11-17). *@
+                        <span class="max-w-40 truncate leading-5">@(SelectedModel?.Identifier ?? "Automatic")</span>
                         <LucideIcon Name="chevron-down" Size="14" />
                     </Button>
                 </DropdownMenuTrigger>

@@ -46,6 +46,18 @@ public sealed class AutoRunViewBuilder
         var vProcessRun = vCurrent?.ProcessRunId is { } vRunId ? await objRuns.GetAsync((int)vRunId, aCt).ConfigureAwait(false) : null;
         var vGoing = vState is AutoRunState.Running or AutoRunState.WaitingForLimit or AutoRunState.Paused;
 
+        // REQ-UI-087 (BRD-202): the output tokens the chain's process runs have spent so far, from the usage every model
+        // call returned (ProcessRunView.TokensOutSoFar), for "against the estimate" on End-to-end run.
+        long vTokensOut = 0;
+        foreach (var vProcess in vChainRows)
+        {
+            if (vProcess.ProcessRunId is { } vSpentRunId)
+            {
+                var vSpent = vSpentRunId == vCurrent?.ProcessRunId ? vProcessRun : await objRuns.GetAsync((int)vSpentRunId, aCt).ConfigureAwait(false);
+                vTokensOut += vSpent?.TokensOutSoFar ?? 0;
+            }
+        }
+
         return new AutoRunView(
             (int)aRow.AutoRunId,
             (int)aRow.ProjectId,
@@ -68,7 +80,8 @@ public sealed class AutoRunViewBuilder
             vGoing && vCurrent is not null ? NowOf(vCurrent, vChainRows.Count, vProcessRun, vFocus) : null,
             vCounts,
             vState == AutoRunState.ReadyForAcceptance && vCounts.Total == 0,
-            await objStore.EventsAsync((int)aRow.AutoRunId, aCt).ConfigureAwait(false));
+            await objStore.EventsAsync((int)aRow.AutoRunId, aCt).ConfigureAwait(false),
+            vTokensOut);
     }
 
     private static int ProgressOf(AutoRunState aState, IReadOnlyList<AutoRunProcessRow> aChain, ProcessRunView? aProcessRun)

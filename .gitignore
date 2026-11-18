@@ -31,3 +31,6 @@ TestResults/
 
 # Verify-test settings with real passwords and keys (tests/verify/test-settings.example.json is the committed shape)
 tests/verify/test-settings.json
+
+# TechieFlow framework — deployed copies, never commit (managed by scaffold/update-framework.sh)
+tests/verify/testsettings.Local.json

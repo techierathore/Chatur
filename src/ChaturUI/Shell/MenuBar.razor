@@ -14,7 +14,7 @@
                 <LucideIcon Name="chevron-down" Size="14" />
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent Class="w-64" data-testid="project-switch-pop">
+        <DropdownMenuContent Class="max-h-80 w-64 overflow-y-auto" data-testid="project-switch-pop">
             <DropdownMenuLabel>Switch project</DropdownMenuLabel>
             <DropdownMenuSeparator />
             @if (objOtherProjects.Count == 0)
@@ -52,12 +52,19 @@
                 <MenubarSeparator />
                 @* File ▸ Recent projects ▸ opens its own list beside the menu, as mockups/main.html draws it (TR-020, TrBlazeUI 2.2.2). *@
                 <MenubarSub>
-                    <MenubarSubTrigger Disabled="@(objRecent.Count == 0)" data-testid="menu-file-recent">Recent projects</MenubarSubTrigger>
+                    <MenubarSubTrigger data-testid="menu-file-recent">Recent projects</MenubarSubTrigger>
                     <MenubarSubContent data-testid="menu-file-recent-list">
                         @foreach (var vRecent in objRecent)
                         {
                             <MenubarItem OnClick="@(() => SwitchToAsync(vRecent.ProjectId))" data-testid="@($"menu-file-recent-{vRecent.ProjectId}")">@vRecent.Name</MenubarItem>
                         }
+                        @* The mockup's "Recent projects" leads to the Start window (main.html href="start.html"); the list
+                           ends with that way in, so every project, not only the recent ones, is one click away. *@
+                        @if (objRecent.Count > 0)
+                        {
+                            <MenubarSeparator />
+                        }
+                        <MenubarItem OnClick="ShowProjectList" data-testid="menu-file-project-list">Project list</MenubarItem>
                     </MenubarSubContent>
                 </MenubarSub>
                 <MenubarSeparator />

@@ -5,6 +5,7 @@ import { test, expect, Page } from '@playwright/test';
 import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 import { tmpdir } from 'os';
+import { execFileSync } from 'child_process';
 
 export const ROOT = resolve(__dirname, '../../.artifacts/verify/fixtures/workbench-a');
 export const NAME = 'WbAFilesApp';
@@ -69,6 +70,26 @@ export function resetFixture(aProgram = PROGRAM_OK) {
     `<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFrameworks>net10.0;${remoteTfm()}</TargetFrameworks>\n  </PropertyGroup>\n</Project>\n`);
   write(join(ROOT, MULTI, 'Multi.cs'), 'class Multi { }\n');
   write(join(ROOT, MULTI, 'Docs', 'readme.txt'), 'multi readme\n');
+  ownRepository(PROJECT);
+}
+
+/**
+ * Makes the fixture project a git repository of its own, on branch main with one empty check-in, unless it
+ * already is one. Before 18 Nov it had none: inside Chatur's working copy git walked up and the top bar showed
+ * Chatur's own branch, so REQ-FN-007 passed only by reading the repository the tests sit in, and failed in a
+ * separate copy with no repository above it. Only the fixture's own repository is ever written (TF-037).
+ */
+function ownRepository(aPath: string): void {
+  const vGit = (aArgs: string[]) => execFileSync('git', ['-C', aPath, ...aArgs], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  let vTop = '';
+  try {
+    vTop = vGit(['rev-parse', '--show-toplevel']);
+  } catch {
+    vTop = '';
+  }
+  if (vTop && resolve(vTop) === resolve(aPath)) return;
+  vGit(['init', '-q', '-b', 'main']);
+  vGit(['-c', 'user.name=Chatur verify', '-c', 'user.email=verify@example.test', 'commit', '-q', '--allow-empty', '-m', 'fixture']);
 }
 
 export const projectName = (aPage: Page) => aPage.getByTestId('project-switch-name');

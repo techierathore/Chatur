@@ -16,7 +16,7 @@
                 @(objBoard is { HasProject: true } ? $"Every requirement of {objBoard.ProjectName} and where it stands, read from the phase checklists." : "Every requirement of the open project and where it stands, read from the phase checklists.")
             </p>
         </div>
-        <Button Variant="ButtonVariant.Outline" OnClick="ReloadAsync" Disabled="objIsLoading" data-testid="reload-board">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="ReloadAsync" Disabled="objIsLoading" data-testid="reload-board">
             <LucideIcon Name="refresh-cw" Size="14" />
             Reload
         </Button>
@@ -48,44 +48,38 @@
     else
     {
         <div class="flex flex-wrap items-center gap-2" data-testid="board-filters">
-            <div data-testid="filter-phase">
-                <Select TValue="string" Value="@PhaseFilter" ValueChanged="OnPhaseChangedAsync" DisplayTextSelector="@(v => PhaseLabel(v))" Class="w-40">
-                    <SelectTrigger AriaLabel="Phase" data-testid="filter-phase-button"><SelectValue /></SelectTrigger>
-                    <SelectContent data-testid="filter-phase-pop">
-                        <SelectItem TValue="string" Value="@AllValue" Text="Every phase">Every phase</SelectItem>
-                        @foreach (var vPhase in objBoard.Phases)
-                        {
-                            <SelectItem TValue="string" Value="@vPhase.ToString()" Text="@($"Phase {vPhase}")">Phase @vPhase</SelectItem>
-                        }
-                    </SelectContent>
-                </Select>
-            </div>
-            <div data-testid="filter-status">
-                <Select TValue="string" Value="@StatusFilter" ValueChanged="OnStatusChangedAsync" DisplayTextSelector="@(v => v == AllValue ? "Every status" : v)" Class="w-40">
-                    <SelectTrigger AriaLabel="Status" data-testid="filter-status-button"><SelectValue /></SelectTrigger>
-                    <SelectContent data-testid="filter-status-pop">
-                        <SelectItem TValue="string" Value="@AllValue" Text="Every status">Every status</SelectItem>
-                        @foreach (var vStatus in BoardStatuses.All)
-                        {
-                            <SelectItem TValue="string" Value="@vStatus" Text="@vStatus">@vStatus</SelectItem>
-                        }
-                    </SelectContent>
-                </Select>
-            </div>
-            <div data-testid="filter-agent">
-                <Select TValue="string" Value="@AgentFilter" ValueChanged="OnAgentChangedAsync" DisplayTextSelector="@(v => AgentLabel(v))" Class="w-44">
-                    <SelectTrigger AriaLabel="Agent" data-testid="filter-agent-button"><SelectValue /></SelectTrigger>
-                    <SelectContent data-testid="filter-agent-pop">
-                        <SelectItem TValue="string" Value="@AllValue" Text="Every agent">Every agent</SelectItem>
-                        @foreach (var vAgent in BoardActions.Agents)
-                        {
-                            <SelectItem TValue="string" Value="@vAgent.Code" Text="@vAgent.Name">@vAgent.Name</SelectItem>
-                        }
-                    </SelectContent>
-                </Select>
-            </div>
-            <Input Value="@Search" ValueChanged="OnSearchChangedAsync" Placeholder="Search id or title" MaxLength="@RequirementFilter.MaxSearchLength" AriaLabel="Search requirements" Class="min-w-44 flex-1" data-testid="filter-search" />
-            <Button Variant="ButtonVariant.Outline" OnClick="ResetAsync" data-testid="filter-reset">
+            <Select TValue="string" Value="@PhaseFilter" ValueChanged="OnPhaseChangedAsync" DisplayTextSelector="@(v => PhaseLabel(v))" Class="w-56" data-testid="filter-phase">
+                <SelectTrigger Class="rounded-full" AriaLabel="Phase" data-testid="filter-phase-button"><span class="text-muted-foreground">Phase</span><SelectValue /></SelectTrigger>
+                <SelectContent data-testid="filter-phase-pop">
+                    <SelectItem TValue="string" Value="@AllValue" Text="Every phase">Every phase</SelectItem>
+                    @foreach (var vPhase in objBoard.Phases)
+                    {
+                        <SelectItem TValue="string" Value="@vPhase.ToString()" Text="@($"Phase {vPhase}")">Phase @vPhase</SelectItem>
+                    }
+                </SelectContent>
+            </Select>
+            <Select TValue="string" Value="@StatusFilter" ValueChanged="OnStatusChangedAsync" DisplayTextSelector="@(v => v == AllValue ? "Every status" : v)" Class="w-56" data-testid="filter-status">
+                <SelectTrigger Class="rounded-full" AriaLabel="Status" data-testid="filter-status-button"><span class="text-muted-foreground">Status</span><SelectValue /></SelectTrigger>
+                <SelectContent data-testid="filter-status-pop">
+                    <SelectItem TValue="string" Value="@AllValue" Text="Every status">Every status</SelectItem>
+                    @foreach (var vStatus in BoardStatuses.All)
+                    {
+                        <SelectItem TValue="string" Value="@vStatus" Text="@vStatus">@vStatus</SelectItem>
+                    }
+                </SelectContent>
+            </Select>
+            <Select TValue="string" Value="@AgentFilter" ValueChanged="OnAgentChangedAsync" DisplayTextSelector="@(v => AgentLabel(v))" Class="w-56" data-testid="filter-agent">
+                <SelectTrigger Class="rounded-full" AriaLabel="Agent" data-testid="filter-agent-button"><span class="text-muted-foreground">Agent</span><SelectValue /></SelectTrigger>
+                <SelectContent data-testid="filter-agent-pop">
+                    <SelectItem TValue="string" Value="@AllValue" Text="Every agent">Every agent</SelectItem>
+                    @foreach (var vAgent in BoardActions.Agents)
+                    {
+                        <SelectItem TValue="string" Value="@vAgent.Code" Text="@vAgent.Name">@vAgent.Name</SelectItem>
+                    }
+                </SelectContent>
+            </Select>
+            <Input Value="@Search" ValueChanged="OnSearchChangedAsync" Placeholder="Search id or title" MaxLength="@RequirementFilter.MaxSearchLength" AriaLabel="Search requirements" Class="min-w-44 flex-1 rounded-full" data-testid="filter-search" />
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="ResetAsync" data-testid="filter-reset">
                 <LucideIcon Name="refresh-cw" Size="14" />
                 Reset
             </Button>
@@ -105,7 +99,7 @@
 
         <Card data-testid="board-table-panel">
             <CardHeader>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <CardTitle>Requirements</CardTitle>
                     <span class="grow"></span>
                     <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="showing-count">showing @objBoard.Items.Count of @objBoard.Counts.All</Badge>
@@ -124,7 +118,7 @@
                                 <CellTemplate Context="req">
                                     <div class="flex flex-col items-start gap-1">
                                         <Button Variant="ButtonVariant.Link" Class="h-auto p-0 font-mono text-sm" OnClick="@(() => Open(req))" data-testid="@($"open-{req.Id}")">@req.Id</Button>
-                                        <Badge Variant="BadgeVariant.Outline" Class="rounded-full" data-testid="@($"type-{req.Id}")">@req.Type</Badge>
+                                        <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="@($"type-{req.Id}")">@req.Type</Badge>
                                     </div>
                                 </CellTemplate>
                             </DataTableColumn>
@@ -141,7 +135,7 @@
                                 <CellTemplate Context="req">
                                     <div data-testid="@($"status-{req.Id}")">
                                         <Select TValue="string" Value="@req.BoardStatus" ValueChanged="@((string v) => SetStatusAsync(req, v))" DisplayTextSelector="@(v => v)" Class="w-36">
-                                            <SelectTrigger AriaLabel="@($"Status of {req.Id}")" data-testid="@($"status-{req.Id}-button")"><SelectValue /></SelectTrigger>
+                                            <SelectTrigger Class="rounded-full" AriaLabel="@($"Status of {req.Id}")" data-testid="@($"status-{req.Id}-button")"><SelectValue /></SelectTrigger>
                                             <SelectContent data-testid="@($"status-{req.Id}-pop")">
                                                 @foreach (var vStatus in StatusChoices(req))
                                                 {
@@ -192,11 +186,11 @@
                         {
                             @if (vDetail.ScreenRoute is { } vRoute && IsTabScreen(vRoute))
                             {
-                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => OpenScreen(vRoute))" data-testid="detail-screen-link">@vDetail.ScreenName</Button>
+                                <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => OpenScreen(vRoute))" data-testid="detail-screen-link">@vDetail.ScreenName</Button>
                             }
                             else if (vDetail.ScreenRoute is { } vWindowRoute)
                             {
-                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="@vWindowRoute" data-testid="detail-screen-link">@vDetail.ScreenName</Button>
+                                <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="@vWindowRoute" data-testid="detail-screen-link">@vDetail.ScreenName</Button>
                             }
                             else
                             {

@@ -25,29 +25,29 @@
 
 ---
 project: Chatur
-last_updated: 2026-11-04
-current_phase: Phase 3 of 4 (End to end and unattended) · Verify — 11 to verify across phases 1, 2, 56 of 56 verified
+last_updated: 2026-11-18
+current_phase: Phase 3 of 4 (End to end and unattended) · Verify — 1 to verify across phases 1, handoff done, 81 of 81 verified
 last_verified_build: PASS
-last_verified_date: 2026-11-04
+last_verified_date: 2026-11-18
 ---
 
 # Chatur — Status
 
 ## Where I am
 
-Phase 3 of 4 (End to end and unattended). All 56 phase-3 rows are Verified. Chatur is on TrBlazeUI 2.2.2: File ▸ Recent projects and View ▸ Zoom are real submenus, and chatur.css keeps only the 5px around menus. Register tests no longer create accounts on App Manager; they sign in as test user 1 first. Test passwords come from tests/verify/test-settings.json. REQ-FN-004, REQ-UI-004, REQ-UI-073 and REQ-UI-080 are Verified.
+Phase 3 of 4 (End to end and unattended): 81 of 81 Verified after a full verify of phases 1 to 3 on 18 Nov. Phase 1 has 83 of 98 Verified, phase 2 18 of 23: twelve rows wait only on a fault in the mockup check (TF-045), and REQ-UI-018 needs a build that carries its commit. Two live accounts were walked on the Windows app. Phase 4 is not built.
 
 ## Next command to run
 
 Claude Code:
 ```
-/TechieFlow:agents:verifier *verify all Chatur --phase all
+/TechieFlow:agents:verifier *verify ui Chatur --phase 1
 ```
 OpenCode:
 ```
-/flow-verifier *verify all Chatur --phase all
+/flow-verifier *verify ui Chatur --phase 1
 ```
-Why: 11 rows of other phases are built and not verified — phase 1: 3 (REQ-UI-008, REQ-FN-012, REQ-FN-013); phase 2: 8 (REQ-FN-053, REQ-UI-047, REQ-FN-054, REQ-UI-053 …); this phase alone would be: 56 of 56 verified (every row in this phase's scope is terminal and handoff has not run yet); working docs/Chatur-P3-Checklist.md.
+Why: 1 rows of other phases are built and not verified — phase 1: 1 (REQ-UI-018); this phase alone would be: handoff done, 81 of 81 verified (every row in this phase's scope is terminal and handoff has run; waiting on the owner); working docs/Chatur-P3-Checklist.md.
 
 ## Open requirements
 
@@ -63,9 +63,10 @@ Why: 11 rows of other phases are built and not verified — phase 1: 3 (REQ-UI-0
 
 ## Known blockers
 
-- TF-018 and TF-021 are fixed upstream (1 Nov) and not yet re-checked; on 4 Nov the verify booted the WSL harness copy without help.
-- REQ-FN-004's "register creates the account" is a hand step, once per release; not yet done (checklist entry, 2026-11-04).
-- The test provider key (Chatur:TestProvider, OpenCode Go) is refused with 401; the model-answer tests fail until it is renewed.
+- TF-045 (mockup check): Blocked until fixed upstream — REQ-FN-018 to 021, REQ-FN-023, REQ-UI-037, REQ-UI-038 (phase 1) and REQ-UI-053, REQ-FN-058, REQ-UI-054, REQ-FN-059, REQ-FN-060 (phase 2).
+- REQ-UI-018 shows the build's commit only on a build made in the repository or a nightly; the separate copy has no `.git`.
+- Hand steps, once per release: REQ-FN-001, REQ-FN-002, REQ-FN-022, REQ-FN-030, REQ-FN-048; REQ-FN-012 needs the Mac; REQ-NFR-006 needs a published nightly.
+- Owner, before the next commit: the `[verify-seed]` check-ins and branches written into this repository on 15 Nov (TF-037); remove them by hand.
 
 ## Verification log
 
@@ -73,17 +74,17 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 | Date | Phase | Result | Status table |
 |---|---|---|---|
-| 2026-10-28 | build-phase | 32/51 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
-| 2026-10-29 | amend-docs | 32/51 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
-| 2026-10-29 | *verify all Chatur --phase 3 | 51/51 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
-| 2026-10-30 | triage-and-fix | 56/56 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
-| 2026-11-04 | fix-issues | 56/56 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-14 | triage-and-fix | 74/74 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-15 | triage-and-fix + handoff | 74/74 Verified, ready for the owner's test | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-16 | triage-and-fix | 74/74 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-18 | triage-and-fix | 78/81 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-18 | triage-and-fix | 81/81 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
 
 ## Library feedback summary
 
-- TechieFlow: 1 open · 10 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 11 closed — docs/Chatur-TechieFlow-Feedback.md
+- TechieFlow: 2 open · 14 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 24 closed — docs/Chatur-TechieFlow-Feedback.md
 - TechieRag: 0 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
-- TrBlazeUI: 2 open · 22 closed — docs/Chatur-TrBlazeUI-Feedback.md
+- TrBlazeUI: 2 open · 24 closed — docs/Chatur-TrBlazeUI-Feedback.md
 
 ## Standards compliance
 
@@ -91,13 +92,9 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 ## Deferred / future
 
-- No BRD row: account controls, hiding output, merging or creating a branch.
-- Submenu arrow order and 390px overflow: TR-023, TR-024 filed upstream.
-- A run cut off by closing Chatur resumes when End-to-end run opens.
-- With six tabs open, the newest can scroll out of view.
-- Top bar says "Signed in" after a failed sign-in check.
+- No BRD row: Settings ▸ Account content, hiding output, merging or creating a branch.
+- The run queue moves only while its tab is open.
+- Feedback and Licence screens wait for phase 4 (REQ-UI-062, REQ-UI-064).
+- Once on 18 Nov an end-to-end run's step stopped with "Unable to find the specified file"; not reproduced since (note on REQ-FN-061).
+- Data kept before 17 Nov stays in the install's own chatur.db, shown to no account.
 - Owner reviews step wording for 11 processes.
-- Processes has no change or evidence field.
-- Appearance text size; routing's small model unnamed.
-- Sign out hangs on "Loading Chatur" until reopened.
-- Anthropic tier 3 seeds invalid `claude-haiku-5`.

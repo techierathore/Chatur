@@ -156,7 +156,8 @@ test.describe('Prerequisites', () => {
     }
 
     const vTarget = vMissing[0];
-    const vFixText = (await vTarget.row.locator('td').nth(4).innerText()).trim();
+    // The cell's innerText starts with the Copy button's label on its own line; the command is what must be shown.
+    const vFixText = (await vTarget.row.locator('td').nth(4).innerText()).trim().replace(/^Copy\s*/, '');
     expect(vFixText, `${vTarget.name} has an install command`).not.toBe('');
 
     const vSlug = vTarget.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

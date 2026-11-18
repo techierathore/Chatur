@@ -106,7 +106,7 @@ public partial class SettingsProviders
         aState switch
         {
             ProviderState.Connected => BadgeVariant.Success,
-            ProviderState.Failed => BadgeVariant.Destructive,
+            ProviderState.Failed => BadgeVariant.Danger,
             _ => BadgeVariant.Warning
         };
 

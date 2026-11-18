@@ -33,4 +33,24 @@ public static class AccountSecretNames
     /// (REQ-FN-003).
     /// </summary>
     public const string TokenExpiresAtUtc = "AppManager.TokenExpiresAtUtc";
+
+    /// <summary>
+    /// The name one account's own secret — a provider key, a subscription session — is filed under:
+    /// <c>chatur.account.&lt;user id&gt;.&lt;name&gt;</c>, so two accounts on one install never share or
+    /// overwrite a secret (BRD-212). With no account (a host or test with no sign-in) it is the name as
+    /// given, as it was before accounts had secrets of their own; a name kept that way is never read
+    /// for an account.
+    /// </summary>
+    /// <param name="aUserId">The account's App Manager user id, or <see langword="null"/>.</param>
+    /// <param name="aName">The secret's own name, e.g. <c>chatur.provider.3</c>.</param>
+    public static string ForAccount(string? aUserId, string aName)
+    {
+        if (string.IsNullOrWhiteSpace(aUserId))
+        {
+            return aName;
+        }
+
+        var vRest = aName.StartsWith("chatur.", StringComparison.Ordinal) ? aName["chatur.".Length..] : aName;
+        return $"chatur.account.{Data.SqliteConnectionFactory.AccountFolderName(aUserId)}.{vRest}";
+    }
 }

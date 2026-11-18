@@ -8,68 +8,93 @@
 
 ## Goal
 
-Phase 3, the unattended run: one command takes a brief and runs the whole chain to ready-for-acceptance, starting each agent as it is needed. A run survives a usage limit, a stall and a crash, can be queued and resumed, and never reports complete while a requirement is open. Afterwards there is a report to read. Since 2026-10-08 (owner decision, option A) every process step that is not a check or an owner stop is handed to the agent owning its process, and each process's checks judge the result on disk (REQ-FN-084 to REQ-FN-102, REQ-UI-070, REQ-UI-071). Since 2026-10-09 a "writes documents" right covers docs/ only (REQ-FN-103 to REQ-FN-105, REQ-UI-072). This checklist is the whole work list of the phase.
+Phase 3, the unattended run: one command takes a brief and runs the whole chain to ready-for-acceptance, starting each agent as it is needed. A run survives a usage limit, a stall and a crash, can be queued and resumed, and never reports complete while a requirement is open. Afterwards there is a report to read. Since 2026-10-08 (owner decision, option A) every process step that is not a check or an owner stop is handed to the agent owning its process, and each process's checks judge the result on disk (REQ-FN-084 to REQ-FN-102, REQ-UI-070, REQ-UI-071). Since 2026-10-09 a "writes documents" right covers docs/ only (REQ-FN-103 to REQ-FN-105, REQ-UI-072). Since 2026-11-10: estimates (REQ-UI-083 to 090, REQ-FN-107 to 116).
 
 ## Requirements Status
 
 | ID | Requirement | Status | % | Remarks | Details |
 |----|-------------|--------|---|---------|---------|
-| REQ-FN-061 | A brief in, the whole chain run | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-061 the registered end-to-end run starts and the back`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-061) |
-| REQ-UI-055 | Each role starts when it is needed | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-055 the planned chain lists the eight processes and t`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-055) |
-| REQ-FN-062 | It stops at the acceptance test | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-062 the finished chain reads ready for acceptance and`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-062) |
-| REQ-UI-056 | What is happening now | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-056 a run that is going shows the agent, the process,`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-056) |
-| REQ-FN-063 | Step by step is untouched | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-063 with no run going every process can still be star`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-063) |
-| REQ-FN-064 | A limit is waited out | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-064 a rate limit from a provider is recognised as a u`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-064) |
-| REQ-FN-065 | A stall or a crash is survived | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-065 a stalled step is stopped, retried and recorded a`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-065) |
-| REQ-FN-066 | Never complete while work is open | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-066 a run that has not finished its chain cannot be m`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-066) |
-| REQ-FN-067 | Queue a run | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-067 a brief shorter than the minimum is refused`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-067) |
-| REQ-UI-057 | One at a time | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-057 the next run waits while one is going and starts `; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-057) |
-| REQ-FN-068 | Pause and start again | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-068 a paused run resumes the same run it was paused o`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-068) |
-| REQ-FN-069 | Take one out | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-069 a removed waiting run leaves the queue and is nev`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-069) |
-| REQ-FN-070 | A resumed run picks the weakest work first | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-070 a resume takes the blocked requirement before par`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-070) |
-| REQ-UI-058 | Every requirement and its verdict | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-058 the report of a finished run reads verdicts, wait`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-058) |
-| REQ-UI-059 | Every miss, and whose gap it was | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-059 the report lists each miss with what it was and w`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-059) |
-| REQ-UI-060 | What it cost | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-060 a run with nothing recorded reports cost as not r`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-060) |
-| REQ-UI-061 | Read an earlier one | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-061 earlier runs are listed newest first and a run of`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-061) |
-| REQ-FN-071 | A small model picks the model | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-071 the owner turns automatic routing on and it is re` | [view](#d-req-fn-071) |
-| REQ-FN-072 | The owner can take it back | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-072 the owner turns automatic routing off and the tie` | [view](#d-req-fn-072) |
-| REQ-FN-084 | A step is handed to its agent | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-084 a project with only a step session still gets the` | [view](#d-req-fn-084) |
-| REQ-FN-085 | The agent keeps to its rights | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-085 a tool the agent's rights withhold is refused and` | [view](#d-req-fn-085) |
-| REQ-FN-086 | The agent works on its own tier | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-086 the handed step names the model routed to its age` | [view](#d-req-fn-086) |
-| REQ-FN-087 | The step waits for the agent and records what it did | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-087 the step ends only when the agent finishes, recor` | [view](#d-req-fn-087) |
-| REQ-FN-088 | The checks judge what is on disk | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-088 a failed check stops the run at that step with th` | [view](#d-req-fn-088) |
-| REQ-FN-089 | A real usage limit is waited out | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-089 a handed step's usage limit is waited out, the st`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-089) |
-| REQ-FN-090 | Stop ends the agent's work | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-090 stop during a handed step ends the agent's work a` | [view](#d-req-fn-090) |
-| REQ-FN-091 | An unattended step does not wait on approvals | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-091 an unattended handed step writes without approval`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-091) |
-| REQ-UI-070 | Process run shows the agent at work | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-070 Process run shows the agent, its model, and the f` | [view](#d-req-ui-070) |
-| REQ-UI-071 | The agent's output in the conversation | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-071 the agent's messages and tool calls appear in the` | [view](#d-req-ui-071) |
-| REQ-FN-100 | day1-greenfield is done when its documents are | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-100 a missing brief fails the check` | [view](#d-req-fn-100) |
-| REQ-FN-092 | split-brd is done when every requirement is in one phase | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-092 a one-phase project passes on its one BRD and che` | [view](#d-req-fn-092) |
-| REQ-FN-093 | build-phase is done when the open rows are built | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-093 build-phase passes only when every open row is Im` | [view](#d-req-fn-093) |
-| REQ-FN-094 | fix-issues is done when every issue is fixed | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-094 fix-issues passes only when no row is left FAIL o` | [view](#d-req-fn-094) |
-| REQ-FN-095 | handoff-phase is done when the phase is closed in the documents | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-095 handoff-phase passes only when no row is open and` | [view](#d-req-fn-095) |
-| REQ-FN-096 | refresh-status is done when the status matches the checklists | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-096 refresh-status passes only when the status writte` | Status | n |" or "Status: n". | [view](#d-req-fn-096) |
-| REQ-FN-101 | deploy-checklist is done when the release list is whole | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-101 deploy-checklist passes only when the list writte` | [view](#d-req-fn-101) |
-| REQ-FN-102 | mockups is done when every screen is drawn and linked | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-102 mockups passes only when every screen is drawn, a` | [view](#d-req-fn-102) |
-| REQ-FN-097 | amend-docs is done when the documents agree | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-097 amend-docs passes only when touched documents cha` | [view](#d-req-fn-097) |
-| REQ-FN-098 | triage-issues is done when every report has a row | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-098 triage-issues passes only when every report has a` | [view](#d-req-fn-098) |
-| REQ-FN-099 | metrics-report is done when the report matches the records | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-099 metrics-report passes only when the report's tota` | [view](#d-req-fn-099) |
-| REQ-FN-103 | A right to write documents | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-103 a role with only write-docs may write a new folde` | [view](#d-req-fn-103) |
-| REQ-FN-104 | The Analyst, the Architect and the Verifier hold it | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-104 every source-file right is as before(aRole: "arch` | [view](#d-req-fn-104) |
-| REQ-UI-072 | The right is shown where rights are listed | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-072 Settings > Agents lists "Writes documents" among ` | [view](#d-req-ui-072) |
-| REQ-FN-105 | A handed step writes its documents but not source | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-105 a handed step writes its documents but a source w` | [view](#d-req-fn-105) |
-| REQ-UI-073 | The menu bar's menus do their jobs | Verified | 100% | 2026-11-04 verify: PASS — test `REQ-UI-073 File, Edit, View and Help each hold their items a` | [d](#d-req-ui-073) |
-| REQ-UI-074 | Close the conversation and bring it back | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-074 closing the conversation gives the file view the ` | [d](#d-req-ui-074) |
-| REQ-FN-106 | Settings and the other pages open from the main window | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-FN-106 REQ-FN-011 REQ-UI-017 REQ-UI-018 REQ-FN-012 REQ-F` | [d](#d-req-fn-106) |
-| REQ-NFR-007 | The app icon is the approved Chatur mark | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-NFR-007 icon colour is brand amber and splash colour sta` | [view](#d-req-nfr-007) |
-| REQ-NFR-008 | The splash screen is the approved glyph | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-NFR-008 icon and splash SVGs are byte-identical to the b` | [view](#d-req-nfr-008) |
-| REQ-UI-078 | The mark sits beside the wordmark | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-UI-078 the mark is the white glyph on a 20 px amber squa` | [view](#d-req-ui-078) |
-| REQ-NFR-009 | The web harness carries the icon, made by a script | Verified | 100% | 2026-10-29 verify: PASS — test `REQ-NFR-009 App.razor links favicon.ico, icon-192.png and ic` | [view](#d-req-nfr-009) |
-| REQ-UI-079 | Type @ to attach a project file in the chat | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-079 typing @ lists the project files, typing narrows ` | [d](#d-req-ui-079) |
-| REQ-UI-080 | Controls keep the mockup's inner spacing | Verified | 100% | 2026-11-04 verify: PASS — test `REQ-UI-080 a focused field on New project keeps its text ins` | [d](#d-req-ui-080) |
-| REQ-UI-081 | Labels carry no trailing dots | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-081 no menu, button, label or placeholder on any scre` | [d](#d-req-ui-081) |
-| REQ-UI-082 | Every button does something | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-UI-082 the toolbar Find, once always greyed out, opens F` | [d](#d-req-ui-082) |
-| REQ-NFR-010 | Tests never touch the owner's database | Verified | 100% | 2026-10-30 verify: PASS — test `REQ-NFR-010 the desktop head under test keeps its database u` | [d](#d-req-nfr-010) |
+| REQ-FN-061 | A brief in, the whole chain run | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-061 the registered end-to-end run starts and the back`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-061) |
+| REQ-UI-055 | Each role starts when it is needed | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-055 the planned chain lists the eight processes and t`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-055) |
+| REQ-FN-062 | It stops at the acceptance test | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-062 the finished chain reads ready for acceptance and`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-062) |
+| REQ-UI-056 | What is happening now | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-056 a run that is going shows the agent, the process,`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-056) |
+| REQ-FN-063 | Step by step is untouched | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-063 with no run going every process can still be star`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-063) |
+| REQ-FN-064 | A limit is waited out | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-064 a rate limit from a provider is recognised as a u`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-064) |
+| REQ-FN-065 | A stall or a crash is survived | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-065 a stalled step is stopped, retried and recorded a`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-065) |
+| REQ-FN-066 | Never complete while work is open | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-066 a run that has not finished its chain cannot be m`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-066) |
+| REQ-FN-067 | Queue a run | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-067 a brief shorter than the minimum is refused`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-067) |
+| REQ-UI-057 | One at a time | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-057 the next run waits while one is going and starts `; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-057) |
+| REQ-FN-068 | Pause and start again | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-068 a paused run resumes the same run it was paused o`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-068) |
+| REQ-FN-069 | Take one out | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-069 a removed waiting run leaves the queue and is nev`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-069) |
+| REQ-FN-070 | A resumed run picks the weakest work first | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-070 a resumed run continues from the open requirement`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-070) |
+| REQ-UI-058 | Every requirement and its verdict | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-058 the report of a finished run reads verdicts, wait`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 32 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-058) |
+| REQ-UI-059 | Every miss, and whose gap it was | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-059 the report lists each miss with what it was and w`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 32 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-059) |
+| REQ-UI-060 | What it cost | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-060 a run with nothing recorded reports cost as not r`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 32 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-060) |
+| REQ-UI-061 | Read an earlier one | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-061 earlier runs are listed newest first and a run of`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 32 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-061) |
+| REQ-FN-071 | A small model picks the model | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-071 the owner turns automatic routing on and it is re` | [view](#d-req-fn-071) |
+| REQ-FN-072 | The owner can take it back | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-072 the owner turns automatic routing off and the tie` | [view](#d-req-fn-072) |
+| REQ-FN-084 | A step is handed to its agent | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-084 a project with only a step session still gets the` | [view](#d-req-fn-084) |
+| REQ-FN-085 | The agent keeps to its rights | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-085 a tool the agent's rights withhold is refused and` | [view](#d-req-fn-085) |
+| REQ-FN-086 | The agent works on its own tier | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-086 the handed step names the model routed to its age` | [view](#d-req-fn-086) |
+| REQ-FN-087 | The step waits for the agent and records what it did | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-087 the step ends only when the agent finishes, recor` | [view](#d-req-fn-087) |
+| REQ-FN-088 | The checks judge what is on disk | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-088 a failed check stops the run at that step with th` | [view](#d-req-fn-088) |
+| REQ-FN-089 | A real usage limit is waited out | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-089 a handed step's usage limit is waited out, the st`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-089) |
+| REQ-FN-090 | Stop ends the agent's work | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-090 stop ends the agent's session and the step reads ` | [view](#d-req-fn-090) |
+| REQ-FN-091 | An unattended step does not wait on approvals | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-091 an unattended handed step writes without approval`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-091) |
+| REQ-UI-070 | Process run shows the agent at work | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-070 Process run shows the agent, its model, and the f` | [view](#d-req-ui-070) |
+| REQ-UI-071 | The agent's output in the conversation | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-071 the agent's messages and tool calls appear in the` | [view](#d-req-ui-071) |
+| REQ-FN-100 | day1-greenfield is done when its documents are | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-100 a missing brief fails the check` | [view](#d-req-fn-100) |
+| REQ-FN-092 | split-brd is done when every requirement is in one phase | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-092 a one-phase project passes on its one BRD and che` | [view](#d-req-fn-092) |
+| REQ-FN-093 | build-phase is done when the open rows are built | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-093 build-phase passes only when every open row is Im` | [view](#d-req-fn-093) |
+| REQ-FN-094 | fix-issues is done when every issue is fixed | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-094 fix-issues passes only when no row is left FAIL o` | [view](#d-req-fn-094) |
+| REQ-FN-095 | handoff-phase is done when the phase is closed in the documents | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-095 handoff-phase passes only when no row is open and` | [view](#d-req-fn-095) |
+| REQ-FN-096 | refresh-status is done when the status matches the checklists | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-096 refresh-status passes only when the status writte` | Status | n |" or "Status: n". | [view](#d-req-fn-096) |
+| REQ-FN-101 | deploy-checklist is done when the release list is whole | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-101 deploy-checklist passes only when the list writte` | [view](#d-req-fn-101) |
+| REQ-FN-102 | mockups is done when every screen is drawn and linked | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-102 mockups passes only when every screen is drawn, a` | [view](#d-req-fn-102) |
+| REQ-FN-097 | amend-docs is done when the documents agree | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-097 amend-docs passes only when touched documents cha` | [view](#d-req-fn-097) |
+| REQ-FN-098 | triage-issues is done when every report has a row | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-098 triage-issues passes only when every report has a` | [view](#d-req-fn-098) |
+| REQ-FN-099 | metrics-report is done when the report matches the records | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-099 metrics-report passes only when the report's tota` | [view](#d-req-fn-099) |
+| REQ-FN-103 | A right to write documents | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-103 a role with only write-docs may write a new folde` | [view](#d-req-fn-103) |
+| REQ-FN-104 | The Analyst, the Architect and the Verifier hold it | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-104 every source-file right is as before(aRole: "arch` | [view](#d-req-fn-104) |
+| REQ-UI-072 | The right is shown where rights are listed | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-072 Settings > Agents lists "Writes documents" among ` | [view](#d-req-ui-072) |
+| REQ-FN-105 | A handed step writes its documents but not source | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-105 a handed step writes its documents but a source w` | [view](#d-req-fn-105) |
+| REQ-UI-073 | The menu bar's menus do their jobs | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-073 REQ-FN-106 Ctrl+, in the main window opens Settin` | [d](#d-req-ui-073) |
+| REQ-UI-074 | Close the conversation and bring it back | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-074 closing the conversation gives the file view the ` | [d](#d-req-ui-074) |
+| REQ-FN-106 | Settings and the other pages open from the main window | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-106 REQ-FN-011 REQ-UI-017 REQ-UI-018 REQ-FN-012 REQ-F` | [d](#d-req-fn-106) |
+| REQ-NFR-007 | The app icon is the approved Chatur mark | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-NFR-007 icon colour is brand amber and splash colour sta` | [view](#d-req-nfr-007) |
+| REQ-NFR-008 | The splash screen is the approved glyph | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-NFR-008 icon and splash SVGs are byte-identical to the b` | [view](#d-req-nfr-008) |
+| REQ-UI-078 | The mark sits beside the wordmark | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-078 the mark is the white glyph on a 20 px amber squa` | [view](#d-req-ui-078) |
+| REQ-NFR-009 | The web harness carries the icon, made by a script | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-NFR-009 App.razor links favicon.ico, icon-192.png and ic` | [view](#d-req-nfr-009) |
+| REQ-UI-079 | Type @ to attach a project file in the chat | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-079 typing @ lists the project files, typing narrows ` | [d](#d-req-ui-079) |
+| REQ-UI-080 | Controls keep the mockup's inner spacing | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-080 a focused field on New project keeps its text ins` | [d](#d-req-ui-080) |
+| REQ-UI-081 | Labels carry no trailing dots | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-081 no menu, button, label or placeholder on any scre` | [d](#d-req-ui-081) |
+| REQ-UI-082 | Every button does something | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-082 the toolbar Find, once always greyed out, opens F` | [d](#d-req-ui-082) |
+| REQ-NFR-010 | Tests never touch the owner's database | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-NFR-010 the desktop head under test keeps its database u` | [d](#d-req-nfr-010) |
+| REQ-UI-083 | An estimate before a process starts | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-083 REQ-UI-089 Start on build-phase, verify-phase and` | [view](#d-req-ui-083) |
+| REQ-UI-084 | An estimate before an end-to-end run starts | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-084 a brief with no checklist writes nothing until it`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-084) |
+| REQ-UI-085 | An estimate on a queued run | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-085 a queued run keeps its estimate and the run it be`; Run queue renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-085) |
+| REQ-FN-107 | Worked out from this project's own runs, row kind by row kind | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-107 quartiles interpolate between neighbours and roun` | [view](#d-req-fn-107) |
+| REQ-FN-108 | Sister projects fill in, and the estimate says so | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-086 REQ-FN-108 a sister project is listed with its ru` | [view](#d-req-fn-108) |
+| REQ-UI-086 | The owner names the sister projects | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-086 REQ-FN-108 a sister project is listed with its ru` | [view](#d-req-ui-086) |
+| REQ-FN-109 | No precedent, never a number | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-109 F3 after handoff reads no precedent, basis none o` | [view](#d-req-fn-109) |
+| REQ-FN-110 | No model judgement in the estimate | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-110 F1 estimated twice with no provider reachable mat` | [view](#d-req-fn-110) |
+| REQ-FN-111 | Made for the model and tier that will run the step | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-111 the estimate names the routed model claude-opus-5` | [view](#d-req-fn-111) |
+| REQ-FN-112 | Changing the tier changes the estimate before the start | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-112 moving build to tier 2 changes the next estimate ` | [view](#d-req-fn-112) |
+| REQ-UI-087 | Process run shows the actual so far beside the estimate | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-087 a running process records the tokens each model c` | [view](#d-req-ui-087) |
+| REQ-UI-088 | The run report sets estimate beside actual | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-088 6,000 and 12,000 read within, 12,001 above, 5,999`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 32 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-088) |
+| REQ-FN-113 | At handoff, the phase against its estimate | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-113 handoff sets the phase's batch beside F6's runs: ` | [view](#d-req-fn-113) |
+| REQ-FN-114 | Estimates are written in TechieFlow's own shape | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-114 confirming F1 writes REQ-FN-301's build record eq` | [view](#d-req-fn-114) |
+| REQ-FN-115 | An estimate is never mixed with a measurement | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-115 confirming an estimate leaves runs.jsonl, the che`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 32 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-115) |
+| REQ-UI-089 | The owner's own testing reads "not measured" | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-089 the owner's own testing reads not measured and is`; Run report renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 32 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-089) |
+| REQ-UI-090 | A project with no run records says "no estimate yet" | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-090 a project with no run records reads no estimate y` | [view](#d-req-ui-090) |
+| REQ-FN-116 | Runs that cannot be divided among rows are left out | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-116 F4 leaves out undividable runs, equals F1 over 5 ` | [view](#d-req-fn-116) |
+| REQ-UI-091 | What one account makes or opens, another never sees | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-091 REQ-UI-008 REQ-FN-006 a second account on the ins` | [view](#d-req-ui-091) |
+| REQ-FN-302 | A chat is never continued by another account | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-302 REQ-FN-008 a chat started by one account is never` | [view](#d-req-fn-302) |
+| REQ-UI-092 | A provider and its key belong to the account that added it | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-092 REQ-FN-017 one account's provider key is never of` | [view](#d-req-ui-092) |
+| REQ-FN-303 | Run history belongs to the account that ran it | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-FN-303 run history belongs to the account that ran it`; End-to-end run renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 11 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-303) |
+| REQ-UI-093 | Data kept before accounts belongs to nobody | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-093 data kept before accounts belongs to nobody and i` | [view](#d-req-ui-093) |
+| REQ-UI-094 | Open a file from Start | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-094 Open a file opens the folder that holds it, with ` | [view](#d-req-ui-094) |
+| REQ-UI-095 | Signing in as another account leaves nothing of the last one on screen | Verified | 100% | 2026-11-18 verify: PASS — test `REQ-UI-095 another account signing in drops the open project` | [view](#d-req-ui-095) |
 
 **Status values:** `Not Started` · `In Progress` · `Implemented` · `Verified` · `Done (pre-existing)` · `Needs re-verify` · `PARTIAL` · `FAIL` · `Blocked` · `Owner-UAT` · `N/A`.
 
@@ -115,6 +140,14 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 - **REQ-FN-091** — An unattended step does not wait on approvals. *BRD:* BRD-166 · *Mockup:* mockups/auto-run.html
   - *Acceptance:* When a handed step runs on End-to-end run, then the agent's changes are written without waiting for approval, while its rights and the source-control refusal still apply.
 
+<a id="d-req-ui-084"></a>
+- **REQ-UI-084** — An estimate before an end-to-end run starts. *BRD:* BRD-193 · *Mockup:* mockups/auto-run.html
+  - *Acceptance:* When the owner fills in a brief for a project holding fixture F1 on End-to-end run, then the estimate shows before Start, each line naming its model and tier.
+
+<a id="d-req-fn-303"></a>
+- **REQ-FN-303** — Run history belongs to the account that ran it. *BRD:* BRD-213 · *Mockup:* mockups/auto-run.html
+  - *Acceptance:* When a second account opens End-to-end run, Run queue or Run report on an install where a first account has runs, then none of the first account's runs is listed.
+
 ## Page: Run queue (`/auto/queue`)
 
 <a id="d-req-fn-067"></a>
@@ -137,6 +170,10 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 - **REQ-FN-070** — A resumed run picks the weakest work first. *BRD:* BRD-130 · *Mockup:* mockups/run-queue.html
   - *Acceptance:* When a run resumes after a stop on Run queue, then it continues from the open requirement furthest from verified.
 
+<a id="d-req-ui-085"></a>
+- **REQ-UI-085** — An estimate on a queued run. *BRD:* BRD-194 · *Mockup:* mockups/run-queue.html
+  - *Acceptance:* When the owner queues a run for fixture F1 on Run queue, then its estimate shows before Queue it is pressed, and the waiting run keeps that estimate.
+
 ## Page: Run report (`/auto/report`)
 
 <a id="d-req-ui-058"></a>
@@ -154,6 +191,18 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 <a id="d-req-ui-061"></a>
 - **REQ-UI-061** — Read an earlier one. *BRD:* BRD-134 · *Mockup:* mockups/run-report.html
   - *Acceptance:* When the owner picks an earlier run on Run report, then that run's report is shown instead of the newest.
+
+<a id="d-req-ui-088"></a>
+- **REQ-UI-088** — The run report sets estimate beside actual. *BRD:* BRD-203 · *Mockup:* mockups/run-report.html
+  - *Acceptance:* When a run estimated at 6,000/9,000/12,000 tokens ends on Run report, then the actual reads within at 6,000 and 12,000, above at 12,001, below at 5,999.
+
+<a id="d-req-fn-115"></a>
+- **REQ-FN-115** — An estimate is never mixed with a measurement. *BRD:* BRD-206 · *Mockup:* mockups/run-report.html
+  - *Acceptance:* When fixture F1 is estimated and the run ends on Run report, then runs.jsonl, the checklist and PROJECT-STATUS hold no estimate figure, and no screen shows a ratio.
+
+<a id="d-req-ui-089"></a>
+- **REQ-UI-089** — The owner's own testing reads "not measured". *BRD:* BRD-207 · *Mockup:* mockups/run-report.html
+  - *Acceptance:* When any estimate table shows on Processes, End-to-end run, Run queue, Process run or Run report, then the owner's testing line reads "not measured", never a number.
 
 ## Page: Settings
 
@@ -176,6 +225,18 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 <a id="d-req-ui-072"></a>
 - **REQ-UI-072** — The right is shown where rights are listed. *BRD:* BRD-182 · *Mockup:* mockups/settings-agents.html
   - *Acceptance:* When the owner opens a role on Settings or its Agent workspace, then "writes documents" is listed with the other rights, held or withheld.
+
+<a id="d-req-ui-086"></a>
+- **REQ-UI-086** — The owner names the sister projects. *BRD:* BRD-197 · *Mockup:* mockups/settings-measurements.html
+  - *Acceptance:* When the owner adds a sister project on Settings, then it is listed with its run count, and a folder without docs/metrics/runs.jsonl is refused with the reason.
+
+<a id="d-req-fn-112"></a>
+- **REQ-FN-112** — Changing the tier changes the estimate before the start. *BRD:* BRD-201 · *Mockup:* mockups/settings-routing.html
+  - *Acceptance:* When the owner moves build to tier 2 on Settings, then F5 reads 2,000/3,000/4,000 tokens "from all models" for claude-sonnet-5-5 without a restart; a started run keeps its own.
+
+<a id="d-req-ui-092"></a>
+- **REQ-UI-092** — A provider and its key belong to the account that added it. *BRD:* BRD-212 · *Mockup:* mockups/settings-providers.html
+  - *Acceptance:* When a second account opens Providers on Settings after a first account connected one, then the list is empty and the first account's key is never read for it.
 
 ## Page: Process run
 
@@ -259,7 +320,13 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 - **REQ-FN-105** — A handed step writes its documents but not source. *BRD:* BRD-183 · *Mockup:* mockups/process-run.html
   - *Acceptance:* When an agent with only "writes documents" works a handed step on Process run, then its docs/ writes succeed and a source write is refused and recorded on the step.
 
+<a id="d-req-ui-087"></a>
+- **REQ-UI-087** — Process run shows the actual so far beside the estimate. *BRD:* BRD-202 · *Mockup:* mockups/process-run.html
+  - *Acceptance:* When a build-phase run on F1's three rows has spent 4,500 tokens and 400 s on Process run, then those show beside 6,000/9,000/12,000 and 720/900/1,080 s, uncombined.
 
+<a id="d-req-fn-113"></a>
+- **REQ-FN-113** — At handoff, the phase against its estimate. *BRD:* BRD-204 · *Mockup:* mockups/process-run.html
+  - *Acceptance:* When handoff-phase runs for fixture F6 on Process run, then build shows 6,000/9,000/12,000 beside 10,500 tokens, apportioned, within, and "1 run named no row" stands apart.
 
 ## Workbench
 
@@ -286,6 +353,14 @@ Phase 3, the unattended run: one command takes a brief and runs the whole chain 
 
 - <a id="d-req-nfr-010"></a> **REQ-NFR-010** (BRD-pending) Tests never touch the owner's database
   - *Acceptance:* When the desktop or web tests run, then the app keeps its database under tests/.artifacts and refuses the owner's application-data database.
+
+<a id="d-req-fn-302"></a>
+- **REQ-FN-302** — A chat is never continued by another account. *BRD:* BRD-211 · *Mockup:* mockups/main.html
+  - *Acceptance:* When a second account opens on Workbench a folder a first account chatted in, then its conversation is empty and never says "Continuing after".
+
+<a id="d-req-ui-095"></a>
+- **REQ-UI-095** — Signing in as another account leaves nothing of the last one on screen. *BRD:* BRD-216 · *Mockup:* mockups/main.html
+  - *Acceptance:* When one account signs out in a window and another signs in there, then no project, open file, chat or output of the first account is shown.
 
 ## Page: Start
 
@@ -318,3 +393,54 @@ e glyph.
 <a id="d-req-nfr-009"></a>
 - **REQ-NFR-009** — The web harness carries the icon, made by a script. *BRD:* BRD-191 · *Mockup:* mockups/start.html
   - *Acceptance:* When the web harness page loads, then it links `favicon.ico` (32 px), `icon-192.png` and `icon-512.png`, each loads, and each is what the repository's script under `scripts/` renders from `Chatur.png`.
+
+<a id="d-req-ui-091"></a>
+- **REQ-UI-091** — What one account makes or opens, another never sees. *BRD:* BRD-210 · *Mockup:* mockups/start-empty.html
+  - *Acceptance:* When a second account signs in on Start where a first account opened projects and chatted, then Start is empty and Switch project lists none of the first's.
+
+<a id="d-req-ui-093"></a>
+- **REQ-UI-093** — Data kept before accounts belongs to nobody. *BRD:* BRD-214 · *Mockup:* mockups/start-empty.html
+  - *Acceptance:* When an account signs in on Start where projects, chats and runs were kept before accounts, then it is shown none of them and none is deleted.
+
+<a id="d-req-ui-094"></a>
+- **REQ-UI-094** — Open a file from Start. *BRD:* BRD-215 · *Mockup:* mockups/start-empty.html
+  - *Acceptance:* When the person chooses Open a file on Start and gives a file, then the Workbench opens on the folder holding it, with that file open in a tab.
+
+## Page: Processes
+
+<a id="d-req-ui-083"></a>
+- **REQ-UI-083** — An estimate before a process starts. *BRD:* BRD-192 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When the owner presses Start on build-phase, verify-phase or fix-issues for fixture F1 on Processes, then every row and the phase total show, and nothing runs until confirmed.
+
+<a id="d-req-fn-107"></a>
+- **REQ-FN-107** — Worked out from this project's own runs, row kind by row kind. *BRD:* BRD-195 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When fixture F1 is estimated on Processes, then each REQ-FN row's build reads 2,000/3,000/4,000 tokens and 240/300/360 s over 5 runs, and the three-row total 6,000/9,000/12,000 tokens.
+
+<a id="d-req-fn-108"></a>
+- **REQ-FN-108** — Sister projects fill in, and the estimate says so. *BRD:* BRD-196 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When fixture F2 is estimated on Processes, then a REQ-UI row's build reads 1,750/2,500/3,750 tokens and 175/250/350 s, basis family over 4 runs, naming S1.
+
+<a id="d-req-fn-109"></a>
+- **REQ-FN-109** — No precedent, never a number. *BRD:* BRD-198 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When fixture F3 is estimated on Processes, then after handoff reads "no precedent", basis none over 2 runs, with no figure shown or written.
+
+<a id="d-req-fn-110"></a>
+- **REQ-FN-110** — No model judgement in the estimate. *BRD:* BRD-199 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When fixture F1 is estimated twice on Processes with no model provider reachable, then both results match to the last digit and no model call is made.
+
+<a id="d-req-fn-111"></a>
+- **REQ-FN-111** — Made for the model and tier that will run the step. *BRD:* BRD-200 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When fixture F5 is estimated with build on tier 1, then build reads 3,000/4,000/4,500 tokens and 330/360/405 s over 3 runs, naming claude-opus-5-5 and tier 1.
+
+<a id="d-req-fn-114"></a>
+- **REQ-FN-114** — Estimates are written in TechieFlow's own shape. *BRD:* BRD-205 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When the owner confirms a start for fixture F1 on Processes, then REQ-FN-301's build record in estimates.jsonl equals the Metrics Schema example, ts aside.
+
+<a id="d-req-ui-090"></a>
+- **REQ-UI-090** — A project with no run records says "no estimate yet". *BRD:* BRD-208 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When a process is started on Processes for a project with no usable run anywhere, then it reads "No estimate yet", Start works, and no error is logged.
+
+<a id="d-req-fn-116"></a>
+- **REQ-FN-116** — Runs that cannot be divided among rows are left out. *BRD:* BRD-209 · *Mockup:* mockups/processes.html
+  - *Acceptance:* When fixture F4 is estimated on Processes, then the figures equal F1's over the same 5 runs, and the batch carries basis_note "retro".
+

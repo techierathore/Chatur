@@ -14,7 +14,7 @@
             <h1 class="text-lg font-semibold">Project prerequisites</h1>
             <p class="text-sm text-muted-foreground">@Subtitle</p>
         </div>
-        <Button Variant="ButtonVariant.Outline" OnClick="CheckAgainAsync" Disabled="objIsLoading" data-testid="check-again">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="CheckAgainAsync" Disabled="objIsLoading" data-testid="check-again">
             <LucideIcon Name="refresh-cw" Size="14" />
             Check again
         </Button>
@@ -136,7 +136,7 @@
                             @if (!string.IsNullOrWhiteSpace(objNewerBuild.DownloadUrl))
                             {
                                 <div class="mt-2">
-                                    <Button Size="ButtonSize.Small" Href="@objNewerBuild.DownloadUrl" Target="_blank" data-testid="download-build">Download</Button>
+                                    <Button Class="rounded-full" Size="ButtonSize.Small" Href="@objNewerBuild.DownloadUrl" Target="_blank" data-testid="download-build">Download</Button>
                                 </div>
                             }
                         </AlertDescription>

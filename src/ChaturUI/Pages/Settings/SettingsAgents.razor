@@ -19,15 +19,15 @@
             <p class="text-sm text-muted-foreground">The agents Chatur plays, and what each one is allowed to do.</p>
         </div>
         <span class="flex-1"></span>
-        <Button Variant="ButtonVariant.Outline" OnClick="ExportAsync" data-testid="export-agents">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="ExportAsync" data-testid="export-agents">
             <LucideIcon Name="download" Size="14" />
             Export
         </Button>
-        <Button Variant="ButtonVariant.Outline" OnClick="ToggleImportPicker" data-testid="import-agents">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="ToggleImportPicker" data-testid="import-agents">
             <LucideIcon Name="upload" Size="14" />
             Import
         </Button>
-        <Button Variant="ButtonVariant.Outline" OnClick="OpenAddAgent" data-testid="add-agent">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="OpenAddAgent" data-testid="add-agent">
             <LucideIcon Name="plus" Size="14" />
             Add an agent
         </Button>
@@ -114,8 +114,8 @@
                         <CardContent Class="flex flex-col gap-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <div class="min-w-44 flex-1 text-sm text-muted-foreground">@SavedLine()</div>
-                                <Button Variant="ButtonVariant.Outline" OnClick="DiscardAsync" data-testid="discard-agent">Discard</Button>
-                                <Button OnClick="SaveAsync" Disabled="objIsSaving" data-testid="save-agent">
+                                <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="DiscardAsync" data-testid="discard-agent">Discard</Button>
+                                <Button Class="rounded-full" OnClick="SaveAsync" Disabled="objIsSaving" data-testid="save-agent">
                                     <LucideIcon Name="check" Size="14" />
                                     Save
                                 </Button>
@@ -124,7 +124,7 @@
                                 <span class="w-16 pt-1.5 text-sm text-muted-foreground">Showing</span>
                                 <Collapsible @bind-Open="objSubtabOpen" Class="flex flex-col gap-1" data-testid="subtab-pick">
                                     <CollapsibleTrigger AsChild>
-                                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="subtab-button">
+                                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="subtab-button">
                                             @SubtabLabel(objShow)
                                             <LucideIcon Name="chevron-down" Size="14" />
                                         </Button>
@@ -159,7 +159,7 @@
                                 <span class="w-16 pt-1.5 text-sm text-muted-foreground">Tier</span>
                                 <Collapsible @bind-Open="objTierOpen" Class="flex flex-col gap-1" data-testid="wording-tier">
                                     <CollapsibleTrigger AsChild>
-                                        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="wording-tier-button">
+                                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="wording-tier-button">
                                             @TierLabel(int.Parse(objTierDraft))
                                             <LucideIcon Name="chevron-down" Size="14" />
                                         </Button>
@@ -253,7 +253,7 @@
                                     <Badge Variant="BadgeVariant.Secondary" data-testid="@($"history-v{vVersion.Version}-pill")">v@(vVersion.Version)</Badge>
                                     <span class="min-w-40 flex-1 text-sm">@vVersion.WhatChanged</span>
                                     <span class="text-xs text-muted-foreground">@vVersion.ValidFromUtc.ToLocalTime().ToString("d MMM yyyy")</span>
-                                    <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(vVersion.Version == VersionOf(objDetail.Summary.RoleId) || objIsSaving)" OnClick="() => RestoreAsync(vVersion)" title="@RestoreTitle(vVersion)" data-testid="@($"restore-v{vVersion.Version}")">
+                                    <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Disabled="@(vVersion.Version == VersionOf(objDetail.Summary.RoleId) || objIsSaving)" OnClick="() => RestoreAsync(vVersion)" title="@RestoreTitle(vVersion)" data-testid="@($"restore-v{vVersion.Version}")">
                                         <LucideIcon Name="undo-2" Size="14" />
                                         Restore
                                     </Button>

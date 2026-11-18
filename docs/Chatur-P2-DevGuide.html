@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Developer Guide</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout no-toc">
+  <main>
+    <h1>Chatur — Developer Guide</h1>
+    <div class="subtitle">Rendered 2026-11-15 &middot; source <code>Chatur-P2-DevGuide.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#architecture-cheat-sheet">Architecture cheat-sheet</a></li>
+        <li><a href="#roles-and-menu-map">Roles and menu map</a></li>
+        <li><a href="#screen-by-screen-code-map">Screen-by-screen code map</a></li>
+        <li class="h3"><a href="#processes-processes">Processes (/processes)</a></li>
+        <li class="h3"><a href="#process-run-processes-id-run">Process run (/processes/{id}/run)</a></li>
+        <li class="h3"><a href="#requirements-board-board">Requirements board (/board)</a></li>
+        <li class="h3"><a href="#agent-workspace-workspace-agent">Agent workspace (/workspace/{agent})</a></li>
+        <li><a href="#cross-cutting-flows">Cross-cutting flows</a></li>
+        <li class="h3"><a href="#a-process-step-handed-to-an-agent">A process step handed to an agent</a></li>
+        <li class="h3"><a href="#the-board-writes-a-status-change-back-to-the-checklist">The board writes a status change back to the checklist</a></li>
+        <li><a href="#known-issues">Known issues</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Large</td></tr>
+<tr><td>Phase</td><td>2 of 4</td></tr>
+<tr><td>Verified on</td><td>2026-11-15</td></tr>
+<tr><td>Date</td><td>2026-11-15</td></tr>
+</tbody>
+</table>
+<h2 id="architecture-cheat-sheet">Architecture cheat-sheet<a class="anchor-link" href="#architecture-cheat-sheet">#</a></h2>
+<div class="diagram">
+  <div class="dt">
+    <button data-zout title="Zoom out">&minus;</button>
+    <span class="zlabel">100%</span>
+    <button data-zin title="Zoom in">+</button>
+    <button data-fit title="Fit to width">Fit</button>
+    <button data-one title="Actual size">1:1</button>
+    <button data-fs title="Fullscreen">&#9166;</button>
+    <button data-pop title="Open in new tab">&#8599;</button>
+  </div>
+  <pre class="mermaid">flowchart LR
+  Link["ToolTabLink (route)"] --&gt; Tabs["WorkbenchState (open tabs)"]
+  Menu["MenuBar, Project menu"] --&gt; Tabs
+  Tabs --&gt; Area["EditorArea (draws the active tab)"]
+  Area --&gt; Page["Pages/*.razor"]
+  Page --&gt; Act["Chatur.Core actions"]
+  Act --&gt; DB[("SQLite")]
+  Act --&gt; Files["Project files on disk"]</pre>
+</div>
+<p>The four phase-2 screens are not pages of their own. Each opens as a tab inside the main window. A route such as <code>/board</code> is a deep link handled by <code>src/ChaturUI/Pages/ToolTabLink.razor.cs</code> (<code>OnAfterRenderAsync</code>, line 44): it opens the tab through <code>src/ChaturUI/Shell/WorkbenchState.cs</code> and then goes on to <code>/</code>. <code>src/ChaturUI/Shell/EditorArea.razor</code> (the <code>switch</code> at line 43) draws the active tab's component. The conversation stays on the right of every tab.</p>
+<table>
+<thead><tr><th>Layer</th><th>Project or folder</th><th>What lives here</th></tr></thead>
+<tbody>
+<tr><td>Tabs</td><td><code>src/ChaturUI/Shell</code></td><td><code>WorkbenchState.cs</code> holds the open tabs; <code>EditorArea.razor</code> draws the active one; <code>MenuBar.razor</code> opens them</td></tr>
+<tr><td>Screens</td><td><code>src/ChaturUI/Pages</code></td><td><code>Processes</code>, <code>ProcessRun</code>, <code>Board</code>, <code>AgentWorkspace</code>, each a <code>.razor</code> with a <code>.razor.cs</code></td></tr>
+<tr><td>Actions</td><td><code>src/Chatur.Core/Processes</code>, <code>ProcessRuns</code>, <code>StepAgents</code>, <code>Board</code>, <code>AgentWorkspace</code></td><td>One class per interface in <code>Chatur.Core/Actions</code>; SQL through Dapper</td></tr>
+<tr><td>Database</td><td><code>src/ChaturDb/Scripts</code></td><td>DbUp scripts <code>0040</code> to <code>0045</code>: <code>ProcessStepText</code>, <code>ProcessRun</code>, <code>ProcessRunStep</code>, <code>ProcessRunVerdict</code>, run evidence, agent rights and commands</td></tr>
+<tr><td>Project files</td><td>the opened project's <code>docs</code> folder</td><td><code>*Checklist*.md</code> is the only store of the board; <code>docs/metrics/runs.jsonl</code> gets one record per run</td></tr>
+</tbody>
+</table>
+<h2 id="roles-and-menu-map">Roles and menu map<a class="anchor-link" href="#roles-and-menu-map">#</a></h2>
+<table>
+<thead><tr><th>Role</th><th>Test user</th><th>Menu items and the screen each opens</th></tr></thead>
+<tbody>
+<tr><td>User</td><td>1 (chatur-owner@techierathore.com)</td><td>Project → Processes (<code>/processes</code>); Project → Board (<code>/board</code>); Project → Agent workspace (<code>/workspace/{agent}</code>). Process run (<code>/processes/{id}/run</code>) has no menu item: Start on Processes opens it.</td></tr>
+</tbody>
+</table>
+<p>The items are in <code>src/ChaturUI/Shell/MenuBar.razor</code>, lines 152 to 154. Each calls <code>WorkbenchState.OpenProcesses</code>, <code>OpenBoard</code> or <code>OpenAgentWorkspace</code> (through <code>MenuBar.razor.cs:299</code>).</p>
+<h2 id="screen-by-screen-code-map">Screen-by-screen code map<a class="anchor-link" href="#screen-by-screen-code-map">#</a></h2>
+<h3 id="processes-processes">Processes (<code>/processes</code>)<a class="anchor-link" href="#processes-processes">#</a></h3>
+<p><img src="screenshots/Chatur/processes.png" alt="Processes" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Processes.razor.cs:StartNowAsync</code> → <code>ProcessActions.StartAsync</code> → <code>ProcessRun</code> table (one <code>INSERT</code>)</p>
+<p>The screen lists the twelve processes from <code>ProcessCatalogue</code> and, for the one opened, its steps with the wording held in <code>ProcessStepText</code>. <code>LoadAsync</code> (line 75) reads the list, the project's documents and the newest run. It opens the process that is running, else the one already open, else the first.</p>
+<p>Start works in two ways. For <code>build-phase</code>, <code>verify-phase</code> and <code>fix-issues</code> (<code>EstimatedProcesses</code>, line 26) <code>StartAsync</code> first asks <code>EstimateActions.EstimateAsync</code> and shows the estimate; the run starts only when the owner presses Start on that panel (<code>ConfirmEstimateAsync</code>). Every other process starts at once. <code>StartNowAsync</code> then writes the run, keeps the confirmed estimate with <code>EstimateActions.ConfirmAsync</code>, and opens the Process run tab with <code>WorkbenchState.OpenProcessRun</code>.</p>
+<p><code>ProcessActions.StartAsync</code> does not start a second run of the same process on the same project. If one is in state <code>running</code> it returns that run with <code>AlreadyRunning</code> true.</p>
+<p>Editing a step's wording (<code>SaveEditAsync</code>, line 150) calls <code>ProcessActions.SaveStepWordingAsync</code>, which updates <code>ProcessStepText</code>, raises its <code>Version</code>, and adds a <code>Correction</code> row in one transaction.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Processes.razor.cs:82</code></td><td><code>LoadAsync</code></td><td><code>objProcesses.Count</code></td><td>12</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Processes.razor.cs:193</code></td><td><code>StartAsync</code></td><td><code>aCode</code></td><td>the code on the row pressed; one of the three estimated codes goes on to line 202</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Processes.razor.cs:202</code></td><td><code>StartAsync</code></td><td><code>vEstimate</code></td><td>an estimate, or <code>null</code> when the project folder is not known (then the run starts at once)</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Processes.razor.cs:252</code></td><td><code>StartNowAsync</code></td><td><code>vStarted.RunId</code></td><td>the id of the new run, or of the run already going</td></tr>
+<tr><td><code>src/Chatur.Core/Processes/ProcessActions.cs:194</code></td><td><code>StartAsync</code></td><td><code>vExisting</code></td><td><code>null</code> unless this process is already running on the project</td></tr>
+<tr><td><code>src/Chatur.Core/Processes/ProcessActions.cs:208</code></td><td><code>StartAsync</code></td><td><code>vRunId</code></td><td>the new <code>ProcessRun</code> row: state <code>running</code>, <code>CurrentStep</code> 1</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>StepsSummary</code> (<code>Processes.razor.cs:45</code>) counts the opened process's steps, checks and owner stops. <code>LastRunText</code> (line 294) turns the last start time into a short date or "never run". <code>ProcessActions.ListAsync</code> (<code>ProcessActions.cs:34</code>) works out, per process, the last start time and whether a run is going, from the project's <code>ProcessRun</code> rows. The estimate shown before Start is computed in <code>EstimateActions.EstimateAsync</code> (<code>src/Chatur.Core/Estimates/EstimateActions.cs:56</code>), not on this screen.</p>
+<h3 id="process-run-processes-id-run"><a id="process-run-processesidrun"></a>Process run (<code>/processes/{id}/run</code>)<a class="anchor-link" href="#process-run-processes-id-run">#</a></h3>
+<p><img src="screenshots/Chatur/process-run.png" alt="Process run" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>ProcessRun.razor.cs:AdvanceAsync</code> → <code>ProcessRunActions.AdvanceAsync</code> → <code>ProcessRunActions.AdvanceLockedAsync</code> → <code>ProjectStepExecutor.ExecuteAsync</code> → <code>ProcessRunStep</code> and <code>ProcessRun</code> tables</p>
+<p>The screen shows one run and also carries it on. <code>OnParametersSetAsync</code> (line 295) reads the run and, when its state is <code>Running</code>, calls <code>AdvanceAsync</code>. That call does not return until the run reaches an owner stop, a failed check or its end. While it waits, <code>ShowingProgressAsync</code> (line 364) reads the run again every second so each step shows as it lands.</p>
+<p>The database holds the run's position (<code>ProcessRun.CurrentStep</code>) and one <code>ProcessRunStep</code> row per finished step, so a run carries on after a restart. One lock per run (<code>RunLocks</code>, <code>ProcessRunActions.cs:20</code>) keeps two callers from advancing the same run.</p>
+<p>In <code>AdvanceLockedAsync</code> an owner stop sets the run to <code>Waiting</code> and returns. <code>AnswerAsync</code> (page line 394) relays the owner's choice: <code>Later</code> leaves the run waiting; any other answer is recorded and the run goes on. A step that does not pass is recorded as <code>failed</code> and the run ends as <code>Stopped</code>. For <code>verify-phase</code>, the verdict step calls <code>RunVerdictWriter.WriteAsync</code> (<code>src/Chatur.Core/ProcessRuns/RunVerdictWriter.cs:64</code>), which writes each verdict into the checklist file and into <code>ProcessRunVerdict</code>.</p>
+<p>Stop (<code>ConfirmStopAsync</code>, line 480) calls <code>ProcessRunActions.StopAsync</code>, which first tells the working agent to stop and then ends the run.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/ProcessRun.razor.cs:307</code></td><td><code>OnParametersSetAsync</code></td><td><code>objRun</code></td><td>the run with its steps; <code>null</code> when the id is not known</td></tr>
+<tr><td><code>src/ChaturUI/Pages/ProcessRun.razor.cs:351</code></td><td><code>AdvanceAsync</code></td><td><code>objRun.State</code></td><td><code>Waiting</code>, <code>Stopped</code> or <code>Finished</code> when the call returns</td></tr>
+<tr><td><code>src/Chatur.Core/ProcessRuns/ProcessRunActions.cs:290</code></td><td><code>AdvanceLockedAsync</code></td><td><code>vStep.Kind</code></td><td><code>Step</code>, <code>Check</code> or <code>OwnerStop</code> for the step at <code>vPosition</code></td></tr>
+<tr><td><code>src/Chatur.Core/ProcessRuns/ProcessRunActions.cs:333</code></td><td><code>AdvanceLockedAsync</code></td><td><code>vOutcome.Passed</code></td><td><code>true</code> to go on to the next step; <code>false</code> stops the run</td></tr>
+<tr><td><code>src/Chatur.Core/ProcessRuns/ProcessRunActions.cs:408</code></td><td><code>RecordStepAsync</code></td><td><code>aState</code>, <code>aResult</code></td><td><code>done</code> or <code>failed</code>, with the sentence the step row shows</td></tr>
+<tr><td><code>src/Chatur.Core/ProcessRuns/ProcessRunActions.cs:434</code></td><td><code>EndRunAsync</code></td><td><code>aState</code></td><td><code>Finished</code> or <code>Stopped</code>; <code>EndedUtc</code> is stamped here</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>Elapsed</code> (<code>ProcessRun.razor.cs:185</code>) is the end time, or now, minus the start time. <code>ProgressCount</code> (line 206) counts steps done, running, waiting, failed and to come. <code>SoFarLines</code> (line 89) sets output tokens and seconds so far beside the kept estimate; the two are never combined. <code>ProcessRunActions.GetAsync</code> (<code>ProcessRunActions.cs:112</code>) sums <code>Session.TokensOut</code> and <code>TokensIn</code> over the sessions of the run's handed steps. <code>EndRunAsync</code> (line 447) computes <code>duration_s</code> for the record it appends to <code>runs.jsonl</code>.</p>
+<h3 id="requirements-board-board">Requirements board (<code>/board</code>)<a class="anchor-link" href="#requirements-board-board">#</a></h3>
+<p><img src="screenshots/Chatur/board.png" alt="Requirements board" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Board.razor.cs:SetStatusAsync</code> → <code>RequirementBoardActions.SetStatusAsync</code> → <code>ChecklistDocument.WithStatus</code> → the project's <code>docs/*Checklist*.md</code> file (no database table)</p>
+<p>The board has no table of its own. <code>RequirementBoardActions.LoadAsync</code> (<code>src/Chatur.Core/Board/RequirementBoardActions.cs:27</code>) finds every <code>docs/*Checklist*.md</code> file of the selected project, in phase order, reads each from disk and parses it with <code>ChecklistDocument.Parse</code>. Nothing is cached: every filter change, every Reload and every status change reads the files again.</p>
+<p>The four filters (phase, status, agent, search text) are fields of the page. <code>BuildFilter</code> (<code>Board.razor.cs:48</code>) turns them into a <code>RequirementFilter</code>, and the action applies it after all rows are read, so the counts at the top always cover every requirement.</p>
+<p>A checklist uses more status words than the board. <code>ChecklistDocument.ToBoardStatus</code> (<code>ChecklistDocument.cs:42</code>) folds the file's word into one of four: Planned, In progress, Verified, Blocked. A word that fits none is shown as it is and cannot be chosen (<code>StatusChoices</code>, page line 163).</p>
+<p>When a project's folder is gone, <code>LoadAsync</code> returns an empty board that carries the path it looked in, so the screen can say where.</p>
+<p><code>OpenScreen</code> (page line 112) opens the screen a requirement belongs to as a tab, through <code>WorkbenchState</code>.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Board.razor.cs:59</code></td><td><code>LoadAsync</code></td><td><code>objBoard.Items.Count</code></td><td>the number of requirements left after the filters</td></tr>
+<tr><td><code>src/Chatur.Core/Board/RequirementBoardActions.cs:44</code></td><td><code>LoadAsync</code></td><td><code>vFiles</code></td><td><code>docs/…Checklist….md</code> names, phase 1 first</td></tr>
+<tr><td><code>src/Chatur.Core/Board/RequirementBoardActions.cs:52</code></td><td><code>LoadAsync</code></td><td><code>vAll.Count</code></td><td>every requirement of every checklist, before the filters</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Board.razor.cs:138</code></td><td><code>SetStatusAsync</code></td><td><code>aItem.ChecklistFile</code>, <code>aStatus</code></td><td>the file that holds the row, and one of the four board statuses</td></tr>
+<tr><td><code>src/Chatur.Core/Board/RequirementBoardActions.cs:77</code></td><td><code>SetStatusAsync</code></td><td><code>vChanged</code></td><td>the file's text with one row changed and nothing else</td></tr>
+<tr><td><code>src/Chatur.Core/Board/ChecklistDocument.cs:176</code></td><td><code>RewriteRow</code></td><td><code>vCells[2]</code>, <code>vCells[3]</code></td><td>the file's status word and the percentage that follows from it</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>RequirementBoardActions.Count</code> (<code>RequirementBoardActions.cs:108</code>) counts all requirements and those Planned, In progress, Verified and Blocked. <code>ChecklistDocument.RewriteRow</code> (<code>ChecklistDocument.cs:172</code>) sets the percentage from the new status: Not Started gives 0%, Verified gives 100%, In Progress gives 50% when the old figure was 0 or 100, and any other case keeps the old figure. <code>ChecklistDocument.PhaseOf</code> (line 34) reads the phase number from the file name.</p>
+<h3 id="agent-workspace-workspace-agent"><a id="agent-workspace-workspaceagent"></a>Agent workspace (<code>/workspace/{agent}</code>)<a class="anchor-link" href="#agent-workspace-workspace-agent">#</a></h3>
+<p><img src="screenshots/Chatur/agent-workspace.png" alt="Agent workspace" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>AgentWorkspace.razor.cs:StartCommandAsync</code> → <code>AgentWorkspaceActions.StartCommandAsync</code> → <code>Session</code> table (one <code>INSERT</code>), then <code>WorkbenchState.RequestConversation</code> → <code>ConversationPanel.razor.cs:OpenAndSendAsync</code></p>
+<p>The tab shows one agent's view of the selected project: what it may and may not do, the requirements waiting on it, its commands and the sessions it still has open. <code>LoadAsync</code> (line 84) runs whenever the agent code or the project changes; the key <code>"{Agent}|{ProjectId}"</code> stops a second read for the same pair.</p>
+<p><code>AgentWorkspaceActions.WorkspaceAsync</code> (<code>src/Chatur.Core/AgentWorkspace/AgentWorkspaceActions.cs:32</code>) reads <code>Role</code>, <code>RoleRight</code>, <code>RoleCommand</code> and <code>Session</code>. An unknown agent code falls back to the first agent. A command that needs a right the agent does not hold is left out of the list, so the screen never offers it (line 50).</p>
+<p>The waiting work comes from the board, not the database: <code>OpenWorkAsync</code> (page line 118) calls <code>RequirementBoardActions.LoadAsync</code> with the agent as the filter and keeps the rows that are Planned, In progress or Blocked.</p>
+<p>There are three ways into the conversation, and all go through <code>WorkbenchState.RequestConversation</code>:</p>
+<ul>
+<li>A command button: <code>StartCommandAsync</code> inserts a <code>Session</code> row and sends <code>*command</code> as the first message.
+</li>
+<li>Start on a requirement: <code>StartRequirementAsync</code> (line 150) calls <code>AgentActions.StartSessionAsync</code> (<code>src/Chatur.Core/Agent/AgentActions.cs:168</code>) and sends a first message naming the requirement.
+</li>
+<li>An open session: <code>OpenSession</code> (line 142) opens it with no message.
+</li>
+</ul>
+<p>Picking another agent (<code>ChooseAgent</code>, line 128) only changes the tab's agent code. No session is closed.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/AgentWorkspace.razor.cs:105</code></td><td><code>LoadAsync</code></td><td><code>vView.Agent.Code</code></td><td>the agent in the route, or the first agent when the code is unknown</td></tr>
+<tr><td><code>src/Chatur.Core/AgentWorkspace/AgentWorkspaceActions.cs:44</code></td><td><code>WorkspaceAsync</code></td><td><code>vHeld</code></td><td>the actions this agent is allowed</td></tr>
+<tr><td><code>src/ChaturUI/Pages/AgentWorkspace.razor.cs:120</code></td><td><code>OpenWorkAsync</code></td><td><code>vBoard.Items</code></td><td>this agent's requirements, before the three-status filter</td></tr>
+<tr><td><code>src/ChaturUI/Pages/AgentWorkspace.razor.cs:192</code></td><td><code>StartCommandAsync</code></td><td><code>vStart.SessionId</code>, <code>vStart.Message</code></td><td>the new session's id and <code>*</code> followed by the command name</td></tr>
+<tr><td><code>src/Chatur.Core/AgentWorkspace/AgentWorkspaceActions.cs:69</code></td><td><code>StartCommandAsync</code></td><td><code>vSessionId</code></td><td>the new <code>Session</code> row: mode <code>AskFirst</code>, state <code>Active</code></td></tr>
+<tr><td><code>src/ChaturUI/Shell/ConversationPanel.razor.cs:363</code></td><td><code>OpenAndSendAsync</code></td><td><code>aStart.Message</code></td><td>the first message, or <code>null</code> when a session is only opened</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>OpenLine</code> (<code>AgentWorkspace.razor.cs:232</code>) words the count of waiting requirements. <code>AgentWorkspaceActions.AgentsAsync</code> (<code>AgentWorkspaceActions.cs:78</code>) counts each agent's open sessions on the project. <code>OpenSessionsAsync</code> (line 95) counts each session's messages and sums its tokens from <code>SessionEvent</code>.</p>
+<h2 id="cross-cutting-flows">Cross-cutting flows<a class="anchor-link" href="#cross-cutting-flows">#</a></h2>
+<p>For sign-in, configuration and logging: See docs/Chatur-DevGuide.md, Cross-cutting flows.</p>
+<h3 id="a-process-step-handed-to-an-agent">A process step handed to an agent<a class="anchor-link" href="#a-process-step-handed-to-an-agent">#</a></h3>
+<p><strong>Call chain:</strong> <code>ProcessRunActions.AdvanceLockedAsync</code> → <code>ProjectStepExecutor.ExecuteHandedAsync</code> → <code>StepAgentActions.HandAsync</code> → <code>AgentActions.StartSessionAsync</code> and <code>AgentActions.SendAsync</code> → <code>ProcessRunStepWork</code>, <code>Session</code>, <code>SessionEvent</code> tables</p>
+<p>In every process except <code>verify-phase</code>, a work step goes to the agent that owns the process. <code>HandAsync</code> starts a session as that agent, builds the task text from the step's wording, writes a <code>ProcessRunStepWork</code> row in state <code>working</code>, and sends the task through the same <code>SendAsync</code> path the owner's own messages use. When the reply ends, the row is marked <code>finished</code> with the agent's last message. A check then judges what the agent left on disk.</p>
+<p>The conversation shows that session while the step is worked. <code>ProcessRunActions.GetAsync</code> attaches each step's work to the run it returns. On every read, <code>ProcessRun.razor.cs:AnnounceHanded</code> looks for a step whose work is <code>Working</code> and calls <code>WorkbenchState.ShowHandedSession</code>. <code>ConversationPanel</code> listens to <code>HandedSessionChanged</code>, switches its thread to the agent's session, and reads it again every second. When the step ends, or the Process run tab is closed, <code>EndHandedSession</code> sends the conversation back to the owner's own session.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/Chatur.Core/ProcessRuns/ProjectStepExecutor.cs:100</code></td><td><code>ExecuteHandedAsync</code></td><td><code>vWork.ModelName</code></td><td>the model that answered; <code>null</code> means no model could work the step</td></tr>
+<tr><td><code>src/Chatur.Core/StepAgents/StepAgentActions.cs:75</code></td><td><code>HandAsync</code></td><td><code>vSessionId</code></td><td>the new agent session; on a resumed step, the earlier one (line 70)</td></tr>
+<tr><td><code>src/Chatur.Core/StepAgents/StepAgentActions.cs:204</code></td><td><code>InsertRowAsync</code></td><td><code>aTask</code></td><td>the task text sent to the agent</td></tr>
+<tr><td><code>src/ChaturUI/Pages/ProcessRun.razor.cs:153</code></td><td><code>AnnounceHanded</code></td><td><code>vWork.SessionId</code></td><td>the same session id as the work row</td></tr>
+<tr><td><code>src/ChaturUI/Shell/WorkbenchState.cs:211</code></td><td><code>ShowHandedSession</code></td><td><code>Handed</code></td><td>the session, agent, model and step label</td></tr>
+<tr><td><code>src/ChaturUI/Shell/ConversationPanel.razor.cs:279</code></td><td><code>ShowHandedAsync</code></td><td><code>vDetail.Summary</code></td><td>the agent's session, now the one the thread shows</td></tr>
+</tbody>
+</table>
+<h3 id="the-board-writes-a-status-change-back-to-the-checklist">The board writes a status change back to the checklist<a class="anchor-link" href="#the-board-writes-a-status-change-back-to-the-checklist">#</a></h3>
+<p><strong>Call chain:</strong> <code>Board.razor.cs:SetStatusAsync</code> → <code>RequirementBoardActions.SetStatusAsync</code> → <code>ChecklistDocument.WithStatus</code> → <code>File.WriteAllTextAsync</code></p>
+<p><code>SetStatusAsync</code> checks that the file named is one of the selected project's checklists, reads it, and asks <code>ChecklistDocument.WithStatus</code> for the changed text. <code>Rewrite</code> (<code>ChecklistDocument.cs:134</code>) changes the one table row under the status heading, and the matching detail bullet when the file has one. Every other character stays as it was, line endings included. The file is written back with the same byte-order mark it had (<code>HasBom</code>, <code>RequirementBoardActions.cs:115</code>). A requirement with no row raises <code>ArgumentException</code>, which the page shows as a toast. The page then loads the board again from disk.</p>
+<h2 id="known-issues">Known issues<a class="anchor-link" href="#known-issues">#</a></h2>
+<ul>
+<li>None open. 23 of 23 rows of <code>docs/Chatur-P2-Checklist.md</code> are Verified on 2026-11-15.
+</li>
+</ul>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

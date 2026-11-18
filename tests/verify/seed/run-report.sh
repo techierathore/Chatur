@@ -32,6 +32,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 BASE="${TF_BASE:?TF_BASE is not set: run this from tf-verify-screens.sh or set it to the app address}"
 PORT="$(sed -E 's#.*:([0-9]+)/?.*#\1#' <<<"$BASE")"
 DB="$ROOT/tests/.artifacts/verify/run-$PORT/harness-data/chatur.db"
+# Each account has its own database (BRD-210): seed the file of whoever signed in last, named by
+# harness-data/accounts/current.txt, or the install's own before anyone has signed in.
+POINTER="$(dirname "$DB")/accounts/current.txt"
+if [ -s "$POINTER" ]; then DB="$(dirname "$DB")/accounts/$(tr -d '\r\n' < "$POINTER")/chatur.db"; fi
 [[ -f "$DB" ]] || { echo "no database for the app at $BASE (looked for $DB)"; exit 1; }
 case "$DB" in
   "$ROOT/tests/.artifacts/"*) ;;
@@ -193,5 +197,42 @@ for name in ("gates", "sessions", "commits"):
     if not os.path.exists(f):
         open(f, "w").close()
 
-print(f"project {project}: seeded finished run auto-{auto_id} (8 requirements, 4 misses, 5 models, 3 h 14 m) and docs/Seed-Checklist.md")
+# ---- the estimate the run was started with (REQ-UI-088): a batch in estimates.jsonl and the row the app keeps ----
+# The mockup draws "Estimate and actual" on the report, which shows only for an end-to-end run with a kept batch.
+pname = c.execute("SELECT Name FROM Project WHERE ProjectId = ?", (project,)).fetchone()[0]
+batch = iso_s(start - mins(1))
+row_ids = [r[0] for r in reqs]
+fig = lambda lo, mid, hi: {"low": lo, "mid": mid, "high": hi}
+est = []
+for rid in row_ids:
+    est.append({"v": 1, "ts": batch, "kind": "estimate", "app": pname, "phase": 1, "req_id": rid, "cmd": "build-phase",
+                "tokens_out": fig(2000, 3000, 4000), "duration_s": fig(240, 300, 360), "basis": "repo", "basis_runs": 5,
+                "model": "claude-opus-5-5", "tier": 1, "harness": "chatur"})
+n = len(row_ids)
+est.append({"v": 1, "ts": batch, "kind": "estimate", "app": pname, "phase": 1, "req_id": None, "cmd": "build-phase",
+            "tokens_out": fig(2000 * n, 3000 * n, 4000 * n), "duration_s": fig(240 * n, 300 * n, 360 * n), "basis": "repo",
+            "basis_runs": 5, "model": "claude-opus-5-5", "tier": 1, "harness": "chatur", "rows_n": n, "rows_no_precedent_n": 0})
+for step in ("verify-phase", "fix-issues", "triage"):
+    est.append({"v": 1, "ts": batch, "kind": "estimate", "app": pname, "phase": 1, "req_id": None, "cmd": step,
+                "tokens_out": None, "duration_s": None, "basis": "none", "basis_runs": 0, "model": "claude-opus-5-5",
+                "tier": 1, "harness": "chatur", "rows_n": n, "rows_no_precedent_n": n})
+efile = os.path.join(real, "docs", "metrics", "estimates.jsonl")
+with open(efile, "w", encoding="utf-8") as f:
+    f.write("\n".join(json.dumps(r) for r in est) + "\n")
+F = lambda lo, mid, hi: {"Low": lo, "Mid": mid, "High": hi}
+snapshot = {"App": pname, "Phase": 1, "Rows": row_ids,
+            "RowFigures": [{"ReqId": rid, "Step": "build-phase", "TokensOut": F(2000, 3000, 4000), "DurationS": F(240, 300, 360),
+                            "Basis": "repo", "BasisRuns": 5, "FromAllModels": False, "SisterProjects": []} for rid in row_ids],
+            "Totals": [{"Step": "build-phase", "Model": "claude-opus-5-5", "Tier": 1, "TokensOut": F(2000 * n, 3000 * n, 4000 * n),
+                        "DurationS": F(240 * n, 300 * n, 360 * n), "Basis": "repo", "BasisRuns": 5, "RowsN": n, "RowsNoPrecedentN": 0,
+                        "FromAllModels": False, "SisterProjects": []}]
+                      + [{"Step": s, "Model": "claude-opus-5-5", "Tier": 1, "TokensOut": None, "DurationS": None, "Basis": "none",
+                          "BasisRuns": 0, "RowsN": n, "RowsNoPrecedentN": n, "FromAllModels": False, "SisterProjects": []}
+                         for s in ("verify-phase", "fix-issues", "triage")],
+            "Retro": False, "AutoRouting": False, "Skipped": {"Backfilled": 0, "Voided": 0, "NoReqs": 0, "ThisPhase": 0, "NoTokens": 0}}
+c.execute("INSERT OR REPLACE INTO RunEstimate (RunKind, RunId, ProjectId, BatchTs, Snapshot, KeptUtc) VALUES ('auto', ?, ?, ?, ?, ?)",
+          (auto_id, project, batch, json.dumps(snapshot), iso(start)))
+c.commit()
+
+print(f"project {project}: seeded finished run auto-{auto_id} (8 requirements, 4 misses, 5 models, 3 h 14 m), its kept estimate, and docs/Seed-Checklist.md")
 PY

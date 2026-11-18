@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Chatur.Core.Data;
 
 namespace Chatur.Core.Agent;
 
@@ -17,7 +18,26 @@ namespace Chatur.Core.Agent;
 /// </remarks>
 public sealed class AgentSessionRegistry
 {
-    private readonly ConcurrentDictionary<int, CancellationTokenSource> objSources = new();
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> objSources = new();
+    private readonly AppState? objAppState;
+
+    /// <summary>Creates a registry that is not split by account (a test with one account).</summary>
+    public AgentSessionRegistry()
+    {
+    }
+
+    /// <summary>
+    /// Creates a registry that keeps each account's sessions apart: two accounts' databases number
+    /// their sessions from 1 each, so a stop asked for one account's session never reaches the
+    /// other's (BRD-211).
+    /// </summary>
+    /// <param name="aAppState">Names who is signed in.</param>
+    public AgentSessionRegistry(AppState aAppState)
+    {
+        objAppState = aAppState;
+    }
+
+    private string KeyOf(int aSessionId) => $"{AccountScope.Key(objAppState)}|{aSessionId}";
 
     /// <summary>
     /// The cancellation token for a session's current work. Calling this creates the source the first
@@ -25,7 +45,7 @@ public sealed class AgentSessionRegistry
     /// </summary>
     /// <param name="aSessionId">The session to get a token for.</param>
     public CancellationToken Token(int aSessionId) =>
-        objSources.GetOrAdd(aSessionId, _ => new CancellationTokenSource()).Token;
+        objSources.GetOrAdd(KeyOf(aSessionId), _ => new CancellationTokenSource()).Token;
 
     /// <summary>
     /// Cancels a session's current work and drops its token, so the next call to <see cref="Token"/>
@@ -34,7 +54,7 @@ public sealed class AgentSessionRegistry
     /// <param name="aSessionId">The session to stop.</param>
     public void Cancel(int aSessionId)
     {
-        if (objSources.TryRemove(aSessionId, out var vSource))
+        if (objSources.TryRemove(KeyOf(aSessionId), out var vSource))
         {
             vSource.Cancel();
             vSource.Dispose();

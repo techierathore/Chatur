@@ -1,0 +1,176 @@
+@* The estimate table (mockups/processes.html "estimate-panel", REQ-UI-083, REQ-UI-089, REQ-UI-090): four lines of work, an
+   optional per-row table, the model and tier the estimate was made for, and slots for the owner's buttons. Shared by
+   Processes, End-to-end run, Run queue, Process run and Run report. Presentation only: every figure comes from
+   IEstimateActions; nothing is worked out here except how a number is written. *@
+<Card data-testid="estimate-panel" data-tf-state="estimate-before-start">
+    <CardHeader>
+        <div class="flex flex-wrap items-center gap-2">
+            <LucideIcon Name="clock" Size="16" />
+            <CardTitle>@Title</CardTitle>
+            <span class="grow"></span>
+            @if (!Estimate.NoChecklist)
+            {
+                <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="estimate-rows">@RowsText</Badge>
+            }
+        </div>
+    </CardHeader>
+    <CardContent Class="flex flex-col gap-3">
+        @if (Estimate.NoChecklist)
+        {
+            <div class="flex items-start gap-2 rounded-md border px-3 py-2.5 text-muted-foreground" data-testid="estimate-no-checklist">
+                <LucideIcon Name="clock" Size="16" Class="mt-0.5" />
+                <span class="text-sm">No checklist yet, so there is nothing to estimate before the build step.</span>
+            </div>
+        }
+        else if (Estimate.NoEstimateYet)
+        {
+            <div class="flex items-start gap-2 rounded-md border px-3 py-2.5 text-muted-foreground" data-testid="estimate-none-yet" data-tf-state="no-run-records">
+                <LucideIcon Name="clock" Size="16" Class="mt-0.5" />
+                <span class="text-sm">No estimate yet. @Estimate.App has no run records, so there is nothing to work one out from. The first runs make one.</span>
+            </div>
+        }
+        else
+        {
+            @if (ShowMadeFor)
+            {
+                <div class="flex flex-col gap-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="w-28 text-sm text-muted-foreground">Made for</span>
+                        <span class="text-sm" data-testid="estimate-model">@MadeForText</span>
+                        <span class="text-sm text-muted-foreground">the model routed to the build step</span>
+                        <Button Variant="ButtonVariant.Link" Class="h-auto p-0 text-xs" OnClick="ChangeTier" data-testid="estimate-change-tier">Change the tier in Routing</Button>
+                    </div>
+                    <p class="text-sm text-muted-foreground" data-testid="estimate-how">
+                        Worked out from @Estimate.App's own run records, row kind by row kind: the middle half of what earlier runs spent per row. No model is asked.
+                    </p>
+                </div>
+            }
+
+            @if (Estimate.AutoRouting)
+            {
+                <p class="text-sm text-muted-foreground" data-testid="estimate-auto-routing">Automatic routing is on, so the run may use another model than the one named.</p>
+            }
+
+            @if (Estimate.Retro)
+            {
+                <Badge Variant="BadgeVariant.Warning" Class="w-fit" data-testid="estimate-retro">estimated after the fact</Badge>
+            }
+
+            <DataTable TData="EstimateLine" Data="@objLines" ShowPagination="false" MinWidth="680px" Density="DataTableDensity.Compact"
+                       RowAttributes="@(aLine => new Dictionary<string, object> { ["data-testid"] = $"estimate-row-{aLine.Key}", ["class"] = "border-t" })"
+                       data-testid="estimate-table">
+                <Columns>
+                    <DataTableColumn TData="EstimateLine" TValue="string" Property="@(aLine => aLine.Label)" Header="Line of work" CellClass="whitespace-nowrap" />
+                    <DataTableColumn TData="EstimateLine" TValue="string" Property="@(aLine => aLine.Tokens)" Header="Output tokens — low · middle · high">
+                        <CellTemplate Context="aLine">
+                            @if (aLine.NoPrecedent)
+                            {
+                                <Badge Variant="BadgeVariant.Warning" data-testid="@($"estimate-tokens-{aLine.Key}")">no precedent</Badge>
+                            }
+                            else
+                            {
+                                <span class="@(aLine.NotMeasured ? "text-muted-foreground" : "font-mono whitespace-nowrap")" data-testid="@($"estimate-tokens-{aLine.Key}")">@aLine.Tokens</span>
+                            }
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="EstimateLine" TValue="string" Property="@(aLine => aLine.Time)" Header="Time — low · middle · high">
+                        <CellTemplate Context="aLine">
+                            @if (aLine.NoPrecedent)
+                            {
+                                <Badge Variant="BadgeVariant.Warning" data-testid="@($"estimate-time-{aLine.Key}")">no precedent</Badge>
+                            }
+                            else
+                            {
+                                <span class="@(aLine.NotMeasured ? "text-muted-foreground" : "font-mono whitespace-nowrap")" data-testid="@($"estimate-time-{aLine.Key}")">@aLine.Time</span>
+                            }
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="EstimateLine" TValue="string" Property="@(aLine => aLine.Basis)" Header="From">
+                        <CellTemplate Context="aLine">
+                            <span class="text-muted-foreground" data-testid="@($"estimate-basis-{aLine.Key}")">@aLine.Basis</span>
+                            @if (aLine.Covers is not null)
+                            {
+                                <div class="text-xs text-muted-foreground" data-testid="@($"estimate-covers-{aLine.Key}")">@aLine.Covers</div>
+                            }
+                        </CellTemplate>
+                    </DataTableColumn>
+                </Columns>
+            </DataTable>
+
+            @if (BuildLeftOutText is not null)
+            {
+                <p class="text-sm text-muted-foreground" data-testid="estimate-left-out">@BuildLeftOutText</p>
+            }
+
+            @if (ShowPerRow && objRowLines.Count > 0)
+            {
+                <div data-testid="estimate-per-row">
+                    <Collapsible>
+                        <CollapsibleTrigger Class="w-full text-left" data-testid="estimate-per-row-toggle">
+                            <span class="flex w-full items-center gap-2 text-sm text-primary">
+                                <LucideIcon Name="chevron-down" Size="14" />
+                                Each of the @objRowLines.Count rows
+                            </span>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                            <DataTable TData="EstimateRowLine" Data="@objRowLines" ShowPagination="false" MinWidth="680px" Density="DataTableDensity.Compact"
+                                       RowAttributes="@(aRow => new Dictionary<string, object> { ["data-testid"] = $"estimate-req-{aRow.Number}", ["class"] = "border-t" })"
+                                       data-testid="estimate-row-table">
+                                <Columns>
+                                    <DataTableColumn TData="EstimateRowLine" TValue="string" Property="@(aRow => aRow.ReqId)" Header="Row" CellClass="font-mono whitespace-nowrap" />
+                                    <DataTableColumn TData="EstimateRowLine" TValue="string" Property="@(aRow => aRow.BuildTokens)" Header="Build — tokens">
+                                        <CellTemplate Context="aRow">
+                                            @if (aRow.BuildTokens is null)
+                                            {
+                                                <Badge Variant="BadgeVariant.Warning" data-testid="@($"estimate-req-{aRow.Number}-build")">no precedent</Badge>
+                                            }
+                                            else
+                                            {
+                                                <span class="font-mono whitespace-nowrap">@aRow.BuildTokens</span>
+                                            }
+                                        </CellTemplate>
+                                    </DataTableColumn>
+                                    <DataTableColumn TData="EstimateRowLine" TValue="string" Property="@(aRow => aRow.BuildTime)" Header="Build — time">
+                                        <CellTemplate Context="aRow">
+                                            @if (aRow.BuildTime is not null)
+                                            {
+                                                <span class="font-mono whitespace-nowrap">@aRow.BuildTime</span>
+                                            }
+                                        </CellTemplate>
+                                    </DataTableColumn>
+                                    <DataTableColumn TData="EstimateRowLine" TValue="string" Property="@(aRow => aRow.QaTokens)" Header="Machine QA — tokens">
+                                        <CellTemplate Context="aRow">
+                                            @if (aRow.QaTokens is null)
+                                            {
+                                                <Badge Variant="BadgeVariant.Warning" data-testid="@($"estimate-req-{aRow.Number}-qa")">no precedent</Badge>
+                                            }
+                                            else
+                                            {
+                                                <span class="font-mono whitespace-nowrap">@aRow.QaTokens</span>
+                                            }
+                                        </CellTemplate>
+                                    </DataTableColumn>
+                                    <DataTableColumn TData="EstimateRowLine" TValue="string" Property="@(aRow => aRow.QaTime)" Header="Machine QA — time">
+                                        <CellTemplate Context="aRow">
+                                            @if (aRow.QaTime is not null)
+                                            {
+                                                <span class="font-mono whitespace-nowrap">@aRow.QaTime</span>
+                                            }
+                                        </CellTemplate>
+                                    </DataTableColumn>
+                                </Columns>
+                            </DataTable>
+                        </CollapsibleContent>
+                    </Collapsible>
+                </div>
+            }
+        }
+
+        @if (Actions is not null)
+        {
+            <div class="flex flex-wrap items-center gap-2" data-testid="estimate-actions">
+                @Actions
+            </div>
+        }
+    </CardContent>
+</Card>

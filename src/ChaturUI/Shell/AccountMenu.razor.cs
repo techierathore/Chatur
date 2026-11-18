@@ -55,7 +55,13 @@ public partial class AccountMenu : IDisposable
     private async Task SignOutAsync()
     {
         await Accounts.SignOutAsync();
-        Nav.NavigateTo("/sign-in", forceLoad: true);
+
+        // Without reloading the page (REQ-FN-009, miss of 2026-11-16). In the desktop app a reload throws the page's
+        // script away first and clears the components afterwards; each control that then tells its script to tidy up
+        // gets "JS object instance does not exist", and that error stops the new page being attached, so the main
+        // window stayed on "Loading Chatur". Going to Sign in inside the same page clears the components while their
+        // script is still there.
+        Nav.NavigateTo("/sign-in");
     }
 
     private void OnAppStateChanged() => _ = InvokeAsync(StateHasChanged);

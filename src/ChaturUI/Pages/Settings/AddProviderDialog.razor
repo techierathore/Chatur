@@ -22,7 +22,7 @@
                     <FieldLabel>Connector</FieldLabel>
                     <FieldContent>
                         <Select TValue="string" @bind-Value="Connector" DisplayTextSelector="@(c => ConnectorLabel(c))" Class="w-full" data-testid="field-connector">
-                            <SelectTrigger Class="w-full" data-testid="field-connector-button">
+                            <SelectTrigger Class="w-full rounded-full" data-testid="field-connector-button">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent data-testid="field-connector-pop">
@@ -40,7 +40,7 @@
                     <FieldLabel>Sign-in method</FieldLabel>
                     <FieldContent>
                         <Select TValue="string" @bind-Value="SignIn" DisplayTextSelector="@(s => SignInLabel(s))" Class="w-full" data-testid="field-signin">
-                            <SelectTrigger Class="w-full" data-testid="field-signin-button">
+                            <SelectTrigger Class="w-full rounded-full" data-testid="field-signin-button">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent data-testid="field-signin-pop">
@@ -106,8 +106,8 @@
                         <FieldContent>
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="inline-flex h-9 items-center rounded-md border px-3 font-mono font-semibold tracking-widest" data-testid="signin-code">@objPrompt.UserCode</span>
-                                <Button Variant="ButtonVariant.Outline" OnClick="CopyCodeAsync" data-testid="signin-code-copy">@(objCopied ? "Copied" : "Copy")</Button>
-                                <Button Variant="ButtonVariant.Outline" OnClick="OpenBrowserAsync" data-testid="signin-open-browser">Open the browser</Button>
+                                <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="CopyCodeAsync" data-testid="signin-code-copy">@(objCopied ? "Copied" : "Copy")</Button>
+                                <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="OpenBrowserAsync" data-testid="signin-open-browser">Open the browser</Button>
                             </div>
                             <FieldDescription data-testid="signin-waiting">Enter this code on the page the browser opened at @PromptHost. Waiting for you to finish — the code expires in @MinutesLeft @(MinutesLeft == 1 ? "minute" : "minutes"). The session is kept in @SecretStoreName.</FieldDescription>
                         </FieldContent>
@@ -149,7 +149,7 @@
             }
         </DialogBody>
         <DialogFooter Class="sm:justify-between" data-testid="dialog-actions">
-            <Button Variant="ButtonVariant.Outline" Disabled="@(objIsBusy || SignIn == "browser")" OnClick="TestAsync" data-testid="dialog-test">
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="@(objIsBusy || SignIn == "browser")" OnClick="TestAsync" data-testid="dialog-test">
                 @if (objIsTesting)
                 {
                     <Spinner Size="SpinnerSize.Small" />
@@ -161,8 +161,8 @@
                 Test
             </Button>
             <div class="flex gap-2">
-                <Button Variant="ButtonVariant.Outline" OnClick="CancelAsync" data-testid="dialog-cancel">Cancel</Button>
-                <Button Disabled="@(objIsBusy || !CanAdd)" OnClick="AddAsync" data-testid="dialog-add">
+                <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="CancelAsync" data-testid="dialog-cancel">Cancel</Button>
+                <Button Class="rounded-full" Disabled="@(objIsBusy || !CanAdd)" OnClick="AddAsync" data-testid="dialog-add">
                     <LucideIcon Name="plus" Size="14" />
                     Add
                 </Button>

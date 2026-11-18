@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Business Requirements — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-11-04 &middot; source <code>Chatur-P3-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-11-18 &middot; source <code>Chatur-P3-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -123,6 +123,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#document-rights">Document rights</a></li>
         <li class="h3"><a href="#the-main-window-as-the-owner-uses-it">The main window, as the owner uses it</a></li>
         <li class="h3"><a href="#brand-assets">Brand assets</a></li>
+        <li class="h3"><a href="#estimate-before-actual-after">Estimate before, actual after</a></li>
+        <li class="h3"><a href="#each-account-has-its-own-chatur">Each account has its own Chatur</a></li>
         <li><a href="#development-status">4. Development status</a></li>
         <li><a href="#where-the-rest-lives">5. Where the rest lives</a></li>
       </ol>
@@ -139,7 +141,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <h2 id="summary"><a id="1-summary"></a>1. Summary<a class="anchor-link" href="#summary">#</a></h2>
-<p>Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way — this is the extra command, not the replacement. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off. Since 2026-10-08 every work step goes to the agent owning its process, and its checks judge the result on disk (BRD-159 to BRD-179). Since 2026-10-09 a "writes documents" right covers <code>docs/</code> only (BRD-180 to BRD-183).</p>
+<p>Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off. Since 2026-10-08 every work step goes to the agent owning its process, and its checks judge the result on disk (BRD-159 to BRD-179). Since 2026-10-09 a "writes documents" right covers <code>docs/</code> only (BRD-180 to BRD-183). From 2026-11-10, estimate before, actual after (BRD-192 to BRD-209). Per-account data: BRD-210 to BRD-216.</p>
 <h2 id="screens-and-flow"><a id="2-screens-and-flow"></a>2. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
 <p>One row per routed page this phase adds; dialogs are written exactly as in the phase-1 BRD.</p>
 <table>
@@ -147,7 +149,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tbody>
 <tr><td>End-to-end run</td><td><code>/auto</code></td><td>Owner</td><td><a href="mockups/auto-run.html">mockup</a></td><td>brief, project, role now working, step, state, stop</td></tr>
 <tr><td>Run queue</td><td><code>/auto/queue</code></td><td>Owner</td><td><a href="mockups/run-queue.html">mockup</a></td><td>queued run, project, state, position, started</td></tr>
-<tr><td>Run report</td><td><code>/auto/report</code></td><td>Owner</td><td><a href="mockups/run-report.html">mockup</a></td><td>requirement, verdict, miss, model, tokens, time</td></tr>
+<tr><td>Run report</td><td><code>/auto/report</code></td><td>Owner</td><td><a href="mockups/run-report.html">mockup</a></td><td>requirement, verdict, miss, model, tokens, time, estimate, actual, within / above / below</td></tr>
 </tbody>
 </table>
 <p><strong>Primary journey:</strong></p>
@@ -160,9 +162,10 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </li>
 <li>The run stops at "ready for the owner's acceptance test" and never says complete before that.
 </li>
-<li>The owner reads the report afterwards: every requirement, every miss, and what it cost.
+<li>The owner reads the report afterwards: every requirement, every miss, and what it cost beside what it was estimated to cost.
 </li>
 </ol>
+<p>Before step 1, and before any single build, verify or fix started from Processes, Chatur shows what the run should cost and starts only when the owner confirms (BRD-192 to BRD-194).</p>
 <h2 id="requirements"><a id="3-requirements"></a>3. Requirements<a class="anchor-link" href="#requirements">#</a></h2>
 <h3 id="end-to-end-run">End-to-end run<a class="anchor-link" href="#end-to-end-run">#</a></h3>
 <p>One command, a brief in, work ready for the owner's acceptance test out.</p>
@@ -522,19 +525,208 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
+<h3 id="estimate-before-actual-after">Estimate before, actual after<a class="anchor-link" href="#estimate-before-actual-after">#</a></h3>
+<p>Added 2026-11-10 on the owner's ask, a mandatory feature. Before a build, a verify, a fix or a whole brief-to-verified run starts, Chatur shows what it should cost, and afterwards it sets that estimate beside what the run actually cost. TechieFlow v1.3.0 does the same thing with a script (<code>*estimate-phase</code>, <code>tf-estimate.sh</code>, framework schema §2.8 and §6); Chatur does it in its own code from the same rules, so the two give the same figures from the same records. No script is called and no task file is read while Chatur runs.</p>
+<p><strong>The rule, in code, with no model asked.</strong> For each row in scope and each line of work, Chatur takes the earlier live runs of that process that touched at least one row of the same kind (REQ-UI, REQ-FN, REQ-RAG, REQ-NFR) and were run on the model that will run this step. From each run it takes output tokens per row and seconds per row (the run's figure divided by the rows it touched). Low, middle and high are the first quartile, the median and the third quartile of those figures, interpolated between neighbours and rounded to whole numbers half to even, exactly as <code>tf-estimate.sh</code> does. The lines of work are build (<code>build-phase</code>), machine QA (<code>verify-phase</code> plus <code>fix-issues</code>, added for display and never stored added), and after handoff (<code>triage</code>: <code>triage-issues</code> and, in a sister project's records, <code>triage-and-fix</code>). A phase total is the sum of the row figures that have one, and says how many rows it covers. The owner's own testing is never estimated and prints "not measured".</p>
+<p><strong>Which runs count, in order (owner, 10 Nov 2026).</strong> The first of these with at least three runs gives the figure: (1) this project's runs on the step's model; (2) those plus the sister projects' runs on the step's model, labelled "from sister projects"; (3) this project's runs on any model, labelled "from all models"; (4) those plus the sister projects' runs on any model, labelled "from all models" and "from sister projects". None with three: no precedent, never a number, over the runs of the widest pool tried. A project with no run of its own and sister projects that have some is estimated from theirs; "No estimate yet" shows only when no step has a figure from any pool (BRD-208).</p>
+<p><strong>The model a step runs on.</strong> The first model of the tier routing gives the step. With automatic routing on, the estimate is still made for that model, and the screen says that automatic routing may choose another; the actual always names the model that ran. The estimate record's <code>model</code> is that model and its optional <code>tier</code> is that tier (BRD-205, <a href="Chatur-Metrics-Schema.md">the metrics schema</a>).</p>
+<p><strong>A brief with no checklist yet.</strong> An end-to-end run from a brief has no rows before day-1 and split-brd have run. Before Start the estimate says so; the run writes its estimate when it reaches the build step, without stopping. In step-by-step mode the estimate is shown at that step before its Start (BRD-193).</p>
+<p><strong>Fixtures for the acceptance lines.</strong> The checklist rows REQ-UI-083 to REQ-UI-090 and REQ-FN-107 to REQ-FN-116 name these; each is a unit test's input. Each is a set of run records in a test project named <code>Fixture</code>, whose phase 2 checklist holds REQ-FN-301, REQ-FN-302 and REQ-FN-303. Every run is live, measured, and on <code>claude-opus-5-5</code> unless the row says otherwise.</p>
+<table>
+<thead><tr><th>Fixture</th><th>Run records in</th><th>Expected out</th></tr></thead>
+<tbody>
+<tr><td>F1</td><td>Five <code>build-phase</code> runs on REQ-FN rows outside phase 2: A 2 rows, 4,000 tokens out, 600 s · B 1 row, 3,000, 240 s · C 2 rows, 10,000, 900 s · D 4 rows, 4,000, 480 s · E 4 rows, 16,000, 1,440 s</td><td>Each REQ-FN row, build: tokens 2,000 · 3,000 · 4,000; time 240 · 300 · 360 s; basis repo, 5 runs. Phase total over 3 rows: 6,000 · 9,000 · 12,000 tokens; 720 · 900 · 1,080 s</td></tr>
+<tr><td>F2</td><td>Two <code>build-phase</code> runs here on REQ-UI rows (1,000 tokens and 100 s per row; 3,000 and 300) and two in sister project S1 (2,000 and 200; 6,000 and 500)</td><td>A REQ-UI row, build: tokens 1,750 · 2,500 · 3,750; time 175 · 250 · 350 s; basis family, 4 runs; the screen names S1</td></tr>
+<tr><td>F3</td><td>One <code>triage-issues</code> run here on a REQ-FN row; S1 holds one more</td><td>After handoff: no precedent, basis none, 2 runs; both figures null</td></tr>
+<tr><td>F4</td><td>F1, plus one run with no row named, one with no measured output tokens, one backfilled, one voided, and one that touched REQ-FN-301</td><td>The same figures as F1 from the same 5 runs; every record of the batch carries <code>basis_note: "retro"</code> and the screen says "estimated after the fact"</td></tr>
+<tr><td>F5</td><td>F1 with runs B and D on <code>claude-sonnet-5-5</code>; tier 1 is <code>claude-opus-5-5</code>, tier 2 <code>claude-sonnet-5-5</code></td><td>Build on tier 1: tokens 3,000 · 4,000 · 4,500; time 330 · 360 · 405 s; basis repo, 3 runs. Build on tier 2: only 2 runs on <code>claude-sonnet-5-5</code>, so all models: tokens 2,000 · 3,000 · 4,000; time 240 · 300 · 360 s; basis repo, 5 runs, labelled "from all models"</td></tr>
+<tr><td>F6</td><td>F1's phase total as the estimate, then live <code>build-phase</code> runs R1 (REQ-FN-301, REQ-FN-302 and REQ-FN-999 outside the phase; 9,000 tokens, 900 s), R2 (REQ-FN-303; 3,000, 300 s), R3 (REQ-FN-302; 1,500, 150 s), and a <code>verify-phase</code> run R4 that named no row (2,000 tokens, 120 s)</td><td>Build actual 10,500 tokens and 1,050 s, labelled apportioned, within the range; "1 run named no row — 2,000 tokens, 2 m", in no figure. With only R2 and R3: "insufficient data (n=2)"</td></tr>
+</tbody>
+</table>
+<p><strong>The five open points, answered by the owner on 10 Nov 2026</strong> (written into the rules above):</p>
+<ol>
+<li><em>The <code>model</code> field</em> holds the model that will run the step. The tier goes into the record as one extra optional field, <code>tier</code>, described in <a href="Chatur-Metrics-Schema.md">the metrics schema</a>.
+</li>
+<li><em>History by model:</em> same model first. Fewer than three runs on that model: runs on all models, labelled "from all models". Only when that also has fewer than three does the row read "no precedent".
+</li>
+<li><em>Automatic routing on:</em> the estimate is for the first model of the step's tier, and the screen says automatic routing may choose another. The actual always names the model that ran.
+</li>
+<li><em>A brief with no checklist yet:</em> the run writes its estimate when it reaches the build step, without stopping. In step-by-step mode it is shown at that step before Start.
+</li>
+<li><em>No runs of its own:</em> the sister projects' runs are used, labelled "from sister projects". "No estimate yet" only when neither has runs.
+</li>
+</ol>
+<p>Figures checked on 10 Nov 2026: F1 to F5 against <code>tf-estimate.sh --dry-run --json</code> (F5 per model by giving the script only that model's runs) and F6 against <code>tf-metrics.sh --estimates</code> on the same records. Every figure the analyst worked out by hand matched; none was changed. F5's tier 2 line changed only because of answer 2.</p>
+<ul>
+<li><strong>BRD-192</strong> — An estimate before a process starts. <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner presses Start on build-phase, verify-phase or fix-issues for fixture F1 on Processes, then every row and the phase total show, and nothing runs until confirmed.
+</li>
+</ul>
+</li>
+<li><strong>BRD-193</strong> — An estimate before an end-to-end run starts. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner fills in a brief for a project holding fixture F1 on End-to-end run, then the estimate shows before Start, each line naming its model and tier.
+</li>
+</ul>
+</li>
+<li><strong>BRD-194</strong> — An estimate on a queued run. <em>Screen:</em> Run queue · <em>Mockup:</em> <a href="mockups/run-queue.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner queues a run for fixture F1 on Run queue, then its estimate shows before Queue it is pressed, and the waiting run keeps that estimate.
+</li>
+</ul>
+</li>
+<li><strong>BRD-195</strong> — Worked out from this project's own runs, row kind by row kind. <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When fixture F1 is estimated on Processes, then each REQ-FN row's build reads 2,000/3,000/4,000 tokens and 240/300/360 s over 5 runs, and the three-row total 6,000/9,000/12,000 tokens.
+</li>
+</ul>
+</li>
+<li><strong>BRD-196</strong> — Sister projects fill in, and the estimate says so. <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When fixture F2 is estimated on Processes, then a REQ-UI row's build reads 1,750/2,500/3,750 tokens and 175/250/350 s, basis family over 4 runs, naming S1.
+</li>
+</ul>
+</li>
+<li><strong>BRD-197</strong> — The owner names the sister projects. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner adds a sister project on Settings, then it is listed with its run count, and a folder without docs/metrics/runs.jsonl is refused with the reason.
+</li>
+</ul>
+</li>
+<li><strong>BRD-198</strong> — No precedent, never a number. <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When fixture F3 is estimated on Processes, then after handoff reads "no precedent", basis none over 2 runs, with no figure shown or written.
+</li>
+</ul>
+</li>
+<li><strong>BRD-199</strong> — No model judgement in the estimate. <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When fixture F1 is estimated twice on Processes with no model provider reachable, then both results match to the last digit and no model call is made.
+</li>
+</ul>
+</li>
+<li><strong>BRD-200</strong> — Made for the model and tier that will run the step. <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When fixture F5 is estimated with build on tier 1, then build reads 3,000/4,000/4,500 tokens and 330/360/405 s over 3 runs, naming claude-opus-5-5 and tier 1.
+</li>
+</ul>
+</li>
+<li><strong>BRD-201</strong> — Changing the tier changes the estimate before the start. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner moves build to tier 2 on Settings, then F5 reads 2,000/3,000/4,000 tokens "from all models" for claude-sonnet-5-5 without a restart; a started run keeps its own.
+</li>
+</ul>
+</li>
+<li><strong>BRD-202</strong> — Process run shows the actual so far beside the estimate. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a build-phase run on F1's three rows has spent 4,500 tokens and 400 s on Process run, then those show beside 6,000/9,000/12,000 and 720/900/1,080 s, uncombined.
+</li>
+</ul>
+</li>
+<li><strong>BRD-203</strong> — The run report sets estimate beside actual. <em>Screen:</em> Run report · <em>Mockup:</em> <a href="mockups/run-report.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a run estimated at 6,000/9,000/12,000 tokens ends on Run report, then the actual reads within at 6,000 and 12,000, above at 12,001, below at 5,999.
+</li>
+</ul>
+</li>
+<li><strong>BRD-204</strong> — At handoff, the phase against its estimate. <em>Screen:</em> Process run · <em>Mockup:</em> <a href="mockups/process-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When handoff-phase runs for fixture F6 on Process run, then build shows 6,000/9,000/12,000 beside 10,500 tokens, apportioned, within, and "1 run named no row" stands apart.
+</li>
+</ul>
+</li>
+<li><strong>BRD-205</strong> — Estimates are written in TechieFlow's own shape. <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner confirms a start for fixture F1 on Processes, then REQ-FN-301's build record in estimates.jsonl equals the Metrics Schema example, ts aside.
+</li>
+</ul>
+</li>
+<li><strong>BRD-206</strong> — An estimate is never mixed with a measurement. <em>Screen:</em> Run report · <em>Mockup:</em> <a href="mockups/run-report.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When fixture F1 is estimated and the run ends on Run report, then runs.jsonl, the checklist and PROJECT-STATUS hold no estimate figure, and no screen shows a ratio.
+</li>
+</ul>
+</li>
+<li><strong>BRD-207</strong> — The owner's own testing reads "not measured". <em>Screen:</em> Run report · <em>Mockup:</em> <a href="mockups/run-report.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When any estimate table shows on Processes, End-to-end run, Run queue, Process run or Run report, then the owner's testing line reads "not measured", never a number.
+</li>
+</ul>
+</li>
+<li><strong>BRD-208</strong> — A project with no run records says "no estimate yet". <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a process is started on Processes for a project with no usable run anywhere, then it reads "No estimate yet", Start works, and no error is logged.
+</li>
+</ul>
+</li>
+<li><strong>BRD-209</strong> — Runs that cannot be divided among rows are left out. <em>Screen:</em> Processes · <em>Mockup:</em> <a href="mockups/processes.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When fixture F4 is estimated on Processes, then the figures equal F1's over the same 5 runs, and the batch carries basis_note "retro".
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="each-account-has-its-own-chatur">Each account has its own Chatur<a class="anchor-link" href="#each-account-has-its-own-chatur">#</a></h3>
+<p>Added 2026-11-17 from the owner's first sign-in with his common App Manager account (<code>docs/screenshots/2026-11-17-first-use/Home-Screan-Broken.png</code>): an account that had never used Chatur opened another account's project, its files, its chat and its project list. Everything a person makes or opens in Chatur belongs to the account signed in: projects and named folders, the last open project, open files, chat sessions and their records, run history, providers and their keys in the operating system's store, routing and the other settings. A second account on the same install sees none of it. What stays with the install: the device identifier App Manager knows this machine by (BRD-4), and the sign-in that is remembered on this machine (BRD-5). Data kept before this change belongs to nobody: it stays where it was, nothing is deleted, and no account is shown it.</p>
+<ul>
+<li><strong>BRD-210</strong> — What one account makes or opens, another never sees. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start-empty.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a second account signs in on Start where a first account opened projects and chatted, then Start is empty and Switch project lists none of the first's.
+</li>
+</ul>
+</li>
+<li><strong>BRD-211</strong> — A chat is never continued by another account. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a second account opens on Workbench a folder a first account chatted in, then its conversation is empty and never says "Continuing after".
+</li>
+</ul>
+</li>
+<li><strong>BRD-212</strong> — A provider and its key belong to the account that added it. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-providers.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a second account opens Providers on Settings after a first account connected one, then the list is empty and the first account's key is never read for it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-213</strong> — Run history belongs to the account that ran it. <em>Screen:</em> End-to-end run · <em>Mockup:</em> <a href="mockups/auto-run.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a second account opens End-to-end run, Run queue or Run report on an install where a first account has runs, then none of the first account's runs is listed.
+</li>
+</ul>
+</li>
+<li><strong>BRD-214</strong> — Data kept before accounts belongs to nobody. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start-empty.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When an account signs in on Start where projects, chats and runs were kept before accounts, then it is shown none of them and none is deleted.
+</li>
+</ul>
+</li>
+<li><strong>BRD-215</strong> — Open a file from Start. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start-empty.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person chooses Open a file on Start and gives a file, then the Workbench opens on the folder holding it, with that file open in a tab.
+</li>
+</ul>
+</li>
+<li><strong>BRD-216</strong> — Signing in as another account leaves nothing of the last one on screen. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When one account signs out in a window and another signs in there, then no project, open file, chat or output of the first account is shown.
+</li>
+</ul>
+</li>
+</ul>
 <h2 id="development-status"><a id="4-development-status"></a>4. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-11-04.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-11-18.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>End-to-end run</td><td>10</td><td>10</td><td>0</td><td>Done</td></tr>
-<tr><td>Run queue</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
-<tr><td>Run report</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
-<tr><td>Settings</td><td>5</td><td>5</td><td>0</td><td>Done</td></tr>
-<tr><td>Process run</td><td>20</td><td>20</td><td>0</td><td>Done</td></tr>
-<tr><td>Workbench</td><td>8</td><td>8</td><td>0</td><td>Done</td></tr>
-<tr><td>Start</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
+<tr><td>End-to-end run</td><td>12</td><td>12</td><td>0</td><td>Done</td></tr>
+<tr><td>Run queue</td><td>6</td><td>6</td><td>0</td><td>Done</td></tr>
+<tr><td>Run report</td><td>7</td><td>7</td><td>0</td><td>Done</td></tr>
+<tr><td>Settings</td><td>8</td><td>8</td><td>0</td><td>Done</td></tr>
+<tr><td>Process run</td><td>22</td><td>22</td><td>0</td><td>Done</td></tr>
+<tr><td>Workbench</td><td>10</td><td>10</td><td>0</td><td>Done</td></tr>
+<tr><td>Start</td><td>7</td><td>7</td><td>0</td><td>Done</td></tr>
+<tr><td>Processes</td><td>9</td><td>9</td><td>0</td><td>Done</td></tr>
 </tbody>
 </table>
 <h2 id="where-the-rest-lives"><a id="5-where-the-rest-lives"></a>5. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
@@ -548,6 +740,10 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>The Process run screen whose handed steps this phase adds to</td><td><a href="Chatur-P2-BRD.html">phase 2 BRD</a></td></tr>
 <tr><td>The rights on Settings ▸ Agents (BRD-53, BRD-59) and on Agent workspace (BRD-114) that BRD-180 to BRD-183 add to</td><td><a href="Chatur-BRD.html">phase 1 BRD</a>, <a href="Chatur-P2-BRD.html">phase 2 BRD</a></td></tr>
 <tr><td>The Start screen whose logo BRD-188 to BRD-191 change</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
+<tr><td>The Start, Workbench and Settings items BRD-210 to BRD-216 narrow to one account (BRD-11, BRD-13, BRD-14, BRD-17, BRD-35)</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
+<tr><td>The Processes screen whose Start BRD-192 puts an estimate in front of</td><td><a href="Chatur-P2-BRD.html">phase 2 BRD</a></td></tr>
+<tr><td>Settings ▸ Measurements, where BRD-197's sister projects are named</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
+<tr><td>The rules the estimate copies (<code>tf-estimate.sh</code>, the estimates stream, the four separations)</td><td><code>.tfcore/telemetry/SCHEMA.md</code> §2.8 and §6, and <a href="Chatur-Metrics-Schema.md">the metrics schema</a></td></tr>
 <tr><td>Every phase, its screens and its BRD range</td><td><a href="Chatur-Phases.html">Chatur-Phases.md</a></td></tr>
 <tr><td>This phase's work list</td><td><a href="Chatur-P3-Checklist.md">Chatur-P3-Checklist.md</a></td></tr>
 </tbody>

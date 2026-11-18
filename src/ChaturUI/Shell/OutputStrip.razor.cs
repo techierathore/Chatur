@@ -26,10 +26,10 @@ public partial class OutputStrip : IDisposable
     private int? objStreamingForProjectId;
     private string objStatusText = "nothing run yet";
 
-    /// <summary>The result pill's colour: green once a build passed, red once it failed, neutral otherwise (mockup `pill ok`).</summary>
+    /// <summary>The result pill's colour: green once a build passed, red once it failed, neutral otherwise (mockup `pill ok` and `pill bad`, the soft tint, never the solid fill: white on the dark theme's red is 2.8 : 1).</summary>
     private BadgeVariant StatusVariant => objStatusText switch
     {
-        _ when objStatusText.Contains("failed", StringComparison.Ordinal) => BadgeVariant.Destructive,
+        _ when objStatusText.Contains("failed", StringComparison.Ordinal) => BadgeVariant.Danger,
         _ when objStatusText.Contains("passed", StringComparison.Ordinal) => BadgeVariant.Success,
         _ => BadgeVariant.Secondary,
     };
@@ -112,6 +112,14 @@ public partial class OutputStrip : IDisposable
         {
             await foreach (var vLine in BuildRun.StreamOutputAsync(aProjectId, aCt))
             {
+                // RestartStreaming cancels this subscription on the same dispatcher before it clears the
+                // lines, so a line whose delivery was already queued when the next build or run began is
+                // dropped here instead of being added to the fresh run's lines (MISS-Chatur-20261117-02).
+                if (aCt.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 objLines.Add(new LogLine(vLine.Text, vLine.IsError ? LogLineKind.Failure : LogLineKind.Ordinary));
                 UpdateStatus(vLine);
 

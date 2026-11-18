@@ -38,8 +38,12 @@ public sealed class FileDownloadInterop : IAsyncDisposable
     {
         if (objModuleTask.IsValueCreated)
         {
-            var vModule = await objModuleTask.Value.ConfigureAwait(false);
-            await vModule.DisposeAsync().ConfigureAwait(false);
+            // Never waits on a page that has gone (JsCleanUp, REQ-FN-009).
+            await JsCleanUp.RunAsync(async () =>
+            {
+                var vModule = await objModuleTask.Value.ConfigureAwait(false);
+                await vModule.DisposeAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
     }
 }

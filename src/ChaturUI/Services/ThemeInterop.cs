@@ -70,19 +70,12 @@ public sealed class ThemeInterop : IAsyncDisposable
             return;
         }
 
-        try
+        // Never waits on a page that has gone, was never made interactive, or has lost its connection
+        // (JsCleanUp, REQ-FN-009).
+        await JsCleanUp.RunAsync(async () =>
         {
             var vModule = await objModuleTask.Value.ConfigureAwait(false);
             await vModule.DisposeAsync().ConfigureAwait(false);
-        }
-        catch (JSDisconnectedException)
-        {
-            // The circuit is already gone — nothing left to dispose on the JS side.
-        }
-        catch (InvalidOperationException)
-        {
-            // Disposed while the page was still being statically prerendered, before any JS interop
-            // call is allowed — there is nothing on the JS side yet either.
-        }
+        }).ConfigureAwait(false);
     }
 }

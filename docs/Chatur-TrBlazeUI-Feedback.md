@@ -4,11 +4,11 @@
 |---|---|
 | App | Chatur |
 | Upstream | TrBlazeUI |
-| Updated | 2026-11-04 |
+| Updated | 2026-11-14 (TR-026 filed) · 2026-11-13 (TR-025 filed) · 2026-11-10 |
 
 ## Summary
 
-24 entries, none blocking. 2 open (TR-023, TR-024, filed 2026-11-04), 22 closed; TR-020 to TR-022 re-checked on 2.2.2.
+26 entries, none blocking. 2 open: TR-025 (a pulled-back submenu's margin at 390 px) and TR-026 (a Select's list can never be wider than its button). 24 closed; TR-023 and TR-024 re-checked and closed 2026-11-10 on 2.2.3, which every Chatur project now uses.
 
 All ten were answered on 2026-09-22 and all ten have now been re-checked in Chatur against
 2.0.9. Six were fixed in code; four needed no code, because the control already existed. Each
@@ -320,7 +320,9 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 
 ### TR-023 — In a Menubar menu, ArrowDown reaches a submenu row last, not in its place
 
-- **Status:** open, filed 2026-11-04
+> ✅ **Closed 2026-11-10** — re-checked here on TrBlazeUI 2.2.3 (every Chatur project moved from 2.2.2; AI reference has the "After 2.2.2" row). The REQ-UI-073 keyboard test in `tests/verify/workbench-menus.spec.ts` now counts rows instead of walking: from File, ArrowDown five times focuses Recent projects, once more focuses Close project (Save and Save all are off and skipped). PASS.
+
+- **Status:** closed 2026-11-10 (re-checked on 2.2.3), fixed upstream 2026-11-05, filed 2026-11-04
 - **Severity:** minor
 - **Blocks:** no — every item, the ▸ row included, is reachable by keyboard and by mouse; only the order the arrow keys take is wrong.
 - **Repro:** TrBlazeUI 2.2.2. A `MenubarContent` with `MenubarItem` New, Open a solution, Open a folder, Clone; then a `MenubarSub` (`MenubarSubTrigger` "Recent projects"); then `MenubarItem` Save (disabled), Save all (disabled), Close project, Exit. Open the menu and press ArrowDown repeatedly: the focus goes New → Open a solution → Open a folder → Clone → Close project → Exit → Recent projects (Chatur's File menu, `src/ChaturUI/Shell/MenuBar.razor`; seen 2026-11-04 by focusing each step and reading `document.activeElement`).
@@ -332,7 +334,9 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 
 ### TR-024 — At 390px a submenu with no room on either side runs off the window instead of staying inside it
 
-- **Status:** open, filed 2026-11-04
+> ✅ **Closed 2026-11-10** — re-checked here on TrBlazeUI 2.2.3. New test "REQ-UI-073 at 390px File ▸ Recent projects ▸ stays inside the window…" in `tests/verify/workbench-menus.spec.ts`: at 390×800 the Recent projects list has its left edge at 8 px or more and its right edge at 382 or less, no project name is clipped (the long name wraps), and View ▸ Zoom ▸ stays inside the window and opens to the left of its row. PASS. Screenshots `tests/.artifacts/verify/shots/TR-024-file-recent-390.png`, `TR-024-view-zoom-390.png`.
+
+- **Status:** closed 2026-11-10 (re-checked on 2.2.3), fixed upstream 2026-11-05, filed 2026-11-04
 - **Severity:** minor
 - **Blocks:** no — the list opens and every item can be clicked; at 390px only the right end of long project names is cut off.
 - **Repro:** TrBlazeUI 2.2.2, Chatur's main window at 390×800, File ▸ Recent projects ▸ (a `MenubarSubContent` whose items are project names up to about 30 characters, so the list is 235px wide). The File list spans x 60 to 250. Neither side has 235px, so the list opens on the right at x 250 and ends at x 485, 95px past the window's right edge (`tests/.artifacts/verify/shots/TR-020-file-recent-390.png`). View ▸ Zoom ▸ (128px wide) does flip to the left as the 2026-10-13 reply describes.
@@ -342,9 +346,104 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 - **Workaround:** none; the app does not resize the list itself.
 - **Suggested fix:** after choosing a side, shift the list by the overflow so its right edge is at most the window's width minus a small margin (and its left edge at least that margin), or let the caller cap it with a `max-w` that wraps item text.
 
+### TR-025 — At 390px the pulled-back submenu sits 3.5 px inside the window, not 8 px, when its items wrap
+
+- **Status:** open. Filed 2026-11-13.
+- **Severity:** minor
+- **Blocks:** no — the list stays inside the window and every item can be clicked; only the 8 px margin TR-024's fix promises is short by 4.5 px.
+- **Repro:** TrBlazeUI 2.2.3, Chatur's main window at 390×800, File ▸ Recent projects ▸ with the recent names WbAFilesApp, workbench-b, Fixture, ReportRealApp, reportspec-proj, SetEstFixture (one wraps to two lines). Test `REQ-UI-073 at 390px File ▸ Recent projects ▸ stays inside the window and View ▸ Zoom ▸ still opens to the left (TR-024)` in `tests/verify/workbench-menus.spec.ts`.
+- **Expected:** the list's right edge at most 382 (390 − 8), as on 2026-11-10 with shorter names.
+- **Actual:** `right edge at most 382 (390 - 8)` — `Expected: <= 382.5, Received: 385.953125`. [Likely] the list is placed from its width before a long item wraps, and the wrapped list is a little wider than the width it was placed with.
+- **Encountered in:** `*triage-and-fix Chatur`, 2026-11-13, phase 3 verify
+- **Workaround:** none in the app.
+- **Suggested fix:** place the list after its items have laid out at the capped width (or measure again after wrapping), so the 8 px margin holds whatever the names are.
+
+### TR-026 — A Select's list can never be wider than its button, so long options wrap in a narrow picker
+
+- **Status:** open. Filed 2026-11-14.
+- **Severity:** minor
+- **Blocks:** no. Chatur widened its tier pickers' buttons from `w-40` to `w-64` (Settings ▸ Routing, `SettingsRouting.razor`), so each option fits on one line. That is a workaround: the buttons are now wider than their content.
+- **Repro:** TrBlazeUI 2.2.3. `<Select TValue="string" Class="flex h-7 w-40"><SelectTrigger Class="h-7 w-40 py-0"><SelectValue /></SelectTrigger><SelectContent>` with the items "Tier 1 — the strongest", "Tier 2 — everyday" and "Tier 3 — on this machine". Open it at 1280 or 390.
+- **Expected:** the list can be wider than its button when its options need it, as shadcn's Select allows (`min-width` of the trigger, not a fixed `width`), or the component lets the page say so.
+- **Actual:** the positioner around the list carries inline `width: 160px; min-width: 160px; max-width: 160px`, the button's width, and every option wraps onto two lines. A `Class` on `SelectContent` lands on the inner list, inside that fixed box. `TrBlazeUI.Primitives.Select.SelectContent` has `MatchTriggerWidth`, but `TrBlazeUI.Components.Select.SelectContent` (2.0.9 to 2.2.3) exposes only `Class`, `CssClass`, `ChildContent` and `AdditionalAttributes`, so there is no way to turn it off.
+- **Encountered in:** `*triage-and-fix Chatur`, 2026-11-14 (opening every dropdown on the screens under check)
+- **Workaround:** a wider button (`w-64`).
+- **Suggested fix:** pass `MatchTriggerWidth` through on the component's `SelectContent`, or make the trigger's width a `min-width` for the list rather than a fixed width.
+
 ## Replies from TrBlazeUI
 
 <!-- The upstream team's answers, newest block first. Left in full: this is the record. -->
+
+### 2026-11-05 — TR-023 and TR-024 are fixed; they ship in the release after 2.2.2
+
+Both are fixed and tested in the library the day after they were filed. They ship in the next
+release after 2.2.2 (**2.2.3** by the usual count) on GitHub Packages
+(`https://nuget.pkg.github.com/techierathore/index.json`). The release number is the owner's to set
+when the release is cut. When this reply was written, the fixes were built and verified but the
+release had not been cut yet. If the feed still stops at 2.2.2, wait; keep the keyboard test
+walking to the ▸ row until then.
+
+| Entry | State | What you get |
+|---|---|---|
+| **TR-023** ArrowDown reaches a submenu row last | fixed | The arrow keys follow the order on screen. In Chatur's File menu, ArrowDown now goes New → Open a solution → Open a folder → Clone → Recent projects → Close project → Exit (Save and Save all are disabled and skipped). ArrowUp, Home and End follow the same order, and pointing at the ▸ row makes it the current row, so ArrowDown continues from it. |
+| **TR-024** at 390 px a submenu runs off the window | fixed, for all three menus | When neither side has room, the list keeps the side with more room and is pulled back by the overflow, so its far edge sits 8 px inside the window, over part of the parent list. Your 235 px list beside a File list ending at x 250 will sit at about x 147 to 382. A list wider than the window minus 16 px also gets a `max-width`, and its rows wrap. A list that fits one side is drawn exactly as before. `DropdownMenuSubContent` and `ContextMenuSubContent` share the placer and gain the same. |
+
+Why TR-023 happened: a Menubar list held its rows in the order their components initialised. A
+`MenubarItem` is a direct child of the list, but a `MenubarSubTrigger` sits inside `MenubarSub`, and
+Blazor initialises a nested component only after every direct child has, so the ▸ row was always
+registered last. The list now holds the `MenubarSub` itself, which initialises in document order
+with its sibling items; the submenu answers for its row.
+
+Measured on the TrBlazeUI demo at 390 wide, File ▸ Recent folders ▸, a 354 px list beside a File
+list spanning x 29 to 221: it now sits at x 28 to 382, `data-side="right"`,
+`style="left:calc(100% - 192.5px)"`, and its last row is clickable. At 1280 the same list opens
+beside its row with no pull-back. The arrow walk on the demo's File menu (New project, Recent
+projects ▸, Save disabled, Recent folders ▸, Close project) is New project → Recent projects →
+Recent folders → Close project. Tests `tests/verify/req-ui-063.spec.ts` (3 of 3), the earlier
+`req-ui-050.spec.ts` (6 of 6), every other browser test in the library (86 of 87; the one failure
+is a NuGet advisory on the Auto demo host, nothing to do with menus), and the Chatur specs
+`ui-chatur*.spec.js` (86/86, 80/80, 67/67).
+
+Things to know before you use them:
+
+1. **Nothing in your markup changes.** `MenubarSubTrigger` still carries the role, the focus, the
+   ▸ and your `data-testid`; `MenubarSubContent` still carries `data-side`. The list's own record
+   of the current row is now the `MenubarSub`, which is internal.
+2. **The pull-back is an inline style on the list.** On the right side it is
+   `left: calc(100% - Npx)`, on the left side `right: calc(100% - Npx)`, plus `max-width` when
+   the list is wider than the window. A `style` you pass on `MenubarSubContent` is kept after it.
+3. **The margin is 8 px, not a parameter.** Tell us if the mockup wants the list flush with the
+   window edge or further in.
+4. **`ContextMenu` keeps the old arrow order for now.** `ContextMenuSubTrigger` registers the same
+   way `MenubarSubTrigger` used to; it was not changed in this release. Tell us if Chatur draws a
+   `ContextMenuSub` between plain items. `DropdownMenu` was never affected: it walks the rows in
+   DOM order.
+5. **The parity walker's "▸ row does nothing" is the framework's (your TF-022), not the
+   library's.** Our own screen check reports the same on the Menubar demo; nothing here changes it.
+6. **Your agent's reference describes both.** After the upgrade, the build refreshes
+   `.trblazeui/TrBlazeUI-AI-Reference.md`: "Which version added what" has an "After 2.2.2" row,
+   and the Menubar section's "How a submenu behaves" note describes the arrow order and the
+   pull-back. `CHANGELOG.md` has the full entry.
+
+#### What we need from you
+
+Upgrade once the release after 2.2.2 is on the feed. Check that
+`.trblazeui/TrBlazeUI-AI-Reference.md` has an "After 2.2.2" row; if it does not, the upgrade has
+not landed yet.
+
+- **TR-023:** in the REQ-UI-073 keyboard test, count rows instead of walking until the ▸ row has
+  the focus: from File, ArrowDown five times reaches Recent projects, and once more reaches Close
+  project. Then close the entry:
+  `bash .tfcore/utils/tf-feedback.sh Chatur --close TR-023 "<what you ran and what it showed>"`.
+- **TR-024:** in the main window at 390×800, open File ▸ Recent projects ▸ and measure the list:
+  its right edge at most 382, its left edge at least 8, the longest project name unclipped, and
+  View ▸ Zoom ▸ still flipping left. Compare with
+  `tests/.artifacts/verify/shots/TR-020-file-recent-390.png`. Then close it:
+  `bash .tfcore/utils/tf-feedback.sh Chatur --close TR-024 "<what you ran and what it showed>"`.
+
+Tell us what does not fit.
+
+---
 
 ### 2026-10-13 — TR-020 and TR-021 are fixed; they ship in the release after 2.1.6
 

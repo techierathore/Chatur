@@ -15,7 +15,7 @@
             <p class="text-sm text-muted-foreground">Which model does which work, and what happens when one will not answer.</p>
         </div>
         <span class="flex-1"></span>
-        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="ResetTiersAsync" data-testid="reset-tiers">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="ResetTiersAsync" data-testid="reset-tiers">
             <LucideIcon Name="undo-2" Size="14" />
             Reset the tiers
         </Button>
@@ -73,7 +73,7 @@
                         }
                         <Select TValue="string" Value="@((string?)null)" ValueChanged="@(async (string? aValue) => await AddAsync(vTierNumber, aValue))"
                                 Disabled="@(vAvailable.Count == 0)" Class="w-64" data-testid="@($"tier-{vTierNumber}-add-select")">
-                            <SelectTrigger Class="w-64" data-testid="@($"tier-{vTierNumber}-add")">
+                            <SelectTrigger Class="w-64 rounded-full" data-testid="@($"tier-{vTierNumber}-add")">
                                 <SelectValue Placeholder="@(vAvailable.Count == 0 ? "No models to add" : "Add a model")" />
                             </SelectTrigger>
                             <SelectContent data-testid="@($"tier-{vTierNumber}-add-pop")">
@@ -112,15 +112,15 @@
                             <CellTemplate Context="agent">
                                 <Select TValue="string" Value="@agent.Tier.ToString()" DisplayTextSelector="@(t => $"Tier {t}")"
                                         ValueChanged="@(async (string? aValue) => await SetAgentTierAsync(agent, aValue))"
-                                        Class="flex h-7 w-40" data-testid="@($"{agent.Key}-tier")">
-                                    <SelectTrigger Class="h-7 w-40" data-testid="@($"{agent.Key}-tier-button")">
+                                        Class="flex h-7 w-64" data-testid="@($"{agent.Key}-tier")">
+                                    <SelectTrigger Class="h-7 w-64 py-0 rounded-full" data-testid="@($"{agent.Key}-tier-button")">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent data-testid="@($"{agent.Key}-tier-pop")">
                                         @for (var vTierNumber = 1; vTierNumber <= 3; vTierNumber++)
                                         {
                                             var vAgentTier = vTierNumber;
-                                            <SelectItem Value="@vAgentTier.ToString()" Text="@TierLabel(vAgentTier)" TValue="string"
+                                            <SelectItem Value="@vAgentTier.ToString()" Text="@($"Tier {vAgentTier}")" TValue="string"
                                                         data-testid="@($"{agent.Key}-tier-{vAgentTier}")">@TierLabel(vAgentTier)</SelectItem>
                                         }
                                     </SelectContent>
@@ -147,15 +147,15 @@
                         <CellTemplate Context="work">
                             <Select TValue="string" Value="@work.Tier.ToString()" DisplayTextSelector="@(t => $"Tier {t}")"
                                     ValueChanged="@(async (string? aValue) => await SetWorkTierAsync(work, aValue))"
-                                    Class="flex h-7 w-40" data-testid="@($"{work.Kind}-tier")">
-                                <SelectTrigger Class="h-7 w-40" data-testid="@($"{work.Kind}-tier-button")">
+                                    Class="flex h-7 w-64" data-testid="@($"{work.Kind}-tier")">
+                                <SelectTrigger Class="h-7 w-64 py-0 rounded-full" data-testid="@($"{work.Kind}-tier-button")">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent data-testid="@($"{work.Kind}-tier-pop")">
                                     @for (var vTierNumber = 1; vTierNumber <= 3; vTierNumber++)
                                     {
                                         var vWorkTier = vTierNumber;
-                                        <SelectItem Value="@vWorkTier.ToString()" Text="@TierLabel(vWorkTier)" TValue="string"
+                                        <SelectItem Value="@vWorkTier.ToString()" Text="@($"Tier {vWorkTier}")" TValue="string"
                                                     data-testid="@($"{work.Kind}-tier-{vWorkTier}")">@TierLabel(vWorkTier)</SelectItem>
                                     }
                                 </SelectContent>
@@ -171,6 +171,10 @@
                     The kind of work wins over the agent. The Verifier sits in Tier 2, but when it is asked to write code it is given Tier 1.
                 </AlertDescription>
             </Alert>
+            <div class="flex items-start gap-2 rounded-md border px-3 py-2.5 text-muted-foreground" data-testid="routing-estimate-note">
+                <LucideIcon Name="clock" Size="16" Class="mt-0.5" />
+                <span class="text-sm">Changing a tier changes the estimate shown before the next run starts. A run already started keeps the estimate it started with.</span>
+            </div>
         </CardContent>
     </Card>
 

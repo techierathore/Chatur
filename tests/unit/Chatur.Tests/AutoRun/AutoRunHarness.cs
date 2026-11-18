@@ -96,7 +96,8 @@ public sealed class AutoRunHarness
     /// <summary>Wires it.</summary>
     /// <param name="aConnections">The test database.</param>
     /// <param name="aOptions">The limits to run under.</param>
-    public AutoRunHarness(IDbConnectionFactory aConnections, AutoRunOptions? aOptions = null)
+    /// <param name="aEstimates">The Estimator the run writes its build-step estimate through, or none.</param>
+    public AutoRunHarness(IDbConnectionFactory aConnections, AutoRunOptions? aOptions = null, IEstimateActions? aEstimates = null)
     {
         Executor = new ScriptedExecutor();
         Clock = new ManualClock();
@@ -125,7 +126,8 @@ public sealed class AutoRunHarness
             Delay,
             aOptions ?? new AutoRunOptions { StallTimeout = TimeSpan.FromSeconds(5) },
             Clock,
-            NullLogger<AutoRunActions>.Instance);
+            NullLogger<AutoRunActions>.Instance,
+            aEstimates);
     }
 
     /// <summary>The scripted executor.</summary>

@@ -24,7 +24,7 @@ public partial class ConversationPanel : IDisposable
     /// <param name="IsFinal">Whether the reply is done streaming.</param>
     /// <param name="At">When the owner sent it in this view; <see langword="null"/> for a message loaded from history, which records no time.</param>
     /// <param name="Seq">The message's order within the session; <see langword="null"/> for one added in this view until the session is read again.</param>
-    private sealed record DisplayMessage(string Role, string Text, string? ModelName, int? Tokens, bool IsFinal, DateTime? At = null, int? Seq = null);
+    private sealed record DisplayMessage(string Role, string Text, string? ModelName, int? Tokens, bool IsFinal, DateTime? At = null, int? Seq = null, string? RoleName = null);
 
     private IReadOnlyList<SessionSummary> objSessions = [];
     private IReadOnlyList<ActivityEvent> objActivity = [];
@@ -207,17 +207,14 @@ public partial class ConversationPanel : IDisposable
             return;
         }
 
-        try
-        {
-            await objComposer.InvokeVoidAsync("dispose");
-            await objComposer.DisposeAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-            // The window is closing; its listeners go with it.
-        }
-
+        // Never waits on a page that has gone: its listeners went with it (JsCleanUp, REQ-FN-009).
+        var vComposer = objComposer;
         objComposer = null;
+        await JsCleanUp.RunAsync(async () =>
+        {
+            await vComposer.InvokeVoidAsync("dispose");
+            await vComposer.DisposeAsync();
+        });
     }
 
     /// <inheritdoc />
@@ -476,7 +473,7 @@ public partial class ConversationPanel : IDisposable
         var vDetail = await Agent.ContinueSessionAsync(aSessionId);
         objMessages = vDetail.Events
             .Where(e => e.Kind is "user" or "assistant")
-            .Select(e => new DisplayMessage(e.Kind, e.Payload, e.Model, e.Tokens, true, null, e.Seq))
+            .Select(e => new DisplayMessage(e.Kind, e.Payload, e.Model, e.Tokens, true, null, e.Seq, e.RoleName))
             .ToList();
 
         // A handed step's agent is still writing while the run holds the step: its last line keeps the spinner.
@@ -751,7 +748,9 @@ public partial class ConversationPanel : IDisposable
 
         objMessages.Add(new DisplayMessage("user", vText, null, null, true, DateTime.Now));
         var vAssistantIndex = objMessages.Count;
-        objMessages.Add(new DisplayMessage("assistant", string.Empty, null, null, false));
+        // The reply carries the agent that writes it, so choosing another agent later does not rename it (REQ-FN-024).
+        var vWritingRoleName = objRoles.FirstOrDefault(r => r.RoleId == objSelectedRoleId)?.Name ?? vSession.RoleName;
+        objMessages.Add(new DisplayMessage("assistant", string.Empty, null, null, false, RoleName: vWritingRoleName));
         await ShowMentionsAsync([]);
 
         try

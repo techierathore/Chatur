@@ -29,6 +29,7 @@ public sealed class AutoRunActions : IAutoRunActions
     private readonly AutoRunOptions objOptions;
     private readonly IClock objClock;
     private readonly ILogger<AutoRunActions> objLogger;
+    private readonly IEstimateActions? objEstimates;
 
     /// <summary>Creates the actions.</summary>
     /// <param name="aStore">The run's rows.</param>
@@ -41,6 +42,7 @@ public sealed class AutoRunActions : IAutoRunActions
     /// <param name="aOptions">The limits a run works under.</param>
     /// <param name="aClock">The time source.</param>
     /// <param name="aLogger">Where a failure inside Chatur is logged.</param>
+    /// <param name="aEstimates">Writes the run's estimate when it reaches the build step (BRD-193); none in tests that do not need it.</param>
     public AutoRunActions(
         AutoRunStore aStore,
         AutoRunViewBuilder aViews,
@@ -51,8 +53,10 @@ public sealed class AutoRunActions : IAutoRunActions
         IAutoRunDelay aDelay,
         AutoRunOptions aOptions,
         IClock aClock,
-        ILogger<AutoRunActions> aLogger)
+        ILogger<AutoRunActions> aLogger,
+        IEstimateActions? aEstimates = null)
     {
+        objEstimates = aEstimates;
         objStore = aStore;
         objViews = aViews;
         objProcesses = aProcesses;
@@ -299,11 +303,47 @@ public sealed class AutoRunActions : IAutoRunActions
             return (int)vExisting;
         }
 
+        if (aProcess.ProcessCode == EstimateSteps.Build)
+        {
+            await EstimateAtBuildAsync(aRow, aCt).ConfigureAwait(false);
+        }
+
         var vStarted = await objProcesses.StartAsync((int)aRow.ProjectId, aProcess.ProcessCode, aCt).ConfigureAwait(false);
         var vAgent = AutoRunChain.AgentOf(aProcess.ProcessCode);
         await objStore.SetProcessAsync((int)aRow.AutoRunId, (int)aProcess.Position, AutoRunProcessState.Running, vStarted.RunId, aCt).ConfigureAwait(false);
         await objStore.AddEventAsync((int)aRow.AutoRunId, AutoRunEventKind.ProcessStarted, (int)aProcess.Position, aProcess.ProcessCode, $"{vAgent} started on {aProcess.ProcessCode}.", null, aCt).ConfigureAwait(false);
         return vStarted.RunId;
+    }
+
+    /// <summary>
+    /// A run from a brief had no checklist to estimate before it started (owner's answer 4, BRD-193): on reaching the
+    /// build step it writes the estimate the checklist now allows, and carries on without stopping. A run that already
+    /// keeps an estimate with rows keeps it. A failure here is logged and never stops the run.
+    /// </summary>
+    private async Task EstimateAtBuildAsync(AutoRunRow aRow, CancellationToken aCt)
+    {
+        if (objEstimates is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var vKept = await objEstimates.KeptAsync(EstimateRunKinds.Auto, (int)aRow.AutoRunId, aCt).ConfigureAwait(false);
+            if (vKept is { Estimate.NoChecklist: false })
+            {
+                return;
+            }
+
+            if (await objEstimates.EstimateAsync((int)aRow.ProjectId, aCt).ConfigureAwait(false) is { NoChecklist: false } vEstimate)
+            {
+                await objEstimates.ConfirmAsync((int)aRow.ProjectId, vEstimate, EstimateRunKinds.Auto, (int)aRow.AutoRunId, aCt).ConfigureAwait(false);
+            }
+        }
+        catch (Exception vError) when (vError is not OperationCanceledException)
+        {
+            objLogger.LogWarning(vError, "The estimate for end-to-end run {AutoRunId} could not be written at the build step; the run carries on.", aRow.AutoRunId);
+        }
     }
 
     /// <summary>Drives one process run to its end, waiting out a limit and retrying a stall or a crash; <see langword="true"/> only when it finished.</summary>

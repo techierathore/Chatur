@@ -5,10 +5,9 @@
 // test here is skipped, never passed. The web harness's own specs carry each row's acceptance line;
 // these carry what the browser cannot show: that the desktop app reaches the screen at all.
 import { test, expect, chromium, Browser, Page } from '@playwright/test';
-import { execSync } from 'child_process';
-import { existsSync, statSync } from 'fs';
+import { existsSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
-import { testProvider } from './support/provider';
+import { testProvider, connectorItem } from './support/provider';
 import { credentials } from './support/auth';
 import { ROOT as FIXTURE_ROOT, NAME as FIXTURE_PROJECT, resetFixture } from './support/workbench-a';
 
@@ -17,23 +16,12 @@ import { ROOT as FIXTURE_ROOT, NAME as FIXTURE_PROJECT, resetFixture } from './s
 // opens a fixture project itself.
 const TEST_DB = path.resolve('tests/.artifacts/app-data/desktop/chatur.db');
 
-/** The owner's own database on this Windows machine, read through cmd.exe; undefined when it cannot be found. */
-function ownerDatabase(): string | undefined {
-  try {
-    const vLocal = execSync('cmd.exe /c echo %LOCALAPPDATA%', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-    const vPath = execSync(`wslpath -u "${vLocal}"`, { encoding: 'utf8' }).trim();
-    const vDb = path.join(vPath, 'Techie Rathore', 'com.techierathore.chatur', 'Data', 'chatur.db');
-    return existsSync(vDb) ? vDb : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 /** A WSL path under /mnt/<drive>/ as Windows writes it, for the desktop app's own fields. */
 const windowsPath = (aPath: string): string =>
   aPath.replace(/^\/mnt\/([a-z])\//, (_m, aDrive: string) => `${aDrive.toUpperCase()}:\\`).replace(/\//g, '\\');
 
-let objOwnerDbTime: number | undefined;
+// When this run began: the account's own database written by the chat test must be newer (REQ-NFR-010).
+const RUN_STARTED = Date.now();
 
 const CDP_URL = process.env.CDP_URL ?? '';
 test.skip(!CDP_URL, 'desktop head only — boot it with tf-verify-boot.sh --head windows');
@@ -72,8 +60,6 @@ async function secondaryOn(aMain: Page, aRoute: string): Promise<Page> {
 
 test.beforeAll(async () => {
   browser = await chromium.connectOverCDP(CDP_URL);
-  const vOwnerDb = ownerDatabase();
-  objOwnerDbTime = vOwnerDb ? statSync(vOwnerDb).mtimeMs : undefined;
   await ensureMainWindow();
 });
 
@@ -91,7 +77,13 @@ async function ensureMainWindow(): Promise<void> {
   }
   resetFixture();
   const vList = vStart.getByTestId('recent-list');
-  await expect(vStart.getByTestId('manage-folders').or(vStart.getByTestId('name-a-folder')).first()).toBeVisible({ timeout: 60_000 });
+  // With a project already chosen, signing in goes straight to the main window (REQ-FN-006); otherwise to Start.
+  const vFolders = vStart.getByTestId('manage-folders').or(vStart.getByTestId('name-a-folder')).first();
+  await expect.poll(async () => onMain() || (await vFolders.isVisible().catch(() => false)), { timeout: 60_000 }).toBe(true);
+  if (onMain()) {
+    await expect(mainWindow().getByTestId('menubar')).toBeVisible({ timeout: 30_000 });
+    return;
+  }
   if ((await vList.getByText(FIXTURE_PROJECT, { exact: true }).count()) === 0) {
     const vDialog = vStart.getByTestId('folders-dialog');
     await expect(async () => {
@@ -159,13 +151,13 @@ test('REQ-FN-025 REQ-FN-026 REQ-FN-027 REQ-UI-021 a provider added through Tools
     await vSettings.getByTestId('add-provider').click();
     await vField('field-name').fill(vProvider.name);
     await vSettings.getByTestId('field-connector-button').click();
-    await vSettings.getByTestId('connector-compatible').click();
-    await vField('field-address').fill(vProvider.baseUrl);
+    await vSettings.getByTestId(connectorItem(vProvider.connector)).click();
+    if (vProvider.baseUrl) await vField('field-address').fill(vProvider.baseUrl);
     await vField('field-key').fill(vProvider.key);
     await vSettings.getByTestId('dialog-add').click();
     await expect(vSettings.getByTestId('add-provider-dialog')).toHaveCount(0, { timeout: 90_000 });
   }
-  await expect(vSettings.getByTestId('providers-table').getByText(vProvider.name, { exact: true })).toBeVisible();
+  await expect(vSettings.getByTestId('providers-table').getByText(vProvider.name, { exact: true }).first()).toBeVisible();
 
   // Back in the main window: choose the model and ask.
   await vMain.getByTestId('model-pick').click();
@@ -192,12 +184,41 @@ test('REQ-UI-073 REQ-FN-007 REQ-FN-044 no menu of the desktop app shows "Nothing
   }
 });
 
+test('REQ-FN-009 Sign out chosen in the main window of the desktop app shows Sign in, and signing in again works', async () => {
+  // MISS of 2026-11-16: with a project open, Sign out left the window on "Loading Chatur" until the app was
+  // closed and opened again. The page reloads on sign-out, and the menu bar's clean-up waited for an answer from
+  // the old page's script, which never came, so the new page was never attached.
+  const vMain = mainWindow();
+  await vMain.locator('[data-testid=account] button').first().click();
+  await vMain.getByTestId('sign-out').click();
+  await expect.poll(() => views().map((aPage) => new URL(aPage.url()).pathname).join(','), { timeout: 30_000 }).toContain('/sign-in');
+  const vSignIn = views().find((aPage) => new URL(aPage.url()).pathname === '/sign-in')!;
+  await expect(vSignIn.getByTestId('input-email'), 'Sign in is drawn, not "Loading Chatur"').toBeVisible({ timeout: 30_000 });
+  await expect(vSignIn.locator('body')).not.toContainText('Loading Chatur');
+
+  // Sign in again and go back to the project, so the app is left the way the other tests found it.
+  const { email, password } = credentials('Owner');
+  await vSignIn.getByTestId('input-email').fill(email);
+  await vSignIn.getByTestId('input-password').fill(password);
+  await vSignIn.locator('[data-testid=signin-form] button[type=submit]').first().click();
+  const vPaths = () => views().map((aPage) => new URL(aPage.url()).pathname);
+  await expect.poll(() => vPaths().some((aPath) => aPath === '/' || aPath === '/start'), { timeout: 60_000 }).toBe(true);
+  if (!vPaths().includes('/')) await ensureMainWindow();
+  await expect(mainWindow().getByTestId('menubar')).toBeVisible({ timeout: 30_000 });
+});
+
 test('REQ-NFR-010 the desktop head under test keeps its database under tests/.artifacts and leaves the owner database alone', async () => {
-  // Runs last: the chat test above has written a message and chosen a model by now.
-  expect(existsSync(TEST_DB), `the test database ${TEST_DB} exists`).toBe(true);
+  // Runs last: the chat test above has written a message and chosen a model by now. The proof is read from
+  // the test's own data folder only. The owner's application-data folder is never opened, not even to read
+  // a timestamp (owner, 18 Nov 2026; MISS-Chatur-20261117-03): where the app writes is shown by where the
+  // chat it just had was written. TestDataGuardTests prove the guard refuses the owner's folder.
+  expect(existsSync(TEST_DB), `the install's test database ${TEST_DB} exists`).toBe(true);
   expect(statSync(TEST_DB).size).toBeGreaterThan(0);
-  const vOwnerDb = ownerDatabase();
-  if (vOwnerDb && objOwnerDbTime !== undefined) {
-    expect(statSync(vOwnerDb).mtimeMs, 'the owner database was not written during the run').toBe(objOwnerDbTime);
-  }
+  const vAccounts = path.join(path.dirname(TEST_DB), 'accounts');
+  const vWritten = existsSync(vAccounts)
+    ? readdirSync(vAccounts).map((aFolder) => path.join(vAccounts, aFolder, 'chatur.db')).filter((aDb) => existsSync(aDb))
+    : [];
+  expect(vWritten.length, `an account database under ${vAccounts}`).toBeGreaterThan(0);
+  const vNewest = Math.max(...vWritten.map((aDb) => statSync(aDb).mtimeMs));
+  expect(vNewest, 'the signed-in account wrote its chat to the test folder during this run').toBeGreaterThanOrEqual(RUN_STARTED - 1_000);
 });

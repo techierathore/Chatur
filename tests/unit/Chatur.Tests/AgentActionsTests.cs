@@ -147,6 +147,41 @@ public sealed class AgentActionsTests : IDisposable
     }
 
     /// <summary>
+    /// When the owner changes the agent in the middle of a conversation, then the reply written before the
+    /// change still names the agent that wrote it, and the reply after names the new one; only the
+    /// conversation itself moves to the new agent (REQ-FN-024, MISS-Chatur-20261115-03).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-024 an earlier reply keeps the agent that wrote it after the agent is changed")]
+    public async Task EarlierReplyKeepsItsAgentAfterTheAgentIsChanged()
+    {
+        var vProjectId = InsertProject("/tmp/chatur-tests/proj-reply-agent");
+        var vAnalyst = GetRoleId("analyst");
+        var vFlowMaster = GetRoleId("flow-master");
+        InsertConnectedModel(1);
+        var vSessionId = InsertSession(vProjectId, vAnalyst, SessionMode.GoAhead);
+
+        var vSut = CreateSut(new FakeLlmProvider(
+            new LlmResponse { Content = "From the analyst.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } },
+            new LlmResponse { Content = "From the flow master.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } }));
+
+        await foreach (var _ in vSut.SendAsync(vSessionId, "First question", vAnalyst, null, SessionMode.GoAhead))
+        {
+        }
+
+        await foreach (var _ in vSut.SendAsync(vSessionId, "Second question", vFlowMaster, null, SessionMode.GoAhead))
+        {
+        }
+
+        var vDetail = await vSut.ContinueSessionAsync(vSessionId);
+        var vReplies = vDetail.Events.Where(e => e.Kind == "assistant").ToList();
+
+        Assert.Equal(2, vReplies.Count);
+        Assert.Equal("Analyst", vReplies[0].RoleName, ignoreCase: true);
+        Assert.Equal("Flow master", vReplies[1].RoleName, ignoreCase: true);
+        Assert.Equal("Flow master", vDetail.Summary.RoleName, ignoreCase: true);
+    }
+
+    /// <summary>
     /// When the session is in "ask me first", then the same <c>edit-file</c> tool call is refused by
     /// <see cref="AskMeFirstGuard"/>, nothing is written to disk, and the agent loop turns the
     /// refusal into a proposed <c>Change</c> row instead of only a refusal (REQ-FN-035).

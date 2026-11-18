@@ -107,10 +107,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
     <hr>
     <div class="grouplbl">Run target</div>
-    <button onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
-    <button onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
+    <button data-tf-sample onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
+    <button data-tf-sample onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
+    <button data-tf-sample onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
+    <button data-tf-sample onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
     <hr>
     <a href="prerequisites.html">Prerequisites…</a>
     <a href="repository.html">Repository…</a>
@@ -173,10 +173,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="popwrap" data-testid="target">
    <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="target-pop" data-tf-state="popup-open">
-    <button onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
-    <button onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
+    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
+    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
+    <button data-tf-sample onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
+    <button data-tf-sample onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
     <div class="note">Only what this machine can build. A Windows head needs the Windows machine.</div>
    </div>
   </div>
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <div class="popwrap" data-testid="branch-pick">
    <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
-    <button onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
+    <button data-tf-sample onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
     <button data-tf-sample onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
     <button data-tf-sample onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
     <hr>
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
  <div class="body">
 
   <div class="panel files" data-testid="files-panel">
-   <div class="ph" data-testid="files-head">Files</div>
+   <div class="ph" style="justify-content:space-between" data-testid="files-head"><span>Files</span><button class="iconbtn" onclick="say('Reads the project\'s files from disk again, so files made outside Chatur show.')" title="Refresh the files" data-testid="files-refresh"><svg><use href="#i-refresh"/></svg></button></div>
    <div class="tree" data-testid="file-tree">
     <a href="main.html" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
     <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder-open"/></svg>src</a>
@@ -261,6 +261,23 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
       </div>
      </form>
 
+     <div class="panel" data-testid="run-estimate-panel" data-tf-state="estimate-before-start">
+      <div class="ph"><svg><use href="#i-clock"/></svg><span>What this run should cost</span><span class="grow"></span><span class="pill" data-testid="run-estimate-rows">34 rows · phase 2</span></div>
+      <div style="padding:12px 14px 4px" class="sm dim" data-testid="run-estimate-how">Each line is worked out for the model that will run it. Change a tier in <a href="settings-routing.html" style="color:var(--accent)">Routing</a> and this changes before the run starts.</div>
+      <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px" data-testid="run-estimate-table">
+       <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 9px;font-weight:500">Line of work</th><th style="padding:8px 9px;font-weight:500">Model and tier</th><th style="padding:8px 9px;font-weight:500">Output tokens — low · middle · high</th><th style="padding:8px 9px;font-weight:500">Time — low · middle · high</th><th style="padding:8px 9px;font-weight:500">From</th></tr></thead>
+       <tbody>
+        <tr style="border-top:1px solid var(--line2)" data-testid="run-estimate-row-build" data-tf-state="sample-data" data-tf-sample><td style="padding:9px 9px;white-space:nowrap">Build</td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-model-build">Claude Opus 5 · tier 1</td><td class="mono" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-tokens-build">118,000 · 161,000 · 214,000</td><td class="mono" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-time-build">2 h 05 m · 2 h 50 m · 3 h 48 m</td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-basis-build">this project · 14 runs</td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="run-estimate-row-qa" data-tf-state="sample-data" data-tf-sample><td style="padding:9px 9px;white-space:nowrap">Machine QA (verify + fix)</td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-model-qa">Claude Sonnet 5 · tier 2</td><td class="mono" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-tokens-qa">44,000 · 63,000 · 91,000</td><td class="mono" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-time-qa">1 h 02 m · 1 h 31 m · 2 h 12 m</td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-basis-qa">this project · 11 runs</td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="run-estimate-row-triage" data-tf-state="sample-data" data-tf-sample><td style="padding:9px 9px;white-space:nowrap">After handoff (triage)</td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-model-triage">Claude Sonnet 5 · tier 2</td><td style="padding:9px 9px;white-space:nowrap"><span class="pill warn" data-testid="run-estimate-tokens-triage">no precedent</span></td><td style="padding:9px 9px;white-space:nowrap"><span class="pill warn" data-testid="run-estimate-time-triage">no precedent</span></td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-basis-triage">1 run here, none in the sister projects</td></tr>
+        <tr style="border-top:1px solid var(--line2)" data-testid="run-estimate-row-owner" data-tf-state="sample-data" data-tf-sample><td style="padding:9px 9px;white-space:nowrap">Your own testing</td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-model-owner">—</td><td style="padding:9px 9px;white-space:nowrap"><span class="dim" data-testid="run-estimate-tokens-owner">not measured</span></td><td style="padding:9px 9px;white-space:nowrap"><span class="dim" data-testid="run-estimate-time-owner">not measured</span></td><td class="dim" style="padding:9px 9px;white-space:nowrap" data-testid="run-estimate-basis-owner">Chatur does not time it</td></tr>
+       </tbody>
+      </table>
+      </div>
+      <div style="padding:8px 14px 12px" class="sm dim" data-testid="run-estimate-no-checklist">A brief for a project with no checklist yet has no rows to estimate. The estimate is made when the run reaches build-phase, and the run does not stop for it.</div>
+     </div>
+
      <div class="panel" data-testid="running-now">
       <div class="ph"><span>Running now</span><span class="grow"></span><span class="pill" style="color:var(--accent)" data-testid="run-state">running</span></div>
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
@@ -270,6 +287,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <div class="row" style="flex-wrap:wrap"><span class="dim sm" style="width:112px">Requirement</span><span class="mono" data-testid="running-req">REQ-FN-021</span><span class="dim sm">the filter keeps its choice between runs</span></div>
        <div class="row" style="flex-wrap:wrap"><span class="dim sm" style="width:112px">Going for</span><span data-testid="running-elapsed">1 h 42 m</span><span class="dim sm">started 11:18, today</span></div>
 
+       <div class="row" style="flex-wrap:wrap" data-testid="running-against-estimate"><span class="dim sm" style="width:112px">Against the estimate</span><span class="mono" data-testid="running-actual">94,200 tokens out · 1 h 42 m</span><span class="dim sm" data-testid="running-estimate">build so far — estimate 118,000 · 161,000 · 214,000 and 2 h 05 m · 2 h 50 m · 3 h 48 m</span></div>
        <div style="display:flex;flex-direction:column;gap:6px" data-testid="progress-field">
         <div class="row"><span class="xs dim">Progress</span><span class="grow"></span><span class="xs" data-testid="progress-value">62%</span></div>
         <div data-testid="progress-bar" style="height:6px;border-radius:999px;background:var(--soft);overflow:hidden">

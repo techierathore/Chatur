@@ -27,6 +27,7 @@ const BRIEF = 'Finish the coverage panel: the file list, the per-file bar and th
 function clearAll(): number {
   const vProject = Number(query('SELECT ProjectId FROM Project WHERE Name = ?', NAME)[0].ProjectId);
   run('DELETE FROM RunQueueItem');
+  run("DELETE FROM RunEstimate WHERE RunKind = 'queue'"); // a reused queue-item id must not find an earlier item's kept estimate
   run('DELETE FROM AutoRunEvent');
   run('DELETE FROM AutoRunProcess');
   run('DELETE FROM AutoRun');

@@ -44,7 +44,7 @@
                     <ToggleGroupItem TValue="bool" Value="false" Class="h-6 rounded-full px-3 text-xs leading-5 whitespace-nowrap" data-testid="remember-no">Ask again</ToggleGroupItem>
                 </ToggleGroup>
             </div>
-            <Button Type="ButtonType.Submit" Class="mt-4 w-full" Disabled="objIsSigningIn" data-testid="signin-submit">
+            <Button Type="ButtonType.Submit" Class="mt-4 w-full rounded-full" Disabled="objIsSigningIn" data-testid="signin-submit">
                 @if (objIsSigningIn)
                 {
                     <ButtonIcon><Spinner Size="SpinnerSize.Small" /></ButtonIcon>

@@ -30,7 +30,14 @@ export async function signIn(aPage: Page, aUser: TestUser = 'Owner'): Promise<vo
   for (let vAttempt = 1; vAttempt <= 3; vAttempt++) {
     try {
       await aPage.goto('/sign-in', { waitUntil: 'networkidle' });
-      if (!/\/sign-in/.test(aPage.url())) return; // already signed in
+      if (!/\/sign-in/.test(aPage.url())) {
+        // Someone is signed in. Since 18 Nov each account has its own Chatur and test user 2 is a real, separate
+        // account, so being signed in is not enough: it must be this user. The account menu names the email.
+        if (await signedInAs(aPage, email)) return;
+        await aPage.locator('[data-testid=account] button').first().click();
+        await aPage.getByTestId('sign-out').click();
+        await expect(aPage).toHaveURL(/\/sign-in/, { timeout: 30_000 });
+      }
       await aPage.waitForTimeout(1_500 * vAttempt); // let the circuit attach before typing
       const vEmail = aPage.getByTestId('input-email');
       const vPassword = aPage.getByTestId('input-password');
@@ -45,4 +52,15 @@ export async function signIn(aPage: Page, aUser: TestUser = 'Owner'): Promise<vo
     }
   }
   throw vLastError;
+}
+
+/** Whether the page's account menu names this email; the menu is closed again either way. */
+async function signedInAs(aPage: Page, aEmail: string): Promise<boolean> {
+  const vMenu = aPage.locator('[data-testid=account] button').first();
+  if (!(await vMenu.isVisible({ timeout: 15_000 }).catch(() => false))) return false;
+  await vMenu.click();
+  const vPop = aPage.getByTestId('account-pop');
+  const vText = (await vPop.innerText({ timeout: 10_000 }).catch(() => '')).toLowerCase();
+  await aPage.keyboard.press('Escape');
+  return vText.includes(aEmail.toLowerCase());
 }

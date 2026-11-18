@@ -29,6 +29,34 @@ States of `handed-step`: empty — a step that is not handed (a check, an owner 
 
 States: unchanged — the Rights panel's own empty, loading and error states apply to the new line.
 
+**Added to Processes, a phase 2 screen (2026-11-10, BRD-192, BRD-195 to BRD-200, BRD-205, BRD-208, BRD-209).** Mockup: [mockups/processes.html](mockups/processes.html). Start on build-phase, verify-phase or fix-issues now opens an estimate first. Every estimate table in Chatur has the same columns: line of work, model and tier where steps differ, output tokens low · middle · high, time low · middle · high, and where the runs came from. Start writes the estimate batch; Cancel writes nothing.
+
+| Region | Control | Shows or binds |
+|---|---|---|
+| `estimate-panel` | Card + DataTable + Details + Button ×2 | opens when Start is pressed on build-phase, verify-phase or fix-issues: the model and tier it was made for with a link to Routing, the phase total per line of work, each row's figures under "Each of the rows", how many rows have no precedent and are left out, "estimated after the fact" when runs on these rows already exist, and Start or Cancel |
+| `estimate-none-yet` | Alert (info) | "No estimate yet" when no usable run exists anywhere it may look; Start still works |
+
+States of the estimate: empty: "No estimate yet", never an error · loading: the table header with dashes while run records are read; Start stays enabled, since an estimate never holds a run up · error: an unreadable run record is skipped and counted under the table; a sister folder that has gone is left out and named
+
+**Added to Process run, a phase 2 screen (2026-11-10, BRD-202, BRD-204, BRD-207).** Mockup: [mockups/process-run.html](mockups/process-run.html). The estimate the run started with, beside what it has spent.
+
+| Region | Control | Shows or binds |
+|---|---|---|
+| `run-against-estimate` | Card + DataTable | tokens and time so far beside the estimate the run started with, for the model running the step; two columns, never combined |
+| `handoff-estimate` | Card + DataTable | on handoff-phase: per line of work the estimate's middle and range beside the actual, apportioned where runs also worked rows outside the phase, "insufficient data (n=…)" under three runs, your own testing "not measured", and the runs that named no row counted apart and never shared out |
+
+States of the estimate: empty: a run started before estimates existed shows "no estimate for this run" · loading: dashes in the So far column · error: a run record half written marks the actual partial
+
+**Added to Settings ▸ Measurements and Settings ▸ Routing, phase 1 screens (2026-11-10, BRD-197, BRD-201).** Mockups: [mockups/settings-measurements.html](mockups/settings-measurements.html), [mockups/settings-routing.html](mockups/settings-routing.html). A sister project must hold `docs/metrics/runs.jsonl` and is refused with the reason otherwise; Add opens a folder picker.
+
+| Region | Control | Shows or binds |
+|---|---|---|
+| `sister-panel` (Measurements) | Card + list + Button | sister projects by name, folder and run count, Remove on each, and Add a sister project |
+| `stream-estimates`, `rule-estimate` (Measurements) | DataTable row + text | the sixth stream, `estimates.jsonl`, counted like the others, and the rule that an estimate never mixes with a measurement |
+| `routing-estimate-note` (Routing) | Alert (info) | a tier change changes the estimate shown before the next run; a started run keeps its own |
+
+States of the estimate: empty: "No sister projects" with Add · loading: the list with dashes for run counts · error: a folder that has gone shows as missing, with Remove
+
 ### Screen: End-to-end run (`/auto`)
 
 **Mockup:** [mockups/auto-run.html](mockups/auto-run.html) · **Roles:** Owner · **BRD:** BRD-118 to BRD-125
@@ -36,7 +64,8 @@ States: unchanged — the Rights panel's own empty, loading and error states app
 | Region | Control | Shows or binds |
 |---|---|---|
 | `brief-panel` | Card + Select + Textarea + Button | the project and the brief the run begins from, with a line saying step-by-step working is untouched |
-| `running-now` | Card + Progress + Button ×2 | the agent working, the process, the step, the requirement, how long, how far, Pause and Stop |
+| `run-estimate-panel` (BRD-193) | Card + DataTable | before Start: each line of work with its model and tier, tokens and time as low · middle · high, and the runs' source; "no precedent" and "not measured" where they apply |
+| `running-now` | Card + Progress + Button ×2 | the agent working, the process, the step, the requirement, how long, how far, Pause and Stop; `running-against-estimate` sets the tokens and time so far beside the estimate's low · middle · high (BRD-202) |
 | `chain-panel` | DataTable | the eight processes with the agent that runs each — four finished, one running, three to come, one marked as retried |
 | `limit-note` | Alert (info) | the usage limit at 11:40, the 22 minutes waited, and the run carrying on by itself |
 | `retry-note` | Alert (warning) | step 4 stalled once and was retried, and the retry is in the run record |
@@ -60,6 +89,7 @@ States: unchanged — the Rights panel's own empty, loading and error states app
 | `queue-heading` | Badge + Button | one running and three waiting, Queue a run, and the way across to the run going now |
 | `queue-table` | DataTable | five rows: position, project, the brief in short, the state, when it started, how long, and Pause, Resume and Remove |
 | `queue-legend` | text | which action applies to which state, so a disabled button is never a mystery |
+| `queue-estimate-panel` (BRD-194) | Card + DataTable + Button ×2 | before a run joins the queue: the same estimate table as End-to-end run, with Queue it and Cancel; a waiting run keeps the estimate it was queued with |
 | `how-queue-behaves` | Card | one at a time; a paused run carries on from its step; a resumed run takes the open requirement furthest from verified |
 | `removed-note` | Panel | a removed run is never started, and what it already did stays in its report |
 
@@ -82,6 +112,7 @@ States: unchanged — the Rights panel's own empty, loading and error states app
 | `requirements-table` | DataTable | eight of the forty-two: id, title, agent, verdict and when, with the counts in the footer |
 | `misses-table` | DataTable | what it was, whose gap it was, the requirement it happened on, and whether it was fixed; a library miss goes to that library's feedback file |
 | `cost-table` | DataTable | model, tier, calls, tokens in, tokens out and time, with a total row |
+| `estimate-actual-panel` (BRD-203, BRD-206, BRD-207) | DataTable | beside What it cost: per line of work, the model and tier, the estimate as low · middle · high and the actual in two columns, tokens over time, each marked within, above or below; no ratio and no percentage; your own testing reads "not measured" in both |
 | `waiting-note` | Panel | the 22 minutes spent waiting on a usage limit cost nothing and are not in the total |
 
 | Field | Type | Required | Validation |

@@ -80,6 +80,8 @@ public static class ServiceCollectionExtensions
         aServices.AddHttpClient<IGitHubReleaseClient, GitHubReleaseClient>((aProvider, aClient) =>
         {
             aClient.BaseAddress = ReleaseFeedAddress.Resolve(aProvider.GetRequiredService<IConfiguration>());
+            // A feed that does not answer must not hold Prerequisites for HttpClient's default 100 seconds (verify 2026-11-13).
+            aClient.Timeout = TimeSpan.FromSeconds(15);
             aClient.DefaultRequestHeaders.UserAgent.ParseAdd("Chatur-Doctor");
             aClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         });
@@ -140,6 +142,8 @@ public static class ServiceCollectionExtensions
         aServices.AddScoped<IAutoRunActions, AutoRun.AutoRunActions>();
         // Run queue (REQ-FN-067..070, cluster C): end-to-end runs taken one at a time through IAutoRunActions.
         aServices.AddScoped<IRunQueueActions, RunQueue.RunQueueActions>();
+        // Estimate before, actual after (BRD-192 to BRD-209): worked out from run records, no model asked.
+        aServices.AddScoped<IEstimateActions, Estimates.EstimateActions>();
 
         // GuardPipeline resolves every registered IToolGuard, in this order.
         aServices.AddScoped<IToolGuard, RoleRightsGuard>();

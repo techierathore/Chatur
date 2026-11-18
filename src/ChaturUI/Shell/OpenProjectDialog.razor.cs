@@ -17,11 +17,14 @@ public enum ProjectOpenMode
     Folder,
 
     /// <summary>File ▸ Clone a repository</summary>
-    Clone
+    Clone,
+
+    /// <summary>Start ▸ Open a file: the folder that holds it opens, with the file open (BRD-215)</summary>
+    File
 }
 
 /// <summary>
-/// Code-behind for <c>OpenProjectDialog.razor</c> (REQ-UI-073): one dialog for the four File-menu ways
+/// Code-behind for <c>OpenProjectDialog.razor</c> (REQ-UI-073, REQ-UI-094): one dialog for the File-menu and Start ways
 /// into a project, each ending in <see cref="IProjectOpenActions"/> and the Workbench showing the
 /// project it made or found.
 /// </summary>
@@ -43,6 +46,9 @@ public partial class OpenProjectDialog
     [Inject]
     private NavigationManager Nav { get; set; } = default!;
 
+    [Inject]
+    private WorkbenchState Workbench { get; set; } = default!;
+
     /// <summary>Whether the dialog is open. Two-way bindable from the caller with <c>@bind-Open</c>.</summary>
     [Parameter]
     public bool Open { get; set; }
@@ -60,6 +66,7 @@ public partial class OpenProjectDialog
         ProjectOpenMode.NewProject => "New project",
         ProjectOpenMode.Solution => "Open a solution",
         ProjectOpenMode.Folder => "Open a folder",
+        ProjectOpenMode.File => "Open a file",
         _ => "Clone a repository"
     };
 
@@ -68,6 +75,7 @@ public partial class OpenProjectDialog
         ProjectOpenMode.NewProject => "Makes a folder with a new, empty solution in it, and opens it.",
         ProjectOpenMode.Solution => "A .sln file, or the folder that holds one. Its projects are read.",
         ProjectOpenMode.Folder => "Anything on disk, project or not.",
+        ProjectOpenMode.File => "Any file. The folder that holds it opens, with the file open in a tab.",
         _ => "Copies a repository from GitHub, or any address you paste, and opens it."
     };
 
@@ -76,10 +84,16 @@ public partial class OpenProjectDialog
         ProjectOpenMode.NewProject => "Make it in this folder",
         ProjectOpenMode.Solution => "The solution file or its folder",
         ProjectOpenMode.Folder => "The folder",
+        ProjectOpenMode.File => "The file",
         _ => "Clone into this folder"
     };
 
-    private string PathPlaceholder => Mode == ProjectOpenMode.Solution ? "The full path of a .sln file or its folder" : "The folder's full path";
+    private string PathPlaceholder => Mode switch
+    {
+        ProjectOpenMode.Solution => "The full path of a .sln file or its folder",
+        ProjectOpenMode.File => "The file's full path",
+        _ => "The folder's full path"
+    };
 
     private string ActionLabel => Mode switch
     {
@@ -110,7 +124,9 @@ public partial class OpenProjectDialog
     /// <summary>Opens the machine's own folder picker and fills the path with what it returns.</summary>
     private async Task BrowseAsync()
     {
-        var vPicked = await Picker.PickFolderAsync(Title);
+        var vPicked = Mode == ProjectOpenMode.File
+            ? await Picker.PickFileAsync(Title)
+            : await Picker.PickFolderAsync(Title);
         if (vPicked is not null)
         {
             objPath = vPicked;
@@ -124,15 +140,33 @@ public partial class OpenProjectDialog
         objErrorMessage = null;
         try
         {
-            _ = Mode switch
+            string? vFileToOpen = null;
+            switch (Mode)
             {
-                ProjectOpenMode.NewProject => await Opener.CreateSolutionAsync(objPath, objName),
-                ProjectOpenMode.Solution => await Opener.OpenSolutionAsync(objPath),
-                ProjectOpenMode.Folder => await Opener.OpenFolderAsync(objPath),
-                _ => await Opener.CloneAsync(objAddress, objPath)
-            };
+                case ProjectOpenMode.NewProject:
+                    await Opener.CreateSolutionAsync(objPath, objName);
+                    break;
+                case ProjectOpenMode.Solution:
+                    await Opener.OpenSolutionAsync(objPath);
+                    break;
+                case ProjectOpenMode.Folder:
+                    await Opener.OpenFolderAsync(objPath);
+                    break;
+                case ProjectOpenMode.File:
+                    vFileToOpen = (await Opener.OpenFileAsync(objPath)).RelativePath;
+                    break;
+                default:
+                    await Opener.CloneAsync(objAddress, objPath);
+                    break;
+            }
+
             await OpenChanged.InvokeAsync(false);
             Nav.NavigateTo("/");
+            if (vFileToOpen is not null)
+            {
+                // The Workbench opens it as soon as the project that holds it is showing (BRD-215).
+                Workbench.RequestOpenFile(vFileToOpen);
+            }
         }
         catch (Exception aException) when (aException is InvalidOperationException or ArgumentException or IOException or UnauthorizedAccessException)
         {

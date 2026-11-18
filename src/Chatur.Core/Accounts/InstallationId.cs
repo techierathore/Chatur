@@ -18,7 +18,7 @@ public static class InstallationId
     /// <param name="aCt">Cancels the read or write.</param>
     public static async Task<string> GetOrCreateAsync(IDbConnectionFactory aDb, IClock aClock, CancellationToken aCt = default)
     {
-        using var vConnection = aDb.OpenConnection();
+        using var vConnection = aDb.OpenInstallConnection();
 
         var vExisting = await vConnection.QueryFirstOrDefaultAsync<string>(
             new CommandDefinition("SELECT DeviceId FROM Installation ORDER BY InstallationId LIMIT 1", cancellationToken: aCt)).ConfigureAwait(false);

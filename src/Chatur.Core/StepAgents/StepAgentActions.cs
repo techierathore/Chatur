@@ -4,6 +4,7 @@ using Chatur.Core.Data;
 using Chatur.Core.Platform;
 using Chatur.Core.ProcessRuns;
 using Chatur.Core.Processes;
+using Chatur.Core.Routing;
 using Dapper;
 
 namespace Chatur.Core.StepAgents;
@@ -24,16 +25,19 @@ public sealed class StepAgentActions : IStepAgentActions
     private readonly IDbConnectionFactory objConnections;
     private readonly IAgentActions objAgents;
     private readonly IClock objClock;
+    private readonly IRoutingActions objRouting;
 
     /// <summary>Creates the action implementation.</summary>
     /// <param name="aConnections">Opens connections to Chatur's database.</param>
     /// <param name="aAgents">Starts the session and sends the task.</param>
     /// <param name="aClock">The time source.</param>
-    public StepAgentActions(IDbConnectionFactory aConnections, IAgentActions aAgents, IClock aClock)
+    /// <param name="aRouting">The tiers, chains and work tiers set on Settings ▸ Routing, read by the rule the estimate uses (<see cref="StepRoutes"/>).</param>
+    public StepAgentActions(IDbConnectionFactory aConnections, IAgentActions aAgents, IClock aClock, IRoutingActions aRouting)
     {
         objConnections = aConnections;
         objAgents = aAgents;
         objClock = aClock;
+        objRouting = aRouting;
     }
 
     /// <inheritdoc />
@@ -53,6 +57,11 @@ public sealed class StepAgentActions : IStepAgentActions
         var vRole = await ReadRoleAsync(vDefinition.Agent, aCt).ConfigureAwait(false)
             ?? throw new InvalidOperationException($"The agent \"{vDefinition.Agent}\" of {vRun.ProcessCode} is not one of Chatur's agents.");
 
+        // MISS-Chatur-20261110-06: the step runs on the model Settings ▸ Routing names for this process, by the same rule
+        // the estimate uses. With automatic routing on, the small model chooses instead (REQ-FN-071), as the estimate says.
+        var vRoute = await new StepRoutes(objConnections, objRouting).ForProcessAsync(vRun.ProcessCode, aCt).ConfigureAwait(false);
+        var vPinnedModelId = await objRouting.AutoRoutingAsync(aCt).ConfigureAwait(false) ? null : vRoute.ModelId;
+
         string vMessage;
         int vSessionId;
         if (vExisting is not null)
@@ -66,12 +75,12 @@ public sealed class StepAgentActions : IStepAgentActions
             var vSession = await objAgents.StartSessionAsync(vRun.ProjectId, (int)vRole.RoleId, aCt).ConfigureAwait(false);
             vSessionId = vSession.SessionId;
             vMessage = await BuildTaskAsync(vRun, vDefinition, aPosition, aCt).ConfigureAwait(false);
-            await InsertRowAsync(aRunId, aPosition, vSessionId, vRole, vMessage, aCt).ConfigureAwait(false);
+            await InsertRowAsync(aRunId, aPosition, vSessionId, vRole, vRoute, vMessage, aCt).ConfigureAwait(false);
         }
 
         var vMode = await ModeAsync(vSessionId, vRun.ProjectId, aCt).ConfigureAwait(false);
         string? vAnsweringModel = null;
-        await foreach (var vChunk in objAgents.SendAsync(vSessionId, vMessage, (int)vRole.RoleId, null, vMode, aCt).ConfigureAwait(false))
+        await foreach (var vChunk in objAgents.SendAsync(vSessionId, vMessage, (int)vRole.RoleId, vPinnedModelId, vMode, aCt).ConfigureAwait(false))
         {
             if (vChunk.IsFinal)
             {
@@ -183,16 +192,10 @@ public sealed class StepAgentActions : IStepAgentActions
         return Enum.TryParse<SessionMode>(vMode, out var vParsed) ? vParsed : SessionMode.AskFirst;
     }
 
-    private async Task InsertRowAsync(int aRunId, int aPosition, int aSessionId, RoleRow aRole, string aTask, CancellationToken aCt)
+    private async Task InsertRowAsync(int aRunId, int aPosition, int aSessionId, RoleRow aRole, StepModelRoute aRoute, string aTask, CancellationToken aCt)
     {
         using var vConnection = objConnections.OpenConnection();
-        var vModel = await vConnection.QueryFirstOrDefaultAsync<string>(new CommandDefinition(
-            """
-            SELECT m.Identifier FROM Model m JOIN Provider p ON p.ProviderId = m.ProviderId
-            WHERE m.Tier = @Tier AND p.State = 'Connected' ORDER BY m.ModelId LIMIT 1
-            """,
-            new { aRole.Tier },
-            cancellationToken: aCt)).ConfigureAwait(false)
+        var vModel = aRoute.Model
             ?? await vConnection.QueryFirstOrDefaultAsync<string>(new CommandDefinition(
                 "SELECT m.Identifier FROM Model m JOIN Provider p ON p.ProviderId = m.ProviderId WHERE p.State = 'Connected' ORDER BY m.ModelId LIMIT 1",
                 cancellationToken: aCt)).ConfigureAwait(false);
@@ -201,7 +204,7 @@ public sealed class StepAgentActions : IStepAgentActions
             INSERT INTO ProcessRunStepWork (RunId, Position, SessionId, AgentName, ModelName, Tier, State, Task, StartedUtc)
             VALUES (@aRunId, @aPosition, @aSessionId, @AgentName, @vModel, @Tier, @WorkingState, @aTask, @vNow)
             """,
-            new { aRunId, aPosition, aSessionId, AgentName = aRole.Name, vModel, aRole.Tier, WorkingState, aTask, vNow = Stamp(objClock.UtcNow) },
+            new { aRunId, aPosition, aSessionId, AgentName = aRole.Name, vModel, aRoute.Tier, WorkingState, aTask, vNow = Stamp(objClock.UtcNow) },
             cancellationToken: aCt)).ConfigureAwait(false);
     }
 

@@ -22,8 +22,10 @@ public sealed class BuildRunActions : IBuildRunActions
 {
     // Shared across every scoped instance of this class, for the same reason as
     // Agent.AgentSessionRegistry: the request that starts a run and the request that streams or stops
-    // it are different scopes. Keyed by ProjectId — one run at a time per project.
-    private static readonly ConcurrentDictionary<int, RunState> objRunStates = new();
+    // it are different scopes. Keyed by account and ProjectId — one run at a time per project, and
+    // two accounts' databases both number their projects from 1, so one account never streams or stops
+    // another's run (BRD-216).
+    private static readonly ConcurrentDictionary<string, RunState> objRunStates = new();
 
     private static readonly Regex ErrorLineRegex = new(
         @"^\s*(?<file>[^()\r\n]+?)\((?<line>\d+)(,\d+)?\)\s*:\s*error\s+\S+\s*:\s*(?<message>.+?)(\s*\[.*\])?\s*$",
@@ -134,14 +136,14 @@ public sealed class BuildRunActions : IBuildRunActions
         var vState = GetOrCreateState(aProjectId);
         var vGeneration = vState.Begin();
 
-        _ = RunInBackgroundAsync(aProjectId, aRunTargetId, aCt, vState, vGeneration);
+        _ = RunInBackgroundAsync(aProjectId, aRunTargetId, aCt, vState, vGeneration, objDb.CurrentUserId);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public Task StopAsync(int aProjectId, CancellationToken aCt = default)
     {
-        if (objRunStates.TryGetValue(aProjectId, out var vState))
+        if (objRunStates.TryGetValue(StateKey(aProjectId), out var vState))
         {
             vState.Publish(vState.CurrentGeneration, new OutputLine("Stopping — ending every process the run started", false));
             vState.Stop();
@@ -176,6 +178,15 @@ public sealed class BuildRunActions : IBuildRunActions
 
             foreach (var vLine in vBatch)
             {
+                // A subscriber that has been replaced (the Output strip opens a fresh one for every build
+                // or run) must not deliver the rest of a batch it read before it was cancelled: that copy
+                // of "> dotnet run" landed after the strip was cleared and the line showed twice
+                // (MISS-Chatur-20261117-02).
+                if (aCt.IsCancellationRequested)
+                {
+                    yield break;
+                }
+
                 vSent++;
                 yield return vLine;
             }
@@ -191,8 +202,10 @@ public sealed class BuildRunActions : IBuildRunActions
         }
     }
 
-    private async Task RunInBackgroundAsync(int aProjectId, int aRunTargetId, CancellationToken aCt, RunState aState, int aGeneration)
+    private async Task RunInBackgroundAsync(int aProjectId, int aRunTargetId, CancellationToken aCt, RunState aState, int aGeneration, string? aUserId)
     {
+        // The run outlives the request that started it: it stays the starting account's (BRD-216).
+        using var vPin = AccountScope.Enter(aUserId);
         var (vProjectPath, vSpec) = await LoadTargetAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
         var vState = aState;
 
@@ -225,8 +238,10 @@ public sealed class BuildRunActions : IBuildRunActions
         await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
     }
 
-    private static RunState GetOrCreateState(int aProjectId) =>
-        objRunStates.GetOrAdd(aProjectId, _ => new RunState());
+    private RunState GetOrCreateState(int aProjectId) =>
+        objRunStates.GetOrAdd(StateKey(aProjectId), _ => new RunState());
+
+    private string StateKey(int aProjectId) => $"{objDb.AccountKey}|{aProjectId}";
 
     private async Task<(string ProjectPath, TargetSpec Spec)> LoadTargetAsync(int aProjectId, int aRunTargetId, CancellationToken aCt)
     {

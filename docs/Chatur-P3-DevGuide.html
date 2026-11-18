@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Developer Guide</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout no-toc">
+  <main>
+    <h1>Chatur — Developer Guide</h1>
+    <div class="subtitle">Rendered 2026-11-15 &middot; source <code>Chatur-P3-DevGuide.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#architecture-cheat-sheet">Architecture cheat-sheet</a></li>
+        <li><a href="#roles-and-menu-map">Roles and menu map</a></li>
+        <li><a href="#screen-by-screen-code-map">Screen-by-screen code map</a></li>
+        <li class="h3"><a href="#end-to-end-run-auto">End-to-end run (/auto)</a></li>
+        <li class="h3"><a href="#run-queue-auto-queue">Run queue (/auto/queue)</a></li>
+        <li class="h3"><a href="#run-report-auto-report">Run report (/auto/report)</a></li>
+        <li><a href="#cross-cutting-flows">Cross-cutting flows</a></li>
+        <li class="h3"><a href="#the-end-to-end-engine">The end-to-end engine</a></li>
+        <li class="h3"><a href="#the-queue-starts-the-next-run">The queue starts the next run</a></li>
+        <li class="h3"><a href="#where-the-run-report-reads-its-measurements">Where the run report reads its measurements</a></li>
+        <li><a href="#known-issues">Known issues</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Large</td></tr>
+<tr><td>Phase</td><td>3 of 4</td></tr>
+<tr><td>Verified on</td><td>2026-11-15</td></tr>
+<tr><td>Date</td><td>2026-11-15</td></tr>
+</tbody>
+</table>
+<h2 id="architecture-cheat-sheet">Architecture cheat-sheet<a class="anchor-link" href="#architecture-cheat-sheet">#</a></h2>
+<div class="diagram">
+  <div class="dt">
+    <button data-zout title="Zoom out">&minus;</button>
+    <span class="zlabel">100%</span>
+    <button data-zin title="Zoom in">+</button>
+    <button data-fit title="Fit to width">Fit</button>
+    <button data-one title="Actual size">1:1</button>
+    <button data-fs title="Fullscreen">&#9166;</button>
+    <button data-pop title="Open in new tab">&#8599;</button>
+  </div>
+  <pre class="mermaid">flowchart LR
+  Link["ToolTabLink (route)"] --&gt; Tabs["WorkbenchState (open tabs)"]
+  Menu["MenuBar, Project menu"] --&gt; Tabs
+  Tabs --&gt; Area["EditorArea (draws the active tab)"]
+  Area --&gt; Page["AutoRun, RunQueue, RunReport"]
+  Page --&gt; Act["AutoRunActions, RunQueueActions, RunReportActions"]
+  Act --&gt; Runs["ProcessActions, ProcessRunActions (phase 2)"]
+  Act --&gt; DB[("SQLite")]
+  Act --&gt; Files["docs/metrics/*.jsonl"]</pre>
+</div>
+<p>The three phase-3 screens are not pages of their own. Each opens as a tab inside the main window. A route such as <code>/auto</code> is a deep link handled by <code>src/ChaturUI/Pages/ToolTabLink.razor.cs</code> (<code>OnAfterRenderAsync</code>, line 44): it opens the tab through <code>src/ChaturUI/Shell/WorkbenchState.cs</code> and then goes on to <code>/</code>. <code>src/ChaturUI/Shell/EditorArea.razor</code> (the <code>switch</code> at line 43) draws the active tab's component.</p>
+<table>
+<thead><tr><th>Layer</th><th>Project or folder</th><th>What lives here</th></tr></thead>
+<tbody>
+<tr><td>Screens</td><td><code>src/ChaturUI/Pages</code></td><td><code>AutoRun</code>, <code>RunQueue</code> (with <code>QueueRunDialog</code>), <code>RunReport</code>, each a <code>.razor</code> with a <code>.razor.cs</code></td></tr>
+<tr><td>Engine</td><td><code>src/Chatur.Core/AutoRun</code></td><td><code>AutoRunActions</code> walks the chain; <code>AutoRunStore</code> holds the SQL; <code>AutoRunViewBuilder</code> builds what the screen shows; <code>BackgroundAutoRunLauncher</code> runs it off the screen</td></tr>
+<tr><td>Queue</td><td><code>src/Chatur.Core/RunQueue</code></td><td><code>RunQueueActions</code>; <code>RequirementOrder</code> picks the requirement a resumed run works from</td></tr>
+<tr><td>Report</td><td><code>src/Chatur.Core/RunReports</code></td><td><code>RunReportActions</code> and <code>RunReportReader</code>; read only</td></tr>
+<tr><td>Database</td><td><code>src/ChaturDb/Scripts</code></td><td>DbUp scripts <code>0046</code> to <code>0057</code>: <code>AutoRun</code>, <code>AutoRunProcess</code>, <code>AutoRunEvent</code>, <code>RunQueueItem</code>, <code>ProcessRunStepWork</code>, estimates</td></tr>
+</tbody>
+</table>
+<h2 id="roles-and-menu-map">Roles and menu map<a class="anchor-link" href="#roles-and-menu-map">#</a></h2>
+<table>
+<thead><tr><th>Role</th><th>Test user</th><th>Menu items and the screen each opens</th></tr></thead>
+<tbody>
+<tr><td>User</td><td>1 (chatur-owner@techierathore.com)</td><td>Project → End-to-end run (<code>/auto</code>); Project → Run queue (<code>/auto/queue</code>); Project → Run record (<code>/auto/report</code>), which opens the Run report</td></tr>
+</tbody>
+</table>
+<p>The items are in <code>src/ChaturUI/Shell/MenuBar.razor</code>, lines 156 to 158. Each calls <code>WorkbenchState.OpenAutoRun</code>, <code>OpenRunQueue</code> or <code>OpenRunReport</code> directly.</p>
+<h2 id="screen-by-screen-code-map">Screen-by-screen code map<a class="anchor-link" href="#screen-by-screen-code-map">#</a></h2>
+<h3 id="end-to-end-run-auto">End-to-end run (<code>/auto</code>)<a class="anchor-link" href="#end-to-end-run-auto">#</a></h3>
+<p><img src="screenshots/Chatur/auto-run.png" alt="End-to-end run" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>AutoRun.razor.cs:StartAsync</code> → <code>AutoRunActions.StartAsync</code> → <code>AutoRunStore.CreateAsync</code> → <code>AutoRun</code>, <code>AutoRunProcess</code> and <code>AutoRunEvent</code> tables</p>
+<p>The screen starts a run from a brief and then only watches it. The run itself goes on in a background task, so closing the tab does not stop it.</p>
+<p><code>OnInitializedAsync</code> (line 116) picks the selected project and calls <code>LoadRunAsync</code> (line 147). That takes the project's going run from <code>AutoRunActions.CurrentAsync</code>, or, when none is going, its newest run if that one is ready for the owner's acceptance test. <code>PollAsync</code> (line 163) then reads the run again every two seconds.</p>
+<p><code>StartAsync</code> (line 335) checks that a project is chosen and that the brief has at least 40 characters (<code>AutoRunBrief.MinLength</code>). <code>AutoRunActions.StartAsync</code> checks the same rule again, refuses a second going run on the same project, writes the run, and hands it to the launcher. The page then keeps the estimate the owner was shown (<code>KeepStartEstimateAsync</code>, line 278). A refusal is shown under the brief, and the brief stays filled.</p>
+<p>Pause, Resume and Stop all go through <code>ChangeAsync</code> (line 374) to the action of the same name. Stop asks first, in a dialog.</p>
+<p>Before a run exists, <code>ChainRows</code> (line 42) shows the planned chain from <code>AutoRunActions.PlannedChain</code>, with every process still to come.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/AutoRun.razor.cs:149</code></td><td><code>LoadRunAsync</code></td><td><code>objRun</code></td><td>the going run, or <code>null</code> when the project has none</td></tr>
+<tr><td><code>src/ChaturUI/Pages/AutoRun.razor.cs:355</code></td><td><code>StartAsync</code></td><td><code>objRun.State</code></td><td><code>Running</code>, with a new <code>AutoRunId</code></td></tr>
+<tr><td><code>src/Chatur.Core/AutoRun/AutoRunActions.cs:87</code></td><td><code>StartAsync</code></td><td>result of <code>GoingAsync</code></td><td><code>null</code>; a row here means the start is refused</td></tr>
+<tr><td><code>src/Chatur.Core/AutoRun/AutoRunStore.cs:101</code></td><td><code>CreateAsync</code></td><td><code>vId</code></td><td>the new <code>AutoRun</code> row; eight <code>AutoRunProcess</code> rows follow, each <code>ToCome</code></td></tr>
+<tr><td><code>src/ChaturUI/Pages/AutoRun.razor.cs:175</code></td><td><code>PollAsync</code></td><td><code>vNow.ProgressPercent</code>, <code>vNow.Now</code></td><td>a rising figure, and the agent, process and step being worked</td></tr>
+<tr><td><code>src/Chatur.Core/AutoRun/AutoRunViewBuilder.cs:46</code></td><td><code>BuildAsync</code></td><td><code>vProcessRun</code></td><td>the process run the chain is on now</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>Elapsed</code> (<code>AutoRun.razor.cs:85</code>) is the end time, or now, minus the start time. <code>AutoRunViewBuilder.ProgressOf</code> (<code>AutoRunViewBuilder.cs:87</code>) gives the bar's figure: finished processes, plus the share of done steps in the current process run, times 100, divided by the length of the chain; it is 100 once the run is ready for acceptance. <code>BuildAsync</code> (lines 51 to 59) adds up <code>TokensOutSoFar</code> over the chain's process runs. <code>OpenRequirementReader.Count</code> (<code>OpenRequirementReader.cs:79</code>) counts the open requirements by status. <code>EstimateSoFarText</code> (page line 62) sets the kept build estimate beside the measured figures; the two are never combined.</p>
+<h3 id="run-queue-auto-queue"><a id="run-queue-autoqueue"></a>Run queue (<code>/auto/queue</code>)<a class="anchor-link" href="#run-queue-auto-queue">#</a></h3>
+<p><img src="screenshots/Chatur/run-queue.png" alt="Run queue" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>RunQueue.razor.cs:LoadAsync</code> → <code>RunQueueActions.ListAsync</code> → <code>RunQueueActions.StartNextAsync</code> → <code>AutoRunActions.StartAsync</code> → <code>RunQueueItem</code> and <code>AutoRun</code> tables</p>
+<p>The queue lets one end-to-end run go at a time. A <code>RunQueueItem</code> row holds very little: the project, the brief, a status (<code>Queued</code>, <code>Started</code> or <code>Removed</code>), the id of the run it became, and the requirement a resumed run works from. Where a started run stands is always read from the run itself, in <code>SnapshotAsync</code> (<code>src/Chatur.Core/RunQueue/RunQueueActions.cs:295</code>), so the queue and the run cannot disagree. A started row whose run cannot be read shows as lost.</p>
+<p>Reading the queue is also what moves it on. Every <code>ListAsync</code> call first runs <code>StartNextAsync</code>. The page calls it on opening and then every four seconds from a timer (<code>cRefreshEvery</code>, page line 15), so the next run starts without a click while the tab is open.</p>
+<p>Adding a run is done in the dialog: <code>QueueRunDialog.razor.cs:QueueAsync</code> (line 127) calls <code>RunQueueActions.QueueAsync</code>, which inserts the row and reports whether the project already had an unfinished run in the queue. The brief needs 40 to 4000 characters.</p>
+<p>Pause and Resume on a row (<code>PauseAsync</code>, <code>ResumeAsync</code>, page lines 177 and 182) pass through to the run's own pause and resume. Resuming while another run is going puts the row back to <code>Queued</code>, to wait its turn. Remove marks the row <code>Removed</code> and stops its run; a running or finished row cannot be removed.</p>
+<p>All actions take one shared lock (<code>Gate</code>, line 21), so two readers cannot start two runs.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/RunQueue.razor.cs:76</code></td><td><code>LoadAsync</code></td><td><code>objView.Items</code></td><td>unfinished runs in queue order, then finished runs, newest first</td></tr>
+<tr><td><code>src/Chatur.Core/RunQueue/RunQueueActions.cs:204</code></td><td><code>StartNextAsync</code></td><td><code>vItems</code></td><td>no item <code>Running</code>, or the method returns here</td></tr>
+<tr><td><code>src/Chatur.Core/RunQueue/RunQueueActions.cs:252</code></td><td><code>TryStartAsync</code></td><td><code>vRun.AutoRunId</code></td><td>the id of the run just started; written to the row on the next line</td></tr>
+<tr><td><code>src/Chatur.Core/RunQueue/RunQueueActions.cs:307</code></td><td><code>SnapshotAsync</code></td><td><code>vState</code></td><td><code>Waiting</code>, <code>Running</code>, <code>Paused</code>, <code>Finished</code> or <code>Lost</code></td></tr>
+<tr><td><code>src/ChaturUI/Pages/QueueRunDialog.razor.cs:139</code></td><td><code>QueueAsync</code></td><td><code>vAdded.ProjectAlreadyQueued</code></td><td><code>true</code> when the project already had a run waiting or going</td></tr>
+<tr><td><code>src/Chatur.Core/RunQueue/RunQueueActions.cs:92</code></td><td><code>QueueAsync</code></td><td><code>vId</code></td><td>the new <code>RunQueueItem</code> row, status <code>Queued</code></td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>CountText</code> (<code>RunQueue.razor.cs:33</code>) counts running rows and waiting rows; a paused row counts as waiting. <code>RunQueueActions.ToItem</code> (<code>RunQueueActions.cs:330</code>) computes elapsed time as the run's end, or now, minus its start. <code>SnapshotAsync</code> (line 308) numbers the unfinished rows. <code>ElapsedText</code> (page line 268) words the time as hours and minutes. <code>EstimateTextOf</code> (page line 112) shows the middle build figure of the estimate the run was queued with; it reads the kept estimate and never works one out again.</p>
+<h3 id="run-report-auto-report"><a id="run-report-autoreport"></a>Run report (<code>/auto/report</code>)<a class="anchor-link" href="#run-report-auto-report">#</a></h3>
+<p><img src="screenshots/Chatur/run-report.png" alt="Run report" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>RunReport.razor.cs:LoadAsync</code> → <code>RunReportActions.ReportAsync</code> → <code>RunReportActions.AutoReportAsync</code> → <code>AutoRunProcess</code>, <code>AutoRunEvent</code> and <code>ProcessRunVerdict</code> tables, plus <code>docs/metrics/runs.jsonl</code> and <code>misses.jsonl</code></p>
+<p>The report is read only, and every call reads again. <code>OnInitializedAsync</code> (line 89) asks <code>RunReportActions.RunsAsync</code> for the list of runs and loads the newest. The owner can pick an earlier one (<code>OnPickedAsync</code>, line 115).</p>
+<p>The list has two sources. Runs Chatur carried out come from <code>AutoRun</code> rows and have the key <code>auto-</code> followed by the row id. End-to-end runs found only in the project's <code>runs.jsonl</code> (command <code>auto</code>) are listed beside them, keyed by their start time.</p>
+<p><code>ReportAsync</code> (<code>src/Chatur.Core/RunReports/RunReportActions.cs:66</code>) branches on that key:</p>
+<ul>
+<li>An <code>auto-</code> key goes to <code>AutoReportAsync</code>. The requirements are the last verdict each one was left at by the run's process runs (<code>VerdictsAsync</code>, line 170). Waits and retries come from the run's own record. Misses and tokens come from the measurement files, limited to the time the run was going.
+</li>
+<li>Any other key goes to <code>RunReportReader.Report</code> (<code>RunReportReader.cs:39</code>), which builds the whole report from <code>runs.jsonl</code>, <code>gates.jsonl</code> and <code>misses.jsonl</code>.
+</li>
+</ul>
+<p>Titles and owning agents come from the board (<code>RequirementBoardActions.LoadAsync</code>). A figure that no record carries is shown as "not recorded", never as zero.</p>
+<p><code>LoadEstimateAsync</code> (page line 160) reads the estimate an <code>auto-</code> run kept and asks <code>EstimateActions.AgainstActualAsync</code> to set it beside what was measured.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/RunReport.razor.cs:93</code></td><td><code>OnInitializedAsync</code></td><td><code>objRuns[0].Key</code></td><td><code>auto-{id}</code> for a run Chatur carried out</td></tr>
+<tr><td><code>src/ChaturUI/Pages/RunReport.razor.cs:129</code></td><td><code>LoadAsync</code></td><td><code>objReport</code></td><td>the report; <code>null</code> when the run is not the selected project's</td></tr>
+<tr><td><code>src/Chatur.Core/RunReports/RunReportActions.cs:74</code></td><td><code>ReportAsync</code></td><td><code>vRuns.Length</code></td><td>the number of lines in <code>runs.jsonl</code>; 0 when the file is missing</td></tr>
+<tr><td><code>src/Chatur.Core/RunReports/RunReportActions.cs:110</code></td><td><code>AutoReportAsync</code></td><td><code>vVerdicts</code></td><td>one row per requirement the run graded</td></tr>
+<tr><td><code>src/Chatur.Core/RunReports/RunReportActions.cs:118</code></td><td><code>AutoReportAsync</code></td><td><code>vCost.TokensIn</code>, <code>vCost.TokensOut</code></td><td>totals of the records started inside the run's time; <code>null</code> when none carries the figure</td></tr>
+<tr><td><code>src/ChaturUI/Pages/RunReport.razor.cs:185</code></td><td><code>LoadEstimateAsync</code></td><td><code>objAgainst</code></td><td>the kept estimate against the measured figures</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>RunReportActions.WaitsOf</code> (<code>RunReportActions.cs:136</code>) measures each usage-limit wait, from the wait to the entry that ended it. <code>AutoReportAsync</code> (line 115) computes the run's duration as end minus start minus the time waited, sums tokens in and out (line 119) and sums the retries of the chain (line 132). <code>RunReportReader.CostBetween</code> (<code>RunReportReader.cs:105</code>) adds tokens and seconds per model. On the page, <code>Lay</code> (<code>RunReport.razor.cs:197</code>) builds the Total row with <code>SumOrNull</code> (line 231), which gives a sum only when every model's figure was recorded. <code>VerdictCounts</code> (line 71) counts requirements per verdict.</p>
+<h2 id="cross-cutting-flows">Cross-cutting flows<a class="anchor-link" href="#cross-cutting-flows">#</a></h2>
+<p>For sign-in, configuration and logging: See docs/Chatur-DevGuide.md, Cross-cutting flows.</p>
+<h3 id="the-end-to-end-engine">The end-to-end engine<a class="anchor-link" href="#the-end-to-end-engine">#</a></h3>
+<p><strong>Call chain:</strong> <code>AutoRunActions.StartAsync</code> → <code>BackgroundAutoRunLauncher.Launch</code> → <code>AutoRunActions.AdvanceAsync</code> → <code>CarryOnAsync</code> → <code>RunCurrentProcessAsync</code> → <code>ProcessActions.StartAsync</code> and <code>ProcessRunActions.AdvanceUnattendedAsync</code></p>
+<p><strong>Start.</strong> <code>AutoRunStore.CreateAsync</code> writes the <code>AutoRun</code> row in state <code>Running</code> and one <code>AutoRunProcess</code> row per process of the chain. The launcher (<code>src/Chatur.Core/AutoRun/BackgroundAutoRunLauncher.cs:28</code>) starts one background task per run, in its own service scope. <code>AdvanceAsync</code> takes a lock per run, so only one loop carries a run on.</p>
+<p><strong>The chain of eight processes.</strong> <code>AutoRunChain.Processes</code> (<code>AutoRunChain.cs:14</code>) lists them in order: <code>day1-greenfield</code>, <code>split-brd</code>, <code>mockups</code>, <code>deploy-checklist</code>, <code>build-phase</code>, <code>verify-phase</code>, <code>fix-issues</code>, <code>refresh-status</code>. For each one, <code>EnsureProcessRunAsync</code> starts an ordinary phase-2 process run and <code>DriveProcessRunAsync</code> carries it to its end. An owner stop inside a process is answered yes by the run itself and written into the run's record. A check that fails stops the whole run with the reason. After the last process the run goes to <code>ReadyForAcceptance</code> and nothing more is run. <code>MarkCompleteAsync</code> refuses while any requirement is open.</p>
+<p><strong>Pause and stop.</strong> <code>PauseAsync</code> and <code>StopAsync</code> only change the run's state in the database. The loop gives way at the next step boundary: before each step, <code>AdvanceLockedAsync</code> calls the <code>ShouldYield</code> check from <code>PolicyFor</code>, which reads that state. A step already being worked is finished first on pause. On stop, <code>StopProcessRunAsync</code> ends the current process run. <code>ResumeAsync</code> sets <code>Running</code> again and launches the loop on the same step.</p>
+<p><strong>Waiting out a usage limit.</strong> <code>ProcessRunActions.ExecuteUnattendedAsync</code> marks the step's model calls as made for a run. <code>AgentActions.SendAsync</code> then raises a provider's rate limit as <code>ModelUsageLimitException</code> instead of showing it as a note. <code>BeginLimitWaitAsync</code> sets the run to <code>WaitingForLimit</code> with a resume time: the provider's own figure, else 30 minutes, never more than 12 hours (<code>AutoRunOptions</code>). <code>WaitOutAsync</code> sleeps in 15-second slices and checks each time whether the owner paused or stopped. The run then carries on by itself on the same step. A stalled or crashed step is retried up to three times, with a growing pause, in <code>RetryAsync</code>.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/Chatur.Core/AutoRun/AutoRunActions.cs:278</code></td><td><code>RunCurrentProcessAsync</code></td><td><code>vProcess.ProcessCode</code></td><td>the chain's code at <code>aRow.CurrentProcess</code></td></tr>
+<tr><td><code>src/Chatur.Core/AutoRun/AutoRunActions.cs:311</code></td><td><code>EnsureProcessRunAsync</code></td><td><code>vStarted.RunId</code></td><td>the process run for this place in the chain</td></tr>
+<tr><td><code>src/Chatur.Core/AutoRun/AutoRunActions.cs:358</code></td><td><code>DriveProcessRunAsync</code></td><td><code>vView.State</code></td><td><code>Finished</code> to go on to the next process</td></tr>
+<tr><td><code>src/Chatur.Core/ProcessRuns/ProcessRunActions.cs:285</code></td><td><code>AdvanceLockedAsync</code></td><td>result of <code>vShouldYield()</code></td><td><code>false</code> while the run is <code>Running</code>; <code>true</code> after Pause or Stop</td></tr>
+<tr><td><code>src/Chatur.Core/Agent/AgentActions.cs:392</code></td><td><code>SendAsync</code></td><td><code>vUsageLimit</code></td><td>set when the provider reported a rate limit during a run</td></tr>
+<tr><td><code>src/Chatur.Core/AutoRun/AutoRunActions.cs:476</code></td><td><code>BeginLimitWaitAsync</code></td><td><code>vUntil</code></td><td>the time the run carries on, saved as <code>AutoRun.ResumeAtUtc</code></td></tr>
+</tbody>
+</table>
+<h3 id="the-queue-starts-the-next-run">The queue starts the next run<a class="anchor-link" href="#the-queue-starts-the-next-run">#</a></h3>
+<p><code>RunQueueActions.StartNextAsync</code> (<code>RunQueueActions.cs:201</code>) runs at the start of every <code>ListAsync</code>. If any row is running it does nothing. Otherwise it tries each waiting row in order (<code>TryStartAsync</code>, line 242). A row that already has a run is resumed; a new row calls <code>AutoRunActions.StartAsync</code>, stores the new run's id on the row, and carries the queued estimate over to the run. A project that already has a run going is skipped and stays waiting.</p>
+<p>Nothing in the background calls <code>ListAsync</code>. The next run starts when a Run queue tab is open and its four-second timer fires.</p>
+<h3 id="where-the-run-report-reads-its-measurements">Where the run report reads its measurements<a class="anchor-link" href="#where-the-run-report-reads-its-measurements">#</a></h3>
+<p><code>RunReportActions.ReadAsync</code> (<code>RunReportActions.cs:188</code>) reads <code>runs.jsonl</code>, <code>misses.jsonl</code> and <code>gates.jsonl</code> from the selected project's <code>docs/metrics</code> folder; a missing file reads as empty. The records are written elsewhere: <code>ProcessRunActions.EndRunAsync</code> appends one <code>runs.jsonl</code> record per process run through <code>MeasurementActions.AppendAsync</code> (<code>src/Chatur.Core/Measurements/MeasurementActions.cs:196</code>). For a run Chatur carried out, verdicts come from the <code>ProcessRunVerdict</code> table, and waits and retries from <code>AutoRunEvent</code> and <code>AutoRunProcess</code>.</p>
+<h2 id="known-issues">Known issues<a class="anchor-link" href="#known-issues">#</a></h2>
+<ul>
+<li>A run cut off by closing Chatur resumes when End-to-end run opens. <code>AutoRunActions.CurrentAsync</code> (<code>src/Chatur.Core/AutoRun/AutoRunActions.cs:139</code>) launches the run again and adds a Retry entry to its record; until that screen is opened the run stands still.
+</li>
+<li>Fixed on 2026-11-15, REQ-UI-055: the web test copy now releases a closed page at once (<code>src/Chatur.WebHarness/Program.cs:50</code>, <code>DisconnectedCircuitMaxRetained = 0</code>; test <code>tests/verify/deep-link-after-closed-pages.spec.ts</code>). Before that, End-to-end run could stand blank for seconds after a test run.
+</li>
+</ul>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

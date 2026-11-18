@@ -16,6 +16,7 @@
 <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
 <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
 <symbol id="i-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
 </defs></svg>
 <script>
@@ -115,6 +116,11 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    <button class="bigaction" onclick="say('Opens any folder on disk as it is.')" data-testid="open-folder">
     <span class="ic"><svg><use href="#i-folder"/></svg></span>
     <span><b>Open a folder</b><span>Anything on disk, project or not</span></span>
+   </button>
+
+   <button class="bigaction" onclick="say('Opens the folder that holds the file, with the file open.')" data-testid="open-file">
+    <span class="ic"><svg><use href="#i-file"/></svg></span>
+    <span><b>Open a file</b><span>With the folder that holds it</span></span>
    </button>
 
    <button class="bigaction" onclick="say('Starts a new solution from a template.')" data-testid="new-project">

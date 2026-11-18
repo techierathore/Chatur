@@ -1,4 +1,5 @@
 using Chatur.Core.Actions;
+using ChaturUI.Components.Estimates;
 using TrBlazeUI.Components.Badge;
 
 namespace ChaturUI.Pages;
@@ -26,6 +27,7 @@ public partial class RunQueue : IDisposable
     private bool objIsQueueDialogOpen;
     private bool objIsReading;
     private Timer? objTimer;
+    private readonly Dictionary<int, KeptEstimate> objKept = [];
 
     // The mockup counts a paused run among the waiting: it is not going, and it takes its turn again on resume.
     private string CountText
@@ -74,6 +76,7 @@ public partial class RunQueue : IDisposable
             objView = await RunQueueActions.ListAsync();
             objItems = objView.Items;
             objError = null;
+            await LoadKeptAsync();
         }
         catch (Exception aEx)
         {
@@ -83,6 +86,60 @@ public partial class RunQueue : IDisposable
         {
             objIsReading = false;
         }
+    }
+
+    /// <summary>Reads the estimate each unfinished run was queued with; the estimate is never worked out again. A failure leaves the cell empty.</summary>
+    private async Task LoadKeptAsync()
+    {
+        foreach (var vItem in objItems.Where(aItem => aItem.State != RunQueueState.Finished && !objKept.ContainsKey(aItem.QueueItemId)))
+        {
+            try
+            {
+                if (await EstimateActions.KeptAsync(EstimateRunKinds.Queue, vItem.QueueItemId) is { } vKept)
+                {
+                    objKept[vItem.QueueItemId] = vKept;
+                }
+            }
+            catch (Exception aEx) when (aEx is not OperationCanceledException)
+            {
+                // The queue itself is unaffected; the run shows no estimate until the next read.
+            }
+        }
+    }
+
+    /// <summary>The build step's middle figure and time, compactly; words where there is none.</summary>
+    /// <param name="aItem">The queued run.</param>
+    private string EstimateTextOf(RunQueueItem aItem)
+    {
+        if (!objKept.TryGetValue(aItem.QueueItemId, out var vKept))
+        {
+            return "—";
+        }
+
+        if (vKept.Estimate.NoChecklist)
+        {
+            return "no checklist yet";
+        }
+
+        var vBuild = vKept.Estimate.Total(EstimateSteps.Build);
+        return vBuild.TokensOut is { } vTokens && vBuild.DurationS is { } vTime
+            ? $"{vTokens.Mid.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} · {EstimateLines.Duration(vTime.Mid)}"
+            : vKept.Estimate.NoEstimateYet ? "no estimate yet" : "no precedent";
+    }
+
+    /// <summary>The build step's full range, for the cell's tooltip.</summary>
+    /// <param name="aItem">The queued run.</param>
+    private string EstimateTitleOf(RunQueueItem aItem)
+    {
+        if (!objKept.TryGetValue(aItem.QueueItemId, out var vKept) || vKept.Estimate.NoChecklist)
+        {
+            return "The estimate this run was queued with";
+        }
+
+        var vBuild = vKept.Estimate.Total(EstimateSteps.Build);
+        return vBuild.TokensOut is not null && vBuild.DurationS is not null
+            ? $"Build, as queued: {EstimateLines.TokensText(vBuild.TokensOut)} tokens out; {EstimateLines.DurationText(vBuild.DurationS)}"
+            : "The estimate this run was queued with has no build figure";
     }
 
     private async Task RefreshAsync()

@@ -37,7 +37,8 @@ public sealed record SessionSummary(int SessionId, int ProjectId, string RoleNam
 /// <param name="Payload">The step's own content.</param>
 /// <param name="Model">The model that produced this step, when one did.</param>
 /// <param name="Tokens">The tokens this step used, when known.</param>
-public sealed record SessionEventRecord(int Seq, string Kind, string Payload, string? Model, int? Tokens);
+/// <param name="RoleName">The agent that wrote this reply (REQ-FN-024); <see langword="null"/> for a step that is not a reply, and for a reply recorded before replies kept their agent.</param>
+public sealed record SessionEventRecord(int Seq, string Kind, string Payload, string? Model, int? Tokens, string? RoleName = null);
 
 /// <summary>A session with its full recorded history (REQ-FN-031, REQ-FN-032).</summary>
 /// <param name="Summary">The session's summary row.</param>

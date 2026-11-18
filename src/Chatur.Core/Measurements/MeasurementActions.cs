@@ -17,8 +17,11 @@ public sealed class MeasurementActions : IMeasurementActions
 {
     private static readonly string[] StreamNames =
     [
-        "runs.jsonl", "gates.jsonl", "misses.jsonl", "sessions.jsonl", "commits.jsonl"
+        "runs.jsonl", "gates.jsonl", "misses.jsonl", EstimatesStream, "sessions.jsonl", "commits.jsonl"
     ];
+
+    /// <summary>The Estimator's own stream (REQ-FN-114): listed for its records, never written through <see cref="AppendAsync"/>.</summary>
+    private const string EstimatesStream = "estimates.jsonl";
 
     /// <summary>One append lock per stream file, so two sessions writing the same project's stream at
     /// once cannot interleave their lines (Architecture §5 "Measurements" — appended, never edited).</summary>
@@ -69,7 +72,8 @@ public sealed class MeasurementActions : IMeasurementActions
                         }
 
                         vRecordCount++;
-                        vFieldsEmpty += CountEmptyFields(vLine);
+                        // An estimate's null figure means "no precedent", not a field left empty, so that stream counts none.
+                        vFieldsEmpty += vStreamName == EstimatesStream ? 0 : CountEmptyFields(vLine);
                         var vAt = TryReadAt(vLine);
                         if (vAt is { } vParsed && (vNewest is null || vParsed > vNewest))
                         {
@@ -163,7 +167,8 @@ public sealed class MeasurementActions : IMeasurementActions
         try
         {
             using var vDoc = JsonDocument.Parse(aJsonLine);
-            if (vDoc.RootElement.TryGetProperty("at", out var vAt)
+            // Chatur's own streams date a record with "at"; an estimate record is dated with TechieFlow's "ts".
+            if ((vDoc.RootElement.TryGetProperty("at", out var vAt) || vDoc.RootElement.TryGetProperty("ts", out vAt))
                 && vAt.ValueKind == JsonValueKind.String
                 && DateTime.TryParse(vAt.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var vParsed))
             {

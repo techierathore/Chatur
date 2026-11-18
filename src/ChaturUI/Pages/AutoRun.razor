@@ -1,5 +1,6 @@
 @implements IDisposable
 @inject IAutoRunActions AutoRuns
+@inject IEstimateActions EstimateActions
 @inject IProjectActions ProjectActions
 @inject WorkbenchState WorkbenchTabs
 @inject Chatur.Core.Platform.IClock Clock
@@ -17,11 +18,11 @@
             <p class="text-sm text-muted-foreground">Hand Chatur a brief. It runs every process in order, on its own, until nothing is left open.</p>
         </div>
         <span class="flex-1"></span>
-        <Button Variant="ButtonVariant.Outline" OnClick="WorkbenchTabs.OpenRunQueue" data-testid="go-queue">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="WorkbenchTabs.OpenRunQueue" data-testid="go-queue">
             <LucideIcon Name="list" Size="14" />
             Queue
         </Button>
-        <Button Variant="ButtonVariant.Outline" OnClick="WorkbenchTabs.OpenRunReport" data-testid="go-report">Run record</Button>
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="WorkbenchTabs.OpenRunReport" data-testid="go-report">Run record</Button>
     </div>
 
     <Card data-testid="brief-panel">
@@ -32,33 +33,41 @@
             <div class="flex flex-wrap items-center gap-3" data-testid="brief-project-field">
                 <span class="w-24 text-sm text-muted-foreground">Project</span>
                 <div class="min-w-44 flex-1" data-testid="brief-project">
-                    <Select TValue="string" Value="@objProjectValue" ValueChanged="OnProjectChangedAsync" Disabled="@(objIsBusy || objIsGoing)"
-                            DisplayTextSelector="@(v => ProjectNameOf(v))" Class="w-full">
-                        <SelectTrigger AriaLabel="Project" data-testid="brief-project-button"><SelectValue /></SelectTrigger>
-                        <SelectContent data-testid="brief-project-pop">
+                    @* A button with a chevron and a pop-up list, as the mockup draws the picker (the Run report's run-select is the same shape). *@
+                    <DropdownMenu>
+                        <DropdownMenuTrigger AsChild>
+                            <Button Variant="ButtonVariant.Outline" Class="w-full justify-between font-normal" AriaLabel="Project"
+                                    Disabled="@(objIsBusy || objIsGoing)" data-testid="brief-project-button">
+                                <span class="truncate">@(string.IsNullOrEmpty(objProjectValue) ? "Pick a project" : ProjectNameOf(objProjectValue))</span>
+                                <LucideIcon Name="chevron-down" Size="14" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent Class="max-h-80 min-w-44 overflow-y-auto" data-testid="brief-project-pop">
                             @foreach (var vProject in objProjects)
                             {
-                                <SelectItem TValue="string" Value="@vProject.ProjectId.ToString()" Text="@vProject.Name">@vProject.Name</SelectItem>
+                                var vValue = vProject.ProjectId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                <DropdownMenuItem OnClick="@(() => OnProjectChangedAsync(vValue))" data-testid="@($"brief-project-{vValue}")">
+                                    <span class="w-4 shrink-0 text-center">@(vValue == objProjectValue ? "✓" : "")</span>
+                                    <span class="ml-2">@vProject.Name</span>
+                                </DropdownMenuItem>
                             }
-                        </SelectContent>
-                    </Select>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
-            <Field data-testid="brief-text-field">
-                <FieldLabel For="brief-text">Brief</FieldLabel>
-                <FieldContent>
-                    <Textarea Id="brief-text" @bind-Value="objBrief" Disabled="@(objIsBusy || objIsGoing)" Class="min-h-24 leading-relaxed"
-                              Placeholder="What should be true when this run finishes?" data-testid="brief-text" />
-                </FieldContent>
-            </Field>
+            @* The mockup's brief is a <label> and a textarea, not a div: the project row and the start row are the
+               panel's only two div children. A Field would be a third div and push the start row (and its icon) to div[2]. *@
+            <FieldLabel For="brief-text" Class="-mb-1.5" data-testid="brief-text-field">Brief</FieldLabel>
+            <Textarea Id="brief-text" Value="@objBrief" ValueChanged="OnBriefChangedAsync" Disabled="@(objIsBusy || objIsGoing)" Class="min-h-24 leading-relaxed"
+                      Placeholder="What should be true when this run finishes?" data-testid="brief-text" />
 
             <div class="flex flex-wrap items-center gap-3">
                 <span class="@(objBriefError is null ? "text-xs text-muted-foreground" : "text-xs text-destructive")" data-testid="brief-rule">
                     @(objBriefError ?? "A project and at least a sentence. Anything shorter comes back asking what \"done\" means.")
                 </span>
                 <span class="flex-1"></span>
-                <Button OnClick="StartAsync" Disabled="@(objIsBusy || objIsGoing || objProjects.Count == 0)" data-testid="start-run">
+                <Button Class="rounded-full" OnClick="StartAsync" Disabled="@(objIsBusy || objIsGoing || objProjects.Count == 0)" data-testid="start-run">
                     <LucideIcon Name="play" Size="14" />
                     Start the run
                 </Button>
@@ -71,6 +80,44 @@
             </div>
         </CardContent>
     </Card>
+
+    @if (objEstimateError is not null)
+    {
+        <Alert Variant="AlertVariant.Warning" data-testid="estimate-error">
+            <LucideIcon Name="triangle-alert" Size="16" />
+            <AlertTitle>The estimate could not be worked out</AlertTitle>
+            <AlertDescription>@objEstimateError The run can still start without it.</AlertDescription>
+        </Alert>
+    }
+
+    @if (ShownEstimate is { } vEstimate)
+    {
+        @if (vEstimate.NoChecklist)
+        {
+            <div class="flex items-start gap-2 rounded-md border px-3 py-2.5 text-muted-foreground" data-testid="estimate-no-checklist">
+                <LucideIcon Name="clock" Size="16" Class="mt-0.5" />
+                <span class="text-sm">No checklist yet. The run works out its estimate when it reaches the build step, and does not stop for it.</span>
+            </div>
+        }
+        else
+        {
+            <EstimateLines Estimate="vEstimate" Title="@EstimateTitle" ShowMadeFor="false" />
+            <Card data-testid="estimate-models">
+                <CardHeader>
+                    <CardTitle Class="text-sm">The model and tier for each step</CardTitle>
+                </CardHeader>
+                <CardContent Class="flex flex-col gap-1">
+                    @foreach (var vLine in ModelLinesOf(vEstimate))
+                    {
+                        <div class="flex flex-wrap items-baseline gap-2">
+                            <span class="w-44 text-sm text-muted-foreground">@vLine.Label</span>
+                            <span class="text-sm" data-testid="@($"estimate-model-{vLine.Key}")">@vLine.Text</span>
+                        </div>
+                    }
+                </CardContent>
+            </Card>
+        }
+    }
 
     @if (objIsLoading)
     {
@@ -132,6 +179,12 @@
                     <span data-testid="running-elapsed">@Elapsed</span>
                     <span class="text-sm text-muted-foreground">started @StartedText</span>
                 </div>
+                @* REQ-UI-087 (BRD-202): what the run has spent so far beside the estimate it was started with, never combined. *@
+                <div class="flex flex-wrap items-baseline gap-2" data-testid="running-against-estimate">
+                    <span class="w-28 text-sm text-muted-foreground">Against the estimate</span>
+                    <span class="font-mono" data-testid="running-actual">@ActualSoFarText</span>
+                    <span class="text-sm text-muted-foreground" data-testid="running-estimate">@EstimateSoFarText</span>
+                </div>
 
                 <div class="flex flex-col gap-1.5" data-testid="progress-field">
                     <div class="flex items-center"><span class="text-xs text-muted-foreground">Progress</span><span class="flex-1"></span><span class="text-xs" data-testid="progress-value">@objRun.ProgressPercent%</span></div>
@@ -143,19 +196,19 @@
                     <div class="flex flex-wrap items-center gap-2">
                         @if (objRun.State == AutoRunState.Paused)
                         {
-                            <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="ResumeAsync" data-testid="pause-run">
+                            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="ResumeAsync" data-testid="pause-run">
                                 <LucideIcon Name="play" Size="14" />
                                 Resume
                             </Button>
                         }
                         else
                         {
-                            <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="PauseAsync" data-testid="pause-run">
+                            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="PauseAsync" data-testid="pause-run">
                                 <LucideIcon Name="pause" Size="14" />
                                 Pause
                             </Button>
                         }
-                        <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="AskToStop" data-testid="stop-run">
+                        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="AskToStop" data-testid="stop-run">
                             <LucideIcon Name="square" Size="14" />
                             Stop
                         </Button>

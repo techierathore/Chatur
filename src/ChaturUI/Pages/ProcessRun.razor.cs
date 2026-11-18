@@ -1,4 +1,5 @@
 using Chatur.Core.Actions;
+using ChaturUI.Components.Estimates;
 using Microsoft.AspNetCore.Components;
 using TrBlazeUI.Components.Badge;
 using ChaturUI.Shell;
@@ -14,6 +15,8 @@ namespace ChaturUI.Pages;
 /// </summary>
 public partial class ProcessRun : IDisposable
 {
+    private const string HandoffCode = "handoff-phase";
+
     private readonly CancellationTokenSource objCts = new();
 
     private ProcessRunView? objRun;
@@ -24,6 +27,9 @@ public partial class ProcessRun : IDisposable
     private bool objIsStopDialogOpen;
     private int objLoadedId;
     private int? objAnnouncedSessionId;
+
+    private KeptEstimate? objKept;
+    private EstimateAgainstActual? objHandoff;
 
     private int objEarlierRunId;
     private DateTime objEarlierStartedUtc;
@@ -47,6 +53,65 @@ public partial class ProcessRun : IDisposable
     private ProcessRunStepView? objHandedStep =>
         objRun?.Steps.FirstOrDefault(aStep => aStep.Work is { State: ProcessStepWorkState.Working })
         ?? objRun?.Steps.LastOrDefault(aStep => aStep.Work is not null);
+
+    /// <summary>The line of work the run's own process counts towards, or <see langword="null"/> for a process that is not estimated (REQ-UI-087).</summary>
+    private string? objEstimatedStep => objRun is null ? null : EstimateSteps.StepOf(objRun.ProcessCode);
+
+    /// <summary>The kept estimate's total for the run's own step: Build for build-phase, its own for verify-phase and fix-issues.</summary>
+    private StepTotal? objStepTotal =>
+        objKept is { Estimate.NoChecklist: false } vKept && objEstimatedStep is { } vStep ? vKept.Estimate.Total(vStep) : null;
+
+    /// <summary>The model and tier the kept estimate was made for, or <see langword="null"/> when routing named none.</summary>
+    private string? SoFarModelText
+    {
+        get
+        {
+            var vParts = new List<string>();
+            if (objStepTotal?.Model is { } vModel)
+            {
+                vParts.Add(vModel);
+            }
+
+            if (objStepTotal?.Tier is { } vTier)
+            {
+                vParts.Add($"tier {vTier}");
+            }
+
+            return vParts.Count == 0 ? null : string.Join(" · ", vParts);
+        }
+    }
+
+    /// <summary>
+    /// The run's rows against its estimate, "so far" beside the estimate and never combined: the output tokens the run's
+    /// model calls have returned so far (<see cref="ProcessRunView.TokensOutSoFar"/>, counted after every call) and how
+    /// long the run has been going (REQ-UI-087).
+    /// </summary>
+    private IReadOnlyList<SoFarLine> SoFarLines
+    {
+        get
+        {
+            if (objRun is null || objStepTotal is not { } vTotal)
+            {
+                return [];
+            }
+
+            var vSpan = (objRun.EndedUtc ?? Clock.UtcNow) - objRun.StartedUtc;
+            var vSeconds = vSpan < TimeSpan.Zero ? 0 : (long)vSpan.TotalSeconds;
+            return
+            [
+                new SoFarLine("tokens", "Output tokens", objRun.TokensOutSoFar.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), EstimateLines.TokensText(vTotal.TokensOut)),
+                new SoFarLine("time", "Time", EstimateLines.Duration(vSeconds), EstimateLines.DurationText(vTotal.DurationS))
+            ];
+        }
+    }
+
+    private string SoFarNote =>
+        objStepTotal is { } vTotal
+            ? $"The estimate for {objRun?.ProcessCode} on {vTotal.RowsCovered} row{(vTotal.RowsCovered == 1 ? "" : "s")}, made when you started the run. The two are shown side by side and never combined."
+            : string.Empty;
+
+    /// <summary>One line of the "so far, against the estimate" table.</summary>
+    private sealed record SoFarLine(string Key, string Label, string SoFar, string? Estimate);
 
     private static BadgeVariant HandedVariant(ProcessStepWork aWork) => aWork.State switch
     {
@@ -249,12 +314,17 @@ public partial class ProcessRun : IDisposable
             await ReadProjectNameAsync();
             await LoadEarlierFailureAsync();
             AnnounceHanded();
+
+            // REQ-UI-087: the estimate the run was started with is read before the run is carried on, so "so far, against
+            // the estimate" shows while it is still working; it is read again below, for the handoff figures at the end.
+            await LoadEstimateAsync();
             if (objRun.State == ProcessRunState.Running)
             {
                 await AdvanceAsync();
             }
 
             await LoadVerdictsAsync();
+            await LoadEstimateAsync();
         }
         catch (OperationCanceledException)
         {
@@ -329,6 +399,7 @@ public partial class ProcessRun : IDisposable
             objRun = await ShowingProgressAsync(Runs.AnswerAsync(Id, aAnswer, objCts.Token)) ?? objRun;
             AnnounceHanded();
             await LoadVerdictsAsync();
+            await LoadEstimateAsync();
         }
         catch (Exception aEx) when (aEx is InvalidOperationException)
         {
@@ -351,6 +422,31 @@ public partial class ProcessRun : IDisposable
         catch (Exception aEx) when (aEx is InvalidOperationException or NotImplementedException)
         {
             objVerdicts = [];
+        }
+    }
+
+    /// <summary>
+    /// Reads the estimate the run kept (REQ-UI-087) and, for a handoff-phase run, the phase against its estimate
+    /// (REQ-FN-113). A project or run with no estimate shows nothing.
+    /// </summary>
+    private async Task LoadEstimateAsync()
+    {
+        if (objRun is null)
+        {
+            return;
+        }
+
+        try
+        {
+            objKept = await EstimateActions.KeptAsync(EstimateRunKinds.Process, objRun.RunId, objCts.Token);
+            objHandoff = objRun.ProcessCode == HandoffCode
+                ? await EstimateActions.PhaseAgainstActualAsync(objRun.ProjectId, objCts.Token)
+                : null;
+        }
+        catch (Exception aEx) when (aEx is InvalidOperationException or IOException or NotImplementedException)
+        {
+            objKept = null;
+            objHandoff = null;
         }
     }
 

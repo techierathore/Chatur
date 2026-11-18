@@ -22,6 +22,9 @@ public partial class Processes
     [Parameter]
     public string? Process { get; set; }
 
+    /// <summary>The processes that show an estimate before they start (BRD-192).</summary>
+    private static readonly string[] EstimatedProcesses = [EstimateSteps.Build, EstimateSteps.Verify, EstimateSteps.Fix];
+
     private string? objAppliedProcess;
     private ProjectSummary? objProject;
     private IReadOnlyList<ProcessSummary> objProcesses = Array.Empty<ProcessSummary>();
@@ -35,6 +38,8 @@ public partial class Processes
     private string? objEditStepCode;
     private string objEditText = string.Empty;
     private bool objIsSaving;
+    private PhaseEstimate? objEstimate;
+    private string? objEstimateCode;
 
     /// <summary>The "7 steps · 4 checks · 1 owner stop" pill over the opened process's rows.</summary>
     private string StepsSummary
@@ -170,9 +175,71 @@ public partial class Processes
     /// <summary>Reads everything again, so reworded steps show without a restart (REQ-UI-046).</summary>
     private Task ReloadAsync() => LoadAsync();
 
-    /// <summary>Starts a process on the selected project and opens its run.</summary>
+    /// <summary>
+    /// Start on build-phase, verify-phase or fix-issues opens the estimate and waits for the owner's confirmation
+    /// (REQ-UI-083); any other process starts at once, as it always did.
+    /// </summary>
     /// <param name="aCode">The process to start.</param>
     private async Task StartAsync(string aCode)
+    {
+        // A press while an estimate is being worked out or a start is under way is ignored here rather than by disabling the
+        // row's button: the processes table does not redraw its cells when only this flag changes, so a disabled Start
+        // stayed disabled after Cancel until the page was reloaded (REQ-UI-083, verify 2026-11-13).
+        if (objProject is null || objIsBusy)
+        {
+            return;
+        }
+
+        if (!EstimatedProcesses.Contains(aCode))
+        {
+            await StartNowAsync(aCode, null);
+            return;
+        }
+
+        objIsBusy = true;
+        try
+        {
+            var vEstimate = await EstimateActions.EstimateAsync(objProject.ProjectId);
+            if (vEstimate is null)
+            {
+                // The project or its folder is not known to the estimator: nothing to show, so start as before.
+                await StartNowAsync(aCode, null);
+                return;
+            }
+
+            objEstimate = vEstimate;
+            objEstimateCode = aCode;
+        }
+        catch (Exception aEx)
+        {
+            ToastService.Error(aEx.Message, "Could not work out the estimate");
+        }
+        finally
+        {
+            objIsBusy = false;
+        }
+    }
+
+    /// <summary>The owner pressed the panel's Start: starts the process, then keeps the estimate it was shown with.</summary>
+    private async Task ConfirmEstimateAsync()
+    {
+        if (objEstimate is { } vEstimate && objEstimateCode is { } vCode)
+        {
+            await StartNowAsync(vCode, vEstimate);
+        }
+    }
+
+    /// <summary>Closes the panel. Nothing is started and nothing is written.</summary>
+    private void CancelEstimate()
+    {
+        objEstimate = null;
+        objEstimateCode = null;
+    }
+
+    /// <summary>Starts a process on the selected project, keeps its estimate when one was confirmed, and opens its run.</summary>
+    /// <param name="aCode">The process to start.</param>
+    /// <param name="aEstimate">The estimate the owner confirmed, or <see langword="null"/> when none was shown.</param>
+    private async Task StartNowAsync(string aCode, PhaseEstimate? aEstimate)
     {
         if (objProject is null)
         {
@@ -183,6 +250,19 @@ public partial class Processes
         try
         {
             var vStarted = await ProcessActionsService.StartAsync(objProject.ProjectId, aCode);
+            if (aEstimate is not null)
+            {
+                try
+                {
+                    await EstimateActions.ConfirmAsync(objProject.ProjectId, aEstimate, EstimateRunKinds.Process, vStarted.RunId);
+                }
+                catch (Exception aEx)
+                {
+                    ToastService.Error(aEx.Message, "The run started but its estimate was not kept");
+                }
+            }
+
+            CancelEstimate();
             WorkbenchTabs.OpenProcessRun(vStarted.RunId, aCode);
         }
         catch (Exception aEx)

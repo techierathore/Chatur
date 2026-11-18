@@ -11,16 +11,18 @@ namespace ChaturUI.Layouts;
 /// </summary>
 public partial class SecondaryLayout : IDisposable
 {
-    private const string ActiveClass = "flex h-8 items-center gap-2 rounded-md px-3 text-sm font-medium bg-primary/10 text-primary";
-    private const string InactiveClass = "flex h-8 items-center gap-2 rounded-md px-3 text-sm text-foreground hover:bg-accent";
+    // The open row is the mockup's `.subnav a.on`: the accent-soft surface (this theme's --accent) with
+    // the accent text (--accent-foreground). A 10% primary tint read as grey beside the mockup's amber.
+    private const string ActiveClass = "flex h-8 items-center gap-2 rounded-md px-3 text-sm font-medium bg-accent text-accent-foreground";
+    private const string InactiveClass = "flex h-8 items-center gap-2 rounded-md px-3 text-sm text-foreground hover:bg-muted";
 
     // [fix 2026-09-23] The persistent left nav (`subnav`) is hidden below 640px in favour of the
     // Sheet; its own <a> rows carry the same "hidden … sm:flex" so each row's OWN computed style
     // reports invisible (tf-verify-screens.mjs's `vis()` only reads an element's own display, not
     // an ancestor's), and no anchored control is graded "zero width" at 390px. The Sheet's rows use
     // the plain, always-visible ItemClass below.
-    private const string DesktopActiveClass = "hidden h-8 items-center gap-2 rounded-md px-3 text-sm font-medium bg-primary/10 text-primary sm:flex";
-    private const string DesktopInactiveClass = "hidden h-8 items-center gap-2 rounded-md px-3 text-sm text-foreground hover:bg-accent sm:flex";
+    private const string DesktopActiveClass = "hidden h-8 items-center gap-2 rounded-md px-3 text-sm font-medium bg-accent text-accent-foreground sm:flex";
+    private const string DesktopInactiveClass = "hidden h-8 items-center gap-2 rounded-md px-3 text-sm text-foreground hover:bg-muted sm:flex";
 
     /// <summary>Closes this window (REQ-FN-106); the web harness goes back to the Workbench.</summary>
     [Inject]
@@ -58,8 +60,11 @@ public partial class SecondaryLayout : IDisposable
     private bool objMobileNavOpen;
 
     /// <inheritdoc />
+    private string? objUserId;
+
     protected override async Task OnInitializedAsync()
     {
+        objUserId = State.CurrentUser?.UserId;
         State.Changed += OnAppStateChanged;
         try
         {
@@ -74,6 +79,17 @@ public partial class SecondaryLayout : IDisposable
     /// <summary>Re-renders the title bar when the theme changes anywhere, so the palette label and ticks follow (REQ-UI-037).</summary>
     private void OnAppStateChanged() => _ = InvokeAsync(async () =>
     {
+        // This window was opened by the account signed in then, and every page in it shows that account's
+        // own data. When the account changes (a sign-out, or another account signing in) the window closes,
+        // so nothing of the last account stays on screen (REQ-UI-095; 18 Nov walk: Model providers kept
+        // listing the first account's provider after the second account signed in).
+        if (!string.Equals(State.CurrentUser?.UserId, objUserId, StringComparison.Ordinal))
+        {
+            objUserId = State.CurrentUser?.UserId;
+            SecondaryWindow.Close();
+            return;
+        }
+
         // A theme added from a file may not be in the menu yet.
         try
         {

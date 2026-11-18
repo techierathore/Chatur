@@ -3,10 +3,57 @@
 @inject IProjectActions Projects
 @inject NavigationManager Nav
 
-@* UI Design "Screen: Start" — mockups/start.html. Cluster E wires IProjectActions.ScanAsync into
+@* UI Design "Screen: Start" — mockups/start.html, and mockups/start-empty.html for an account that has opened nothing (BRD-14). Cluster E wires IProjectActions.ScanAsync into
    `recent-list` and the Project folders dialog (REQ-UI-005 through REQ-UI-009); cluster F wires
    `SelectedProjectAsync` surviving a restart and reopens it straight into the Workbench on load
    (REQ-FN-006, see Start.razor.cs). *@
+@if (IsEmptyStart)
+{
+    @* BRD-14, BRD-210: an account that has opened nothing gets an empty start — no project, no file, no
+       chat — with exactly three plainly labelled ways on (mockups/start-empty.html). *@
+    <div class="flex flex-1 justify-center overflow-auto p-6" data-testid="empty-start-side">
+        <div class="mt-12 flex w-full max-w-md flex-col gap-3" data-testid="empty-start">
+            <div>
+                <h1 class="text-lg font-semibold outline-none" tabindex="-1" data-testid="empty-start-title">Nothing is open yet</h1>
+                <p class="text-sm text-muted-foreground">Choose what to work on. Chatur opens it and you are straight into the work.</p>
+            </div>
+            <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="way-open-folder">
+                <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+                    <LucideIcon Name="folder" Size="18" />
+                </span>
+                <span class="flex flex-col items-start">
+                    <span class="font-medium">Open a folder</span>
+                    <span class="text-xs text-muted-foreground">Anything on disk, project or not</span>
+                </span>
+            </Button>
+            <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Solution))" data-testid="way-open-solution">
+                <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+                    <LucideIcon Name="folder-open" Size="18" />
+                </span>
+                <span class="flex flex-col items-start">
+                    <span class="font-medium">Open a solution</span>
+                    <span class="text-xs text-muted-foreground">A .sln, with its projects read</span>
+                </span>
+            </Button>
+            <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.File))" data-testid="way-open-file">
+                <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+                    <LucideIcon Name="file" Size="18" />
+                </span>
+                <span class="flex flex-col items-start">
+                    <span class="font-medium">Open a file</span>
+                    <span class="text-xs text-muted-foreground">With the folder that holds it</span>
+                </span>
+            </Button>
+            <div class="mt-1 flex items-center gap-2">
+                <span class="text-xs text-muted-foreground">Chatur can also search folders you name.</span>
+                <span class="flex-1"></span>
+                <Button Class="shrink-0 whitespace-nowrap rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="OpenFoldersDialog" data-testid="manage-folders">Project folders</Button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
 <div class="flex flex-none flex-col gap-4 p-6 sm:min-h-0 sm:min-w-0 sm:flex-1" data-testid="recent-side">
     <div class="flex flex-wrap items-center gap-3">
         <div class="min-w-40 flex-1">
@@ -18,7 +65,7 @@
             </p>
         </div>
         @* `recent-search` filters the list by name or any part of a path (UI Design "Screen: Start"). *@
-        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="ToggleSearch" data-testid="recent-search">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="ToggleSearch" data-testid="recent-search">
             <LucideIcon Name="search" Size="14" />
             Search
         </Button>
@@ -98,7 +145,7 @@
         <span class="text-xs text-muted-foreground">A solution opens with its projects read. A folder opens as it is.</span>
         <span class="flex-1"></span>
         @* `forget` drops a project from the list; the folder on disk is untouched (UI Design "Screen: Start"). Pressed, each row offers its own x. *@
-        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="shrink-0 whitespace-nowrap" Disabled="@(objProjects.Count == 0)" OnClick="ToggleForgetMode" data-testid="forget">
+        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="shrink-0 whitespace-nowrap rounded-full" Disabled="@(objProjects.Count == 0)" OnClick="ToggleForgetMode" data-testid="forget">
             <LucideIcon Name="@(objForgetMode ? "check" : "x")" Size="14" />
             @(objForgetMode ? "Done" : "Remove from the list")
         </Button>
@@ -111,7 +158,7 @@
         <p class="text-sm text-muted-foreground">Open something that exists, or make something new.</p>
     </div>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Clone))" data-testid="clone-repo">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
             <LucideIcon Name="github" Size="18" />
         </span>
         <span class="flex flex-col items-start">
@@ -120,7 +167,7 @@
         </span>
     </Button>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Solution))" data-testid="open-solution">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
             <LucideIcon Name="folder-open" Size="18" />
         </span>
         <span class="flex flex-col items-start">
@@ -129,7 +176,7 @@
         </span>
     </Button>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="open-folder">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
             <LucideIcon Name="folder" Size="18" />
         </span>
         <span class="flex flex-col items-start">
@@ -137,8 +184,17 @@
             <span class="text-xs text-muted-foreground">Anything on disk, project or not</span>
         </span>
     </Button>
+    <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.File))" data-testid="open-file">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+            <LucideIcon Name="file" Size="18" />
+        </span>
+        <span class="flex flex-col items-start">
+            <span class="font-medium">Open a file</span>
+            <span class="text-xs text-muted-foreground">With the folder that holds it</span>
+        </span>
+    </Button>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.NewProject))" data-testid="new-project">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-primary/10 text-primary">
+        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
             <LucideIcon Name="plus" Size="18" />
         </span>
         <span class="flex flex-col items-start">
@@ -147,6 +203,8 @@
         </span>
     </Button>
 </div>
+
+}
 
 <ProjectFoldersDialog @bind-Open="objDialogOpen" FoldersChanged="ReloadAsync" />
 <OpenProjectDialog @bind-Open="objOpenProjectOpen" Mode="objOpenProjectMode" />

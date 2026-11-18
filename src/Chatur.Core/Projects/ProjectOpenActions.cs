@@ -74,6 +74,67 @@ public sealed class ProjectOpenActions : IProjectOpenActions
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Walks up from the file's folder to the nearest one that holds a <c>.sln</c> (opened as that
+    /// solution) or a <c>.git</c> (opened as a folder), so a file deep in a repository opens with the
+    /// whole repository around it; with neither above it, the file's own folder is opened.
+    /// </remarks>
+    public async Task<ProjectFileOpened> OpenFileAsync(string aPath, CancellationToken aCt = default)
+    {
+        var vFile = CleanPath(aPath);
+        if (!File.Exists(vFile))
+        {
+            throw new InvalidOperationException(Directory.Exists(vFile)
+                ? "That is a folder. Give the path of a file, or use Open a folder."
+                : "No file was found at that path.");
+        }
+
+        var vOwnFolder = Path.GetDirectoryName(vFile)!;
+        string? vSolution = null;
+        string? vRepository = null;
+        for (var vFolder = new DirectoryInfo(vOwnFolder); vFolder is not null; vFolder = vFolder.Parent)
+        {
+            string[] vSolutions;
+            try
+            {
+                vSolutions = Directory.GetFiles(vFolder.FullName, "*.sln");
+            }
+            catch (Exception aException) when (aException is UnauthorizedAccessException or IOException)
+            {
+                break;
+            }
+
+            if (vSolutions.Length > 0)
+            {
+                vSolution = vSolutions.OrderBy(f => f, StringComparer.OrdinalIgnoreCase).First();
+                break;
+            }
+
+            if (Directory.Exists(Path.Combine(vFolder.FullName, ".git")) || File.Exists(Path.Combine(vFolder.FullName, ".git")))
+            {
+                vRepository = vFolder.FullName;
+                break;
+            }
+        }
+
+        ProjectSummary vProject;
+        string vRoot;
+        if (vSolution is not null)
+        {
+            vProject = await RegisterAndSelectAsync(Path.GetFileNameWithoutExtension(vSolution), vSolution, "Solution", aCt).ConfigureAwait(false);
+            vRoot = Path.GetDirectoryName(vSolution)!;
+        }
+        else
+        {
+            vRoot = vRepository ?? vOwnFolder;
+            vProject = await RegisterAndSelectAsync(Path.GetFileName(Path.TrimEndingDirectorySeparator(vRoot)), vRoot, "Folder", aCt).ConfigureAwait(false);
+        }
+
+        var vRelative = Path.GetRelativePath(vRoot, vFile).Replace('\\', '/');
+        return new ProjectFileOpened(vProject, vRelative);
+    }
+
+    /// <inheritdoc />
     public async Task<ProjectSummary> CreateSolutionAsync(string aParentFolder, string aName, CancellationToken aCt = default)
     {
         var vName = (aName ?? string.Empty).Trim();

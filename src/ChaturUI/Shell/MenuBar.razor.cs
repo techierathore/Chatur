@@ -249,6 +249,9 @@ public partial class MenuBar : IAsyncDisposable
     }
 
     /// <summary>File ▸ Close project: nothing stays selected, and the project list is shown.</summary>
+    /// <summary>File ▸ Recent projects ▸ Project list: the Start window with every project, the open one left open (<c>/start?all=1</c>).</summary>
+    private void ShowProjectList() => Nav.NavigateTo("/start?all=1");
+
     private async Task CloseProjectAsync()
     {
         await Opener.CloseProjectAsync();
@@ -302,17 +305,16 @@ public partial class MenuBar : IAsyncDisposable
     {
         AppStateService.Changed -= OnAppStateChanged;
         Workbench.Changed -= OnAppStateChanged;
-        if (objShortcuts is not null)
+        if (objShortcuts is { } vShortcuts)
         {
-            try
+            // Never waits on a page that has gone: Sign out reloads the page, and waiting here for the old page's
+            // script left the window on "Loading Chatur" (REQ-FN-009, miss of 2026-11-16).
+            objShortcuts = null;
+            await JsCleanUp.RunAsync(async () =>
             {
-                await objShortcuts.InvokeVoidAsync("dispose");
-                await objShortcuts.DisposeAsync();
-            }
-            catch (JSDisconnectedException)
-            {
-                // the window is already gone, and its listener with it
-            }
+                await vShortcuts.InvokeVoidAsync("dispose");
+                await vShortcuts.DisposeAsync();
+            });
         }
 
         objSelfRef?.Dispose();

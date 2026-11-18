@@ -1,5 +1,6 @@
 using System.Globalization;
 using Chatur.Core.Actions;
+using Chatur.Core.RunReports;
 using TrBlazeUI.Components.Badge;
 
 namespace ChaturUI.Pages;
@@ -23,6 +24,8 @@ public partial class RunReport : IDisposable
     private string objSelectedKey = string.Empty;
     private bool objIsLoading = true;
     private bool objFailed;
+    private EstimateAgainstActual? objAgainst;
+    private bool objKeptWithoutBatch;
 
 
     /// <summary>A requirement row with its position, which names its test hooks.</summary>
@@ -140,6 +143,55 @@ public partial class RunReport : IDisposable
         }
 
         Lay();
+        await LoadEstimateAsync(aKey);
+    }
+
+    /// <summary>
+    /// Reads the estimate an end-to-end run kept and sets it beside what was measured (REQ-UI-088, REQ-UI-089). The report is
+    /// keyed by the run's record; an end-to-end run's key is <c>auto-</c> and its <c>AutoRun</c> id, which is the id the
+    /// estimate was kept under. A run picked from <c>runs.jsonl</c> alone has no such id and shows no estimate.
+    /// </summary>
+    /// <summary>"estimated 11:16, before the start": when the kept batch was written, in local time.</summary>
+    private string? EstimateMadeText =>
+        objAgainst is { } vAgainst && DateTime.TryParse(vAgainst.BatchTs, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var vAt)
+            ? $"estimated {vAt.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture)}, before the start"
+            : null;
+
+    private async Task LoadEstimateAsync(string aKey)
+    {
+        objAgainst = null;
+        objKeptWithoutBatch = false;
+        if (!aKey.StartsWith(RunReportActions.AutoKeyPrefix, StringComparison.Ordinal)
+            || !int.TryParse(aKey.AsSpan(RunReportActions.AutoKeyPrefix.Length), NumberStyles.None, CultureInfo.InvariantCulture, out var vAutoRunId))
+        {
+            return;
+        }
+
+        try
+        {
+            var vProject = await ProjectActions.SelectedProjectAsync(objCts.Token);
+            var vKept = await EstimateActions.KeptAsync(EstimateRunKinds.Auto, vAutoRunId, objCts.Token);
+            if (vProject is null || vKept is null)
+            {
+                return;
+            }
+
+            if (vKept.BatchTs.Length == 0)
+            {
+                objKeptWithoutBatch = true;
+                return;
+            }
+
+            objAgainst = await EstimateActions.AgainstActualAsync(vProject.ProjectId, vKept.BatchTs, objCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // The tab was closed while the estimate was being read.
+        }
+        catch (Exception aEx) when (aEx is IOException or UnauthorizedAccessException or InvalidOperationException or NotImplementedException)
+        {
+            objAgainst = null;
+        }
     }
 
     private void Lay()

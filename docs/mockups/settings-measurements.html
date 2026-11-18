@@ -27,6 +27,7 @@
 <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
 <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/></symbol>
 <symbol id="i-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></symbol>
 </defs></svg>
 <script>
 function say(m){alert(m);}
@@ -93,7 +94,7 @@ function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
 
    <div class="row" data-testid="measurements-heading">
     <div><div class="h1">Measurements</div>
-     <div class="lead">The five files Chatur writes as it works, and what is in each one.</div></div>
+     <div class="lead">The six files Chatur writes as it works, and what is in each one.</div></div>
     <span class="grow"></span>
     <button class="pick" onclick="say('Reads the five files again and counts what is in them.')" data-testid="recount"><svg><use href="#i-refresh"/></svg>Count again</button>
    </div>
@@ -112,7 +113,7 @@ function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
    </div>
 
    <div class="panel" data-testid="streams-panel">
-    <div class="ph">The five streams</div>
+    <div class="ph">The six streams</div>
     <div class="wide">
      <table style="width:100%;min-width:640px;border-collapse:collapse;font-size:13px" data-testid="streams-table">
       <thead><tr class="xs dim" style="text-align:left">
@@ -136,6 +137,10 @@ function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
         <td style="padding:9px 14px" data-testid="misses-records">18</td><td class="dim xs" style="padding:9px 14px">22 Sep 11:07</td>
         <td class="dim" style="padding:9px 14px" data-testid="misses-empty">4</td>
         <td style="padding:9px 14px;color:var(--warn)" data-testid="misses-refused">1</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="stream-estimates">
+        <td style="padding:9px 14px">Estimates</td><td class="mono xs" style="padding:9px 14px">estimates.jsonl</td>
+        <td style="padding:9px 14px" data-testid="estimates-records">156</td><td class="dim xs" style="padding:9px 14px">22 Sep 11:16</td>
+        <td class="dim" style="padding:9px 14px" data-testid="estimates-empty">—</td><td class="dim" style="padding:9px 14px" data-testid="estimates-refused">0</td></tr>
        <tr style="border-top:1px solid var(--line2)" data-testid="stream-sessions">
         <td style="padding:9px 14px">Sessions</td><td class="mono xs" style="padding:9px 14px">sessions.jsonl</td>
         <td style="padding:9px 14px" data-testid="sessions-records">96</td><td class="dim xs" style="padding:9px 14px">22 Sep 09:12</td>
@@ -146,6 +151,16 @@ function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
         <td class="dim" style="padding:9px 14px" data-testid="commits-empty">2</td><td class="dim" style="padding:9px 14px" data-testid="commits-refused">0</td></tr>
       </tbody>
      </table>
+    </div>
+   </div>
+
+   <div class="panel" data-testid="sister-panel">
+    <div class="ph">Sister projects for estimates<span class="grow"></span><span class="pill" data-testid="sister-count">2 projects</span></div>
+    <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+     <div class="sm dim" data-testid="sister-rule">Used only where this project has fewer than three runs of a kind, and the estimate then says it borrowed them. Chatur reads their run records and never writes to them.</div>
+     <div class="row" style="flex-wrap:wrap" data-testid="sister-1" data-tf-state="sample-data" data-tf-sample><svg style="color:var(--dim)"><use href="#i-folder"/></svg><span>Sevak</span><code class="mono xs dim">~/code/Sevak</code><span class="grow"></span><span class="xs faint">212 runs</span><button class="iconbtn" title="Remove" onclick="say('Sevak is no longer used for estimates.')" data-testid="sister-remove-1"><svg><use href="#i-x"/></svg></button></div>
+     <div class="row" style="flex-wrap:wrap" data-testid="sister-2" data-tf-state="sample-data" data-tf-sample><svg style="color:var(--dim)"><use href="#i-folder"/></svg><span>TechieBlog</span><code class="mono xs dim">~/code/TechieBlog</code><span class="grow"></span><span class="xs faint">87 runs</span><button class="iconbtn" title="Remove" onclick="say('TechieBlog is no longer used for estimates.')" data-testid="sister-remove-2"><svg><use href="#i-x"/></svg></button></div>
+     <div class="row"><button class="pick" onclick="say('Pick a project folder that has docs/metrics/runs.jsonl.')" data-testid="sister-add"><svg><use href="#i-plus"/></svg>Add a sister project</button></div>
     </div>
    </div>
 
@@ -169,6 +184,8 @@ function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
        <span class="sm">A number that was not measured is left empty. It is never guessed and never filled in later from something else.</span></div>
       <div class="row" style="align-items:flex-start" data-testid="rule-unknown"><svg style="color:var(--dim);margin-top:2px"><use href="#i-block"/></svg>
        <span class="sm">A record carrying a field the stream does not know is refused whole, and the reason is written to the log.</span></div>
+      <div class="row" style="align-items:flex-start" data-testid="rule-estimate"><svg style="color:var(--dim);margin-top:2px"><use href="#i-block"/></svg>
+       <span class="sm">An estimate is kept in estimates.jsonl, in the same shape TechieFlow writes, and is never added to, averaged with or divided by a measurement.</span></div>
       <div class="row" style="align-items:flex-start" data-testid="rule-money"><svg style="color:var(--dim);margin-top:2px"><use href="#i-chart"/></svg>
        <span class="sm">Money is worked out when a report is made, from the tokens and the price of the day. It is never stored in the record.</span></div>
      </div>

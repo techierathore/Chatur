@@ -152,18 +152,20 @@ test('REQ-UI-071 a long unbroken path in a conversation message wraps inside the
   await expect(page.getByTestId('conversation-thread')).toBeVisible({ timeout: 30_000 });
   const vOwn = ownersSessionId();
   const vPath = `C:\\Users\\owner\\source\\repos\\ProjectWithAVeryLongName\\src\\Component.Feature.Area\\Sub.Folder.Name\\${'VeryLongFileNameSegment'.repeat(6)}.cs`;
-  run('INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, Model, Tokens, CreatedUtc) VALUES (?,?,?,?,?,?,?)', vOwn, 1, 'user', `Open ${vPath}`, null, null, now());
-  run('INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, Model, Tokens, CreatedUtc) VALUES (?,?,?,?,?,?,?)', vOwn, 2, 'assistant', `Reading ${vPath}`, 'stub-edit-model', 5, now());
+  // Appended after whatever the owner's session already holds (an earlier test leaves "first question" at seq 1).
+  const vSeq = Number(query('SELECT COALESCE(MAX(Seq), 0) AS m FROM SessionEvent WHERE SessionId=?', vOwn)[0].m) + 1;
+  run('INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, Model, Tokens, CreatedUtc) VALUES (?,?,?,?,?,?,?)', vOwn, vSeq, 'user', `Open ${vPath}`, null, null, now());
+  run('INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, Model, Tokens, CreatedUtc) VALUES (?,?,?,?,?,?,?)', vOwn, vSeq + 1, 'assistant', `Reading ${vPath}`, 'stub-edit-model', 5, now());
+  // Message test ids count positions on screen, so the two long-path messages are found by their text.
+  const vLong = page.getByTestId('conversation-thread').locator('.msg', { hasText: 'VeryLongFileNameSegment' });
   try {
     await page.setViewportSize({ width: 390, height: 900 });
     await page.reload({ waitUntil: 'domcontentloaded' });
     await openProject(page);
-    for (const vId of ['msg-1', 'msg-2']) {
-      await expect(page.getByTestId(vId)).toContainText('VeryLongFileNameSegment', { timeout: 30_000 });
-    }
+    await expect(vLong).toHaveCount(2, { timeout: 30_000 });
     const vPanel = (await page.getByTestId('chat-panel').boundingBox())!;
-    for (const vId of ['msg-1', 'msg-2']) {
-      const vSaid = page.getByTestId(vId).locator('.said');
+    for (const vId of [0, 1]) {
+      const vSaid = vLong.nth(vId).locator('.said');
       const vBox = (await vSaid.boundingBox())!;
       expect(vBox.x + vBox.width, `${vId} stays inside the panel`).toBeLessThanOrEqual(vPanel.x + vPanel.width + 1);
       expect(await vSaid.evaluate((e) => e.scrollWidth <= e.clientWidth + 1), `${vId} is not clipped`).toBe(true);

@@ -1,3 +1,4 @@
+using Chatur.Core;
 using Chatur.Core.Actions;
 
 namespace ChaturUI.Shell;
@@ -9,11 +10,52 @@ namespace ChaturUI.Shell;
 /// opens a file into it when a tree row is chosen, and <see cref="EditorArea"/> renders whatever it
 /// holds — the two regions coordinate through this rather than through parameters neither owns.
 /// </summary>
-public sealed class WorkbenchState
+public sealed class WorkbenchState : IDisposable
 {
     private readonly List<OpenFile> objOpenFiles = [];
     private readonly List<ToolTab> objToolTabs = [];
     private readonly HashSet<string> objPendingChangePaths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly AppState? objAppState;
+    private string? objUserId;
+
+    /// <summary>Creates the state for a window with no account to follow (a component test).</summary>
+    public WorkbenchState()
+    {
+    }
+
+    /// <summary>
+    /// Creates the state for a window, following who is signed in: when the account changes, every tab
+    /// and the file waiting to be opened are dropped, even while the Workbench page itself is not on
+    /// screen (signed out), so the next account never sees them (BRD-216).
+    /// </summary>
+    /// <param name="aAppState">Names who is signed in.</param>
+    public WorkbenchState(AppState aAppState)
+    {
+        objAppState = aAppState;
+        objUserId = aAppState.CurrentUser?.UserId;
+        aAppState.Changed += OnAppStateChanged;
+    }
+
+    private void OnAppStateChanged()
+    {
+        var vUserId = objAppState?.CurrentUser?.UserId;
+        if (string.Equals(vUserId, objUserId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        objUserId = vUserId;
+        ResetForAccount();
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (objAppState is not null)
+        {
+            objAppState.Changed -= OnAppStateChanged;
+        }
+    }
 
     /// <summary>Raised after the open files, the active file, or a file's own text changes.</summary>
     public event Action? Changed;
@@ -390,6 +432,45 @@ public sealed class WorkbenchState
         }
 
         RaiseChanged();
+    }
+
+    /// <summary>
+    /// The file Start's (or the File menu's) "Open a file" chose, waiting for the Workbench to open it
+    /// once the project that holds it is showing (BRD-215); <see langword="null"/> when nothing waits.
+    /// </summary>
+    public string? PendingFilePath { get; private set; }
+
+    /// <summary>Raised when <see cref="RequestOpenFile"/> leaves a file for the Workbench to open.</summary>
+    public event Action? OpenFileRequested;
+
+    /// <summary>Asks the Workbench to open a file of the selected project in a tab as soon as it can (BRD-215).</summary>
+    /// <param name="aRelativePath">The file's path relative to the project's folder.</param>
+    public void RequestOpenFile(string aRelativePath)
+    {
+        PendingFilePath = aRelativePath;
+        OpenFileRequested?.Invoke();
+    }
+
+    /// <summary>Takes the waiting file, so it is opened once only.</summary>
+    /// <returns>The waiting file's relative path, or <see langword="null"/>.</returns>
+    public string? TakePendingFile()
+    {
+        var vPath = PendingFilePath;
+        PendingFilePath = null;
+        return vPath;
+    }
+
+    /// <summary>
+    /// Clears every tab, and the file waiting to be opened too: called when the account signed in
+    /// changes, so nothing one account had open is shown to the next (BRD-216).
+    /// </summary>
+    public void ResetForAccount()
+    {
+        PendingFilePath = null;
+        objPendingChangePaths.Clear();
+        RunTargets = [];
+        SelectedRunTarget = null;
+        Reset();
     }
 
     /// <summary>Closes every open tab — called when the selected project changes.</summary>

@@ -74,6 +74,22 @@ public sealed class GitHubReleaseClientTests
         Assert.Null(vRelease);
     }
 
+    /// <summary>
+    /// When the release feed does not answer within the client's timeout, then the client reports no newer release rather
+    /// than throwing, so Prerequisites is never held by a silent feed (REQ-FN-013).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-013 a release feed that does not answer in time offers no newer build and does not throw")]
+    public async Task LatestReleaseAsyncReturnsNullWhenTheFeedTimesOut()
+    {
+        var vHandler = new SilentHandler();
+        var vHttpClient = new HttpClient(vHandler) { BaseAddress = new Uri("https://api.github.test/"), Timeout = TimeSpan.FromMilliseconds(200) };
+        var vClient = new GitHubReleaseClient(vHttpClient, NullLogger<GitHubReleaseClient>.Instance);
+
+        var vRelease = await vClient.LatestReleaseAsync();
+
+        Assert.Null(vRelease);
+    }
+
     private static GitHubReleaseClient ClientReturning(HttpStatusCode aStatus, string aBody)
     {
         var vHandler = new FakeHandler(_ => new HttpResponseMessage(aStatus)
@@ -95,5 +111,15 @@ public sealed class GitHubReleaseClientTests
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage aRequest, CancellationToken aCt) =>
             Task.FromResult(objRespond(aRequest));
+    }
+
+    /// <summary>A feed that accepts the request and never answers.</summary>
+    private sealed class SilentHandler : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage aRequest, CancellationToken aCt)
+        {
+            await Task.Delay(Timeout.Infinite, aCt);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
     }
 }

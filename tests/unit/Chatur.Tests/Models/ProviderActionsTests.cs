@@ -27,7 +27,7 @@ public sealed class ProviderActionsTests : MigratedDatabaseFixture
         Assert.True(vSecrets.Contains($"chatur.provider.{vProvider.ProviderId}"));
 
         var vModels = await vActions.ListModelsAsync();
-        Assert.Contains(vModels, aModel => aModel.ProviderId == vProvider.ProviderId && aModel.Identifier == "claude-sonnet-5");
+        Assert.Contains(vModels, aModel => aModel.ProviderId == vProvider.ProviderId && aModel.Identifier == "claude-sonnet-5-5");
     }
 
     /// <summary>

@@ -106,6 +106,17 @@ public sealed class ProcessRunActions : IProcessRunActions, IUnattendedProcessRu
         }
 
         var vCurrent = vState == ProcessRunState.Finished ? (int?)null : vRun.CurrentStep;
+
+        // REQ-UI-087: what the run has spent so far, from the usage each model call returned, counted onto the sessions
+        // of the run's handed steps as the calls came back.
+        var vSpent = await vConnection.QuerySingleAsync<SpentRow>(new CommandDefinition(
+            """
+            SELECT COALESCE(SUM(s.TokensOut), 0) AS TokensOut, COALESCE(SUM(s.TokensIn), 0) AS TokensIn
+              FROM Session s
+             WHERE s.SessionId IN (SELECT SessionId FROM ProcessRunStepWork WHERE RunId = @aRunId)
+            """,
+            new { aRunId },
+            cancellationToken: aCt)).ConfigureAwait(false);
         return new ProcessRunView(
             vRun.RunId,
             vRun.ProjectId,
@@ -114,7 +125,9 @@ public sealed class ProcessRunActions : IProcessRunActions, IUnattendedProcessRu
             ParseStamp(vRun.StartedUtc),
             vRun.EndedUtc is null ? null : ParseStamp(vRun.EndedUtc),
             vCurrent,
-            vSteps);
+            vSteps,
+            vSpent.TokensOut,
+            vSpent.TokensIn);
     }
 
     /// <inheritdoc />
@@ -445,6 +458,13 @@ public sealed class ProcessRunActions : IProcessRunActions, IUnattendedProcessRu
 
     private static DateTime ParseStamp(string aStamp) =>
         DateTime.Parse(aStamp, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+
+    private sealed class SpentRow
+    {
+        public long TokensOut { get; set; }
+
+        public long TokensIn { get; set; }
+    }
 
     private sealed class RunRow
     {

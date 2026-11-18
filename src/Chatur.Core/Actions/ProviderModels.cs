@@ -42,7 +42,7 @@ public sealed record ProviderTestResult(bool Succeeded, string? Message, IReadOn
 /// <param name="ProviderId">The provider that serves this model.</param>
 /// <param name="ProviderName">The provider's name, for display beside the model.</param>
 /// <param name="Tier">The tier this model belongs to, 1 to 3.</param>
-/// <param name="Identifier">The model's own identifier, e.g. <c>"claude-sonnet-5"</c>.</param>
+/// <param name="Identifier">The model's own identifier, e.g. <c>"claude-sonnet-5-5"</c>.</param>
 public sealed record ModelSummary(int ModelId, int ProviderId, string ProviderName, int Tier, string Identifier);
 
 /// <summary>

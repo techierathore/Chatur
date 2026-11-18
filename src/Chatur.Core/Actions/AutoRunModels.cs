@@ -168,6 +168,7 @@ public sealed record AutoRunOpenCounts(int Total, int NotStarted, int InHand, in
 /// <param name="Open">The project's open requirements, read from its checklists just now.</param>
 /// <param name="CanBeCompleted"><see langword="true"/> only when the run is ready for acceptance and no requirement is open.</param>
 /// <param name="Events">The run's record, oldest first: every wait, every retry, every process started.</param>
+/// <param name="TokensOutSoFar">The output tokens the chain's process runs have spent so far, counted after every model call (REQ-UI-087).</param>
 public sealed record AutoRunView(
     int AutoRunId,
     int ProjectId,
@@ -184,7 +185,8 @@ public sealed record AutoRunView(
     AutoRunNow? Now,
     AutoRunOpenCounts Open,
     bool CanBeCompleted,
-    IReadOnlyList<AutoRunEvent> Events);
+    IReadOnlyList<AutoRunEvent> Events,
+    long TokensOutSoFar = 0);
 
 /// <summary>One line of a project's end-to-end run history.</summary>
 /// <param name="AutoRunId">The run's id.</param>

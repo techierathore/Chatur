@@ -15,13 +15,13 @@
     </div>
     @if (objErrors.Count > 0)
     {
-        <div class="flex flex-col gap-1 border-t p-2" data-testid="output-errors">
+        <div class="flex min-w-0 flex-col gap-1 border-t p-2" data-testid="output-errors">
             @foreach (var vError in objErrors)
             {
-                <button type="button" class="flex items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-accent" @onclick="() => OpenErrorFileAsync(vError)" data-testid="output-error">
-                    <LucideIcon Name="circle-x" Size="12" Class="text-destructive" />
-                    <span class="font-mono">@vError.FilePath:@vError.Line</span>
-                    <span class="text-muted-foreground">@vError.Message</span>
+                <button type="button" class="flex w-full min-w-0 flex-wrap items-start gap-x-2 gap-y-0.5 rounded px-2 py-1 text-left text-xs hover:bg-accent" @onclick="() => OpenErrorFileAsync(vError)" data-testid="output-error">
+                    <LucideIcon Name="circle-x" Size="12" Class="mt-0.5 shrink-0 text-destructive" />
+                    <span class="min-w-0 break-all font-mono">@vError.FilePath:@vError.Line</span>
+                    <span class="min-w-0 break-words text-muted-foreground">@vError.Message</span>
                 </button>
             }
         </div>

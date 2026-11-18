@@ -18,7 +18,7 @@ test('REQ-FN-040 a session turn writes the five metrics files and a chatur-signe
   mkdirSync(resolve(FIXTURE_ROOT, FIXTURE_PROJECT), { recursive: true });
   writeFileSync(resolve(FIXTURE_ROOT, FIXTURE_PROJECT, 'notes.txt'), 'hello = 1\n');
 
-  await signIn(page, 'Second');
+  await signIn(page, 'Owner'); // the owner's own account: test user 2 is a separate account since 18 Nov
   await page.goto('/start?all=1', { waitUntil: 'networkidle' });
   const vList = page.getByTestId('recent-list');
   await expect(vList).toBeVisible();

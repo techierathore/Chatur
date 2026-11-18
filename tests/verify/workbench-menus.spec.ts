@@ -9,7 +9,7 @@ import { tmpdir } from 'os';
 import { signIn } from './support/auth';
 import { run, query } from './support/db';
 import {
-  test, NAME, PROJECT, ROOT, NOTES, resetFixture, openProject, openFile, tabs, editorText, projectName,
+  test, NAME, PROJECT, ROOT, NOTES, SHOTS, resetFixture, openProject, openFile, tabs, editorText, projectName,
 } from './support/workbench-a';
 
 let page: Page;
@@ -106,11 +106,21 @@ test('REQ-UI-073 File ▸ Recent projects ▸ and View ▸ Zoom ▸ are submenus
     await expect(vRow).toContainText('▸');
     await expect(vList).toHaveCount(0); // the list is in the page only while it is open
     // A keyboard user reaches the ▸ row with ArrowDown (the menu tracks the focus itself, so the row is not
-    // focused from outside). TR-023: the arrow order puts a ▸ row after the plain items, so this walks until
-    // the row has the focus rather than counting rows.
+    // focused from outside). Since TrBlazeUI 2.2.3 (TR-023 fixed) the ▸ row sits in the arrow order where it is
+    // drawn, so File's rows are counted: New, Open a solution, Open a folder, Clone, then Recent projects on the
+    // fifth press (Save and Save all are off and skipped), and Close project on the sixth. View's Zoom row is
+    // still walked to, since the reply named File's order only.
     const active = () => page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? '');
-    for (let vStep = 0; vStep < 20 && (await active()) !== `menu-${vMenu}-${vSub}`; vStep++) await page.keyboard.press('ArrowDown');
-    expect(await active()).toBe(`menu-${vMenu}-${vSub}`);
+    if (vMenu === 'file') {
+      for (let vStep = 0; vStep < 5; vStep++) await page.keyboard.press('ArrowDown');
+      await expect.poll(active).toBe('menu-file-recent');
+      await page.keyboard.press('ArrowDown');
+      await expect.poll(active).toBe('menu-file-close');
+      await page.keyboard.press('ArrowUp');
+    } else {
+      for (let vStep = 0; vStep < 20 && (await active()) !== `menu-${vMenu}-${vSub}`; vStep++) await page.keyboard.press('ArrowDown');
+    }
+    await expect.poll(active).toBe(`menu-${vMenu}-${vSub}`);
     // ArrowRight opens its list and puts the focus on the list's first item; ArrowLeft closes only the list.
     await page.keyboard.press('ArrowRight');
     await expect(vList).toBeVisible({ timeout: 5_000 });
@@ -128,6 +138,35 @@ test('REQ-UI-073 File ▸ Recent projects ▸ and View ▸ Zoom ▸ are submenus
     await expect(page.getByTestId(`menu-${vMenu}-items`)).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId(`menu-${vMenu}-items`)).toBeHidden();
+  }
+});
+
+test('REQ-UI-073 at 390px File ▸ Recent projects ▸ stays inside the window and View ▸ Zoom ▸ still opens to the left (TR-024)', async () => {
+  // TrBlazeUI 2.2.3 (TR-024 fixed): a submenu with room on neither side keeps the roomier side and is pulled back
+  // so its far edge sits 8 px inside the window; a list wider than the window wraps instead of clipping.
+  await page.setViewportSize({ width: 390, height: 800 });
+  try {
+    const vList = await openSub(page, 'file', 'recent');
+    const vBox = (await vList.boundingBox())!;
+    expect(vBox.x, 'left edge at least 8 px inside').toBeGreaterThanOrEqual(8);
+    expect(vBox.x + vBox.width, 'right edge at most 382 (390 - 8)').toBeLessThanOrEqual(382.5);
+    // every project name in the list is drawn whole: no row is wider inside than it is drawn
+    const vClipped = await vList.evaluate((aEl) => [...aEl.querySelectorAll('[role="menuitem"]')]
+      .filter((aRow) => (aRow as HTMLElement).scrollWidth > (aRow as HTMLElement).clientWidth + 1).length);
+    expect(vClipped, 'no project name clipped').toBe(0);
+    await page.screenshot({ path: `${SHOTS}/TR-024-file-recent-390.png` });
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    const vZoom = await openSub(page, 'view', 'zoom');
+    const vZoomBox = (await vZoom.boundingBox())!;
+    const vRowBox = (await page.getByTestId('menu-view-zoom').boundingBox())!;
+    expect(vZoomBox.x + vZoomBox.width, 'Zoom list inside the window').toBeLessThanOrEqual(382.5);
+    expect(vZoomBox.x, 'Zoom list opens to the left of its row').toBeLessThan(vRowBox.x + vRowBox.width / 2);
+    await page.screenshot({ path: `${SHOTS}/TR-024-view-zoom-390.png` });
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+  } finally {
+    await page.setViewportSize({ width: 1280, height: 800 });
   }
 });
 

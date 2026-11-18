@@ -25,6 +25,7 @@ public sealed class RunQueueActions : IRunQueueActions
     private readonly OpenRequirementReader objOpen;
     private readonly IClock objClock;
     private readonly ILogger<RunQueueActions> objLogger;
+    private readonly IEstimateActions? objEstimates;
 
     /// <summary>Creates the action implementation.</summary>
     /// <param name="aConnections">Opens connections to Chatur's database.</param>
@@ -32,13 +33,16 @@ public sealed class RunQueueActions : IRunQueueActions
     /// <param name="aFolders">Finds a project's folder to read its checklists.</param>
     /// <param name="aClock">The time source.</param>
     /// <param name="aLogger">Where a run that cannot be started is logged.</param>
+    /// <param name="aEstimates">Carries a queued run's estimate to the run it becomes (BRD-194); none in tests that do not need it.</param>
     public RunQueueActions(
         IDbConnectionFactory aConnections,
         IAutoRunActions aAutoRuns,
         ProjectFolders aFolders,
         IClock aClock,
-        ILogger<RunQueueActions> aLogger)
+        ILogger<RunQueueActions> aLogger,
+        IEstimateActions? aEstimates = null)
     {
+        objEstimates = aEstimates;
         objConnections = aConnections;
         objAutoRuns = aAutoRuns;
         objOpen = new OpenRequirementReader(aFolders);
@@ -211,6 +215,30 @@ public sealed class RunQueueActions : IRunQueueActions
         }
     }
 
+    /// <summary>
+    /// The waiting run keeps the estimate it was queued with (BRD-194): the end-to-end run it becomes carries the same
+    /// batch, and no new one is written. A failure here is logged and never stops the run.
+    /// </summary>
+    private async Task CarryEstimateAsync(RunQueueItem aItem, int aAutoRunId, CancellationToken aCt)
+    {
+        if (objEstimates is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (await objEstimates.KeptAsync(EstimateRunKinds.Queue, aItem.QueueItemId, aCt).ConfigureAwait(false) is { } vKept)
+            {
+                await objEstimates.KeepAsync(aItem.ProjectId, vKept, EstimateRunKinds.Auto, aAutoRunId, aCt).ConfigureAwait(false);
+            }
+        }
+        catch (Exception vError) when (vError is not OperationCanceledException)
+        {
+            objLogger.LogWarning(vError, "Queued run {QueueItemId}'s estimate could not be carried to run {AutoRunId}", aItem.QueueItemId, aAutoRunId);
+        }
+    }
+
     private async Task<bool> TryStartAsync(RunQueueItem aItem, CancellationToken aCt)
     {
         try
@@ -223,6 +251,7 @@ public sealed class RunQueueActions : IRunQueueActions
 
             var vRun = await objAutoRuns.StartAsync(aItem.ProjectId, aItem.Brief, aCt).ConfigureAwait(false);
             await SetAsync(aItem.QueueItemId, RunQueueStatus.Started, vRun.AutoRunId, null, aCt).ConfigureAwait(false);
+            await CarryEstimateAsync(aItem, vRun.AutoRunId, aCt).ConfigureAwait(false);
             return true;
         }
         catch (InvalidOperationException vBusy)

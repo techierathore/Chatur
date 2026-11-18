@@ -1,4 +1,5 @@
 using Chatur.Core.Actions;
+using ChaturUI.Components.Estimates;
 using TrBlazeUI.Components.Badge;
 
 namespace ChaturUI.Pages;
@@ -25,6 +26,12 @@ public partial class AutoRun : IDisposable
     private bool objIsLoading = true;
     private bool objIsBusy;
     private bool objIsStopDialogOpen;
+    private PhaseEstimate? objEstimate;
+    private int? objEstimateProjectId;
+    private KeptEstimate? objKept;
+    private int? objKeptRunId;
+    private string? objEstimateError;
+    private string objBriefAtStart = string.Empty;
 
     private int? objProjectId => int.TryParse(objProjectValue, out var vId) ? vId : null;
 
@@ -37,6 +44,25 @@ public partial class AutoRun : IDisposable
         ?? AutoRuns.PlannedChain()
             .Select(aStep => new AutoRunProcessView(aStep.Position, aStep.ProcessCode, aStep.Agent, AutoRunProcessState.ToCome, null, 0))
             .ToList();
+
+    private bool IsBriefFilled => (objBrief ?? string.Empty).Trim().Length >= AutoRunBrief.MinLength;
+
+    /// <summary>A fresh estimate shows for a brief the owner is about to start; never while a run is going, and never for the brief already started.</summary>
+    private bool ShowFresh => IsBriefFilled && !objIsGoing && (objRun is null || objBriefAtStart != objBrief.Trim());
+
+    private PhaseEstimate? ShownEstimate => ShowFresh ? objEstimate : objKept?.Estimate;
+
+    private string EstimateTitle => ShowFresh ? "Before the run starts — what it should cost" : "What this run was started with";
+
+    /// <summary>The run's output tokens and time so far (REQ-UI-087), as measured: never divided by or added to the estimate.</summary>
+    private string ActualSoFarText =>
+        $"{(objRun?.TokensOutSoFar ?? 0).ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} tokens out · {Elapsed}";
+
+    /// <summary>The build estimate the run was started with, low · middle · high, beside the actual; said plainly when none was kept.</summary>
+    private string EstimateSoFarText =>
+        objKept is { Estimate.NoChecklist: false } vKept && vKept.Estimate.Total(EstimateSteps.Build) is { TokensOut: { } vTokens, DurationS: { } vTime }
+            ? $"build so far — estimate {EstimateLines.TokensText(vTokens)} and {EstimateLines.DurationText(vTime)}"
+            : "no estimate figure was kept for this run";
 
     private AutoRunEvent? objLimitEvent => objRun?.Events.LastOrDefault(aEvent => aEvent.Kind == AutoRunEventKind.LimitWait);
 
@@ -98,6 +124,7 @@ public partial class AutoRun : IDisposable
             {
                 objProjectValue = vChosen.ProjectId.ToString();
                 await LoadRunAsync(vChosen.ProjectId);
+                await LoadKeptAsync();
             }
         }
         catch (OperationCanceledException)
@@ -149,6 +176,7 @@ public partial class AutoRun : IDisposable
                 if (vNow is not null)
                 {
                     objRun = vNow;
+                    await LoadKeptAsync();
                 }
 
                 await InvokeAsync(StateHasChanged);
@@ -169,18 +197,140 @@ public partial class AutoRun : IDisposable
     {
         objProjectValue = aValue;
         objRun = null;
+        objEstimate = null;
+        objEstimateProjectId = null;
+        objKept = null;
+        objKeptRunId = null;
+        objEstimateError = null;
+        objBriefAtStart = string.Empty;
         if (objProjectId is { } vId)
         {
             try
             {
                 await LoadRunAsync(vId);
+                await LoadKeptAsync();
             }
             catch (Exception aEx) when (aEx is InvalidOperationException)
             {
                 objError = aEx.Message;
             }
+
+            await LoadFreshEstimateAsync();
         }
     }
+
+    private async Task OnBriefChangedAsync(string? aValue)
+    {
+        objBrief = aValue ?? string.Empty;
+        await LoadFreshEstimateAsync();
+    }
+
+    /// <summary>Works out the estimate for the project once its brief is filled in; the estimate depends on the project, so typing on does not ask again.</summary>
+    private async Task LoadFreshEstimateAsync()
+    {
+        if (!IsBriefFilled || objProjectId is not { } vProjectId || (objEstimateProjectId == vProjectId && objEstimate is not null))
+        {
+            return;
+        }
+
+        try
+        {
+            objEstimate = await EstimateActions.EstimateAsync(vProjectId, objCts.Token);
+            objEstimateProjectId = vProjectId;
+            objEstimateError = null;
+        }
+        catch (Exception aEx) when (aEx is not OperationCanceledException)
+        {
+            objEstimate = null;
+            objEstimateProjectId = null;
+            objEstimateError = aEx.Message;
+        }
+    }
+
+    /// <summary>Reads the estimate the shown run was started with; reads again while a run that has none, or none with rows, goes on (it makes one at its build step).</summary>
+    private async Task LoadKeptAsync()
+    {
+        if (objRun is null)
+        {
+            objKept = null;
+            objKeptRunId = null;
+            return;
+        }
+
+        var vRunId = objRun.AutoRunId;
+        if (objKeptRunId == vRunId && (objKept is { Estimate.NoChecklist: false } || !objIsGoing))
+        {
+            return;
+        }
+
+        try
+        {
+            objKept = await EstimateActions.KeptAsync(EstimateRunKinds.Auto, vRunId, objCts.Token);
+            objKeptRunId = vRunId;
+        }
+        catch (Exception aEx) when (aEx is not OperationCanceledException)
+        {
+            objEstimateError = aEx.Message;
+        }
+    }
+
+    /// <summary>Keeps the estimate the owner was shown with the run that just started. A failure is shown and never undoes the start.</summary>
+    private async Task KeepStartEstimateAsync(int aProjectId, AutoRunView aRun)
+    {
+        try
+        {
+            var vEstimate = objEstimateProjectId == aProjectId && objEstimate is not null
+                ? objEstimate
+                : await EstimateActions.EstimateAsync(aProjectId, objCts.Token);
+            if (vEstimate is not null)
+            {
+                objKept = await EstimateActions.ConfirmAsync(aProjectId, vEstimate, EstimateRunKinds.Auto, aRun.AutoRunId, objCts.Token);
+                objKeptRunId = aRun.AutoRunId;
+            }
+        }
+        catch (Exception aEx) when (aEx is not OperationCanceledException)
+        {
+            ToastService.Error(aEx.Message, "The run started but its estimate was not kept");
+        }
+    }
+
+    private static IReadOnlyList<ModelLine> ModelLinesOf(PhaseEstimate aEstimate) =>
+        aEstimate.Totals.Select(aTotal => new ModelLine(KeyOf(aTotal.Step), LabelOf(aTotal.Step), ModelText(aTotal))).ToList();
+
+    private static string KeyOf(string aStep) => aStep switch
+    {
+        EstimateSteps.Build => "build",
+        EstimateSteps.Verify => "verify",
+        EstimateSteps.Fix => "fix",
+        _ => "triage"
+    };
+
+    private static string LabelOf(string aStep) => aStep switch
+    {
+        EstimateSteps.Build => "Build",
+        EstimateSteps.Verify => "Machine QA: verify",
+        EstimateSteps.Fix => "Machine QA: fix",
+        _ => "After handoff (triage)"
+    };
+
+    private static string ModelText(StepTotal aTotal)
+    {
+        var vParts = new List<string>();
+        if (aTotal.Model is not null)
+        {
+            vParts.Add(aTotal.Model);
+        }
+
+        if (aTotal.Tier is { } vTier)
+        {
+            vParts.Add($"tier {vTier}");
+        }
+
+        return vParts.Count == 0 ? "routing names no model yet" : string.Join(" · ", vParts);
+    }
+
+    /// <summary>One step's model and tier, as the small list beside the estimate shows it.</summary>
+    private sealed record ModelLine(string Key, string Label, string Text);
 
     private async Task StartAsync()
     {
@@ -203,6 +353,8 @@ public partial class AutoRun : IDisposable
         {
             objError = null;
             objRun = await AutoRuns.StartAsync(vProjectId, vBrief, objCts.Token);
+            objBriefAtStart = vBrief;
+            await KeepStartEstimateAsync(vProjectId, objRun);
         }
         catch (Exception aEx) when (aEx is ArgumentException or InvalidOperationException)
         {

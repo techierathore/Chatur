@@ -180,6 +180,31 @@ public sealed class RunQueueActionsTests : MigratedDatabaseFixture
         }
     }
 
+    /// <summary>
+    /// REQ-UI-085 (BRD-194): when a queued run with a kept estimate is started, the end-to-end run it becomes carries
+    /// the same estimate and batch.
+    /// </summary>
+    [Fact(DisplayName = "REQ-UI-085 a queued run that starts carries the estimate it was queued with")]
+    public async Task StartedQueueRunCarriesItsEstimate()
+    {
+        var vFactory = CreateFactory();
+        var vEstimates = new Chatur.Core.Estimates.EstimateActions(vFactory, new Chatur.Core.Routing.RoutingActions(vFactory), new ProjectFolders(vFactory), new SystemClock());
+        Directory.CreateDirectory(objFolder);
+        var vActions = new RunQueueActions(vFactory, objRuns, new ProjectFolders(vFactory), new SystemClock(), NullLogger<RunQueueActions>.Instance, vEstimates);
+        var vProject = CreateProject("TfLens", Path.Combine(objFolder, "TfLens"));
+        var vAdded = await vActions.QueueAsync(vProject, Brief);
+        var vEstimate = new PhaseEstimate("TfLens", 2, ["REQ-FN-301"], [], [], false, false, new EstimateSkipped(0, 0, 0, 0, 0));
+        var vKept = new KeptEstimate("2026-11-10T11:16:00Z", vEstimate);
+        await vEstimates.KeepAsync(vProject, vKept, EstimateRunKinds.Queue, vAdded.Item.QueueItemId);
+
+        var vView = await vActions.ListAsync();
+
+        var vRunId = vView.Items.Single().AutoRunId!.Value;
+        var vCarried = await vEstimates.KeptAsync(EstimateRunKinds.Auto, vRunId);
+        Assert.Equal("2026-11-10T11:16:00Z", vCarried!.BatchTs);
+        Assert.Equal(["REQ-FN-301"], vCarried.Estimate.Rows);
+    }
+
     private RunQueueActions Create()
     {
         Directory.CreateDirectory(objFolder);

@@ -36,7 +36,7 @@ async function shot(aPage: Page, aName: string): Promise<string> {
 
 /** Reaches the Workbench on the fixture project through the real Start flow (`/start?all=1`). */
 async function openWorkbench(aPage: Page): Promise<void> {
-  await signIn(aPage, 'Second');
+  await signIn(aPage, 'Owner'); // the owner's own account: test user 2 is a separate account since 18 Nov
   if (!objProviderReady) {
     await ensureTestProvider(aPage);
     objProviderReady = true;
@@ -170,6 +170,29 @@ test('REQ-FN-025 sending a message about the selected project shows a reply from
   await expect(vReply).toContainText('Analyst'); // the chosen role labels the reply
   await expect(vReply.locator('.said')).toContainText(/\S/);
   await expect(vReply.locator('.said')).not.toContainText(/No model provider is configured/i);
+});
+
+test('REQ-FN-024 an earlier reply keeps the name of the agent that wrote it after another agent is chosen', async ({ page }) => {
+  // MISS-Chatur-20261115-03: every earlier reply took the name of the agent chosen now.
+  await modelSetup(page, 'analyst');
+  await sendAndFinish(page, 'Reply with the single word READY.');
+  const vNames = thread(page).locator('.msg.agent .name');
+  await expect(vNames).toHaveCount(1);
+  await expect(vNames.nth(0)).toContainText('Analyst');
+
+  await pickRole(page, 'flow-master');
+  await sendAndFinish(page, 'Reply with the single word AGAIN.');
+  await expect(vNames).toHaveCount(2);
+  await expect(vNames.nth(1)).toContainText('Flow master');
+  await expect(vNames.nth(0)).toContainText('Analyst');
+  await expect(vNames.nth(0)).not.toContainText('Flow master');
+
+  // and the same after the conversation is read back from what was stored
+  await reloadOnProject(page);
+  await expect(vNames).toHaveCount(2, { timeout: 20_000 });
+  await expect(vNames.nth(0)).toContainText('Analyst');
+  await expect(vNames.nth(0)).not.toContainText('Flow master');
+  await expect(vNames.nth(1)).toContainText('Flow master');
 });
 
 test('REQ-FN-026 a reply names the model that produced it', async ({ page }) => {

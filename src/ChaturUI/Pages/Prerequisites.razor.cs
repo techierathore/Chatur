@@ -46,10 +46,13 @@ public partial class Prerequisites
 
         objTools = await ProbeToolsAsync();
         objBuildInfo = await ReadOwnVersionAsync();
-        objNewerBuild = await ReadNewerBuildAsync();
         objCheckedAt = "just now";
 
+        // The tools and Chatur's own version show as soon as they are read; the newer-build check reaches the release
+        // feed over the network and is shown when it answers, so a slow or silent feed never holds the page (REQ-FN-013).
         objIsLoading = false;
+        StateHasChanged();
+        objNewerBuild = await ReadNewerBuildAsync();
     }
 
     /// <summary>

@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Developer Guide</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout no-toc">
+  <main>
+    <h1>Chatur — Developer Guide</h1>
+    <div class="subtitle">Rendered 2026-11-15 &middot; source <code>Chatur-DevGuide.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#architecture-cheat-sheet">Architecture cheat-sheet</a></li>
+        <li><a href="#roles-and-menu-map">Roles and menu map</a></li>
+        <li><a href="#screen-by-screen-code-map">Screen-by-screen code map</a></li>
+        <li class="h3"><a href="#sign-in-sign-in">Sign in (/sign-in)</a></li>
+        <li class="h3"><a href="#register-register">Register (/register)</a></li>
+        <li class="h3"><a href="#start-window-start">Start window (/start)</a></li>
+        <li class="h3"><a href="#main-window">Main window (/)</a></li>
+        <li class="h3"><a href="#prerequisites-prerequisites">Prerequisites (/prerequisites)</a></li>
+        <li class="h3"><a href="#repository-repository">Repository (/repository)</a></li>
+        <li class="h3"><a href="#settings-model-providers-settings-providers">Settings ▸ Model providers (/settings/providers)</a></li>
+        <li class="h3"><a href="#settings-routing-settings-routing">Settings ▸ Routing (/settings/routing)</a></li>
+        <li class="h3"><a href="#settings-agents-settings-agents">Settings ▸ Agents (/settings/agents)</a></li>
+        <li class="h3"><a href="#settings-corrections-settings-corrections">Settings ▸ Corrections (/settings/corrections)</a></li>
+        <li class="h3"><a href="#settings-measurements-settings-measurements">Settings ▸ Measurements (/settings/measurements)</a></li>
+        <li class="h3"><a href="#settings-appearance-settings-appearance">Settings ▸ Appearance (/settings/appearance)</a></li>
+        <li class="h3"><a href="#settings-account-settings-account">Settings ▸ Account (/settings/account)</a></li>
+        <li class="h3"><a href="#all-projects-all-projects">All projects (/all-projects)</a></li>
+        <li class="h3"><a href="#working-copies-worktrees">Working copies (/worktrees)</a></li>
+        <li class="h3"><a href="#licence-licence">Licence (/licence)</a></li>
+        <li class="h3"><a href="#feedback-feedback">Feedback (/feedback)</a></li>
+        <li class="h3"><a href="#integrations-integrations">Integrations (/integrations)</a></li>
+        <li><a href="#cross-cutting-flows">Cross-cutting flows</a></li>
+        <li class="h3"><a href="#windows">Windows</a></li>
+        <li class="h3"><a href="#sign-in">Sign-in</a></li>
+        <li class="h3"><a href="#the-selected-project">The selected project</a></li>
+        <li class="h3"><a href="#the-agent-loop-and-approving-a-proposed-change">The agent loop and approving a proposed change</a></li>
+        <li class="h3"><a href="#build-and-run-output">Build and run output</a></li>
+        <li class="h3"><a href="#theme">Theme</a></li>
+        <li class="h3"><a href="#configuration-logging-errors">Configuration, logging, errors</a></li>
+        <li><a href="#known-issues">Known issues</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Kind</td><td>app</td></tr>
+<tr><td>Size</td><td>Large</td></tr>
+<tr><td>Phase</td><td>1 of 4</td></tr>
+<tr><td>Verified on</td><td>2026-11-15</td></tr>
+<tr><td>Date</td><td>2026-11-15</td></tr>
+</tbody>
+</table>
+<h2 id="architecture-cheat-sheet">Architecture cheat-sheet<a class="anchor-link" href="#architecture-cheat-sheet">#</a></h2>
+<div class="diagram">
+  <div class="dt">
+    <button data-zout title="Zoom out">&minus;</button>
+    <span class="zlabel">100%</span>
+    <button data-zin title="Zoom in">+</button>
+    <button data-fit title="Fit to width">Fit</button>
+    <button data-one title="Actual size">1:1</button>
+    <button data-fs title="Fullscreen">&#9166;</button>
+    <button data-pop title="Open in new tab">&#8599;</button>
+  </div>
+  <pre class="mermaid">flowchart LR
+  Host["src/Chatur (MAUI windows)"] --&gt; UI["src/ChaturUI (pages, Shell)"]
+  UI --&gt; Act["src/Chatur.Core (action classes)"]
+  Act --&gt; DB[("SQLite chatur.db")]
+  Act --&gt; AM["App Manager (HTTP)"]
+  Act --&gt; LLM["TechieRag (model calls)"]
+  Act --&gt; Disk["Project folder, git, dotnet"]
+  Db["src/ChaturDb (DbUp scripts)"] --&gt; DB</pre>
+</div>
+<p>A page never opens the database. It calls one interface from <code>src/Chatur.Core/Actions</code>, and the class behind it runs Dapper SQL through <code>IDbConnectionFactory</code>. There is no separate data-access layer: the SQL sits inside each action class.</p>
+<table>
+<thead><tr><th>Layer</th><th>Project or folder</th><th>What lives here</th></tr></thead>
+<tbody>
+<tr><td>Host</td><td><code>src/Chatur</code></td><td><code>MauiProgram.cs</code> (services, logging, migration), <code>Services/WindowService.cs</code>, <code>Windows/*.xaml</code>, <code>Platform/*</code> (secret store, paths, process launcher)</td></tr>
+<tr><td>Pages</td><td><code>src/ChaturUI/Pages</code>, <code>Pages/Settings</code></td><td>One <code>.razor</code> plus <code>.razor.cs</code> per screen</td></tr>
+<tr><td>Main window parts</td><td><code>src/ChaturUI/Shell</code></td><td><code>MenuBar</code>, <code>AppToolbar</code>, <code>FilesPanel</code>, <code>EditorArea</code>, <code>ConversationPanel</code>, <code>OutputStrip</code>, <code>WorkbenchState</code></td></tr>
+<tr><td>Layouts</td><td><code>src/ChaturUI/Layouts</code></td><td><code>BareLayout</code>, <code>StartLayout</code>, <code>MainLayout</code>, <code>SecondaryLayout</code>, <code>AuthGate</code></td></tr>
+<tr><td>Action interfaces</td><td><code>src/Chatur.Core/Actions</code></td><td><code>I*Actions</code> and the records they return</td></tr>
+<tr><td>Action classes</td><td><code>src/Chatur.Core/&lt;Area&gt;</code></td><td><code>AccountActions</code>, <code>ProjectActions</code>, <code>AgentActions</code>, <code>BuildRunActions</code> and the rest, registered in <code>ServiceCollectionExtensions.cs:40</code></td></tr>
+<tr><td>Shared state</td><td><code>src/Chatur.Core/AppState.cs</code></td><td>Selected project, signed-in user, theme; one instance for the whole app</td></tr>
+<tr><td>Database</td><td><code>src/ChaturDb/Scripts</code></td><td>Numbered <code>.sql</code> files, run by <code>ChaturDbMigrator.Migrate</code> at start-up</td></tr>
+</tbody>
+</table>
+<p>Naming used in the code: <code>obj</code> for fields, <code>v</code> for locals, <code>a</code> for parameters. The watch names in this guide follow it.</p>
+<h2 id="roles-and-menu-map">Roles and menu map<a class="anchor-link" href="#roles-and-menu-map">#</a></h2>
+<p>Chatur has one role. Every signed-in person sees every menu.</p>
+<table>
+<thead><tr><th>Role</th><th>Test user</th><th>Menu items and the screen each opens</th></tr></thead>
+<tbody>
+<tr><td>User</td><td>1: <code>chatur-owner@techierathore.com</code></td><td>All menus below</td></tr>
+<tr><td>User</td><td>2: <code>chatur-second@…</code></td><td>Same</td></tr>
+<tr><td>User</td><td>3: <code>chatur-yolo-tester@…</code></td><td>Same</td></tr>
+</tbody>
+</table>
+<p>The main window's menus are in <code>src/ChaturUI/Shell/MenuBar.razor</code>. An item marked "secondary window" calls <code>MenuBar.razor.cs:78</code> <code>OpenSecondary</code>, which calls <code>ISecondaryWindow.Open</code>.</p>
+<table>
+<thead><tr><th>Menu</th><th>Item</th><th>What it opens</th></tr></thead>
+<tbody>
+<tr><td>File</td><td>New project, Open a solution, Open a folder, Clone a repository</td><td><code>OpenProjectDialog</code>, then the main window (<code>/</code>)</td></tr>
+<tr><td>File</td><td>Recent projects ▸ a project</td><td>Switches project in place (<code>SwitchToAsync</code>)</td></tr>
+<tr><td>File</td><td>Recent projects ▸ Project list</td><td>Start window list (<code>/start?all=1</code>)</td></tr>
+<tr><td>File</td><td>Save, Save all</td><td>Writes the open file or files; no screen</td></tr>
+<tr><td>File</td><td>Close project</td><td>Clears the selection, then <code>/start?all=1</code></td></tr>
+<tr><td>File</td><td>Exit</td><td><code>IAppShell.Exit</code></td></tr>
+<tr><td>Edit</td><td>Undo, Redo, Cut, Copy, Paste</td><td>Act on the open file's editor</td></tr>
+<tr><td>Edit</td><td>Find in files, Go to file</td><td><code>FileSearchDialog</code></td></tr>
+<tr><td>View</td><td>Files, Chat, Output</td><td>Show or hide that part of the main window</td></tr>
+<tr><td>View</td><td>Prerequisites</td><td>Secondary window, <code>/prerequisites</code></td></tr>
+<tr><td>View</td><td>Repository</td><td>Secondary window, <code>/repository</code></td></tr>
+<tr><td>View</td><td>Appearance</td><td>Secondary window, <code>/settings/appearance</code></td></tr>
+<tr><td>View</td><td>Zoom ▸ Zoom in, Zoom out, Actual size</td><td><code>IAppShell.ZoomBy</code>, <code>ResetZoom</code></td></tr>
+<tr><td>Project</td><td>Build, Run, Stop, Run target</td><td>Same commands as the toolbar; output goes to the output strip</td></tr>
+<tr><td>Project</td><td>Prerequisites, Repository</td><td>Secondary window</td></tr>
+<tr><td>Project</td><td>Processes, Board, Agent workspace, End-to-end run, Run queue, Run record</td><td>Tabs in the main window; built in later phases</td></tr>
+<tr><td>Tools</td><td>Settings (Ctrl+,)</td><td>Secondary window, <code>/settings/providers</code></td></tr>
+<tr><td>Tools</td><td>Model providers, Routing, Agents, Corrections, Measurements, Appearance</td><td>Secondary window, the matching <code>/settings/...</code> page</td></tr>
+<tr><td>Help</td><td>About Chatur</td><td>A dialog with version and commit</td></tr>
+<tr><td>Help</td><td>Send feedback</td><td>Secondary window, <code>/feedback</code></td></tr>
+<tr><td>Help</td><td>Check for updates</td><td>Secondary window, <code>/prerequisites</code></td></tr>
+</tbody>
+</table>
+<p>Two more menus sit in the same bar. The project switcher (<code>MenuBar.razor:9</code>) lists other projects and ends with "All projects", which goes to <code>/start?all=1</code>, not to <code>/all-projects</code>. The account menu (<code>Shell/AccountMenu.razor:20</code> to <code>:24</code>) opens Account (<code>/settings/account</code>), Licence (<code>/licence</code>), Settings (<code>/settings/providers</code>) and Sign out.</p>
+<p>The secondary window's own list comes from <code>src/ChaturUI/Layouts/SecondaryNavigation.cs:11</code>: Prerequisites, Repository, Model providers, Routing, Agents, Corrections, Measurements, Appearance, Account, Licence, Feedback, Working copies, All projects, Integrations. Working copies, All projects and Integrations can only be reached from this list.</p>
+<h2 id="screen-by-screen-code-map">Screen-by-screen code map<a class="anchor-link" href="#screen-by-screen-code-map">#</a></h2>
+<h3 id="sign-in-sign-in">Sign in (<code>/sign-in</code>)<a class="anchor-link" href="#sign-in-sign-in">#</a></h3>
+<p><img src="screenshots/Chatur/sign-in.png" alt="Sign in" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>SignIn.razor.cs:HandleSignInAsync</code> → <code>AccountActions.SignInAsync</code> → <code>AppManagerClient.DeviceLoginAsync</code> → <code>POST AuthSvc/device-login</code>, then the secret store and table <code>Installation</code></p>
+<p>The page uses <code>BareLayout</code>, so no sign-in check runs here. The form at <code>SignIn.razor:25</code> submits to <code>HandleSignInAsync</code>. The action reads this machine's device id (created once, table <code>Installation</code>), fetches App Manager's public key, encrypts the password and posts it. On success it saves the session to the secret store when "remember" is ticked, sets <code>AppState.CurrentUser</code> and the page goes to <code>/start</code>.</p>
+<p>On refusal the page shows App Manager's own message in <code>objErrorMessage</code>. Any exception inside the action is caught at <code>AccountActions.cs:90</code>, logged, and returned as "Could not reach App Manager". An empty <code>AppManager:BaseUrl</code> ends there too, so check the log file before the network. "Forgotten your password?" (<code>SignIn.razor.cs:68</code>) only shows a toast; it calls nothing.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/SignIn.razor.cs:48</code></td><td><code>HandleSignInAsync</code></td><td><code>vResult.Succeeded</code></td><td><code>true</code>; the next line goes to <code>/start</code></td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AccountActions.cs:69</code></td><td><code>SignInAsync</code></td><td><code>vDeviceId</code></td><td>32 hex characters, the same on every run</td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AccountActions.cs:74</code></td><td><code>SignInAsync</code></td><td><code>vResult.Success</code>, <code>vResult.ErrorMessage</code></td><td><code>true</code> and <code>null</code>; a wrong password gives <code>false</code> and the server's text</td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AppManagerClient.cs:121</code></td><td><code>PostAuthAsync</code></td><td><code>vResponse.StatusCode</code>, <code>vEnvelope.Message</code></td><td>200 and an envelope whose <code>Data</code> holds both tokens</td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AccountActions.cs:254</code></td><td><code>PersistSessionAsync</code></td><td><code>aRemember</code></td><td><code>true</code>; six <code>AppManager.*</code> names are then saved</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> none. <code>AccountActions.EncryptPassword</code> (<code>AccountActions.cs:289</code>) encrypts the password with the server's public key (RSA, OAEP SHA-256) before it leaves the machine.</p>
+<h3 id="register-register">Register (<code>/register</code>)<a class="anchor-link" href="#register-register">#</a></h3>
+<p><img src="screenshots/Chatur/register.png" alt="Register" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Register.razor.cs:HandleSubmitAsync</code> → <code>AccountActions.RegisterAsync</code> → <code>AppManagerClient.DeviceRegisterAsync</code> → <code>POST AuthSvc/device-register</code>, then the secret store</p>
+<p>The page also uses <code>BareLayout</code>. "Create account" (<code>Register.razor:95</code>) runs <code>HandleSubmitAsync</code>. It checks the password rule first and stops without sending when the rule fails, then checks that both password boxes match. Only then does it build a <code>RegisterRequest</code> and call the action.</p>
+<p><code>RegisterAsync</code> checks the same rule again, so a caller that skips the page still gets a refusal. It uses the same device id, public key and encryption as sign-in. On success it always saves the session (<code>aRemember: true</code> at <code>AccountActions.cs:137</code>) and the page goes to <code>/start</code>.</p>
+<p>One thing to know when debugging: the page sets <code>objEmailInUse = true</code> on every refusal (<code>Register.razor.cs:89</code>), including "Could not reach App Manager". The email box is marked even when the email was not the problem.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Register.razor.cs:60</code></td><td><code>HandleSubmitAsync</code></td><td><code>PasswordRule.Evaluate(objPassword).MeetsRule</code></td><td><code>true</code>; <code>false</code> sets <code>objPasswordInvalid</code> and returns</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Register.razor.cs:78</code></td><td><code>HandleSubmitAsync</code></td><td><code>vResult.Succeeded</code>, <code>vResult.ErrorMessage</code></td><td><code>true</code> and <code>null</code></td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/PasswordRule.cs:23</code></td><td><code>Evaluate</code></td><td><code>vHasLength</code>, <code>vHasCapital</code>, <code>vHasNumber</code>, <code>vHasSpecial</code></td><td>all <code>true</code> for a password the server accepts</td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AccountActions.cs:124</code></td><td><code>RegisterAsync</code></td><td><code>vResult.Success</code>, <code>vResult.UserId</code></td><td><code>true</code> and a number</td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AppManagerClient.cs:92</code></td><td><code>DeviceRegisterAsync</code></td><td><code>vBody</code></td><td>email, encryptedPassword, firstName, lastName, deviceInfo; <code>applicationId</code> only when no API key header is set</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>RuleMetCount</code> (<code>Register.razor.cs:36</code>) counts how many of the four rule parts are met, for the live list under the password box. <code>PasswordsMatch</code> (<code>:41</code>) is true when the confirm box is not empty and equals the password. <code>PasswordRule.Evaluate</code> works out the four parts: eight or more characters, a capital, a digit, and one character from <code>SpecialCharacters</code> (<code>PasswordRule.cs:13</code>).</p>
+<h3 id="start-window-start">Start window (<code>/start</code>)<a class="anchor-link" href="#start-window-start">#</a></h3>
+<p><img src="screenshots/Chatur/start.png" alt="Start window" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Start.razor.cs:OpenProjectAsync</code> → <code>ProjectActions.SelectProjectAsync</code> → tables <code>Project</code> (<code>LastOpenedUtc</code>) and <code>Setting</code> (key <code>SelectedProjectId</code>)</p>
+<p><code>StartLayout</code> wraps the page in <code>AuthGate</code>, so a person who is not signed in is sent to <code>/sign-in</code>. On load the page asks which project was selected last. If there is one, it goes straight to <code>/</code> unless the address carries <code>?all=1</code>. Otherwise <code>ReloadAsync</code> lists the named folders and scans them.</p>
+<p><code>ScanAsync</code> looks one level into each named folder. A sub-folder with a <code>.sln</code> file becomes a project of kind <code>Solution</code> whose <code>Path</code> is the <code>.sln</code> file itself; any other sub-folder becomes kind <code>Folder</code>. New ones are inserted into <code>Project</code>; rows with <code>RemovedUtc</code> set are left out of the list.</p>
+<p>"Project folders" opens <code>ProjectFoldersDialog</code>, which calls <code>AddFolderAsync</code> and <code>RemoveFolderAsync</code>. The four ways in (clone, open a solution, open a folder, new project) open <code>Shell/OpenProjectDialog</code>, which calls <code>ProjectOpenActions</code> and then goes to <code>/</code>. The remove button on a row calls <code>ForgetProjectAsync</code>, which sets <code>RemovedUtc</code> and deletes nothing on disk.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Start.razor.cs:65</code></td><td><code>OnInitializedAsync</code></td><td><code>vSelectedProject</code>, <code>ShowAll</code></td><td><code>null</code> on a first run; otherwise the page leaves for <code>/</code></td></tr>
+<tr><td><code>src/ChaturUI/Pages/Start.razor.cs:86</code></td><td><code>ReloadAsync</code></td><td><code>objProjects.Count</code></td><td>the number of rows drawn in the list</td></tr>
+<tr><td><code>src/Chatur.Core/Projects/ProjectActions.cs:178</code></td><td><code>ScanAsync</code></td><td><code>vCandidate</code></td><td>name, path and kind of one sub-folder</td></tr>
+<tr><td><code>src/Chatur.Core/Projects/ProjectActions.cs:331</code></td><td><code>SelectProjectAsync</code></td><td><code>vRow</code></td><td>the <code>Project</code> row; <code>null</code> throws <code>InvalidOperationException</code></td></tr>
+<tr><td><code>src/Chatur.Core/Projects/ProjectActions.cs:364</code></td><td><code>SelectProjectAsync</code></td><td><code>objAppState.SelectedProject</code></td><td>the chosen project with the new <code>LastOpenedUtc</code></td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>FormatWhen</code> (<code>Start.razor.cs:138</code>) turns the last-opened time into "just now", minutes, hours or days ago, or a date after 30 days. <code>VisibleProjects</code> (<code>:37</code>) filters the list by the search text against name and path. <code>ProjectActions.FindCandidates</code> (<code>ProjectActions.cs:222</code>) decides the kind of each sub-folder.</p>
+<h3 id="main-window"><a id="main-window-"></a>Main window (<code>/</code>)<a class="anchor-link" href="#main-window">#</a></h3>
+<p><img src="screenshots/Chatur/main.png" alt="Main window" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>ConversationPanel.razor.cs:SendMessageAsync</code> → <code>AgentActions.SendAsync</code> → tables <code>SessionEvent</code>, <code>Session</code> and <code>Change</code></p>
+<p>This is the Workbench. <code>Pages/Workbench.razor</code> holds only <code>FilesPanel</code>, <code>EditorArea</code> and <code>ConversationPanel</code>. <code>Layouts/MainLayout.razor</code> adds <code>MenuBar</code> (line 85), <code>AppToolbar</code> (86), the sign-in check (87) and <code>OutputStrip</code> (95). The parts do not call each other. They share <code>WorkbenchState</code> (<code>Shell/WorkbenchState.cs</code>), which holds open tabs, the active tab, which parts are visible, the run targets and the busy flag, and raises <code>Changed</code>.</p>
+<p>What each part does:</p>
+<ul>
+<li><code>MenuBar</code>: menus, project switcher, account menu, Ctrl+, shortcut.
+</li>
+<li><code>AppToolbar</code>: branch name and switch, run target, Build, Run, Stop.
+</li>
+<li><code>FilesPanel</code>: file tree from <code>FileActions.TreeAsync</code>; a click reads the file and opens a tab.
+</li>
+<li><code>EditorArea</code>: tabs and the editor; save writes through <code>FileActions.SaveAsync</code>.
+</li>
+<li><code>ConversationPanel</code>: sessions, messages, agent and model pick, proposed changes.
+</li>
+<li><code>OutputStrip</code>: build and run lines, with a list of compiler errors that open the file.
+</li>
+</ul>
+<p><code>Workbench.razor.cs:45</code> listens to <code>AppState.Changed</code> and calls <code>WorkbenchTabs.Reset()</code> when the project id changes, so tabs from the old project close. The agent loop and the output stream are described under Cross-cutting flows.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Shell/MenuBar.razor.cs:294</code></td><td><code>SwitchToAsync</code></td><td><code>aProjectId</code></td><td>the id picked in the switcher</td></tr>
+<tr><td><code>src/ChaturUI/Shell/AppToolbar.razor.cs:164</code></td><td><code>BuildAsync</code></td><td><code>objSelectedTarget.RunTargetId</code>, <code>Workbench.IsBuildRunBusy</code></td><td>the chosen target; <code>true</code></td></tr>
+<tr><td><code>src/ChaturUI/Shell/FilesPanel.razor.cs:121</code></td><td><code>OnSelectedPathChangedAsync</code></td><td><code>aPath</code>, <code>vContent</code></td><td>a path with forward slashes, relative to the project; the file's text</td></tr>
+<tr><td><code>src/ChaturUI/Shell/EditorArea.razor.cs:87</code></td><td><code>SaveActiveAsync</code></td><td><code>vFile.RelativePath</code>, <code>vFile.IsDirty</code></td><td>the open file; <code>true</code> before, <code>false</code> after <code>MarkSaved</code></td></tr>
+<tr><td><code>src/ChaturUI/Shell/ConversationPanel.razor.cs:759</code></td><td><code>SendMessageAsync</code></td><td><code>vChunk.TextDelta</code>, <code>vChunk.IsFinal</code></td><td>pieces of text; the last chunk has <code>IsFinal</code> true, a model name and a token count</td></tr>
+<tr><td><code>src/ChaturUI/Shell/OutputStrip.razor.cs:115</code></td><td><code>ConsumeOutputAsync</code></td><td><code>vLine.Text</code>, <code>objStatusText</code></td><td>each output line; "running", "build passed", "build failed" or "stopped"</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>OutputStrip.ParseError</code> (<code>OutputStrip.razor.cs:184</code>) turns a compiler error line into file, line number and message. <code>ConversationPanel.LoadTotalTokensAsync</code> (<code>:494</code>) sums the tokens of every recorded event in the session. <code>MenuBar.LoadRecentAsync</code> (<code>MenuBar.razor.cs:196</code>) picks the five most recently opened projects.</p>
+<h3 id="prerequisites-prerequisites">Prerequisites (<code>/prerequisites</code>)<a class="anchor-link" href="#prerequisites-prerequisites">#</a></h3>
+<p><img src="screenshots/Chatur/prerequisites.png" alt="Prerequisites" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Prerequisites.razor.cs:LoadAsync</code> → <code>PrerequisiteActions.ProbeAsync</code> → <code>ProcessCommandRunner.RunAsync</code> (one version command per tool); table <code>Project</code> gives the folder</p>
+<p>The page does three reads in <code>LoadAsync</code>. First the tools: with a project selected, <code>ResolveProjectCatalogAsync</code> reads the project's folder and looks at what is in it to decide which tools to list; with none, it uses <code>ToolProbeCatalog.Default</code>. Each tool's version command is run. A command that does not start is <code>Missing</code> and gets a fix command to copy (the Mac one on macOS, the Windows one elsewhere). A command that starts but prints no version that can be read is <code>Unknown</code>.</p>
+<p>Second, Chatur's own version and commit, read from the <code>Chatur.Core</code> assembly's attributes. Third, after the page is already drawn, the newer-build check: <code>GitHubReleaseClient.LatestReleaseAsync</code> asks the release feed (15 second limit, set in <code>ServiceCollectionExtensions.cs:84</code>) and <code>NightlyRelease.EvaluateOffer</code> decides whether to offer it. A feed that fails or answers 404 gives no offer and one log line.</p>
+<p>"Check again" runs <code>LoadAsync</code> again. Help ▸ About Chatur in the main window shows the same version and commit.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Prerequisites.razor.cs:47</code></td><td><code>LoadAsync</code></td><td><code>objTools</code></td><td>a list; <code>null</code> shows the empty state</td></tr>
+<tr><td><code>src/Chatur.Core/Prerequisites/PrerequisiteActions.cs:56</code></td><td><code>ProbeAsync</code></td><td><code>vResult.Started</code>, <code>vResult.StandardOutput</code></td><td><code>true</code> and the tool's version text</td></tr>
+<tr><td><code>src/Chatur.Core/Prerequisites/PrerequisiteActions.cs:101</code></td><td><code>ResolveProjectCatalogAsync</code></td><td><code>vSignals</code></td><td>what was found in the project folder</td></tr>
+<tr><td><code>src/Chatur.Core/Prerequisites/PrerequisiteActions.cs:239</code></td><td><code>ReadOwnBuildInfo</code></td><td><code>vVersion</code>, <code>vCommit</code></td><td>for example <code>0.1.0-nightly</code> and a commit; <code>unknown</code> when the build did not stamp one</td></tr>
+<tr><td><code>src/Chatur.Core/Prerequisites/GitHubReleaseClient.cs:36</code></td><td><code>LatestReleaseAsync</code></td><td><code>vResponse.StatusCode</code></td><td>200</td></tr>
+<tr><td><code>src/Chatur.Core/Prerequisites/NightlyRelease.cs:74</code></td><td><code>EvaluateOffer</code></td><td><code>vIsNewerVersion</code>, <code>vIsSameVersionNewerCommit</code></td><td>both <code>false</code> means no offer</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>ReadyCount</code> and <code>AttentionCount</code> (<code>Prerequisites.razor.cs:24</code>, <code>:26</code>) count ready tools and the rest. <code>DisplayVersion</code> (<code>:112</code>) splits <code>0.1.0-nightly</code> into "0.1.0 · nightly". <code>ShortCommit</code> (<code>:118</code>) keeps seven characters. <code>NightlyRelease.EvaluateOffer</code> offers a build when its version is higher, or when the version is equal, the commit differs and it was published after this build was made.</p>
+<h3 id="repository-repository">Repository (<code>/repository</code>)<a class="anchor-link" href="#repository-repository">#</a></h3>
+<p><img src="screenshots/Chatur/repository.png" alt="Repository" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Repository.razor.cs:CheckInChosenAsync</code> → <code>SourceControlActions.CheckInAsync</code> → <code>SourceControlActions.RunGitAsync</code> (<code>git add</code>, <code>git commit</code> in the project folder; table <code>Project</code> gives the folder)</p>
+<p>Every read and write on this page is a <code>git</code> process started by <code>RunGitAsync</code> (<code>SourceControlActions.cs:573</code>). Nothing about the repository is kept in Chatur's database. <code>ResolveWorkingDirectoryAsync</code> (<code>:433</code>) reads <code>Project.Path</code> and, when that is a <code>.sln</code> file, uses its folder.</p>
+<p><code>LoadAsync</code> first asks <code>IsRepositoryAsync</code>. A folder without a repository shows a plain message and stops. Otherwise four reads start side by side: changed files, branch status, branch list and history. The first changed file's difference is shown at once.</p>
+<p><code>StatusAsync</code> runs <code>git fetch --quiet</code> before it counts, so the page needs the network to show true ahead and behind numbers, and is slow when the remote is slow. A repository with no upstream gives 0 and 0.</p>
+<p>Check in is enabled by <code>CanCheckIn</code>: a project, not busy, at least one chosen file and a message. Push and Pull run plain <code>git push</code> and <code>git pull</code> and then read the status again. A failed git command throws from <code>EnsureSuccess</code> with git's own error text, which the page shows in a toast.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Repository.razor.cs:82</code></td><td><code>LoadAsync</code></td><td><code>objIsRepository</code></td><td><code>true</code></td></tr>
+<tr><td><code>src/ChaturUI/Pages/Repository.razor.cs:96</code></td><td><code>LoadAsync</code></td><td><code>objChanges.Count</code></td><td>the number of changed files</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Repository.razor.cs:295</code></td><td><code>CheckInChosenAsync</code></td><td><code>vPaths</code>, <code>objCheckInMessage</code></td><td>the chosen paths; a message that is not empty</td></tr>
+<tr><td><code>src/Chatur.Core/SourceControl/SourceControlActions.cs:146</code></td><td><code>CheckInAsync</code></td><td><code>vCommitResult.ExitCode</code></td><td>0</td></tr>
+<tr><td><code>src/Chatur.Core/SourceControl/SourceControlActions.cs:191</code></td><td><code>StatusAsync</code></td><td><code>vParts</code></td><td>two numbers: behind first, then ahead</td></tr>
+<tr><td><code>src/Chatur.Core/SourceControl/SourceControlActions.cs:593</code></td><td><code>RunGitAsync</code></td><td><code>aArguments</code>, <code>vProcess.ExitCode</code></td><td>the git arguments; 0</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>SourceControlActions.ChangesAsync</code> (<code>:58</code>) works out lines added and removed per file from <code>git diff HEAD --numstat</code>; a new file counts all its lines as added. <code>StatusAsync</code> (<code>:172</code>) works out ahead and behind. On the page, <code>CanCheckIn</code> (<code>Repository.razor.cs:46</code>), <code>NumberOf</code> (<code>:179</code>, <code>:199</code>), <code>RequirementRange</code> (<code>:214</code>) and <code>FormatWhen</code> (<code>:223</code>) shape what is shown.</p>
+<h3 id="settings-model-providers-settings-providers"><a id="settings--model-providers-settingsproviders"></a>Settings ▸ Model providers (<code>/settings/providers</code>)<a class="anchor-link" href="#settings-model-providers-settings-providers">#</a></h3>
+<p><img src="screenshots/Chatur/settings-providers.png" alt="Settings ▸ Model providers" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>SettingsProviders.razor.cs:TestAsync</code> → <code>ProviderActions.TestAsync</code> → <code>TechieRagConnectionProbe.ProbeAsync</code> → table <code>Provider</code> (<code>State</code>)</p>
+<p>The page lists rows from <code>Provider</code> and their models from <code>Model</code>. Test reads the provider's key from the secret store by <code>SecretName</code>, calls the service once and writes <code>Connected</code> or <code>Failed</code> back to <code>Provider.State</code>. A provider signed in through the browser is not called: it passes when a stored session exists. Remove deletes the provider's <code>Model</code> rows, the <code>Provider</code> row and then the secret.</p>
+<p>The "Add a provider" button opens <code>AddProviderDialog</code>. Its own chain is <code>AddProviderDialog.razor.cs:AddAsync</code> → <code>ProviderActions.AddWithKeyAsync</code>, <code>AddLocalAsync</code> or <code>AddSubscriptionAsync</code> → tables <code>Provider</code> and <code>Model</code>. Which one runs depends on the sign-in choice: pasted key, no sign-in (a local service), or the browser. For a pasted key the row is inserted first, the key is saved in the secret store as <code>chatur.provider.{id}</code>, and only that name is written to the row. The key itself never goes into the database. For an OpenAI-compatible service the model list is read from the service before anything is saved; if that read fails, nothing is added. The dialog's Test button calls <code>TestUnsavedAsync</code>, which probes without saving.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsProviders.razor.cs:29</code></td><td><code>LoadAsync</code></td><td><code>objProviders</code>, <code>objModels</code></td><td>lists; <code>null</code> shows "no providers yet"</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsProviders.razor.cs:51</code></td><td><code>TestAsync</code></td><td><code>vResult.Succeeded</code>, <code>vResult.Message</code></td><td><code>true</code> and <code>null</code></td></tr>
+<tr><td><code>src/Chatur.Core/Models/ProviderActions.cs:250</code></td><td><code>TestAsync</code></td><td><code>vRow.SignInMethod</code>, <code>vSecret</code></td><td>the row's method; a key that is not empty</td></tr>
+<tr><td><code>src/Chatur.Core/Models/TechieRagConnectionProbe.cs:71</code></td><td><code>ProbeAsync</code></td><td><code>vLlm.ModelName</code></td><td>the connector's default model</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Settings/AddProviderDialog.razor.cs:217</code></td><td><code>AddAsync</code></td><td><code>SignIn</code>, <code>objConnector</code></td><td><code>key</code>, <code>browser</code> or <code>none</code>; the connector chosen</td></tr>
+<tr><td><code>src/Chatur.Core/Models/ProviderActions.cs:108</code></td><td><code>AddWithKeyAsync</code></td><td><code>vSecretName</code></td><td><code>chatur.provider.</code> followed by the new id</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>NamesOf</code> (<code>SettingsProviders.razor.cs:90</code>) shows the first three model names and "+N more". <code>ModelsOf</code> (<code>:41</code>) picks one provider's models. In the dialog, <code>MinutesLeft</code> (<code>AddProviderDialog.razor.cs:118</code>) works out how long the browser sign-in code is still good for.</p>
+<h3 id="settings-routing-settings-routing"><a id="settings--routing-settingsrouting"></a>Settings ▸ Routing (<code>/settings/routing</code>)<a class="anchor-link" href="#settings-routing-settings-routing">#</a></h3>
+<p><img src="screenshots/Chatur/settings-routing.png" alt="Settings ▸ Routing" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>SettingsRouting.razor.cs:WriteChainAsync</code> → <code>RoutingActions.ReorderChainAsync</code> → table <code>RoutingSetting</code> (keys <code>Tier1Chain</code>, <code>Tier2Chain</code>, <code>Tier3Chain</code>)</p>
+<p>Routing decides which model answers. There are three tiers. Each tier has an ordered list of model ids, stored as a JSON array in one <code>RoutingSetting</code> row. Add, remove and move on the page all build a new list in memory and send the whole list through <code>WriteChainAsync</code>. The action refuses a list that names a model id not in <code>Model</code>.</p>
+<p>On load the page calls <code>EnsureShippedTiersAsync</code>. The first time there are models and no <code>TiersInitialised</code> row, it fills the three lists from each model's own <code>Tier</code> and marks it done. "Reset" does the same at any time.</p>
+<p>Other controls on the page:</p>
+<ul>
+<li>A tier for each agent writes <code>Role.Tier</code> (<code>SetRoleTierAsync</code>). The Agents page edits the same column.
+</li>
+<li>A tier for each kind of work writes <code>RoutingEntry</code> (<code>SetWorkTierAsync</code>). The six kinds and their starting tiers are the <code>WorkKinds</code> list at <code>SettingsRouting.razor.cs:16</code>.
+</li>
+<li>The number of failed fixes before work moves up a tier writes <code>RoutingSetting</code> key <code>EscalationThreshold</code>. The seed value is 3 (<code>0002-SeedRoles.sql:48</code>).
+</li>
+<li>The automatic routing switch writes <code>RoutingSetting</code> key <code>AutoRouting</code>.
+</li>
+</ul>
+<p>Every change is saved at once; there is no Save button. <code>AgentActions.BuildFallbackChainAsync</code> reads these lists when a message is sent.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsRouting.razor.cs:67</code></td><td><code>LoadAsync</code></td><td><code>objTiers</code></td><td>three items, each with <code>ModelIdsInOrder</code></td></tr>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsRouting.razor.cs:124</code></td><td><code>MoveAsync</code></td><td><code>vChain</code></td><td>the same ids with two neighbours swapped</td></tr>
+<tr><td><code>src/Chatur.Core/Routing/RoutingActions.cs:88</code></td><td><code>ReorderChainAsync</code></td><td><code>vFound</code></td><td>equal to <code>aModelIdsInOrder.Count</code>; otherwise <code>ArgumentException</code></td></tr>
+<tr><td><code>src/Chatur.Core/Routing/RoutingActions.cs:94</code></td><td><code>ReorderChainAsync</code></td><td><code>vJson</code></td><td>a JSON array of ids such as <code>[3,1]</code></td></tr>
+<tr><td><code>src/Chatur.Core/Routing/RoutingActions.cs:60</code></td><td><code>SetRoleTierAsync</code></td><td><code>vAffected</code></td><td>1</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>FirstModelOf</code> (<code>SettingsRouting.razor.cs:81</code>) names the first model of an agent's tier, or a dash when the list is empty. <code>AvailableModels</code> (<code>:89</code>) is every model not already in a tier's list. <code>CountText</code> (<code>:190</code>) writes "1 model" or "N models".</p>
+<h3 id="settings-agents-settings-agents"><a id="settings--agents-settingsagents"></a>Settings ▸ Agents (<code>/settings/agents</code>)<a class="anchor-link" href="#settings-agents-settings-agents">#</a></h3>
+<p><img src="screenshots/Chatur/settings-agents.png" alt="Settings ▸ Agents" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>SettingsAgents.razor.cs:SaveAsync</code> → <code>RoleActions.SaveAsync</code> → tables <code>Role</code>, <code>RoleCommand</code>, <code>Rule</code> and <code>RoleVersionHistory</code></p>
+<p>In the code an agent is a role. The page loads every role, then the detail of each one (<code>ReloadAsync</code>), and selects the first. The detail holds the wording, the rights, the commands, the rules and the version history. Editing fills four draft fields; nothing is written until Save.</p>
+<p><code>SaveAsync</code> splits the commands and rules boxes into lines and calls the action. The action refuses wording shorter than 40 characters. It then raises <code>Role.Version</code> by one, replaces the role's <code>RoleCommand</code> rows, replaces the <code>Rule</code> rows whose <code>Scope</code> is the role's code, and adds a <code>RoleVersionHistory</code> row. These statements run one after another with no transaction (<code>RoleActions.cs:262</code> to <code>:293</code>), so a failure part-way leaves the earlier ones in place. If the tier draft changed, a second call (<code>SetTierAsync</code>) writes <code>Role.Tier</code>.</p>
+<p>Restore in the history list saves an old version's wording as the next version; it does not go back. "Add an agent" opens <code>AddAgentDialog</code>, which calls <code>RoleActions.AddAsync</code> with tier 2 and the right to read files, plus edit and build when ticked. Export downloads <code>RoleActions.ExportAsync</code> as a JSON file; import reads a chosen file and calls <code>ImportAsync</code>.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsAgents.razor.cs:75</code></td><td><code>ReloadAsync</code></td><td><code>objDetails.Count</code></td><td>one entry per role</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsAgents.razor.cs:116</code></td><td><code>SaveAsync</code></td><td><code>objWordingDraft</code>, <code>vCommands</code>, <code>vRules</code></td><td>the text in the three boxes</td></tr>
+<tr><td><code>src/Chatur.Core/Roles/RoleActions.cs:241</code></td><td><code>SaveAsync</code></td><td><code>aWording.Length</code></td><td>40 or more; less throws <code>ArgumentException</code></td></tr>
+<tr><td><code>src/Chatur.Core/Roles/RoleActions.cs:259</code></td><td><code>SaveAsync</code></td><td><code>vNewVersion</code></td><td>the current version plus one</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Settings/AddAgentDialog.razor.cs:60</code></td><td><code>AddAsync</code></td><td><code>vActions</code></td><td><code>read-file</code>, plus <code>edit-file</code> and <code>run-build</code> when ticked</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>VersionOf</code> (<code>SettingsAgents.razor.cs:249</code>) takes the highest version in a role's history. <code>PillsOf</code> (<code>:253</code>) turns rights into the labels "reads code", "changes code", "runs commands" and "marks verified". <code>SavedLine</code> (<code>:290</code>) builds the sentence about the current version and when it was saved.</p>
+<h3 id="settings-corrections-settings-corrections"><a id="settings--corrections-settingscorrections"></a>Settings ▸ Corrections (<code>/settings/corrections</code>)<a class="anchor-link" href="#settings-corrections-settings-corrections">#</a></h3>
+<p><img src="screenshots/Chatur/settings-corrections.png" alt="Settings ▸ Corrections" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>SettingsCorrections.razor.cs:UndoAsync</code> → <code>CorrectionActions.UndoAsync</code> → table <code>Correction</code>, then <code>Rule</code>, <code>ProcessStepText</code>, or <code>Role</code> with <code>RoleVersionHistory</code></p>
+<p>A correction is a change an agent made to wording: an agent's own wording, a rule, or a process step's text. Rows are not created on this page. They come from the agent tool <code>CorrectWording</code> (<code>AgentActions.cs:1098</code>), which calls <code>CorrectionActions.CorrectWordingAsync</code> (<code>CorrectionActions.cs:52</code>). That method changes the wording and inserts the <code>Correction</code> row with the text before and after and the reason.</p>
+<p>The page lists them newest first and shows the difference for the chosen one. <code>SelectedCorrection</code> falls back to the first row when nothing is chosen.</p>
+<ul>
+<li>Keep sets <code>Status</code> to <code>Kept</code>.
+</li>
+<li>Undo sets <code>Status</code> to <code>Undone</code> and puts the <code>Before</code> text back. The <code>Target</code> decides where: <code>rule:</code> plus an id updates <code>Rule</code>, <code>step:</code> updates <code>ProcessStepText</code>, anything else is a role code and writes a new role version. When <code>Before</code> is empty only the status changes.
+</li>
+<li>"Export seed data" downloads every kept correction as JSON.
+</li>
+<li>"Copy" puts the changed lines on the clipboard, each with a leading plus or minus.
+</li>
+</ul>
+<p>The <code>catch (NotImplementedException)</code> blocks on this page are left from an earlier build; the three actions are built.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsCorrections.razor.cs:24</code></td><td><code>LoadAsync</code></td><td><code>objCorrections</code></td><td>every row, newest first</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsCorrections.razor.cs:45</code></td><td><code>UndoAsync</code></td><td><code>aCorrection.CorrectionId</code>, <code>aCorrection.Target</code></td><td>the row clicked</td></tr>
+<tr><td><code>src/Chatur.Core/Corrections/CorrectionActions.cs:218</code></td><td><code>UndoAsync</code></td><td><code>vCorrection.Target</code>, <code>vCorrection.Before</code></td><td><code>rule:</code> and an id, <code>step:</code> and a code, or a role code; the earlier text</td></tr>
+<tr><td><code>src/Chatur.Core/Corrections/CorrectionActions.cs:186</code></td><td><code>KeepAsync</code></td><td><code>vAffected</code></td><td>1; 0 throws <code>KeyNotFoundException</code></td></tr>
+<tr><td><code>src/Chatur.Core/Corrections/CorrectionActions.cs:287</code></td><td><code>ExportSeedAsync</code></td><td><code>vKept.Count</code></td><td>the number of rows with <code>Status</code> <code>Kept</code></td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>CopyDiffAsync</code> (<code>SettingsCorrections.razor.cs:70</code>) compares before and after with <code>TextDiff.Compare</code> and keeps only added and removed lines. <code>KindOf</code> (<code>:91</code>) reads the kind from the start of <code>Target</code>.</p>
+<h3 id="settings-measurements-settings-measurements"><a id="settings--measurements-settingsmeasurements"></a>Settings ▸ Measurements (<code>/settings/measurements</code>)<a class="anchor-link" href="#settings-measurements-settings-measurements">#</a></h3>
+<p><img src="screenshots/Chatur/settings-measurements.png" alt="Settings ▸ Measurements" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>SettingsMeasurements.razor.cs:LoadAsync</code> → <code>MeasurementActions.StreamsAsync</code> → files <code>docs/metrics/*.jsonl</code> in the project folder and table <code>RefusedWrite</code></p>
+<p>The numbers on this page are not in Chatur's database. They are counted from six files in the selected project's <code>docs/metrics</code> folder: <code>runs.jsonl</code>, <code>gates.jsonl</code>, <code>misses.jsonl</code>, <code>estimates.jsonl</code>, <code>sessions.jsonl</code> and <code>commits.jsonl</code> (<code>MeasurementActions.cs:18</code>). Each line of a file is one record. With no project selected the page shows nothing.</p>
+<p>For each file <code>StreamsAsync</code> counts the lines, counts fields that are null or empty, and finds the newest date. It then reads <code>RefusedWrite</code> for that project and file. A write is refused when a record fails <code>MeasurementSchema.TryValidate</code> or the file cannot be written; <code>AppendAsync</code> (<code>:196</code>) records the reason there instead of throwing. <code>FolderAsync</code> gives the folder path and the last line of <code>runs.jsonl</code>, indented for reading.</p>
+<p>The lower panel lists other project folders used for estimates. It calls <code>EstimateActions.SistersAsync</code>, <code>AddSisterAsync</code> and <code>RemoveSisterAsync</code> against table <code>SisterProject</code>. A refused folder shows the action's own reason.</p>
+<p>Watch one thing: <code>StreamsAsync</code>, <code>FolderAsync</code> and <code>AppendAsync</code> join <code>Project.Path</code> with <code>docs/metrics</code> as it is. For a project of kind <code>Solution</code> that path is the <code>.sln</code> file (<code>ProjectActions.cs:259</code>), and these methods do not take its folder the way <code>FileActions.cs:63</code> does. If counts are all zero for a solution, look at <code>vFilePath</code> first.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsMeasurements.razor.cs:38</code></td><td><code>LoadAsync</code></td><td><code>objStreams.Count</code></td><td>6</td></tr>
+<tr><td><code>src/Chatur.Core/Measurements/MeasurementActions.cs:63</code></td><td><code>StreamsAsync</code></td><td><code>vFilePath</code></td><td>a real file under the project's <code>docs/metrics</code></td></tr>
+<tr><td><code>src/Chatur.Core/Measurements/MeasurementActions.cs:94</code></td><td><code>StreamsAsync</code></td><td><code>vLastWriteFailed</code></td><td><code>true</code> only when the newest refused write is later than the newest record</td></tr>
+<tr><td><code>src/Chatur.Core/Measurements/MeasurementActions.cs:220</code></td><td><code>AppendAsync</code></td><td><code>vRefusalReason</code></td><td><code>null</code> for a record that is accepted</td></tr>
+<tr><td><code>src/Chatur.Core/Estimates/EstimateActions.cs:179</code></td><td><code>SistersAsync</code></td><td>the returned list</td><td>one item per <code>SisterProject</code> row</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>StreamsAsync</code> (<code>MeasurementActions.cs:45</code>) works out record count, empty-field count (<code>CountEmptyFields</code>, <code>:145</code>), newest date (<code>TryReadAt</code>, <code>:165</code>), refused-write count and whether the last write failed. On the page, <code>SisterCountText</code> (<code>SettingsMeasurements.razor.cs:49</code>) and <code>FailedStreamsText</code> (<code>:100</code>) build two short texts.</p>
+<h3 id="settings-appearance-settings-appearance"><a id="settings--appearance-settingsappearance"></a>Settings ▸ Appearance (<code>/settings/appearance</code>)<a class="anchor-link" href="#settings-appearance-settings-appearance">#</a></h3>
+<p><img src="screenshots/Chatur/settings-appearance.png" alt="Settings ▸ Appearance" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>SettingsAppearance.razor.cs:ChooseAsync</code> → <code>ThemeActions.ChooseAsync</code> → table <code>Theme</code> (the name must exist) and table <code>Setting</code> (keys <code>Appearance.ThemeName</code>, <code>Appearance.ThemeMode</code>, <code>Appearance.IsDark</code>)</p>
+<p>The page lists rows from <code>Theme</code>. Four ship with Chatur (amber, indigo, teal, slate); others have <code>Source</code> equal to <code>file</code>. Each row's <code>Values</code> column is JSON with a <code>light</code> and a <code>dark</code> set of colours.</p>
+<p>Choosing a theme, changing the mode (light, dark, follow the system) and Reset all go through <code>ThemeActions.ChooseAsync</code>. It checks the name, writes the three <code>Setting</code> rows and calls <code>AppState.SetTheme</code>. The page itself paints nothing. <code>Shell/ThemeHost</code>, which sits in <code>ChaturRoutes.razor:25</code> in every window, hears <code>AppState.Changed</code> and applies the theme through <code>ThemeInterop</code>. That is why every open window changes together.</p>
+<p>"Add a theme from a file" takes a typed file path. <code>AddFromFileAsync</code> uses the file name as the theme name, checks the JSON shape, refuses a name that already exists and inserts the row. <code>ArgumentException</code>, <code>InvalidOperationException</code> and <code>FileNotFoundException</code> are shown in the dialog (<code>objAddError</code>); anything else is not caught here. Export downloads the chosen theme in the same shape.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsAppearance.razor.cs:81</code></td><td><code>ChooseAsync</code></td><td><code>aThemeName</code>, <code>State.ThemeMode</code></td><td>the card clicked; the mode already in use</td></tr>
+<tr><td><code>src/Chatur.Core/Themes/ThemeActions.cs:77</code></td><td><code>ChooseAsync</code></td><td><code>vExists</code></td><td>a theme id; <code>null</code> throws <code>KeyNotFoundException</code></td></tr>
+<tr><td><code>src/Chatur.Core/Themes/ThemeActions.cs:89</code></td><td><code>ChooseAsync</code></td><td><code>objAppState.ThemeName</code></td><td>the new name after this line</td></tr>
+<tr><td><code>src/ChaturUI/Shell/ThemeHost.razor.cs:86</code></td><td><code>ApplyAsync</code></td><td><code>vTheme.Source</code>, <code>vIsDark</code></td><td><code>file</code> takes the custom path; anything else calls <code>SetThemeAsync</code></td></tr>
+<tr><td><code>src/Chatur.Core/Themes/ThemeActions.cs:106</code></td><td><code>AddFromFileAsync</code></td><td><code>vName</code>, <code>vJson</code></td><td>a name made from the file name; JSON with both sets</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> <code>SwatchColours</code> (<code>SettingsAppearance.razor.cs:50</code>) picks four colours (background, card, accent, text) from the set for the mode now showing. <code>ModeValue</code> (<code>:33</code>) maps the mode to the radio value. <code>AppState.IsDark</code> (<code>AppState.cs:30</code>) is true for dark mode, or for follow-the-system when the system is dark.</p>
+<h3 id="settings-account-settings-account"><a id="settings--account-settingsaccount"></a>Settings ▸ Account (<code>/settings/account</code>)<a class="anchor-link" href="#settings-account-settings-account">#</a></h3>
+<p><img src="screenshots/Chatur/settings-account.png" alt="Settings ▸ Account" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>SettingsAccount.razor.cs</code> (an empty class, no method) → no action is called → no table is read</p>
+<p>This page is not wired yet. It draws two fixed panels and nothing else. The first always says "Not signed in", and the second always says "Device id not read yet". Both are shown even though the person is signed in: <code>SecondaryLayout</code> wraps the page in <code>AuthGate</code>, so it cannot be reached without a user.</p>
+<p>The data the page should show already exists. The signed-in user is <code>AppState.CurrentUser</code> (set by <code>AccountActions.SignInAsync</code> and <code>CurrentUserAsync</code>), and the device id comes from <code>IAccountActions.DeviceIdAsync</code>. The account menu in the main and start windows already shows the name and email from <code>AppState</code>. To wire the page, inject <code>AppState</code> and <code>IAccountActions</code> in the code-behind and replace the two <code>Empty</code> blocks.</p>
+<p>Sign out is not on this page. It is in the account menu, <code>Shell/AccountMenu.razor.cs:55</code>.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsAccount.razor:14</code></td><td>markup, no function</td><td>the <code>Empty</code> title</td><td>always "Not signed in" today</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Settings/SettingsAccount.razor:22</code></td><td>markup, no function</td><td>the <code>Empty</code> title</td><td>always "Device id not read yet" today</td></tr>
+<tr><td><code>src/ChaturUI/Layouts/AuthGate.razor.cs:36</code></td><td><code>CheckAsync</code></td><td><code>vUser</code></td><td>the signed-in user; the page is drawn only when this is not <code>null</code></td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AccountActions.cs:242</code></td><td><code>DeviceIdAsync</code></td><td>the returned text</td><td>the device id; not called by this page today</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> none</p>
+<h3 id="all-projects-all-projects">All projects (<code>/all-projects</code>)<a class="anchor-link" href="#all-projects-all-projects">#</a></h3>
+<p><img src="screenshots/Chatur/all-projects.png" alt="All projects" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>AllProjects.razor</code> (no code-behind file) → no action is called → no table is read</p>
+<p>A fixed page for a later phase. It always shows "No projects yet", whatever is in table <code>Project</code>. The "All projects" item in the main window's project switcher does not come here; it goes to <code>/start?all=1</code>.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/AllProjects.razor:1</code></td><td>route, no function</td><td>the address</td><td><code>/all-projects</code> in the secondary window</td></tr>
+<tr><td><code>src/ChaturUI/Pages/AllProjects.razor:18</code></td><td>markup, no function</td><td>the <code>Empty</code> title</td><td>always "No projects yet"</td></tr>
+<tr><td><code>src/ChaturUI/Layouts/SecondaryNavigation.cs:25</code></td><td><code>Items</code></td><td>the item's <code>Route</code></td><td><code>/all-projects</code></td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> none</p>
+<h3 id="working-copies-worktrees">Working copies (<code>/worktrees</code>)<a class="anchor-link" href="#working-copies-worktrees">#</a></h3>
+<p><img src="screenshots/Chatur/worktrees.png" alt="Working copies" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Worktrees.razor</code> (no code-behind file) → no action is called → no table is read</p>
+<p>A fixed page for a later phase. It always shows "No working copies" and has no button to add one.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Worktrees.razor:1</code></td><td>route, no function</td><td>the address</td><td><code>/worktrees</code> in the secondary window</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Worktrees.razor:17</code></td><td>markup, no function</td><td>the <code>Empty</code> title</td><td>always "No working copies"</td></tr>
+<tr><td><code>src/ChaturUI/Layouts/SecondaryNavigation.cs:24</code></td><td><code>Items</code></td><td>the item's <code>Route</code></td><td><code>/worktrees</code></td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> none</p>
+<h3 id="licence-licence">Licence (<code>/licence</code>)<a class="anchor-link" href="#licence-licence">#</a></h3>
+<p><img src="screenshots/Chatur/licence.png" alt="Licence" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Licence.razor</code> (no code-behind file) → no action is called → no table is read</p>
+<p>A fixed page for a later phase. The "active" badge and "365 days remaining" are text typed into the markup, not values read from App Manager. Do not treat them as a real licence state. The machines panel always shows "No devices to show".</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Licence.razor:19</code></td><td>markup, no function</td><td>the badge text</td><td>always "active"</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Licence.razor:20</code></td><td>markup, no function</td><td>the days text</td><td>always "365 days remaining"</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Licence.razor:31</code></td><td>markup, no function</td><td>the <code>Empty</code> title</td><td>always "No devices to show"</td></tr>
+<tr><td><code>src/ChaturUI/Shell/AccountMenu.razor:21</code></td><td>menu item</td><td>the route opened</td><td><code>/licence</code></td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> none</p>
+<h3 id="feedback-feedback">Feedback (<code>/feedback</code>)<a class="anchor-link" href="#feedback-feedback">#</a></h3>
+<p><img src="screenshots/Chatur/feedback.png" alt="Feedback" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Feedback.razor:SendAsync</code> (in the page's own <code>@code</code> block) → <code>ToastService.Success</code> → nothing is stored and nothing is sent</p>
+<p>The form works on screen only. Send is enabled when the message is not empty. <code>SendAsync</code> shows a toast that says the feedback is kept, then clears the box. The text is not written to the database or a file and is not posted to App Manager, so it is lost. The "What came back" panel always shows "No feedback yet". There is no <code>.razor.cs</code> file for this page.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Feedback.razor:60</code></td><td><code>CanSend</code></td><td><code>objMessage</code></td><td>text that is not empty</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Feedback.razor:62</code></td><td><code>SendAsync</code></td><td><code>objKind</code>, <code>objMessage</code></td><td><code>issue</code> or <code>idea</code>; the typed text</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Feedback.razor:70</code></td><td><code>SendAsync</code></td><td><code>objMessage</code></td><td>empty after this line; the text is gone</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> none</p>
+<h3 id="integrations-integrations">Integrations (<code>/integrations</code>)<a class="anchor-link" href="#integrations-integrations">#</a></h3>
+<p><img src="screenshots/Chatur/integrations.png" alt="Integrations" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Integrations.razor</code> (no code-behind file) → no action is called → no table is read</p>
+<p>A fixed page for a later phase. It always shows "No actions published yet".</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Integrations.razor:1</code></td><td>route, no function</td><td>the address</td><td><code>/integrations</code> in the secondary window</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Integrations.razor:18</code></td><td>markup, no function</td><td>the <code>Empty</code> title</td><td>always "No actions published yet"</td></tr>
+<tr><td><code>src/ChaturUI/Layouts/SecondaryNavigation.cs:26</code></td><td><code>Items</code></td><td>the item's <code>Route</code></td><td><code>/integrations</code></td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> none</p>
+<h2 id="cross-cutting-flows">Cross-cutting flows<a class="anchor-link" href="#cross-cutting-flows">#</a></h2>
+<h3 id="windows">Windows<a class="anchor-link" href="#windows">#</a></h3>
+<p><strong>Call chain:</strong> <code>App.xaml.cs:CreateWindow</code> → <code>WindowService.CreateStartWindow</code> → <code>StartWindowPage</code> (a <code>BlazorWebView</code> whose root is <code>ChaturUI.ChaturRoutes</code>)</p>
+<p>The design has three windows: start, main and secondary. All three are made in <code>src/Chatur/Services/WindowService.cs</code>. Each window is a MAUI <code>ContentPage</code> under <code>src/Chatur/Windows</code> holding one <code>BlazorWebView</code>, and every web view loads the same <code>ChaturRoutes</code> router.</p>
+<ul>
+<li>Start window: <code>CreateStartWindow</code> (line 18), called once from <code>App.xaml.cs:26</code> when the app starts.
+</li>
+<li>Main window: <code>ShowMainWindow</code> (line 22) makes a window from <code>MainWindowPage</code>. Nothing in <code>src</code> calls it today. When a project is opened, <code>Start.razor.cs:68</code> and <code>:134</code> navigate the start window's own web view to <code>/</code>, so the main window's content appears inside the first window.
+</li>
+<li>Secondary window: <code>ShowSecondaryWindow</code> (line 35). The pages reach it through <code>ISecondaryWindow.Open</code>, implemented by <code>Platform/MauiSecondaryWindow.cs:23</code>, which moves the call to the main thread. If the window is already open, <code>SecondaryWindowPage.NavigateTo</code> (<code>SecondaryWindowPage.xaml.cs:32</code>) moves it to the new route and the window is brought forward.
+</li>
+</ul>
+<p><code>AppState</code> is a singleton, so all windows share it. Services registered as scoped, such as <code>WorkbenchState</code> and every action class, are separate per web view.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/Chatur/App.xaml.cs:26</code></td><td><code>CreateWindow</code></td><td>the returned <code>Window</code></td><td>a window whose page is <code>StartWindowPage</code></td></tr>
+<tr><td><code>src/Chatur/Services/WindowService.cs:39</code></td><td><code>ShowSecondaryWindow</code></td><td><code>aRoute</code>, <code>objSecondaryWindow</code></td><td>the route asked for; <code>null</code> the first time</td></tr>
+<tr><td><code>src/Chatur/Services/WindowService.cs:50</code></td><td><code>ShowSecondaryWindow</code></td><td><code>aRoute</code></td><td>the new route when the window is already open</td></tr>
+<tr><td><code>src/Chatur/Windows/SecondaryWindowPage.xaml.cs:35</code></td><td><code>NavigateTo</code></td><td>the result of <code>TryDispatchAsync</code></td><td><code>true</code> while the web view is alive</td></tr>
+</tbody>
+</table>
+<h3 id="sign-in">Sign-in<a class="anchor-link" href="#sign-in">#</a></h3>
+<p><strong>Call chain:</strong> <code>AuthGate.razor.cs:CheckAsync</code> → <code>AccountActions.CurrentUserAsync</code> → <code>ISecretStore.ReadAsync</code> (and <code>AppManagerClient.RefreshAsync</code> when the token has expired)</p>
+<p><code>StartLayout</code>, <code>MainLayout</code> and <code>SecondaryLayout</code> wrap their content in <code>AuthGate</code>. <code>BareLayout</code> (Sign in, Register) does not. <code>AuthGate</code> asks for the current user once when it is first drawn. No user means a move to <code>/sign-in</code>. An exception shows an error box with "Try again" and "Sign in again" instead of a blank window.</p>
+<p><code>CurrentUserAsync</code> returns <code>AppState.CurrentUser</code> when it is set. After a restart it is empty, so the method reads six values from the secret store. Their names are in <code>Accounts/AccountSecretNames.cs</code>. If any of the four it needs is missing, there is no user. If the stored expiry time has passed, it calls <code>AuthSvc/refresh</code>; a failed refresh clears the stored session and returns no user.</p>
+<p>The App Manager client is a typed <code>HttpClient</code> set up in <code>ServiceCollectionExtensions.cs:53</code>. It takes <code>AppManager:BaseUrl</code>, and adds <code>X-Api-Key</code> and <code>X-Api-Secret</code> headers when those are configured. <code>AppManagerDeviceIdHandler</code> adds <code>X-Device-Id</code> to every call.</p>
+<p>The secret store is <code>ISecretStore</code>, implemented by <code>src/Chatur/Platform/MauiSecretStore.cs</code>: Windows Credential Manager under the prefix <code>Chatur:</code>, and <code>SecureStorage</code> on Mac Catalyst. A test run uses its own prefix so it never replaces a real session.</p>
+<p>Sign out is <code>AccountMenu.razor.cs:55</code>: <code>AccountActions.SignOutAsync</code> calls <code>AuthSvc/logout</code>, clears the six stored values even when that call fails, clears <code>AppState.CurrentUser</code>, and the menu then loads <code>/sign-in</code> with a forced reload.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Layouts/AuthGate.razor.cs:36</code></td><td><code>CheckAsync</code></td><td><code>vUser</code></td><td>the user; <code>null</code> sends the window to <code>/sign-in</code></td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AccountActions.cs:196</code></td><td><code>CurrentUserAsync</code></td><td><code>vAccessToken</code>, <code>vRefreshToken</code>, <code>vUserId</code>, <code>vEmail</code></td><td>all four not <code>null</code> after a remembered sign-in</td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AccountActions.cs:211</code></td><td><code>CurrentUserAsync</code></td><td><code>vExpiresAt</code>, <code>objClock.UtcNow</code></td><td>expiry later than now; otherwise a refresh is tried</td></tr>
+<tr><td><code>src/Chatur.Core/Accounts/AccountActions.cs:214</code></td><td><code>CurrentUserAsync</code></td><td><code>vRefreshed.Success</code></td><td><code>true</code>; <code>false</code> clears the session</td></tr>
+<tr><td><code>src/Chatur/Platform/MauiSecretStore.cs:41</code></td><td><code>ReadAsync</code></td><td><code>TargetPrefix + aName</code></td><td><code>Chatur:AppManager.AccessToken</code> and the like</td></tr>
+</tbody>
+</table>
+<h3 id="the-selected-project">The selected project<a class="anchor-link" href="#the-selected-project">#</a></h3>
+<p><strong>Call chain:</strong> <code>MenuBar.razor.cs:SwitchToAsync</code> → <code>ProjectActions.SelectProjectAsync</code> → tables <code>Project</code> and <code>Setting</code>, then <code>AppState.SetSelectedProject</code></p>
+<p>The selected project lives in two places. In memory it is <code>AppState.SelectedProject</code>. On disk it is the <code>Setting</code> row with key <code>SelectedProjectId</code>. Pages read the first; the second is how the choice survives a restart.</p>
+<ul>
+<li><code>SelectProjectAsync</code> (<code>ProjectActions.cs:327</code>) stamps <code>Project.LastOpenedUtc</code>, writes the <code>Setting</code> row and calls <code>AppState.SetSelectedProject</code>.
+</li>
+<li><code>SelectedProjectAsync</code> (<code>:300</code>) reads the <code>Setting</code> row joined to <code>Project</code> and also sets <code>AppState</code>. A new process learns the selection only through this call. Start, Workbench and Repository each make it on load.
+</li>
+<li><code>ProjectOpenActions.CloseProjectAsync</code> (<code>ProjectOpenActions.cs:141</code>) deletes the row and sets <code>AppState</code> to nothing.
+</li>
+</ul>
+<p><code>AppState.SetSelectedProject</code> raises <code>Changed</code>. Every part of the main window listens. <code>Workbench.razor.cs:45</code> compares project ids and calls <code>WorkbenchTabs.Reset()</code> to close all tabs. <code>FilesPanel</code> reloads the tree, <code>ConversationPanel.EnsureLoadedAsync</code> (<code>:416</code>) clears and reloads sessions, <code>OutputStrip</code> and <code>AppToolbar</code> restart their output readers. No navigation happens on a switch.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/Chatur.Core/Projects/ProjectActions.cs:315</code></td><td><code>SelectedProjectAsync</code></td><td><code>vProject</code></td><td>the stored project, or <code>null</code> when none was ever chosen</td></tr>
+<tr><td><code>src/Chatur.Core/AppState.cs:41</code></td><td><code>SetSelectedProject</code></td><td><code>aProject</code></td><td>the new project</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Workbench.razor.cs:48</code></td><td><code>OnAppStateChanged</code></td><td><code>vProjectId</code>, <code>objProjectId</code></td><td>different on a real switch; equal means the tabs are kept</td></tr>
+<tr><td><code>src/ChaturUI/Shell/WorkbenchState.cs:396</code></td><td><code>Reset</code></td><td><code>objOpenFiles.Count</code></td><td>0 after the call</td></tr>
+</tbody>
+</table>
+<h3 id="the-agent-loop-and-approving-a-proposed-change">The agent loop and approving a proposed change<a class="anchor-link" href="#the-agent-loop-and-approving-a-proposed-change">#</a></h3>
+<p><strong>Call chain:</strong> <code>ConversationPanel.razor.cs:SendMessageAsync</code> → <code>AgentActions.SendAsync</code> → <code>GuardPipeline.EvaluateAsync</code> → tables <code>SessionEvent</code> and <code>Change</code>; then <code>ConversationPanel.razor.cs:ApproveAsync</code> → <code>ChangeActions.ApproveAsync</code> → <code>FileActions.SaveAsync</code> → table <code>Change</code></p>
+<p><code>SendAsync</code> (<code>AgentActions.cs:208</code>) returns pieces of the reply as they arrive. In order:</p>
+<ol>
+<li>It loads the session, saves the mode if it changed, and makes a picked agent the session's role (<code>SetSessionRoleAsync</code>).
+</li>
+<li>It records the message as a <code>SessionEvent</code> row of kind <code>user</code> and builds the history from the role's wording and past messages.
+</li>
+<li>It picks a model: the one chosen in the box, else automatic routing when on, else <code>ResolveModelAsync</code> (<code>:777</code>), which uses the role's tier. With no connected provider it replies "No model provider is configured yet" and stops.
+</li>
+<li>It builds the tier's fallback list. A model that fails before showing any text gives way to the next one.
+</li>
+<li>It streams the model's answer through TechieRag. Text goes back to the page at once. Tool calls are collected.
+</li>
+<li>Each tool call goes through <code>GuardPipeline</code>, which runs <code>RoleRightsGuard</code>, <code>AskMeFirstGuard</code> and <code>SourceControlRefusalGuard</code> in that order (<code>ServiceCollectionExtensions.cs:149</code>). An allowed call runs in <code>ExecuteToolAsync</code> (<code>:1061</code>). A refused call is recorded as kind <code>refusal</code>.
+</li>
+<li>The loop repeats until an answer has no tool calls, up to <code>MaxToolIterations</code> (8, <code>:28</code>).
+</li>
+<li>The full reply is recorded as kind <code>assistant</code> with model name and tokens, and a last chunk with <code>IsFinal</code> true is returned.
+</li>
+</ol>
+<p>In "ask me first" mode <code>AskMeFirstGuard</code> refuses every file edit. <code>SendAsync</code> sees that at <code>:470</code> and inserts a <code>Change</code> row with status <code>Proposed</code>, holding the text before and after. In "go ahead" mode the edit is written at once and recorded as <code>Approved</code>.</p>
+<p>The page reloads proposed changes after each send (<code>LoadProposedChangesAsync</code>, <code>:507</code>) and marks those files read-only in the editor. Approve calls <code>ChangeActions.ApproveAsync</code> (<code>ChangeActions.cs:55</code>): it writes <code>After</code> to the file and sets the status to <code>Approved</code>; a change that is no longer <code>Proposed</code> is left alone. Reject only sets <code>Rejected</code>. Stop calls <code>AgentActions.StopAsync</code> (<code>:528</code>), which cancels through the shared <code>AgentSessionRegistry</code>.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/Chatur.Core/Agent/AgentActions.cs:252</code></td><td><code>SendAsync</code></td><td><code>vModel</code></td><td>a connected model; <code>null</code> gives the "no provider" reply</td></tr>
+<tr><td><code>src/Chatur.Core/Agent/AgentActions.cs:300</code></td><td><code>SendAsync</code></td><td><code>vOpened.Failure</code>, <code>vChainIndex</code></td><td><code>null</code> and 0 when the first model answers</td></tr>
+<tr><td><code>src/Chatur.Core/Agent/AgentActions.cs:464</code></td><td><code>SendAsync</code></td><td><code>vGuardResult.Allowed</code>, <code>vGuardResult.RefusalReason</code></td><td><code>false</code> with a reason that holds "ask me first" for a held edit</td></tr>
+<tr><td><code>src/Chatur.Core/Agent/AgentActions.cs:477</code></td><td><code>SendAsync</code></td><td><code>vToolRequest.FilePath</code></td><td>the file the agent wants to change</td></tr>
+<tr><td><code>src/Chatur.Core/Changes/ChangeActions.cs:74</code></td><td><code>ApproveAsync</code></td><td><code>vRow.Status</code></td><td><code>Proposed</code>; anything else returns without writing</td></tr>
+<tr><td><code>src/ChaturUI/Shell/ConversationPanel.razor.cs:862</code></td><td><code>ApproveAsync</code></td><td><code>aChange.FilePath</code></td><td>the same file; an open tab is reloaded with the new text</td></tr>
+</tbody>
+</table>
+<h3 id="build-and-run-output">Build and run output<a class="anchor-link" href="#build-and-run-output">#</a></h3>
+<p><strong>Call chain:</strong> <code>AppToolbar.razor.cs:BuildAsync</code> → <code>BuildRunActions.BuildAsync</code> → <code>IProcessLauncher.RunAsync</code> (<code>dotnet build</code>); <code>OutputStrip.razor.cs:ConsumeOutputAsync</code> → <code>BuildRunActions.StreamOutputAsync</code></p>
+<p>Build and Run are in the toolbar and in the Project menu; both call the same action. Run targets come from table <code>RunTarget</code>. The first time a project has none, <code>TargetsAsync</code> (<code>BuildRunActions.cs:49</code>) finds them in the project folder and stores them.</p>
+<p>Output is not pushed to the page. <code>BuildRunActions</code> keeps one <code>RunState</code> per project (<code>:456</code>) with a list of lines and a generation number. <code>BuildAsync</code> and <code>RunAsync</code> call <code>RunState.Begin</code> first, which clears the list, raises the generation and cancels the previous run. Each line the process prints is added with <code>Publish</code>. <code>StreamOutputAsync</code> (<code>:154</code>) is a loop that returns new lines every 150 milliseconds and starts again from the top when the generation changes.</p>
+<p>Two readers follow that stream. <code>OutputStrip</code> draws the lines, sets the status text and collects compiler errors. <code>AppToolbar.WatchOutputAsync</code> (<code>AppToolbar.razor.cs:222</code>) clears the busy flag when it sees an ending line such as "Build succeeded". The toolbar calls the action before it calls <code>NotifyBuildOrRunStarted</code> (<code>:164</code>, <code>:165</code>), so the list is already cleared when <code>OutputStrip</code> restarts its reader. Keep that order.</p>
+<p><code>RunAsync</code> returns at once and runs <code>dotnet run</code> in the background. Stop cancels the token; the launcher then ends the whole process tree (<code>MauiProcessLauncher.cs:157</code>).</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:83</code></td><td><code>BuildAsync</code></td><td><code>vArguments</code></td><td><code>build</code>, the project path, <code>-c</code> and the configuration</td></tr>
+<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:118</code></td><td><code>BuildAsync</code></td><td><code>vExitCode</code>, <code>vErrors.Count</code></td><td>0 and 0 for a good build</td></tr>
+<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:168</code></td><td><code>StreamOutputAsync</code></td><td><code>vState.Generation</code>, <code>vGeneration</code></td><td>equal; a difference resets <code>vSent</code> to 0</td></tr>
+<tr><td><code>src/ChaturUI/Shell/OutputStrip.razor.cs:116</code></td><td><code>ConsumeOutputAsync</code></td><td><code>objStatusText</code></td><td>"build passed", "build failed", "running" or "stopped"</td></tr>
+</tbody>
+</table>
+<h3 id="theme">Theme<a class="anchor-link" href="#theme">#</a></h3>
+<p><strong>Call chain:</strong> <code>ThemeToggle.razor.cs:ToggleModeAsync</code> → <code>ThemeActions.ChooseAsync</code> → table <code>Setting</code>, then <code>AppState.SetTheme</code> → <code>ThemeHost.razor.cs:ApplyAsync</code> → <code>ThemeInterop.SetThemeAsync</code></p>
+<p><code>ThemeHost</code> is drawn once per window by <code>ChaturRoutes.razor:25</code>. On start it reads the stored choice with <code>ThemeActions.CurrentAsync</code> and sets <code>AppState</code>. After the first draw it asks the browser whether the system is dark, then applies the theme. Every later <code>AppState.Changed</code> applies it again. A built-in theme is applied by name; the CSS for the four built-in themes is linked in <code>src/Chatur/wwwroot/index.html:14</code> to <code>:17</code>. A theme added from a file is applied by passing its colour values.</p>
+<p>The Sign in and Register pages use <code>BareLayout</code>, whose two buttons (<code>BareLayout.razor.cs:36</code>) change <code>AppState</code> only. That choice is not saved, because nobody is signed in yet.</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Shell/ThemeHost.razor.cs:38</code></td><td><code>OnInitializedAsync</code></td><td><code>vCurrent.ThemeName</code>, <code>vCurrent.Mode</code></td><td>the stored choice; amber and dark on a new install</td></tr>
+<tr><td><code>src/ChaturUI/Shell/ThemeToggle.razor.cs:27</code></td><td><code>ToggleModeAsync</code></td><td><code>vMode</code></td><td>the opposite of what is showing</td></tr>
+<tr><td><code>src/ChaturUI/Services/ThemeInterop.cs:36</code></td><td><code>SetThemeAsync</code></td><td><code>aThemeName</code>, <code>aIsDark</code></td><td>the values now in <code>AppState</code></td></tr>
+</tbody>
+</table>
+<h3 id="configuration-logging-errors">Configuration, logging, errors<a class="anchor-link" href="#configuration-logging-errors">#</a></h3>
+<ul>
+<li>Service registration: <code>src/Chatur/MauiProgram.cs:77</code> (<code>RegisterServices</code>), which calls <code>AddChaturCore</code> (<code>src/Chatur.Core/ServiceCollectionExtensions.cs:40</code>) and <code>AddChaturUI</code> (<code>src/ChaturUI/Services/ServiceCollectionExtensions.cs:18</code>).
+</li>
+<li>Configuration file: <code>src/Chatur/appsettings.json</code>, embedded in the app and loaded at <code>MauiProgram.cs:142</code>. It holds <code>AppManager:BaseUrl</code> and <code>AppManager:ApplicationId</code>.
+</li>
+<li>User secrets: loaded in Debug builds only, at <code>MauiProgram.cs:160</code>. <code>AppManager:ApiKey</code> and <code>AppManager:ApiSecret</code> are read at <code>ServiceCollectionExtensions.cs:62</code> and <code>:68</code>. Never put a key in <code>appsettings.json</code>.
+</li>
+<li>Release feed address: key <code>Chatur:Releases:ApiBaseAddress</code>, read in <code>src/Chatur.Core/Prerequisites/ReleaseFeedAddress.cs:21</code>.
+</li>
+<li>Data folder and database file: <code>src/Chatur/Platform/MauiAppPaths.cs:14</code> and <code>:21</code> (<code>chatur.db</code>). A test run is sent to its own folder by <code>src/Chatur.Core/Platform/TestDataGuard.cs:40</code>.
+</li>
+<li>Database connection: <code>src/Chatur.Core/Data/SqliteConnectionFactory.cs:24</code>; each call opens a new connection and turns foreign keys on.
+</li>
+<li>Database changes: <code>ChaturDbMigrator.Migrate</code> (<code>src/ChaturDb/ChaturDbMigrator.cs:35</code>), called at <code>MauiProgram.cs:56</code>. A failed migration is logged as fatal and the app still starts.
+</li>
+<li>Logging: Serilog, set up at <code>MauiProgram.cs:103</code>. One file per day, <code>logs/chatur-.log</code> under the data folder, 14 files kept. Microsoft sources log from Warning up.
+</li>
+<li>Unhandled exceptions: <code>MauiProgram.cs:120</code>. Unobserved task exceptions: <code>MauiProgram.cs:129</code>; they are logged as "Unobserved task exception" and marked observed.
+</li>
+<li>Errors shown to the person: toasts through <code>ToastService</code>, drawn by <code>ToastProvider</code> at <code>src/ChaturUI/ChaturRoutes.razor:20</code>. Action classes throw <code>ArgumentException</code>, <code>InvalidOperationException</code> or <code>KeyNotFoundException</code>; most pages catch the first two and show the message.
+</li>
+<li>Sign-in check failure: the error box in <code>src/ChaturUI/Layouts/AuthGate.razor.cs:48</code>.
+</li>
+</ul>
+<h2 id="known-issues">Known issues<a class="anchor-link" href="#known-issues">#</a></h2>
+<ul>
+<li>REQ-FN-024: an earlier reply takes the name of the agent chosen now, because <code>src/ChaturUI/Shell/ConversationPanel.razor:99</code> labels every reply with the open session's <code>RoleName</code>.
+</li>
+<li>REQ-FN-022: checked by a hand step; no test drives it.
+</li>
+<li>REQ-FN-012: can only be checked on the Mac.
+</li>
+<li>REQ-FN-001, REQ-FN-002, REQ-FN-030, REQ-FN-048, REQ-FN-004: checked by hand steps, not by a test.
+</li>
+<li>Sign out leaves the window on "Loading Chatur" until the app is reopened; start at the forced reload in <code>src/ChaturUI/Shell/AccountMenu.razor.cs:58</code>.
+</li>
+<li>Closing the secondary window logs an unobserved WebView2 <code>SendMessage</code> error; it reaches the log through <code>src/Chatur/MauiProgram.cs:129</code>.
+</li>
+</ul>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

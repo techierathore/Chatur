@@ -20,7 +20,7 @@ public sealed class ProviderActions : IProviderActions
     private static readonly IReadOnlyDictionary<string, (string Identifier, int Tier)[]> ModelCatalogByConnector =
         new Dictionary<string, (string, int)[]>
         {
-            ["Anthropic"] = new[] { ("claude-opus-5", 1), ("claude-sonnet-5", 2), ("claude-haiku-5", 3) },
+            ["Anthropic"] = new[] { ("claude-opus-5-5", 1), ("claude-sonnet-5-5", 2), ("claude-haiku-5-5", 3) },
             ["OpenAI"] = new[] { ("gpt-5", 1), ("gpt-5-mini", 2), ("gpt-5-nano", 3) },
             ["Google"] = new[] { ("gemini-2.5-pro", 1), ("gemini-2.5-flash", 2), ("gemini-2.5-flash-lite", 3) }
         };
@@ -44,6 +44,7 @@ public sealed class ProviderActions : IProviderActions
     private readonly ISecretStore objSecrets;
     private readonly ILlmConnectionProbe objProbe;
     private readonly ISubscriptionSignIn objSubscriptionSignIn;
+    private readonly AppState? objAppState;
 
     /// <summary>Creates the action implementation.</summary>
     /// <param name="aDb">Opens connections to Chatur's own database.</param>
@@ -51,7 +52,22 @@ public sealed class ProviderActions : IProviderActions
     /// <param name="aProbe">Calls a provider once, through TechieRag.</param>
     /// <param name="aSubscriptionSignIn">Runs a subscription's device-code sign-in through TechieRag.</param>
     public ProviderActions(IDbConnectionFactory aDb, ISecretStore aSecrets, ILlmConnectionProbe aProbe, ISubscriptionSignIn aSubscriptionSignIn)
+        : this(aDb, aSecrets, aProbe, aSubscriptionSignIn, null)
     {
+    }
+
+    /// <summary>
+    /// Creates the action set for the signed-in account: its providers live in its own database, and
+    /// their secrets are filed under names that carry the account (BRD-212).
+    /// </summary>
+    /// <param name="aDb">Opens connections to the signed-in account's database.</param>
+    /// <param name="aSecrets">The operating system's secret store.</param>
+    /// <param name="aProbe">Checks that a source answers.</param>
+    /// <param name="aSubscriptionSignIn">Signs in to a subscription.</param>
+    /// <param name="aAppState">Names who is signed in; <see langword="null"/> files secrets under their plain names.</param>
+    public ProviderActions(IDbConnectionFactory aDb, ISecretStore aSecrets, ILlmConnectionProbe aProbe, ISubscriptionSignIn aSubscriptionSignIn, AppState? aAppState)
+    {
+        objAppState = aAppState;
         objDb = aDb;
         objSecrets = aSecrets;
         objProbe = aProbe;
@@ -105,7 +121,7 @@ public sealed class ProviderActions : IProviderActions
             cancellationToken: aCt);
         var vProviderId = await vConnection.ExecuteScalarAsync<long>(vInsert).ConfigureAwait(false);
 
-        var vSecretName = $"chatur.provider.{vProviderId}";
+        var vSecretName = Accounts.AccountSecretNames.ForAccount(Data.AccountScope.CurrentUserId(objAppState), $"chatur.provider.{vProviderId}");
         await objSecrets.SaveAsync(vSecretName, aKey, aCt).ConfigureAwait(false);
 
         var vUpdate = new CommandDefinition(
@@ -153,7 +169,7 @@ public sealed class ProviderActions : IProviderActions
     /// Signs in first and writes the <c>Provider</c> row only once the sign-in has succeeded, so a
     /// cancelled, expired or refused sign-in leaves nothing behind. The session itself is filed by
     /// TechieRag through <see cref="SecretSubscriptionSessionStore"/> under
-    /// <see cref="SecretSubscriptionSessionStore.SecretNameFor"/>; the row keeps only that name.
+    /// <see cref="SecretSubscriptionSessionStore.SecretNameFor(string, string?)"/>; the row keeps only that name.
     /// </remarks>
     public async Task<ModelProvider> AddSubscriptionAsync(
         string aName,
@@ -176,7 +192,7 @@ public sealed class ProviderActions : IProviderActions
         var vModelIdentifier = new ChatGptSubscriptionOptions().Model;
         await objSubscriptionSignIn.SignInAsync(vModelIdentifier, aOnSignInCode, aCt).ConfigureAwait(false);
 
-        var vSecretName = SecretSubscriptionSessionStore.SecretNameFor(ChatGptCatalogName);
+        var vSecretName = SecretSubscriptionSessionStore.SecretNameFor(ChatGptCatalogName, Data.AccountScope.CurrentUserId(objAppState));
         using var vConnection = objDb.OpenConnection();
 
         var vExisting = await vConnection.QuerySingleOrDefaultAsync<ProviderRow>(

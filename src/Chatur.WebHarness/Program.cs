@@ -39,8 +39,15 @@ try
                 retainedFileCountLimit: 14);
     });
 
+    // A page that goes away without saying goodbye (a test closing its browser) is let go at once, not kept
+    // for three minutes in case it comes back. AppState is one object for the whole harness, so every page
+    // kept this way went on answering its Changed event: after a test run, one project change made dozens
+    // of closed pages re-read their files, run targets, branch and conversation together, and the page that
+    // was really open stood with an empty work area for 3.7 to 6.9 s (REQ-UI-055, 2026-11-15;
+    // tests/verify/deep-link-after-closed-pages.spec.ts). The MAUI head has no such pages: a window that
+    // closes takes its components with it.
     vBuilder.Services.AddRazorComponents()
-        .AddInteractiveServerComponents();
+        .AddInteractiveServerComponents(aOptions => aOptions.DisconnectedCircuitMaxRetained = 0);
 
     // TrBlazeUI setup (.trblazeui/TrBlazeUI-AI-Reference.md §1 "Program.cs Service Registration").
     vBuilder.Services.AddTrBlazeUIPrimitives();
@@ -51,6 +58,8 @@ try
     vBuilder.Services.AddChaturCore();
     vBuilder.Services.AddChaturUI();
     vBuilder.Services.AddSingleton<IAppPaths, HarnessAppPaths>();
+    // Each account's own database file is migrated the first time that account signs in (Architecture §6, 2026-11-17).
+    vBuilder.Services.AddSingleton<IDatabaseMigrator>(new DelegateDatabaseMigrator(aPath => ChaturDbMigrator.Migrate($"Data Source={aPath}").Successful));
     vBuilder.Services.AddSingleton<IClock, SystemClock>();
     vBuilder.Services.AddSingleton<ISecretStore, HarnessSecretStore>();
     vBuilder.Services.AddSingleton<IFolderPicker, HarnessFolderPicker>();
@@ -71,22 +80,47 @@ try
         Log.Fatal(vMigrationResult.Error, "Chatur.WebHarness database migration failed");
     }
 
-    // The web harness is driven headless for verification; a freshly started copy has no project
-    // selected, so Workbench and every project-scoped screen would render empty. Ensure a fixture
-    // project is registered and selected. The fixture lives under tests/.artifacts/, never in the
-    // real source tree, and carries a maccatalyst TFM so the Project menu discovers the
-    // "Mac Catalyst · Debug" target on macOS (REQ-FN-006, REQ-FN-007, REQ-UI-011).
-    await EnsureDefaultProjectAsync(vApp.Services);
-
-    // Routing and several acceptance tests need at least one connected provider with models in the
-    // harness database. The harness never invents a real subscription, but a connected row with
-    // sample models is enough for the UI to render the mockup's tier chains.
-    // The seeded provider's key is never written into this file. It comes from configuration —
-    // in Development the project's user secrets (UserSecretsId in Chatur.WebHarness.csproj), the same
-    // place Chatur:TestProvider:Model lives. Absent, the provider is seeded without a key.
-    await EnsureDefaultProviderAsync(vApp.Services, vBuilder.Configuration["Chatur:TestProvider:Key"]);
+    // The web harness is driven headless for verification. Everything a person makes or opens lives in
+    // the signed-in account's own database (BRD-210), so the fixture project the acceptance tests work
+    // in, and the one connected provider routing needs, are put into the OWNER test account's database
+    // the first time it signs in in this process — never into the install's file, and never into any
+    // other account's: a second account starts empty, exactly as it does in the app. The fixture lives
+    // under tests/.artifacts/, never in the real source tree, and carries a maccatalyst TFM so the
+    // Project menu discovers the "Mac Catalyst · Debug" target on macOS (REQ-FN-006, REQ-FN-007,
+    // REQ-UI-011). Which provider is the owner's choice, made in the testProvider block of
+    // tests/verify/test-settings.json; the key falls back to Chatur:TestProvider:Key in configuration
+    // (the project's user secrets in Development) when the file leaves it empty.
+    var vTestProvider = HarnessTestProvider.Load(
+        vBuilder.Configuration,
+        new[] { AppContext.BaseDirectory, vApp.Environment.ContentRootPath },
+        out var vTestProviderReason);
+    var vOwnerEmail = HarnessTestProvider.OwnerEmail(vBuilder.Configuration, new[] { AppContext.BaseDirectory, vApp.Environment.ContentRootPath });
+    AttachAccountSeeding(vApp.Services, vPaths, vOwnerEmail, vTestProvider, vTestProviderReason);
 
     vApp.MapHealthChecks("/healthz");
+
+    if (vApp.Environment.IsDevelopment())
+    {
+        // Test only, Development only (REQ-FN-043): every record the app writes is built by its own code from
+        // known fields, so no screen can offer the measurement writer an unknown field. This hands the real
+        // writer, as the app wires it, one record carrying a field the schema does not know, for the selected
+        // project, so a browser check can see the refusal on Settings ▸ Measurements and the stream file stay
+        // as it was. The MAUI head has no such route.
+        vApp.MapPost("/test/measurements/unknown-field", async (IProjectActions aProjects, IMeasurementActions aMeasurements) =>
+        {
+            var vProject = await aProjects.SelectedProjectAsync().ConfigureAwait(false);
+            if (vProject is null)
+            {
+                return Results.Conflict("No project is selected.");
+            }
+
+            await aMeasurements.AppendAsync(
+                vProject.ProjectId,
+                "runs",
+                new Dictionary<string, string?> { ["kind"] = "run", ["not_in_the_schema"] = "x" }).ConfigureAwait(false);
+            return Results.Ok(vProject.Name);
+        });
+    }
 
     if (!vApp.Environment.IsDevelopment())
     {
@@ -112,6 +146,51 @@ catch (Exception vException)
 finally
 {
     Log.CloseAndFlush();
+}
+
+// Seeds the owner test account's own database at its first sign-in in this process, and keeps
+// harness-data/accounts/current.txt naming the folder of whoever signed in last, so the test seeds that
+// write the database file directly (tests/verify/support/db.ts, tests/verify/seed/*.sh) find the
+// signed-in account's file. Seeding runs on its own task and is waited for, so Start never reads the
+// account's database half-seeded.
+static void AttachAccountSeeding(IServiceProvider aServices, IAppPaths aPaths, string? aOwnerEmail, HarnessTestProvider? aProvider, string aProviderReason)
+{
+    var vAppState = aServices.GetRequiredService<AppState>();
+    var vSeeded = new System.Collections.Concurrent.ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
+    string? vLastPointer = null;
+    vAppState.Changed += () =>
+    {
+        var vUser = vAppState.CurrentUser;
+        if (vUser is null)
+        {
+            return;
+        }
+
+        var vFolder = SqliteConnectionFactory.AccountFolderName(vUser.UserId);
+        if (vFolder != vLastPointer)
+        {
+            var vAccounts = Path.Combine(aPaths.AppDataFolder, SqliteConnectionFactory.AccountsFolderName);
+            Directory.CreateDirectory(vAccounts);
+            File.WriteAllText(Path.Combine(vAccounts, "current.txt"), vFolder);
+            vLastPointer = vFolder;
+        }
+
+        if (!vSeeded.TryAdd(vUser.UserId, true)
+            || aOwnerEmail is null
+            || !string.Equals(vUser.Email, aOwnerEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        Task.Run(async () =>
+        {
+            using var vPin = AccountScope.Enter(vUser.UserId);
+            // The provider first: selecting the fixture project raises AppState.Changed, and the screens
+            // that answer it read routing, which settles its tiers on the models there are at that moment.
+            await EnsureTestProviderAsync(aServices, aProvider, aProviderReason).ConfigureAwait(false);
+            await EnsureDefaultProjectAsync(aServices).ConfigureAwait(false);
+        }).GetAwaiter().GetResult();
+    };
 }
 
 static async Task EnsureDefaultProjectAsync(IServiceProvider aServices)
@@ -202,59 +281,114 @@ static async Task EnsureDefaultProjectAsync(IServiceProvider aServices)
     }
 }
 
-static async Task EnsureDefaultProviderAsync(IServiceProvider aServices, string? aProviderKey)
+static async Task EnsureTestProviderAsync(IServiceProvider aServices, HarnessTestProvider? aProvider, string aReason)
 {
+    if (aProvider is null)
+    {
+        Log.Warning("Web harness seeds no test provider: {Reason}", aReason);
+        return;
+    }
+
+    // Filed under the account's own name, like every key a person pastes (BRD-212).
+    var vSecretName = Chatur.Core.Accounts.AccountSecretNames.ForAccount(AccountScope.Pinned, HarnessTestProvider.SecretName);
     try
     {
         await using var vScope = aServices.CreateAsyncScope();
         var vConnection = vScope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
         using var vDb = vConnection.OpenConnection();
+        using var vTransaction = vDb.BeginTransaction();
 
-        var vHasConnected = vDb.ExecuteScalar<int>(
-            "SELECT COUNT(1) FROM Provider WHERE State = 'Connected';") > 0;
-        if (vHasConnected)
+        // The harness owns exactly one provider row: the one filed under the test secret name. An
+        // earlier run may have seeded a different provider there; it is brought in line with the file
+        // every start, so changing test-settings.json is enough to change the provider.
+        var vProviderId = vDb.ExecuteScalar<int?>(
+            "SELECT ProviderId FROM Provider WHERE SecretName = @SecretName OR Name = @Name ORDER BY SecretName = @SecretName DESC LIMIT 1;",
+            new { SecretName = vSecretName, aProvider.Name },
+            vTransaction);
+
+        // A provider of the same name that a test added by hand keeps its row id but becomes the seed.
+        vDb.Execute(
+            "DELETE FROM Model WHERE ProviderId IN (SELECT ProviderId FROM Provider WHERE SecretName = @SecretName AND ProviderId <> @ProviderId); " +
+            "DELETE FROM Provider WHERE SecretName = @SecretName AND ProviderId <> @ProviderId;",
+            new { SecretName = vSecretName, ProviderId = vProviderId ?? -1 },
+            vTransaction);
+
+        var vRow = new
         {
-            return;
+            ProviderId = vProviderId,
+            aProvider.Name,
+            aProvider.Connector,
+            aProvider.BaseUrl,
+            SecretName = vSecretName,
+        };
+        if (vProviderId is null)
+        {
+            vProviderId = vDb.ExecuteScalar<int>(
+                "INSERT INTO Provider (Name, Connector, SignInMethod, BaseUrl, SecretName, State) " +
+                "VALUES (@Name, @Connector, 'key', @BaseUrl, @SecretName, 'Connected'); SELECT last_insert_rowid();",
+                vRow,
+                vTransaction);
         }
-
-        const string vProviderName = "OpenCode Go";
-        const string vConnector = "OpenAICompatible";
-        const string vBaseUrl = "https://opencode.ai/zen/go/v1";
-        const string vSecretName = "Chatur:TestProvider:Key";
-
-        var vProviderId = vDb.ExecuteScalar<int>(
-            "INSERT INTO Provider (Name, Connector, SignInMethod, BaseUrl, SecretName, State) " +
-            "VALUES (@Name, @Connector, 'key', @BaseUrl, @SecretName, 'Connected'); " +
-            "SELECT last_insert_rowid();",
-            new { Name = vProviderName, Connector = vConnector, BaseUrl = vBaseUrl, SecretName = vSecretName });
-
-        var vModels = new[] { "kimi-k2.7-code", "kimi-k2.5-code" };
-        for (var vIndex = 0; vIndex < vModels.Length; vIndex++)
+        else
         {
-            // Tier 2 is the shipped "everyday work" tier; Routing's reset-tiers puts these in Tier 2.
+            // A restart keeps the row's state (a test that paused the provider to isolate a stub model keeps it
+            // paused across the restart it makes). It is connected again only when the file now names another
+            // provider, connector, address or model, or when the row had failed (an earlier, refused key).
+            var vChanged = vDb.ExecuteScalar<int>(
+                "SELECT COUNT(1) FROM Provider p WHERE p.ProviderId = @ProviderId AND (p.Name <> @Name OR p.Connector <> @Connector " +
+                "OR p.BaseUrl <> @BaseUrl OR p.State = 'Failed' OR NOT EXISTS (SELECT 1 FROM Model m WHERE m.ProviderId = p.ProviderId AND m.Identifier = @Model));",
+                new { ProviderId = vProviderId, aProvider.Name, aProvider.Connector, aProvider.BaseUrl, aProvider.Model },
+                vTransaction) > 0;
             vDb.Execute(
-                "INSERT INTO Model (ProviderId, Tier, Identifier) VALUES (@ProviderId, 2, @Identifier);",
-                new { ProviderId = vProviderId, Identifier = vModels[vIndex] });
+                "UPDATE Provider SET Name = @Name, Connector = @Connector, SignInMethod = 'key', BaseUrl = @BaseUrl, " +
+                "SecretName = @SecretName" + (vChanged ? ", State = 'Connected'" : string.Empty) + " WHERE ProviderId = @ProviderId;",
+                vRow,
+                vTransaction);
         }
 
-        if (string.IsNullOrWhiteSpace(aProviderKey))
+        // Tier 2 is the shipped "everyday work" tier; Routing's reset-tiers puts the model there.
+        var vHasModel = vDb.ExecuteScalar<int>(
+            "SELECT COUNT(1) FROM Model WHERE ProviderId = @ProviderId AND Identifier = @Model;",
+            new { ProviderId = vProviderId, aProvider.Model },
+            vTransaction) > 0;
+        vDb.Execute(
+            "DELETE FROM Model WHERE ProviderId = @ProviderId AND Identifier <> @Model;",
+            new { ProviderId = vProviderId, aProvider.Model },
+            vTransaction);
+        if (!vHasModel)
+        {
+            vDb.Execute(
+                "INSERT INTO Model (ProviderId, Tier, Identifier) VALUES (@ProviderId, 2, @Model);",
+                new { ProviderId = vProviderId, aProvider.Model },
+                vTransaction);
+        }
+
+        vTransaction.Commit();
+
+        if (aProvider.Key is null)
         {
             // One warning that names the setting, never its value (REQ-NFR-001). The harness still
             // renders every provider-dependent screen; only a live model call would fail.
             Log.Warning(
-                "Web harness configuration has no value for {SettingName}; the default provider is seeded without a key",
-                vSecretName);
+                "Web harness test provider {Provider} has no key in test-settings.json or {SettingName}; live model calls will fail",
+                aProvider.Name,
+                HarnessTestProvider.SecretName);
         }
         else
         {
             var vSecretStore = vScope.ServiceProvider.GetRequiredService<ISecretStore>();
-            await vSecretStore.SaveAsync(vSecretName, aProviderKey).ConfigureAwait(false);
+            await vSecretStore.SaveAsync(vSecretName, aProvider.Key).ConfigureAwait(false);
         }
 
-        Log.Information("Web harness seeded connected provider {ProviderId} with {ModelCount} model(s)", vProviderId, vModels.Length);
+        Log.Information(
+            "Web harness seeded test provider {ProviderId} {Provider} ({Connector}) with model {Model}",
+            vProviderId,
+            aProvider.Name,
+            aProvider.Connector,
+            aProvider.Model);
     }
     catch (Exception vException)
     {
-        Log.Warning(vException, "Could not ensure a default provider for the web harness");
+        Log.Warning(vException, "Could not seed the test provider for the web harness");
     }
 }

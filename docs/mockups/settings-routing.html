@@ -28,6 +28,7 @@
 <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
 <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></symbol>
 <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.2-9.5L3 6"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 1.9"/></symbol>
 </defs></svg>
 <script>
 function say(m){alert(m);}
@@ -109,12 +110,12 @@ function toggleSwitch(b,ev){if(ev)ev.stopPropagation();var on=b.classList.toggle
       <button class="iconbtn" title="Move up" onclick="say('Already first in the chain.')" data-testid="tier-1-up-1"><svg><use href="#i-up"/></svg></button>
       <button class="iconbtn" title="Move down" onclick="say('Moves Claude Opus 5 below GPT-5.')" data-testid="tier-1-down-1"><svg><use href="#i-chevron"/></svg></button>
       <button class="iconbtn" title="Remove" onclick="say('Takes Claude Opus 5 out of Tier 1.')" data-testid="tier-1-remove-1"><svg><use href="#i-trash"/></svg></button></div>
-     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-1-row-2">
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-1-row-2" data-tf-sample>
       <span class="pill" data-testid="tier-1-pos-2">2</span><span>GPT-5</span><span class="xs faint">OpenAI</span><span class="grow"></span>
       <button class="iconbtn" title="Move up" onclick="say('Moves GPT-5 to the front of Tier 1.')" data-testid="tier-1-up-2"><svg><use href="#i-up"/></svg></button>
       <button class="iconbtn" title="Move down" onclick="say('Moves GPT-5 below Claude Sonnet 5.')" data-testid="tier-1-down-2"><svg><use href="#i-chevron"/></svg></button>
       <button class="iconbtn" title="Remove" onclick="say('Takes GPT-5 out of Tier 1.')" data-testid="tier-1-remove-2"><svg><use href="#i-trash"/></svg></button></div>
-     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-1-row-3">
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-1-row-3" data-tf-sample>
       <span class="pill" data-testid="tier-1-pos-3">3</span><span>Claude Sonnet 5</span><span class="xs faint">Anthropic</span><span class="grow"></span>
       <button class="iconbtn" title="Move up" onclick="say('Moves Claude Sonnet 5 above GPT-5.')" data-testid="tier-1-up-3"><svg><use href="#i-up"/></svg></button>
       <button class="iconbtn" title="Move down" onclick="say('Already last in the chain.')" data-testid="tier-1-down-3"><svg><use href="#i-chevron"/></svg></button>
@@ -131,12 +132,12 @@ function toggleSwitch(b,ev){if(ev)ev.stopPropagation();var on=b.classList.toggle
       <button class="iconbtn" title="Move up" onclick="say('Already first in the chain.')" data-testid="tier-2-up-1"><svg><use href="#i-up"/></svg></button>
       <button class="iconbtn" title="Move down" onclick="say('Moves Claude Sonnet 5 below GPT-5 mini.')" data-testid="tier-2-down-1"><svg><use href="#i-chevron"/></svg></button>
       <button class="iconbtn" title="Remove" onclick="say('Takes Claude Sonnet 5 out of Tier 2.')" data-testid="tier-2-remove-1"><svg><use href="#i-trash"/></svg></button></div>
-     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-2-row-2">
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-2-row-2" data-tf-sample>
       <span class="pill" data-testid="tier-2-pos-2">2</span><span>GPT-5 mini</span><span class="xs faint">OpenAI</span><span class="grow"></span>
       <button class="iconbtn" title="Move up" onclick="say('Moves GPT-5 mini to the front of Tier 2.')" data-testid="tier-2-up-2"><svg><use href="#i-up"/></svg></button>
       <button class="iconbtn" title="Move down" onclick="say('Moves GPT-5 mini below Claude Haiku 4.5.')" data-testid="tier-2-down-2"><svg><use href="#i-chevron"/></svg></button>
       <button class="iconbtn" title="Remove" onclick="say('Takes GPT-5 mini out of Tier 2.')" data-testid="tier-2-remove-2"><svg><use href="#i-trash"/></svg></button></div>
-     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-2-row-3">
+     <div class="row" style="padding:6px 9px;border:1px solid var(--line2);border-radius:var(--r);flex-wrap:wrap" data-testid="tier-2-row-3" data-tf-sample>
       <span class="pill" data-testid="tier-2-pos-3">3</span><span>Claude Haiku 4.5</span><span class="xs faint">Anthropic</span><span class="grow"></span>
       <button class="iconbtn" title="Move up" onclick="say('Moves Claude Haiku 4.5 above GPT-5 mini.')" data-testid="tier-2-up-3"><svg><use href="#i-up"/></svg></button>
       <button class="iconbtn" title="Move down" onclick="say('Already last in the chain.')" data-testid="tier-2-down-3"><svg><use href="#i-chevron"/></svg></button>
@@ -282,6 +283,11 @@ function toggleSwitch(b,ev){if(ev)ev.stopPropagation();var on=b.classList.toggle
     <div class="row" style="align-items:flex-start;gap:9px;padding:11px 14px;border-top:1px solid var(--line2);color:var(--dim)" data-testid="work-wins-note">
      <svg style="margin-top:2px"><use href="#i-alert"/></svg>
      <span class="sm">The kind of work wins over the agent. The Verifier sits in Tier 2, but when it is asked to write code it is given Tier 1.</span></div>
+   </div>
+
+   <div class="row" style="align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r2);color:var(--dim)" data-testid="routing-estimate-note">
+    <svg style="margin-top:2px"><use href="#i-clock"/></svg>
+    <span class="sm">Changing a tier changes the estimate shown before the next run starts. A run already started keeps the estimate it started with.</span>
    </div>
 
    <div class="panel" data-testid="fallback-panel">

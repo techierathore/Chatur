@@ -253,7 +253,7 @@ public sealed class AgentActions : IAgentActions
         if (vModel is null)
         {
             const string vText = "No model provider is configured yet. Add one under Settings ▸ Providers.";
-            await AppendEventAsync(aSessionId, vSeq, "assistant", vText, null, null, vCt).ConfigureAwait(false);
+            await AppendEventAsync(aSessionId, vSeq, "assistant", vText, null, null, vCt, vRoleId).ConfigureAwait(false);
             await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, null, null, null, vStartedUtc, vCt).ConfigureAwait(false);
             yield return new AgentReplyChunk(vText, true, null, null);
             yield break;
@@ -439,6 +439,7 @@ public sealed class AgentActions : IAgentActions
                 vTotalTokens = (vTotalTokens ?? 0) + vUsage.TotalTokens;
                 vInputTokens = (vInputTokens ?? 0) + vUsage.InputTokens;
                 vOutputTokens = (vOutputTokens ?? 0) + vUsage.OutputTokens;
+                await AddSessionTokensAsync(aSessionId, vUsage, vCt).ConfigureAwait(false);
             }
 
             vModelName = string.IsNullOrEmpty(vCompletedModelName) ? vLlm?.ModelName : vCompletedModelName;
@@ -498,7 +499,7 @@ public sealed class AgentActions : IAgentActions
             if (vShown.Length > 0)
             {
                 var vStoppedSeq = await NextSeqAsync(aSessionId, CancellationToken.None).ConfigureAwait(false);
-                await AppendEventAsync(aSessionId, vStoppedSeq, "assistant", vShown.ToString(), vModelName, vTotalTokens, CancellationToken.None).ConfigureAwait(false);
+                await AppendEventAsync(aSessionId, vStoppedSeq, "assistant", vShown.ToString(), vModelName, vTotalTokens, CancellationToken.None, vRoleId).ConfigureAwait(false);
             }
 
             await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, vModelName, vInputTokens, vOutputTokens, vStartedUtc, CancellationToken.None).ConfigureAwait(false);
@@ -518,7 +519,7 @@ public sealed class AgentActions : IAgentActions
         }
 
         var vReportedModelName = vFailed ? null : vModelName;
-        await AppendEventAsync(aSessionId, vSeq, "assistant", vShown.ToString(), vReportedModelName, vTotalTokens, vCt).ConfigureAwait(false);
+        await AppendEventAsync(aSessionId, vSeq, "assistant", vShown.ToString(), vReportedModelName, vTotalTokens, vCt, vRoleId).ConfigureAwait(false);
         await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, vReportedModelName, vInputTokens, vOutputTokens, vStartedUtc, vCt).ConfigureAwait(false);
         yield return new AgentReplyChunk(string.Empty, true, vReportedModelName, vTotalTokens);
     }
@@ -596,7 +597,11 @@ public sealed class AgentActions : IAgentActions
 
         var vEventRows = await vConnection.QueryAsync<FullSessionEventRow>(
             new CommandDefinition(
-                "SELECT Seq AS Seq, Kind AS Kind, Payload AS Payload, Model AS Model, Tokens AS Tokens FROM SessionEvent WHERE SessionId = @aSessionId ORDER BY Seq;",
+                @"SELECT e.Seq AS Seq, e.Kind AS Kind, e.Payload AS Payload, e.Model AS Model, e.Tokens AS Tokens, r.Name AS RoleName
+                  FROM SessionEvent e
+                  LEFT JOIN Role r ON r.RoleId = e.RoleId
+                  WHERE e.SessionId = @aSessionId
+                  ORDER BY e.Seq;",
                 new { aSessionId },
                 cancellationToken: aCt)).ConfigureAwait(false);
 
@@ -609,13 +614,13 @@ public sealed class AgentActions : IAgentActions
             vSummaryRow.State);
 
         var vEvents = vEventRows
-            .Select(r => new SessionEventRecord((int)r.Seq, r.Kind, r.Payload, r.Model, r.Tokens is null ? null : (int)r.Tokens))
+            .Select(r => new SessionEventRecord((int)r.Seq, r.Kind, r.Payload, r.Model, r.Tokens is null ? null : (int)r.Tokens, r.RoleName))
             .ToList();
 
         return new SessionDetail(vSummary, vEvents);
     }
 
-    private sealed record FullSessionEventRow(long Seq, string Kind, string Payload, string? Model, long? Tokens);
+    private sealed record FullSessionEventRow(long Seq, string Kind, string Payload, string? Model, long? Tokens, string? RoleName);
 
     /// <inheritdoc />
     public async IAsyncEnumerable<ActivityEvent> ActivityAsync(int aSessionId, [EnumeratorCancellation] CancellationToken aCt = default)
@@ -720,14 +725,18 @@ public sealed class AgentActions : IAgentActions
         return (vMaxSeq ?? 0) + 1;
     }
 
-    private async Task AppendEventAsync(int aSessionId, int aSeq, string aKind, string aPayload, string? aModel, int? aTokens, CancellationToken aCt)
+    /// <summary>
+    /// Records one step of a session. <paramref name="aRoleId"/> is given for a reply only: the agent that wrote
+    /// it, kept on the reply itself so a later change of agent does not rename it (REQ-FN-024).
+    /// </summary>
+    private async Task AppendEventAsync(int aSessionId, int aSeq, string aKind, string aPayload, string? aModel, int? aTokens, CancellationToken aCt, int? aRoleId = null)
     {
         using var vConnection = objDb.OpenConnection();
         await vConnection.ExecuteAsync(
             new CommandDefinition(
-                @"INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, Model, Tokens, CreatedUtc)
-                  VALUES (@aSessionId, @aSeq, @aKind, @aPayload, @aModel, @aTokens, @vCreatedUtc);",
-                new { aSessionId, aSeq, aKind, aPayload, aModel, aTokens, vCreatedUtc = objClock.UtcNow.ToString("O") },
+                @"INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, Model, Tokens, CreatedUtc, RoleId)
+                  VALUES (@aSessionId, @aSeq, @aKind, @aPayload, @aModel, @aTokens, @vCreatedUtc, @aRoleId);",
+                new { aSessionId, aSeq, aKind, aPayload, aModel, aTokens, vCreatedUtc = objClock.UtcNow.ToString("O"), aRoleId },
                 cancellationToken: aCt)).ConfigureAwait(false);
     }
 
@@ -1112,6 +1121,19 @@ public sealed class AgentActions : IAgentActions
         {
             return $"The wording was not corrected: {vException.Message}";
         }
+    }
+
+    /// <summary>
+    /// Counts one model call's usage onto its session as soon as the call returns, so what a running process has spent
+    /// so far can be read while it is still running (REQ-UI-087, MISS-Chatur-20261110-07).
+    /// </summary>
+    private async Task AddSessionTokensAsync(int aSessionId, TokenUsage aUsage, CancellationToken aCt)
+    {
+        using var vConnection = objDb.OpenConnection();
+        await vConnection.ExecuteAsync(new CommandDefinition(
+            "UPDATE Session SET TokensIn = TokensIn + @InputTokens, TokensOut = TokensOut + @OutputTokens WHERE SessionId = @aSessionId;",
+            new { aSessionId, aUsage.InputTokens, aUsage.OutputTokens },
+            cancellationToken: aCt)).ConfigureAwait(false);
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Chatur.Core.Actions;
+using Chatur.Core.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -11,7 +12,7 @@ namespace Chatur.Core.AutoRun;
 /// </summary>
 public sealed class BackgroundAutoRunLauncher : IAutoRunLauncher
 {
-    private readonly ConcurrentDictionary<int, bool> objActive = new();
+    private readonly ConcurrentDictionary<string, bool> objActive = new();
     private readonly IServiceScopeFactory objScopes;
     private readonly ILogger<BackgroundAutoRunLauncher> objLogger;
 
@@ -25,19 +26,32 @@ public sealed class BackgroundAutoRunLauncher : IAutoRunLauncher
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The run belongs to the account that launched it, and stays pinned to that account's database while
+    /// it goes on in the background, whoever signs in meanwhile (BRD-213, BRD-216). Two accounts number
+    /// their runs from 1 each, so "already going" is asked per account.
+    /// </remarks>
     public bool Launch(int aAutoRunId)
     {
-        if (!objActive.TryAdd(aAutoRunId, true))
+        string? vUserId;
+        using (var vScope = objScopes.CreateScope())
+        {
+            vUserId = vScope.ServiceProvider.GetService<IDbConnectionFactory>()?.CurrentUserId;
+        }
+
+        var vKey = $"{vUserId ?? "install"}|{aAutoRunId}";
+        if (!objActive.TryAdd(vKey, true))
         {
             return false;
         }
 
-        _ = Task.Run(() => CarryOnAsync(aAutoRunId));
+        _ = Task.Run(() => CarryOnAsync(aAutoRunId, vUserId, vKey));
         return true;
     }
 
-    private async Task CarryOnAsync(int aAutoRunId)
+    private async Task CarryOnAsync(int aAutoRunId, string? aUserId, string aKey)
     {
+        using var vPin = AccountScope.Enter(aUserId);
         try
         {
             using var vScope = objScopes.CreateScope();
@@ -50,7 +64,7 @@ public sealed class BackgroundAutoRunLauncher : IAutoRunLauncher
         }
         finally
         {
-            objActive.TryRemove(aAutoRunId, out _);
+            objActive.TryRemove(aKey, out _);
         }
     }
 }

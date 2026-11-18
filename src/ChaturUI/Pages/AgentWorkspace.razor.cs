@@ -131,6 +131,13 @@ public partial class AgentWorkspace : IDisposable
         WorkbenchTabs.SetWorkspaceAgent(aAgent.Code);
     }
 
+    /// <summary>Opens Settings ▸ Agents in the secondary window, from the picker's last row (mockup "Agents…").</summary>
+    private void OpenAgentSettings()
+    {
+        objPickerOpen = false;
+        SecondaryWindow.Open("/settings/agents");
+    }
+
     /// <summary>Brings a session this agent still has open into the conversation, where it was left.</summary>
     private void OpenSession(WorkspaceSession aSession) =>
         WorkbenchTabs.RequestConversation(new ConversationStart(aSession.SessionId, objView?.Agent.RoleId, null));
@@ -217,7 +224,7 @@ public partial class AgentWorkspace : IDisposable
     private static BadgeVariant StatusVariant(RequirementItem aItem) =>
         aItem.BoardStatus switch
         {
-            BoardStatuses.Blocked => BadgeVariant.Destructive,
+            BoardStatuses.Blocked => BadgeVariant.Danger,
             BoardStatuses.InProgress => BadgeVariant.Warning,
             _ => BadgeVariant.Secondary
         };

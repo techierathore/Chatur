@@ -17,7 +17,7 @@
             <p class="text-sm text-muted-foreground">What Chatur changed about its own wording after it got something wrong.</p>
         </div>
         <span class="flex-1"></span>
-        <Button Variant="ButtonVariant.Outline" OnClick="ExportSeedAsync" Disabled="@(objCorrections is null or { Count: 0 })" data-testid="export-seed">
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="ExportSeedAsync" Disabled="@(objCorrections is null or { Count: 0 })" data-testid="export-seed">
             <LucideIcon Name="download" Size="14" />
             Export seed data
         </Button>
@@ -71,11 +71,11 @@
                         <DataTableColumn TData="Correction" TValue="string" Property="@(c => c.CorrectionId.ToString())" Header="" Width="180px">
                             <CellTemplate Context="correction">
                                 <div class="flex gap-1">
-                                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => KeepAsync(correction)" Disabled="@(correction.Status == "Kept")" data-testid="@($"keep-{correction.CorrectionId}")">
+                                    <Button Class="rounded-full" Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => KeepAsync(correction)" Disabled="@(correction.Status == "Kept")" data-testid="@($"keep-{correction.CorrectionId}")">
                                         <LucideIcon Name="check" Size="14" />
                                         Keep
                                     </Button>
-                                    <Button Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => UndoAsync(correction)" Disabled="@(correction.Status == "Undone")" data-testid="@($"undo-{correction.CorrectionId}")">
+                                    <Button Class="rounded-full" Size="ButtonSize.Small" Variant="ButtonVariant.Outline" OnClick="() => UndoAsync(correction)" Disabled="@(correction.Status == "Undone")" data-testid="@($"undo-{correction.CorrectionId}")">
                                         <LucideIcon Name="undo-2" Size="14" />
                                         Undo
                                     </Button>
@@ -138,7 +138,7 @@
 
             <div class="flex flex-wrap items-center gap-2" data-testid="correction-session">
                 <span class="text-xs text-muted-foreground">Seen in</span>
-                <Button Href="/" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="correction-session-link">
+                <Button Class="rounded-full" Href="/" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" data-testid="correction-session-link">
                     <LucideIcon Name="link" Size="14" />
                     No session is recorded for it — open the main window
                 </Button>

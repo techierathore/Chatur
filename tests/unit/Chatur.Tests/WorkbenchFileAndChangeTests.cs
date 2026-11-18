@@ -103,6 +103,53 @@ public sealed class WorkbenchFileAndChangeTests : MigratedDatabaseFixture
         Assert.Equal("Rejected", StatusOf(vChangeId));
     }
 
+    /// <summary>
+    /// When a build has written its lines and the Output strip's subscription is replaced after reading
+    /// only the first of them, then the replaced subscription delivers nothing more: its copy of a line
+    /// must never reach the strip after the strip was cleared for the next run (REQ-UI-014,
+    /// MISS-Chatur-20261117-02, the "> dotnet run" line shown twice).
+    /// </summary>
+    [Fact(DisplayName = "REQ-UI-014 a replaced output subscription delivers no line after it is cancelled")]
+    public async Task ReplacedOutputSubscriptionDeliversNothingMore()
+    {
+        File.WriteAllText(Path.Combine(objProjectPath, "Wb.sln"), string.Empty);
+        var vActions = new BuildRunActions(CreateFactory(), new EmittingLauncher("one", "two", "three"));
+        var vTarget = (await vActions.TargetsAsync(objProjectId))[0];
+        await vActions.BuildAsync(objProjectId, vTarget.RunTargetId);
+
+        using var vCts = new CancellationTokenSource();
+        var vDelivered = new List<string>();
+        await using (var vLines = vActions.StreamOutputAsync(objProjectId, vCts.Token).GetAsyncEnumerator())
+        {
+            Assert.True(await vLines.MoveNextAsync());
+            vDelivered.Add(vLines.Current.Text);
+            vCts.Cancel();
+            while (await vLines.MoveNextAsync())
+            {
+                vDelivered.Add(vLines.Current.Text);
+            }
+        }
+
+        Assert.Single(vDelivered);
+    }
+
+    private sealed class EmittingLauncher(params string[] aLines) : IProcessLauncher
+    {
+        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
+
+        public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
+
+        public Task<int> RunAsync(string aCommand, string aArguments, string aWorkingDirectory, Action<string> aOnOutputLine, CancellationToken aCt = default)
+        {
+            foreach (var vLine in aLines)
+            {
+                aOnOutputLine(vLine);
+            }
+
+            return Task.FromResult(0);
+        }
+    }
+
     /// <summary>When the owner built a target last time, then it is the first one offered and the rest follow (REQ-FN-010).</summary>
     [Fact(DisplayName = "REQ-FN-010 the target used last time is offered first")]
     public async Task LastUsedTargetIsOfferedFirst()

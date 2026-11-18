@@ -35,8 +35,10 @@ public sealed class GitHubReleaseClient : IGitHubReleaseClient
         {
             vResponse = await objHttpClient.GetAsync(ReleasesPath, aCt).ConfigureAwait(false);
         }
-        catch (Exception vEx) when (vEx is not OperationCanceledException)
+        catch (Exception vEx) when (vEx is not OperationCanceledException || !aCt.IsCancellationRequested)
         {
+            // A feed that does not answer times out (HttpClient reports that as a cancellation the caller never asked for):
+            // no newer build is offered, as when it cannot be reached at all.
             objLogger.LogWarning(vEx, "Could not reach GitHub to check for a newer Chatur build.");
             return null;
         }
