@@ -12,6 +12,7 @@
 <symbol id="i-folder-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H21a1 1 0 0 1 .97 1.24l-1.4 5.6A2 2 0 0 1 18.63 18H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
 <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/></symbol>
 <symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="7 4 19 12 7 20 7 4"/></symbol>
 <symbol id="i-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="5.5" y="5.5" rx="2"/></symbol>
 <symbol id="i-hammer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.4 8.4a2.1 2.1 0 0 1-3-3L12 9"/><path d="M17.6 6.4 14 10l-1-1 3.6-3.6a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 1 0 2.8L17 13l-1-1"/></symbol>
@@ -45,6 +46,27 @@ function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.se
  document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
  var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
 document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+// BRD-226: Stop shows only while a build or run goes.
+function busy(on,m){var s=document.querySelector('[data-testid="stop"]');if(s)s.style.display=on?'':'none';say(m);}
+// BRD-225: View ▸ Show hidden files, off by default.
+function toggleHidden(b,ev){ev.stopPropagation();var on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',on?'true':'false');
+ b.querySelector('.tick').innerHTML=on?'✓':'';document.querySelector('[data-testid="file-tree"]').classList.toggle('show-hidden',on);closeAll();}
+// BRD-228: the project to run, set from the target picker, the Project menu or a right-click in Files; one tick everywhere.
+function setRun(name,ev){if(ev)ev.stopPropagation();var v=document.querySelector('[data-testid="target"] [data-value]');if(v)v.textContent=name;
+ document.querySelectorAll('[data-run]').forEach(function(b){var t=b.querySelector('.tick');if(t)t.innerHTML=b.getAttribute('data-run')===name?'✓':'';});closeAll();}
+// a right-click menu on a tree row
+function ctx(a,ev){ev.preventDefault();ev.stopPropagation();var w=a.parentNode;closeAll();w.classList.add('open');return false;}
+// BRD-222, BRD-223: choosing another branch with uncommitted changes asks first.
+function askSwitch(name,ev){ev.stopPropagation();closeAll();document.querySelectorAll('#branch-dirty [data-to]').forEach(function(s){s.textContent=name;});
+ document.getElementById('branch-dirty').classList.add('open');}
+function doSwitch(m){var n=document.querySelector('#branch-dirty [data-to]').textContent.replace(/^origin\//,'');var w=document.querySelector('[data-testid="branch"]');
+ w.querySelector('[data-value]').textContent=n;w.querySelectorAll('.pop button').forEach(function(b){var t=b.querySelector('.tick');if(t)t.innerHTML=b.textContent.trim()===n?'✓':'';});closeDlg('branch-dirty',m);}
+function pickTpl(b){b.parentNode.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed','false');x.style.background='';});b.setAttribute('aria-pressed','true');b.style.background='var(--accent-soft)';}
+function npFolder(){var f=document.getElementById('np-loc');return (f&&f.value.trim())||'~/Source/TfLens';}
+function npLoc(){var n=document.getElementById('np-name').value.trim();document.getElementById('np-project-path').textContent=n?npFolder()+'/'+n:'Shown when the project has a name';}
+function npChange(){document.getElementById('np-fixed').style.display='none';document.getElementById('np-typed').style.display='';document.getElementById('np-loc').focus();}
+function closeDlg(id,m){document.getElementById(id).classList.remove('open');if(m)say(m);}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=document.querySelector('.scrim.open');if(d)d.classList.remove('open');closeAll();}});
 </script>
 
 <div class="win" data-testid="window">
@@ -53,9 +75,26 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
   <a class="logo" href="index.html" data-testid="logo" title="Chatur — click for the list of screens" aria-label="Chatur"></a>
   <span class="wordmark" data-testid="wordmark">Chatur</span>
 
+  <!-- BRD-238 to BRD-240 (owner, 21 Nov 2026): "Project:" and the project open now; the list holds every project,
+       scrolls, filters, ticks the open one, and shows each path so two of the same name are told apart. No "All projects". -->
+  <div class="popwrap">
+   <button class="tb" style="height:28px" onclick="pop(this,event)" title="The project open now: TfLens — C:\Code\TfLens\TfLens.sln. Click to switch." data-testid="project-switch">
+    <svg><use href="#i-folder"/></svg><span class="xs faint" data-testid="project-switch-label">Project:</span> <b data-testid="project-switch-name">TfLens</b><svg><use href="#i-chevron"/></svg></button>
+   <div class="pop" style="width:300px;padding:0" data-testid="project-switch-pop" data-tf-state="popup-open">
+    <div style="padding:8px;border-bottom:1px solid var(--line)"><div class="xs faint" style="margin:0 0 6px 4px">Switch project</div>
+     <input class="in" type="search" placeholder="Filter by name or path" aria-label="Filter the projects" data-testid="project-switch-filter" style="width:100%"></div>
+    <div style="max-height:320px;overflow-y:auto;padding:4px" data-testid="project-switch-list" data-tf-state="sample-data">
+     <button aria-current="true" onclick="say('TfLens is the project open now.')" data-tf-sample><span class="tick">✓</span><span><b>TfLens</b> <span class="xs faint" data-testid="project-switch-current">open now</span><br><span class="xs faint mono">C:\Code\TfLens\TfLens.sln</span></span></button>
+     <button onclick="say('Switches to Xpenser: its files, its chat and its run targets.')" data-tf-sample><span class="tick"></span><span><b>Xpenser</b><br><span class="xs faint mono">C:\Code\Xpenser\Xpenser.sln</span></span></button>
+     <button onclick="say('Switches to the other Xpenser, the folder.')" data-tf-sample><span class="tick"></span><span><b>Xpenser</b><br><span class="xs faint mono">C:\Code\Xpenser</span></span></button>
+     <button onclick="say('Switches to MyTasks.')" data-tf-sample><span class="tick"></span><span><b>MyTasks</b><br><span class="xs faint mono">C:\Code\MyTasks\MyTasks.sln</span></span></button>
+    </div>
+   </div>
+  </div>
+
   <div class="menu" data-testid="menu-file"><button onclick="menu(this,event)">File</button>
    <div class="drop" data-testid="menu-file-items" data-tf-state="popup-open">
-    <button onclick="say('Starts a new project here.')">New project…<span class="sub">⇧⌘N</span></button>
+    <button onclick="closeAll();document.getElementById('new-project').classList.add('open')" data-testid="menu-file-new">New project…<span class="sub">⇧⌘N</span></button>
     <button onclick="say('Opens a .sln and reads its projects.')">Open a solution…<span class="sub">⌘O</span></button>
     <button onclick="say('Opens any folder as a project.')">Open a folder…<span class="sub">⇧⌘O</span></button>
     <button onclick="say('Clones a repository from GitHub and opens it.')">Clone a repository…</button>
@@ -65,7 +104,8 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Saves the open file.')">Save<span class="sub">⌘S</span></button>
     <button onclick="say('Saves every open file.')">Save all<span class="sub">⌥⌘S</span></button>
     <hr>
-    <a href="start.html">Close project</a>
+    <!-- BRD-229: names what is open — "Close solution" with a solution open, "Close folder" with a folder open; never "Close project". -->
+    <a href="start.html" data-testid="menu-file-close" data-tf-sample style="white-space:nowrap" title="Reads &quot;Close folder&quot; when a folder is open">Close solution<span class="sub" style="margin-left:auto;padding-left:14px">a folder: Close folder</span></a>
     <button onclick="say('Quits Chatur.')">Exit<span class="sub">⌘Q</span></button>
    </div>
   </div>
@@ -90,6 +130,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Hides or shows the conversation. Hidden, the file view takes the window.')"><span class="tick">✓</span>Chat</button>
     <button onclick="say('Hides or shows the output strip.')"><span class="tick">✓</span>Output</button>
     <hr>
+    <!-- BRD-225: a check item, off by default; the choice is kept for the account. -->
+    <button role="menuitemcheckbox" aria-checked="false" onclick="toggleHidden(this,event)" data-testid="menu-view-hidden"><span class="tick"></span>Show hidden files</button>
+    <hr>
     <a href="prerequisites.html"><span class="tick"></span>Prerequisites</a>
     <a href="repository.html"><span class="tick"></span>Repository</a>
     <hr>
@@ -104,11 +147,11 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Runs the chosen target.')">Run<span class="sub">⌘R</span></button>
     <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
     <hr>
-    <div class="grouplbl">Run target</div>
-    <button data-tf-sample onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button data-tf-sample onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button data-tf-sample onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
-    <button data-tf-sample onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
+    <!-- BRD-227, BRD-228: the solution's runnable projects; the same list as the target picker, the chosen one ticked. -->
+    <div class="grouplbl" data-testid="menu-project-run">Project to run</div>
+    <button data-tf-sample data-run="TfLens" onclick="setRun('TfLens',event)"><span class="tick">✓</span>TfLens</button>
+    <button data-tf-sample data-run="TfLens.Api" onclick="setRun('TfLens.Api',event)"><span class="tick"></span>TfLens.Api</button>
+    <button data-tf-sample data-run="TfLens.DbMigration" onclick="setRun('TfLens.DbMigration',event)"><span class="tick"></span>TfLens.DbMigration</button>
     <hr>
     <a href="prerequisites.html">Prerequisites…</a>
     <a href="repository.html">Repository…</a>
@@ -164,29 +207,20 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
  </div>
 
  <div class="toolbar" data-testid="toolbar">
-  <button class="tb primary" onclick="say('Builds and runs TfLens on this machine.')" data-testid="run"><svg><use href="#i-play"/></svg>Run</button>
-  <button class="tb" onclick="say('Stops the run and every program it started.')" data-testid="stop"><svg><use href="#i-stop"/></svg>Stop</button>
-  <button class="tb" onclick="say('Builds without running.')" data-testid="build"><svg><use href="#i-hammer"/></svg>Build</button>
+  <button class="tb primary" onclick="busy(true,'Builds and runs the project to run on this machine. Stop shows while it goes.')" data-testid="run"><svg><use href="#i-play"/></svg>Run</button>
+  <!-- BRD-226: drawn idle, so Stop is not shown. It appears beside Run while a build or run goes, and ends it. -->
+  <button class="tb" style="display:none" onclick="busy(false,'Stops the run and every program it started. Stop goes away again.')" data-testid="stop" data-tf-state="running"><svg><use href="#i-stop"/></svg>Stop</button>
+  <button class="tb" onclick="busy(true,'Builds without running. Stop shows while it goes.')" data-testid="build"><svg><use href="#i-hammer"/></svg>Build</button>
   <span class="sep"></span>
+  <!-- BRD-227, BRD-228: the solution's runnable projects; a test project or a class library is not offered. -->
   <div class="popwrap" data-testid="target">
-   <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
+   <button class="tb bordered" onclick="pop(this,event)"><span data-value>TfLens</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="target-pop" data-tf-state="popup-open">
-    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button data-tf-sample onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
-    <button data-tf-sample onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
-    <div class="note">Only what this machine can build. A Windows head needs the Windows machine.</div>
-   </div>
-  </div>
-  <span class="sep"></span>
-  <div class="popwrap" data-testid="branch-pick">
-   <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
-    <button data-tf-sample onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
-    <button data-tf-sample onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
-    <button data-tf-sample onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
-    <hr>
-    <a href="repository.html">Open the repository…</a>
+    <div class="grouplbl">Project to run</div>
+    <button data-tf-sample data-run="TfLens" onclick="setRun('TfLens',event)"><span class="tick">✓</span>TfLens</button>
+    <button data-tf-sample data-run="TfLens.Api" onclick="setRun('TfLens.Api',event)"><span class="tick"></span>TfLens.Api</button>
+    <button data-tf-sample data-run="TfLens.DbMigration" onclick="setRun('TfLens.DbMigration',event)"><span class="tick"></span>TfLens.DbMigration</button>
+    <div class="note">Only projects that run. Your choice is kept for this solution and offered next time you open it.</div>
    </div>
   </div>
   <button class="find" onclick="say('Finds a file, a symbol or some text in TfLens.')" data-testid="find"><svg><use href="#i-search"/></svg>Find in TfLens<span class="grow"></span><span class="xs faint">⌘P</span></button>
@@ -198,16 +232,46 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    <div class="ph" style="justify-content:space-between" data-testid="files-head"><span>Files</span><button class="iconbtn" onclick="say('Reads the project\'s files from disk again, so files made outside Chatur show.')" title="Refresh the files" data-testid="files-refresh"><svg><use href="#i-refresh"/></svg></button></div>
    <div class="tree" data-testid="file-tree">
     <a href="main.html" data-tf-state="sample-data"><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
+    <!-- BRD-225: names starting with a dot, and .vs, are listed only with View ▸ Show hidden files. -->
+    <a href="main.html" class="d1 hid" data-tf-state="hidden-files-shown"><svg><use href="#i-folder"/></svg>.github</a>
+    <a href="main.html" class="d1 hid" data-tf-state="hidden-files-shown"><svg><use href="#i-folder"/></svg>.vs</a>
     <a href="main.html" class="d1" data-tf-state="sample-data"><svg><use href="#i-folder-open"/></svg>src</a>
     <a href="main.html" class="d2" data-tf-state="sample-data"><svg><use href="#i-folder-open"/></svg>TfLens</a>
     <a href="main.html" class="d3" data-tf-state="sample-data"><svg><use href="#i-file"/></svg>Program.cs</a>
     <a href="main.html" class="d3 on" data-testid="tree-selected" data-tf-state="sample-data"><svg><use href="#i-file"/></svg>Query.cs<span class="mk"></span></a>
     <a href="main.html" class="d3" data-tf-state="sample-data"><svg><use href="#i-file"/></svg>Coverage.razor</a>
+    <!-- BRD-228: right-click a project (its folder or its .csproj) for "Set as the project to run". -->
+    <div class="popwrap" data-testid="tree-project" data-tf-state="sample-data">
+     <a href="main.html" class="d2" oncontextmenu="return ctx(this,event)" title="Right-click: Set as the project to run"><svg><use href="#i-folder"/></svg>TfLens.Api</a>
+     <div class="pop" data-testid="tree-menu" data-tf-state="context-menu-open" role="menu">
+      <button role="menuitem" onclick="setRun('TfLens.Api',event)" data-testid="tree-set-run">Set as the project to run</button>
+      <div class="note">The same on TfLens.Api.csproj. Only a project that runs offers it.</div>
+     </div>
+    </div>
+    <a href="main.html" class="d2" data-tf-state="sample-data"><svg><use href="#i-folder"/></svg>TfLens.DbMigration</a>
     <a href="main.html" class="d2" data-tf-state="sample-data"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
+    <!-- BRD-217: a folder Windows will not list keeps its row, marked; everything else still shows. A folder is read when it is opened. -->
+    <a href="main.html" class="d1 locked" data-testid="tree-unreadable" data-tf-state="sample-data" title="Windows will not let Chatur read this folder. Everything else is listed."><svg><use href="#i-lock"/></svg>artifacts<span class="nr">not readable</span></a>
     <a href="main.html" class="d1" data-tf-state="sample-data"><svg><use href="#i-folder"/></svg>docs</a>
     <a href="main.html" class="d1" data-tf-state="sample-data"><svg><use href="#i-folder"/></svg>tests</a>
+    <a href="main.html" class="d1 hid" data-tf-state="hidden-files-shown"><svg><use href="#i-file"/></svg>.editorconfig</a>
    </div>
-   <a class="branch" href="repository.html" data-testid="branch" data-tf-state="sample-data"><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
+   <!-- BRD-222: the one branch picker. It never opens the Repository window. -->
+   <div class="popwrap branchwrap" data-testid="branch" data-tf-state="sample-data">
+    <button class="branch" onclick="pop(this,event)" aria-haspopup="menu" title="Switch branch"><svg><use href="#i-branch"/></svg><span data-value>main</span><svg><use href="#i-chevron"/></svg><span class="ab">2 to push</span></button>
+    <div class="pop up" data-testid="branch-pop" data-tf-state="popup-open">
+     <div class="grouplbl">Local</div>
+     <button data-tf-sample onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
+     <button data-tf-sample onclick="askSwitch('feature/board',event)"><span class="tick"></span>feature/board</button>
+     <button data-tf-sample onclick="askSwitch('run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
+     <hr>
+     <div class="grouplbl">Remote</div>
+     <button data-tf-sample onclick="askSwitch('origin/main',event)"><span class="tick"></span>origin/main</button>
+     <button data-tf-sample onclick="askSwitch('origin/feature/board',event)"><span class="tick"></span>origin/feature/board</button>
+     <button data-tf-sample onclick="askSwitch('origin/feature/paging',event)"><span class="tick"></span>origin/feature/paging</button>
+     <div class="note">A remote branch is switched to as a local branch that follows it.</div>
+    </div>
+   </div>
   </div>
 
   <div class="split">
@@ -242,6 +306,20 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
 
     <div class="talk" data-testid="conversation">
 
+     <div class="msg agent" data-testid="agent-greeting" data-tf-state="sample-data" data-tf-sample>
+      <span class="who"><svg><use href="#i-sparkle"/></svg></span>
+      <div class="body">
+       <span class="name">Flow master</span>
+       <div class="said">Hello, I am Madhav, the Flow Master.<br>The one agent for building, fixing, documenting for developers and users, handing off, and reporting.
+        <ul style="margin:8px 0 0;padding-left:18px;color:var(--dim)">
+         <li data-testid="agent-greeting-command"><span class="mono">*build-phase {App}</span> — builds every open row of the phase's checklist, smokes, chains the verifier, fixes what fails</li>
+         <li data-testid="agent-greeting-command"><span class="mono">*fix-issues {App} {folder}</span> — reproduces reported bugs from screenshots and notes, fixes, re-verifies</li>
+         <li data-testid="agent-greeting-command"><span class="mono">*estimate-phase {App}</span> — estimates the phase's tokens and time before it is built</li>
+         <li data-testid="agent-greeting-command"><span class="mono">*help</span> — prints this table</li>
+        </ul></div>
+      </div>
+     </div>
+
      <div class="msg me" data-testid="msg-1" data-tf-state="sample-data" data-tf-sample>
       <span class="who">TR</span>
       <div class="body"><span class="name">You<span class="model">14:22</span></span>
@@ -251,10 +329,11 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
      <div class="msg agent" data-testid="msg-2" data-tf-state="sample-data" data-tf-sample>
       <span class="who"><svg><use href="#i-sparkle"/></svg></span>
       <div class="body">
-       <span class="name">Flow master<span class="model">Claude Opus 5 · 3,412 tokens · 4.1 s</span></span>
+       <span class="name">Flow master<span class="model"><span data-testid="msg-model">Claude Opus 5</span> · 3,412 tokens · 4.1 s</span><span class="model" data-testid="msg-model-why">Automatic: a code change, so the strongest model</span></span>
        <div class="said">The table is bound straight to the list, so the paging belongs in the query, not the component.</div>
-       <div class="step"><svg class="ok"><use href="#i-check"/></svg>read <b class="mono">Coverage.razor</b> and <b class="mono">Query.cs</b></div>
-       <div class="step"><svg><use href="#i-search"/></svg>searched for <b class="mono">RepoRow</b> — 6 hits</div>
+       <div data-testid="activity-panel">
+       <div class="step" data-testid="activity-step"><svg><use href="#i-check"/></svg>read <b class="mono">Coverage.razor</b> and <b class="mono">Query.cs</b></div>
+       <div class="step" data-testid="activity-step"><svg><use href="#i-search"/></svg>searched for <b class="mono">RepoRow</b> — 6 hits</div>
 
        <div class="change" data-testid="proposed-change" data-tf-state="change-proposed">
         <div class="ch"><svg><use href="#i-pencil"/></svg><span class="mono" data-testid="change-file">Query.cs</span>
@@ -266,8 +345,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
         <pre><span class="ln del">- return objRows.OrderBy(r =&gt; r.Name).ToList();</span><span class="ln add">+ return objRows.OrderBy(r =&gt; r.Name)</span><span class="ln add">+     .Skip(aPage * aSize).Take(aSize).ToList();</span></pre>
        </div>
 
-       <div class="step"><svg class="bad"><use href="#i-block"/></svg>asked to run <b class="mono">git commit</b> — refused, you check in yourself</div>
-       <div class="step busy"><svg><use href="#i-terminal"/></svg>dotnet build TfLens.sln<span class="dots"><i></i><i></i><i></i></span></div>
+       <div class="step" data-testid="activity-step"><svg class="bad"><use href="#i-block"/></svg>asked to run <b class="mono">git commit</b> — refused, you check in yourself</div>
+       <div class="step busy" data-testid="activity-step"><svg><use href="#i-terminal"/></svg>dotnet build TfLens.sln<span class="dots"><i></i><i></i><i></i></span></div>
+       </div>
       </div>
      </div>
 
@@ -296,9 +376,10 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
          <hr>
          <button onclick="choose(this,'Analyst',event)" data-tf-sample><span class="tick"></span>Analyst</button>
          <button onclick="choose(this,'Architect',event)" data-tf-sample><span class="tick"></span>Architect</button>
-         <button onclick="choose(this,'Flow master',event)" data-tf-sample><span class="tick">✓</span>Flow master<span class="sub">suggested</span></button>
+         <!-- BRD-224: the agent the closed picker names carries the one tick; no entry says "suggested". -->
+         <button onclick="choose(this,'Flow master',event)" data-tf-sample><span class="tick">✓</span>Flow master</button>
          <button onclick="choose(this,'Verifier',event)" data-tf-sample><span class="tick"></span>Verifier</button>
-         <div class="note">Chatur suggested the Flow master because TfLens is mid-build.</div>
+         <div class="note">Chatur chose the Flow master because TfLens is mid-build.</div>
          <hr>
          <a href="settings-agents.html" data-tf-state="sample-data">Agents…</a>
         </div>
@@ -328,6 +409,63 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
 <span class="ok">Build succeeded in 4.8s</span>
 <span class="d">&gt; dotnet test TfLens.Tests</span>
   Starting test execution…</div>
+ </div>
+
+ <!-- BRD-223: shown when another branch is chosen while there are uncommitted changes. Escape is Stay. -->
+ <div class="scrim" id="branch-dirty" role="alertdialog" aria-modal="true" aria-labelledby="branch-dirty-title" data-testid="branch-dirty" data-tf-state="dialog-open">
+  <div class="dlg">
+   <div><h2 id="branch-dirty-title">You have uncommitted changes</h2>
+    <div class="sm dim">Your changes on <b>main</b> are not committed. You chose <b data-to>feature/board</b>. What should happen to them?</div></div>
+   <button class="choice" onclick="doSwitch('The changes came with you to the new branch.')" data-testid="branch-dirty-bring"><b>Bring them along</b><span>The changes move to the new branch with you. If they would be overwritten there, Git refuses and nothing changes.</span></button>
+   <button class="choice" onclick="doSwitch('The changes are stashed under a name, and the branch switched. Get them back from the stash later.')" data-testid="branch-dirty-stash"><b>Put them aside</b><span>They are stashed under a name and the branch switches. Get them back from the stash later.</span></button>
+   <button class="choice" onclick="closeDlg('branch-dirty','Nothing changed. You are still on main, with your changes.')" data-testid="branch-dirty-stay"><b>Stay on main</b><span>Nothing changes.</span></button>
+  </div>
+ </div>
+
+ <!-- BRD-244, BRD-279, REQ-UI-112, REQ-UI-126: File ▸ New project, drawn with a solution open. The templates are this
+      machine's `dotnet new list`. The folder that is open is shown as "Will be created in", never as a field to type,
+      with "Change location" for the rare case; under it the two full paths Create will make follow the name as it is
+      typed. With a folder open that has no solution, a "Solution name" field comes first and the solution file's path
+      reads <that folder>/<solution name>.slnx: the solution file goes in the folder itself and the project one folder
+      under it, never in a folder named after the solution (BRD-247, owner's test of 23 Nov 2026). A folder with projects
+      and no solution adds one line: "This folder has a project and no solution. Create makes the solution here and
+      adds it to it: OwnerTest/OwnerTest.csproj" (BRD-276). With nothing open, "Will be created in" is one Location
+      field with a folder button, and the same two paths. Escape closes. -->
+ <div class="scrim" id="new-project" role="dialog" aria-modal="true" aria-labelledby="new-project-title" data-testid="new-project-dialog" data-tf-state="dialog-open">
+  <div class="dlg" style="max-width:640px">
+   <div><h2 id="new-project-title">New project in TfLens</h2>
+    <div class="sm dim">Pick a template and name the project. It is made with dotnet new and added to the solution.</div></div>
+   <div data-testid="template-list" style="max-height:200px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--r)">
+    <button class="choice" style="border:0;border-bottom:1px solid var(--line);border-radius:0;flex-direction:row;align-items:center;gap:10px;background:var(--accent-soft)" data-testid="template-console" aria-pressed="true" onclick="pickTpl(this)"><b class="grow">Console App</b><span class="mono">console</span><span class="xs">Common/Console</span></button>
+    <button class="choice" style="border:0;border-bottom:1px solid var(--line);border-radius:0;flex-direction:row;align-items:center;gap:10px" data-testid="template-classlib" aria-pressed="false" onclick="pickTpl(this)"><b class="grow">Class Library</b><span class="mono">classlib</span><span class="xs">Common/Library</span></button>
+    <button class="choice" style="border:0;border-bottom:1px solid var(--line);border-radius:0;flex-direction:row;align-items:center;gap:10px" data-testid="template-blazor" aria-pressed="false" onclick="pickTpl(this)"><b class="grow">Blazor Web App</b><span class="mono">blazor</span><span class="xs">Web/Blazor/WebAssembly</span></button>
+    <button class="choice" style="border:0;border-bottom:1px solid var(--line);border-radius:0;flex-direction:row;align-items:center;gap:10px" data-testid="template-xunit" aria-pressed="false" onclick="pickTpl(this)"><b class="grow">xUnit Test Project</b><span class="mono">xunit</span><span class="xs">Test/xUnit/Desktop/Web</span></button>
+    <button class="choice" style="border:0;border-bottom:1px solid var(--line);border-radius:0;flex-direction:row;align-items:center;gap:10px" data-testid="template-nunit" aria-pressed="false" onclick="pickTpl(this)"><b class="grow">NUnit Test Project</b><span class="mono">nunit</span><span class="xs">Test/NUnit/Desktop/Web</span></button>
+    <button class="choice" style="border:0;border-bottom:1px solid var(--line);border-radius:0;flex-direction:row;align-items:center;gap:10px" data-testid="template-mstest" aria-pressed="false" onclick="pickTpl(this)"><b class="grow">MSTest Test Project</b><span class="mono">mstest</span><span class="xs">Test/MSTest/Desktop/Web</span></button>
+    <button class="choice" style="border:0;border-radius:0;flex-direction:row;align-items:center;gap:10px" data-testid="template-maui-blazor" aria-pressed="false" onclick="pickTpl(this)"><b class="grow">.NET MAUI Blazor Hybrid App</b><span class="mono">maui-blazor</span><span class="xs">MAUI/Blazor Hybrid/Mobile</span></button>
+   </div>
+   <div class="row" style="align-items:flex-start">
+    <div class="field grow"><label for="np-name">Name</label><input class="fld" id="np-name" placeholder="A name for the new project" data-testid="new-project-name" oninput="npLoc()"></div>
+    <div class="field grow"><label for="np-fw">Framework</label><select class="fld" id="np-fw" data-testid="new-project-framework"><option>net10.0</option><option>net9.0</option><option>net8.0</option></select></div>
+   </div>
+   <div data-testid="new-project-where" style="border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+    <div id="np-fixed" class="row" style="align-items:baseline;flex-wrap:wrap;gap:4px 12px">
+     <b class="sm">Will be created in</b>
+     <span class="mono xs" data-testid="new-project-folder">~/Source/TfLens</span>
+     <button class="tb xs" style="border:0;background:none;padding:0;text-decoration:underline;cursor:pointer" onclick="npChange()" data-testid="new-project-change-location">Change location</button>
+    </div>
+    <div id="np-typed" class="field" style="display:none"><label for="np-loc">Location</label><input class="fld mono" id="np-loc" value="~/Source/TfLens" placeholder="The folder the solution goes in" data-testid="new-project-location" oninput="npLoc()"></div>
+    <div data-testid="new-project-paths" class="xs" style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px">
+     <span class="dim">Solution file (already there)</span><span class="mono" data-testid="new-project-solution-path">~/Source/TfLens/TfLens.sln</span>
+     <span class="dim">Project folder</span><span class="mono" id="np-project-path" data-testid="new-project-project-path">Shown when the project has a name</span>
+    </div>
+   </div>
+   <div class="err" data-testid="new-project-error" style="display:none">Making the project failed (dotnet new console …).</div>
+   <div class="row" style="justify-content:flex-end">
+    <button class="tb" onclick="closeDlg('new-project')" data-testid="new-project-cancel">Cancel</button>
+    <button class="tb primary" onclick="closeDlg('new-project','The project is made, added to TfLens.sln, and shown in Files and in the run targets.')" data-testid="new-project-create">Create</button>
+   </div>
+  </div>
  </div>
 
 </div>

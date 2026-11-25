@@ -6,7 +6,7 @@ namespace Chatur.Tests;
 /// <summary>Tests for <see cref="TestDataGuard"/> (REQ-NFR-010).</summary>
 public sealed class TestDataGuardTests : IDisposable
 {
-    private readonly string objRoot = Path.Combine(Path.GetTempPath(), "chatur-guard-" + Guid.NewGuid().ToString("N"));
+    private readonly string objRoot = Path.Combine(Chatur.Tests.Support.TestScratch.Root, "chatur-guard-" + Guid.NewGuid().ToString("N"));
     private readonly string objOwner;
     private readonly string objBin;
 
@@ -63,7 +63,7 @@ public sealed class TestDataGuardTests : IDisposable
     public void TestRunOutsideRepositoryRefuses()
     {
         Assert.Throws<InvalidOperationException>(() =>
-            TestDataGuard.ResolveDataFolder(objOwner, Env(("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--remote-debugging-port=9222")), objOwner, "desktop"));
+            TestDataGuard.ResolveDataFolder(objOwner, Env(("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--remote-debugging-port=9222")), OutsideAnyRepository, "desktop"));
     }
 
     /// <summary>When other web view arguments are set without the DevTools port, then it is not a test run.</summary>
@@ -81,4 +81,10 @@ public sealed class TestDataGuardTests : IDisposable
 
     private static Func<string, string?> Env(params (string Name, string Value)[] aVariables) =>
         aName => aVariables.FirstOrDefault(v => v.Name == aName).Value;
+
+    /// <summary>
+    /// An app folder with no solution above it. The test's scratch space is inside Chatur's repository (owner, 21 Nov
+    /// 2026), so this is a path under the drive's root that is never made: the guard only looks for a solution above it.
+    /// </summary>
+    private static string OutsideAnyRepository => Path.Combine(Path.GetPathRoot(AppContext.BaseDirectory)!, $"no-repository-{Guid.NewGuid():N}", "app");
 }

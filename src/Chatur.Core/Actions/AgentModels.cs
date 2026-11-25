@@ -20,7 +20,15 @@ public sealed record AgentSuggestion(int? RoleId, string Why);
 /// <param name="IsFinal">Whether this is the last piece of the reply.</param>
 /// <param name="ModelName">The model that produced the reply; set once known.</param>
 /// <param name="TokensUsed">The tokens the finished reply used; set only on the final piece.</param>
-public sealed record AgentReplyChunk(string TextDelta, bool IsFinal, string? ModelName, int? TokensUsed);
+/// <param name="RoutingReason">In a few words, why Automatic routing picked that model (REQ-UI-111); <see langword="null"/> when routing did not choose; set only on the final piece.</param>
+public sealed record AgentReplyChunk(string TextDelta, bool IsFinal, string? ModelName, int? TokensUsed, string? RoutingReason = null)
+{
+    /// <summary>The conversation's mode after this reply, when a command changed it (<c>*yolo</c>, BRD-249); <see langword="null"/> otherwise.</summary>
+    public SessionMode? ModeNow { get; init; }
+
+    /// <summary>Whether this reply closed the conversation (<c>*exit</c>, BRD-249), so the next message starts a new one.</summary>
+    public bool EndsConversation { get; init; }
+}
 
 /// <summary>One past or current session, as Sessions lists it (REQ-UI-031).</summary>
 /// <param name="SessionId">The row's identity.</param>
@@ -38,7 +46,21 @@ public sealed record SessionSummary(int SessionId, int ProjectId, string RoleNam
 /// <param name="Model">The model that produced this step, when one did.</param>
 /// <param name="Tokens">The tokens this step used, when known.</param>
 /// <param name="RoleName">The agent that wrote this reply (REQ-FN-024); <see langword="null"/> for a step that is not a reply, and for a reply recorded before replies kept their agent.</param>
-public sealed record SessionEventRecord(int Seq, string Kind, string Payload, string? Model, int? Tokens, string? RoleName = null);
+/// <param name="RoutingReason">Why Automatic routing picked the model that wrote this reply (REQ-UI-111); <see langword="null"/> when routing did not choose it, and for a reply recorded before the reason was kept.</param>
+public sealed record SessionEventRecord(int Seq, string Kind, string Payload, string? Model, int? Tokens, string? RoleName = null, string? RoutingReason = null);
+
+/// <summary>One command an agent has (REQ-FN-308).</summary>
+/// <param name="Command">The command as typed, e.g. <c>*build-phase {App}</c>.</param>
+/// <param name="Description">What it does, in one line; empty when the agent's definition says nothing.</param>
+public sealed record PersonaCommand(string Command, string Description);
+
+/// <summary>What an agent says about itself when the person chooses it (REQ-FN-308).</summary>
+/// <param name="RoleName">The role's name in the picker, e.g. <c>Analyst</c>.</param>
+/// <param name="Name">The agent's own name, e.g. <c>Chanakya</c>; the role's name when it has none.</param>
+/// <param name="Title">The agent's title, e.g. <c>Business Analyst</c>.</param>
+/// <param name="Purpose">What the agent is for, in a sentence or two.</param>
+/// <param name="Commands">The commands the agent has, as its own definition lists them.</param>
+public sealed record AgentGreeting(string RoleName, string Name, string Title, string Purpose, IReadOnlyList<PersonaCommand> Commands);
 
 /// <summary>A session with its full recorded history (REQ-FN-031, REQ-FN-032).</summary>
 /// <param name="Summary">The session's summary row.</param>

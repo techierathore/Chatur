@@ -1,21 +1,222 @@
 @page "/all-projects"
 @layout Layouts.SecondaryLayout
+@using TrBlazeUI.Components.Table
+@using TrBlazeUI.Components.InputGroup
+@inject IAllProjectsActions AllProjectsActions
+@inject IRoleSyncActions RoleSyncActions
+@inject NavigationManager Nav
 
 @* UI Design phase 4 "Screen: All projects" — mockups/all-projects.html. Cluster P4-C lists every
    project Chatur knows, its phase and how its requirements stand (REQ-FN-076, REQ-UI-067,
-   REQ-FN-077, REQ-FN-078). *@
+   REQ-FN-077), and the roles sync panel (REQ-FN-078). *@
 <div class="flex flex-col gap-4" data-testid="page">
-    <div data-testid="page-heading">
-        <h1 class="text-lg font-semibold">All projects</h1>
-        <p class="text-sm text-muted-foreground">Every project Chatur knows, with where each one stands.</p>
+    <div class="flex flex-wrap items-center gap-2.5" data-testid="projects-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Every project on one view</h1>
+            <p class="text-sm text-muted-foreground" data-testid="projects-lead">@Lead</p>
+        </div>
+        <span class="flex-1"></span>
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="AddProject" data-testid="add-project">
+            <LucideIcon Name="plus" Size="14" />
+            Add a project
+        </Button>
     </div>
+
+    <div class="flex flex-wrap items-center gap-2" data-testid="projects-controls">
+        <InputGroup Class="min-w-44 flex-1 rounded-full">
+            <InputGroupAddon Align="InputGroupAlign.InlineStart">
+                <LucideIcon Name="search" Size="14" />
+            </InputGroupAddon>
+            <InputGroupInput Value="@objSearch" ValueChanged="OnSearchChangedAsync" Placeholder="Search projects and folders" AriaLabel="Search projects and folders" data-testid="projects-search" />
+        </InputGroup>
+        <Select TValue="string" Value="@objOrder.ToString()" ValueChanged="OnOrderChangedAsync" DisplayTextSelector="@(v => OrderLabel(v))" Class="w-64" data-testid="projects-sort">
+            <SelectTrigger Class="rounded-full" AriaLabel="Sort by" data-testid="projects-sort-button"><span class="text-muted-foreground">Sort by</span><SelectValue /></SelectTrigger>
+            <SelectContent data-testid="projects-sort-pop">
+                <SelectItem TValue="string" Value="@nameof(AllProjectsOrder.LastWorked)" Text="Last worked on" data-testid="sort-last-worked">Last worked on</SelectItem>
+                <SelectItem TValue="string" Value="@nameof(AllProjectsOrder.Name)" Text="Name" data-testid="sort-name">Name</SelectItem>
+                <SelectItem TValue="string" Value="@nameof(AllProjectsOrder.OpenRequirements)" Text="Open requirements" data-testid="sort-open">Open requirements</SelectItem>
+            </SelectContent>
+        </Select>
+        <Select TValue="string" Value="@(objCards ? "Cards" : "Table")" ValueChanged="OnViewChanged" DisplayTextSelector="@(v => v)" Class="w-44" data-testid="projects-view">
+            <SelectTrigger Class="rounded-full" AriaLabel="View" data-testid="projects-view-button"><span class="text-muted-foreground">View</span><SelectValue /></SelectTrigger>
+            <SelectContent data-testid="projects-view-pop">
+                <SelectItem TValue="string" Value="@("Cards")" Text="Cards" data-testid="view-cards">Cards</SelectItem>
+                <SelectItem TValue="string" Value="@("Table")" Text="Table" data-testid="view-table">Table</SelectItem>
+            </SelectContent>
+        </Select>
+    </div>
+
+    @if (objView is not null)
+    {
+        @* The four tiles as the mockup draws them, each value with its own test label (tile-…-value); StatTile has no place for one. *@
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" data-testid="projects-tiles">
+            <Card data-testid="tile-projects">
+                <CardContent Class="flex flex-col gap-0.5 p-3">
+                    <b class="text-xl" data-testid="tile-projects-value">@objView.TotalProjects</b>
+                    <span class="text-xs text-muted-foreground">Projects</span>
+                </CardContent>
+            </Card>
+            <Card data-testid="tile-open">
+                <CardContent Class="flex flex-col gap-0.5 p-3">
+                    <b class="text-xl text-alert-warning" data-testid="tile-open-value">@objView.OpenRequirements</b>
+                    <span class="text-xs text-muted-foreground">Open requirements</span>
+                </CardContent>
+            </Card>
+            <Card data-testid="tile-verified">
+                <CardContent Class="flex flex-col gap-0.5 p-3">
+                    <b class="text-xl text-alert-success" data-testid="tile-verified-value">@objView.VerifiedRequirements</b>
+                    <span class="text-xs text-muted-foreground">Verified</span>
+                </CardContent>
+            </Card>
+            <Card data-testid="tile-sessions">
+                <CardContent Class="flex flex-col gap-0.5 p-3">
+                    <b class="text-xl" data-testid="tile-sessions-value">@objView.SessionsThisWeek</b>
+                    <span class="text-xs text-muted-foreground">Sessions this week</span>
+                </CardContent>
+            </Card>
+        </div>
+    }
 
     <Card data-testid="projects-panel">
         <CardHeader>
-            <CardTitle>Projects</CardTitle>
+            <div class="flex items-center gap-2">
+                <CardTitle>Every project</CardTitle>
+                <span class="flex-1"></span>
+                @if (objView is not null)
+                {
+                    <span class="text-xs text-muted-foreground" data-testid="projects-shown">@objView.Projects.Count of @objView.TotalProjects shown</span>
+                }
+            </div>
         </CardHeader>
         <CardContent>
-            <Empty Title="No projects yet" Description="Projects you open appear here with their phase and status." Size="EmptySize.Small" data-testid="projects-empty" />
+            @if (objView is null)
+            {
+                <div class="flex flex-col gap-2" data-testid="projects-loading">
+                    <Skeleton Class="h-8 w-full" />
+                    <Skeleton Class="h-8 w-full" />
+                </div>
+            }
+            else if (objView.Projects.Count == 0)
+            {
+                <Empty Title="@(objView.TotalProjects == 0 ? "No projects yet" : "No project matches")" Description="@(objView.TotalProjects == 0 ? "Projects you open appear here with their phase and status." : "Nothing matches that search.")" Size="EmptySize.Small" data-testid="projects-empty" />
+            }
+            else if (objCards)
+            {
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="projects-cards">
+                    @foreach (var vProject in objView.Projects)
+                    {
+                        <div class="flex flex-col gap-2 rounded-lg border p-3" data-testid="@($"project-card-{Slug(vProject.Name)}")">
+                            <div class="flex items-center gap-2">
+                                <LucideIcon Name="folder" Size="14" Class="flex-none text-muted-foreground" />
+                                <b class="min-w-0 flex-1 truncate font-medium">@vProject.Name</b>
+                                <Badge Variant="@StateVariant(vProject.State)" Class="whitespace-nowrap border-0">@vProject.State</Badge>
+                            </div>
+                            <span class="truncate font-mono text-xs text-muted-foreground">@vProject.Path</span>
+                            <Progress Value="@VerifiedPercent(vProject)" Class="h-1.5" />
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="text-muted-foreground">@PhaseText(vProject)</span>
+                                <span><b class="text-alert-warning">@vProject.Open</b> open</span>
+                                <span><b class="text-alert-success">@vProject.Verified</b> verified</span>
+                                <span class="flex-1"></span>
+                                <Button Variant="ButtonVariant.Link" Size="ButtonSize.Small" OnClick="@(() => OpenProjectAsync(vProject.ProjectId))" data-testid="@($"open-{Slug(vProject.Name)}")">Open</Button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <Table data-testid="projects-table">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Project</TableHead>
+                            <TableHead>Folder</TableHead>
+                            <TableHead>Phase</TableHead>
+                            <TableHead>Reqs</TableHead>
+                            <TableHead>Open</TableHead>
+                            <TableHead>Verified</TableHead>
+                            <TableHead>Last worked</TableHead>
+                            <TableHead>State</TableHead>
+                            <TableHead></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var vProject in objView.Projects)
+                        {
+                            <TableRow Class="border-b-0 border-t" data-testid="@($"project-row-{Slug(vProject.Name)}")">
+                                <TableCell Class="whitespace-nowrap">
+                                    <span class="flex items-center gap-2"><LucideIcon Name="folder" Size="14" Class="text-muted-foreground" /><b class="font-medium">@vProject.Name</b></span>
+                                </TableCell>
+                                <TableCell Class="font-mono text-muted-foreground" title="@vProject.Path">@ShortPath(vProject.Path)</TableCell>
+                                <TableCell Class="whitespace-nowrap text-muted-foreground">@PhaseText(vProject)</TableCell>
+                                <TableCell>@vProject.Requirements</TableCell>
+                                <TableCell><b class="@(vProject.Open == 0 ? "font-normal text-muted-foreground" : "text-alert-warning")">@vProject.Open</b></TableCell>
+                                <TableCell><span class="text-alert-success">@vProject.Verified</span></TableCell>
+                                <TableCell Class="whitespace-nowrap text-muted-foreground">@WhenText(vProject.LastWorkedUtc)</TableCell>
+                                <TableCell><Badge Variant="@StateVariant(vProject.State)" Class="whitespace-nowrap border-0" data-testid="@($"project-state-{Slug(vProject.Name)}")">@vProject.State</Badge></TableCell>
+                                <TableCell><Button Variant="ButtonVariant.Link" Size="ButtonSize.Small" OnClick="@(() => OpenProjectAsync(vProject.ProjectId))" data-testid="@($"open-{Slug(vProject.Name)}")">Open</Button></TableCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+            }
+        </CardContent>
+    </Card>
+
+    <Card data-testid="sync-panel">
+        <CardHeader>
+            <CardTitle Class="flex items-center gap-2"><LucideIcon Name="monitor" Size="14" />Agents and rules across machines</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3">
+            @if (objSync is null)
+            {
+                <Skeleton Class="h-8 w-full" />
+            }
+            else
+            {
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <span class="grow text-sm text-muted-foreground">
+                        Last synced through App Manager
+                        <b class="font-medium text-foreground" data-testid="sync-when">@SyncedText</b>
+                    </span>
+                    <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="SyncNowAsync" Disabled="@(objSyncing || !objSync.Available)" data-testid="sync-now">
+                        <LucideIcon Name="refresh-cw" Size="14" />
+                        Sync now
+                    </Button>
+                </div>
+                @if (objSync.Outcome is not null)
+                {
+                    <p class="text-sm" role="status" data-testid="sync-outcome">@objSync.Outcome</p>
+                }
+                @if (!objSync.Available)
+                {
+                    <p class="text-sm text-muted-foreground" data-testid="sync-unavailable">@objSync.UnavailableReason</p>
+                }
+                @foreach (var vMachine in objSync.Machines)
+                {
+                    var vKey = vMachine.IsThisMachine ? "this" : Slug(vMachine.Name);
+                    <div class="flex items-center gap-3 border-t pt-2.5" data-testid="@($"sync-machine-{vKey}")">
+                        <LucideIcon Name="monitor" Size="16" Class="flex-none text-muted-foreground" />
+                        <div class="grow">
+                            <div class="text-sm font-medium">
+                                @vMachine.Name
+                                @if (vMachine.IsThisMachine)
+                                {
+                                    <span class="text-xs font-normal text-muted-foreground">· this machine</span>
+                                }
+                            </div>
+                            <div class="text-xs text-muted-foreground">@vMachine.Agents agents · @vMachine.Rules rules@(vMachine.LastSeenUtc is { } vSeen ? $" · last seen {WhenText(vSeen)}" : string.Empty)</div>
+                        </div>
+                        <Badge Variant="@(vMachine.UpToDate ? BadgeVariant.Success : BadgeVariant.Warning)" Class="whitespace-nowrap border-0" data-testid="@($"sync-state-{vKey}")">@(vMachine.UpToDate ? "up to date" : "not synced yet")</Badge>
+                    </div>
+                }
+                <p class="flex items-start gap-2 border-t pt-2.5 text-sm text-muted-foreground" data-testid="sync-note">
+                    <LucideIcon Name="triangle-alert" Size="14" Class="mt-0.5 flex-none" />
+                    <span>A change on one machine reaches the other. Edit an agent or a rule here and your other machine has it at the next sync, so you never copy a file by hand.</span>
+                </p>
+            }
         </CardContent>
     </Card>
 </div>
+
+<OpenProjectDialog @bind-Open="objAddOpen" Mode="ProjectOpenMode.Folder" />

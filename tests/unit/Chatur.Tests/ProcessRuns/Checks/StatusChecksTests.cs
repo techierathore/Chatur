@@ -203,7 +203,7 @@ public sealed class StatusChecksTests : MigratedDatabaseFixture
 
     private int StartRun()
     {
-        var vProjectId = CreateProject("P", Path.Combine(Path.GetTempPath(), $"chatur-unused-{Guid.NewGuid():N}"));
+        var vProjectId = CreateProject("P", Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-unused-{Guid.NewGuid():N}"));
         using var vConnection = new SqliteConnection(ConnectionString);
         vConnection.Open();
         return (int)vConnection.ExecuteScalar<long>(

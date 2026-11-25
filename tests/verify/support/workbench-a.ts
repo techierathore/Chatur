@@ -4,20 +4,21 @@
 import { test, expect, Page } from '@playwright/test';
 import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
-import { tmpdir } from 'os';
+import { scratchDir } from './cleanup';
 import { execFileSync } from 'child_process';
 
 export const ROOT = resolve(__dirname, '../../.artifacts/verify/fixtures/workbench-a');
 export const NAME = 'WbAFilesApp';
 export const MULTI = 'WbAMultiHead';
 export const PROJECT = join(ROOT, NAME);
-export const PID_FILE = join(tmpdir(), 'wba-run.pid');
+// The fixture program's process id, in this test project's own bin folder (owner, 20 Nov 2026: nothing outside the repository).
+export const PID_FILE = join(scratchDir('workbench-a'), 'wba-run.pid');
 // The booted app's own log follows the port of BASE_URL (5280 when none is set), as db.ts does for the database.
 export const APP_LOG = resolve(__dirname, `../../.artifacts/verify/app-${new URL(process.env.BASE_URL ?? 'http://localhost:5280').port || '5280'}.log`);
 export const SHOTS = resolve(__dirname, '../../.artifacts/verify/shots');
 
 export const PROGRAM_OK = `Console.WriteLine("WBA starting");
-File.WriteAllText(Path.Combine(Path.GetTempPath(), "wba-run.pid"), Environment.ProcessId.ToString());
+File.WriteAllText(@"${PID_FILE}", Environment.ProcessId.ToString());
 for (var i = 1; i <= 40; i++)
 {
     Console.WriteLine($"WBA tick {i}");

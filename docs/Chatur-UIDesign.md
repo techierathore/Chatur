@@ -11,7 +11,7 @@
 
 ## Design system
 
-- **Three windows.** The **start window** opens first: recent projects on the left, the ways in on the right — clone, open a solution, open a folder, new project, new empty folder. No menu bar, no files, no conversation, because nothing is open. The **main window** is where work happens: a menu bar (File, Edit, View, Project, Tools, Help), a toolbar (Run, Stop, Build, the run target, the branch, Find), the files down the left with the branch beneath them, one content area of tabs, the conversation pinned right at half the width, and an output strip. The **secondary window** holds everything that is not the work — Prerequisites, Repository, Settings, Licence, Feedback, Integrations, All projects, Working copies — as a title bar, a left navigation list and one page. No file tree, no conversation: there is nothing to say to an agent while changing a setting.
+- **Three windows.** The **start window** opens first: recent projects on the left, the ways in on the right — clone, open a solution, open a folder, new project, new empty folder. No menu bar, no files, no conversation, because nothing is open. The **main window** is where work happens: a menu bar (File, Edit, View, Project, Tools, Help), a toolbar (Run, Build, the project to run, Find; Stop only while something runs), the files down the left with the branch picker beneath them, one content area of tabs, the conversation pinned right at half the width, and an output strip. The **secondary window** holds everything that is not the work — Prerequisites, Repository, Settings, Licence, Feedback, Integrations, All projects, Working copies — as a title bar, a left navigation list and one page. No file tree, no conversation: there is nothing to say to an agent while changing a setting.
 - **Menus and pickers really open**, each dropping its list with a tick on the chosen one. Nothing looks like a drop-down and behaves like a label.
 - **Theme.** A theme is a named set of OKLCH values in the shape TrBlazeUI reads, carrying a light set and a dark set. Amber ships as the default, with Indigo, Teal and Slate; more are added from a file. Nothing is coloured by which agent is working.
 - **Controls**, all real in 2.0.9: `Menubar`, `DropdownMenu`, `TreeView`, `EditorTabs`, `CodeEditor`, `DiffView`, `LogView`, `Typing`, `NavList`, `SortableList`, `DataTable` with row selection, small `Switch`, `Card`, `Badge`, `Alert`, `Button`, `Select`, `Dialog`, `Progress`, `Empty`, `LucideIcon`.
@@ -79,7 +79,7 @@ A window of its own, the one that opens first. It carries no menu bar, no file t
 | `recent-search` | Button | filters the list by name or path |
 | `forget` | Button | drops a project from the list; the folder on disk is untouched |
 | `clone-repo` | Button | clones from GitHub, or any address pasted, and opens it |
-| `open-solution` / `open-folder` | Button ×2 | a `.sln` with its projects read, or any folder as it is |
+| `open-solution` / `open-folder` | Button ×2 | a `.sln` or `.slnx` with its projects read, or any folder as it is |
 | `open-file` | Button | any file, opened with the folder that holds it (BRD-215) |
 | `new-project` | Button | a solution from a template |
 | `new-blank` | Button | an empty folder and an agent, for thinking something through before there is code |
@@ -89,9 +89,9 @@ A window of its own, the one that opens first. It carries no menu bar, no file t
 | Search | search | no | matches a name or any part of a path |
 | Repository address | text | yes, when cloning | a git address this machine can reach; the folder it clones into must be empty |
 
-**Dialogs opened here:** Clone a repository · Open a solution · Open a folder · New project — each the machine's own picker or a small form
+**Dialogs opened here:** Clone a repository · Open a solution · Open a folder — each the machine's own picker or a small form · New project, from this machine's templates
 
-**States:** empty, for an account that has opened nothing (`start-empty.html`): `empty-start` shows three ways on, `way-open-folder`, `way-open-solution`, `way-open-file`, and a quiet `manage-folders` · loading: a clone shows its progress in place of the list, and the buttons wait · error: a folder that has moved keeps its row, marked, and offers to forget it
+**States:** empty, for an account that has opened nothing (`start-empty.html`): `empty-start`: `way-new-project`, `way-open-folder`, `way-open-solution`, `way-open-file`, quiet `manage-folders` (BRD-14, BRD-247) · loading: a clone shows its progress in place of the list, and the buttons wait · error: a folder that has moved keeps its row, marked, and offers to forget it
 
 ### Screen: Workbench (`/`)
 
@@ -102,8 +102,8 @@ The window itself, and where the work happens.
 | Region | Control | Shows or binds |
 |---|---|---|
 | `menubar` | Menubar | File, Edit, View, Project, Tools, Help; the signed-in user at the right |
-| `toolbar` | Button row | `run`, `stop`, `build`, `target`, `repo`, `find` |
-| `files-panel` | Card + tree | the project's files; `branch` beneath them opens the Repository |
+| `toolbar` | Button row | `run`, `build`, `target`, `find`; `stop` only while something runs |
+| `files-panel` | Card + tree | the project's files; `branch` beneath them picks a local or remote branch |
 | `tabs` | Tabs | the open files and views; `close-file-view` gives the conversation the window |
 | `editor` | code pane | the open file with syntax colour; a change waiting on it is shown in place and the file is read-only until it is settled |
 | `conversation` | ScrollArea | the turns, each naming its model, tokens and seconds; the agent's steps as chips |
@@ -118,10 +118,10 @@ The window itself, and where the work happens.
 | Model | select | yes | one of the connected providers' models |
 | Agent | select | no | none means the model itself; Chatur pre-selects from the project's state |
 | Mode | two-way choice | yes | ask first, or go ahead |
-| Run target | select | yes | only a target this machine can build |
+| Project to run | select | yes | a runnable project of the solution |
 | File text | textarea | no | read-only while a change waits on that file |
 
-**Dialogs opened here:** Unsaved changes — save, close without saving, cancel
+**Dialogs opened here:** Unsaved changes — save, close without saving, cancel · Uncommitted changes (`branch-dirty`)
 
 **States:** empty: a folder with no project — the conversation takes the whole window and no target can be chosen ([drawn here](mockups/folder-only.html)) · loading: the reply shows as moving dots with its model named · error: a failed provider is shown in the conversation with the model that answered instead
 

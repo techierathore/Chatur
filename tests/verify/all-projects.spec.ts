@@ -9,6 +9,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import * as path from 'path';
 import { signIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
+import { query, run, snapshot, restore, ROLE_TABLES } from './support/db';
 
 test.setTimeout(180_000);
 
@@ -52,7 +53,7 @@ async function addRootFolder(aPage: Page): Promise<void> {
   if ((await vDialog.getByText(ROOT, { exact: true }).count()) === 0) {
     await vDialog.getByTestId('new-folder-path').fill(ROOT);
     await vDialog.getByTestId('add-folder').click();
-    await expect(vDialog.getByText(ROOT, { exact: true })).toBeVisible();
+    await expect(vDialog.getByText(ROOT, { exact: true })).toBeVisible({ timeout: 30_000 });
   }
   await vDialog.getByTestId('folders-dialog-close').click();
   await expect(vDialog).toBeHidden();
@@ -67,14 +68,14 @@ async function selectProject(aPage: Page, aName: string): Promise<void> {
   }
   await addRootFolder(aPage);
   const vRow = aPage.getByTestId(/^project-\d+-name$/).filter({ hasText: new RegExp(`^${aName}$`) });
-  await expect(vRow).toBeVisible();
+  await expect(vRow).toBeVisible({ timeout: 60_000 });
   await vRow.click();
   await expect(aPage).not.toHaveURL(/\/start/);
 }
 
 async function openAllProjects(aPage: Page): Promise<void> {
   await aPage.goto('/all-projects', { waitUntil: 'networkidle' });
-  await expect(aPage.getByTestId('page-heading').or(aPage.getByTestId('projects-heading'))).toBeVisible();
+  await expect(aPage.getByTestId('projects-heading')).toBeVisible();
 }
 
 function projectRow(aPage: Page, aName: string) {
@@ -82,6 +83,7 @@ function projectRow(aPage: Page, aName: string) {
 }
 
 test.beforeAll(async ({ browser }) => {
+  test.setTimeout(180_000);
   buildFixture();
   const vPage = await browser.newPage({ baseURL: process.env.BASE_URL ?? 'http://localhost:5290' });
   try {
@@ -155,37 +157,106 @@ test('REQ-FN-077 opening a project from the view selects it and opens Project ho
   await openAllProjects(page);
   const vRow = projectRow(page, NAME_A).first();
   await expect(vRow).toBeVisible({ timeout: 15_000 });
-  await vRow.locator('[data-testid^="open-"]').first().click();
-  await expect(page).not.toHaveURL(/\/all-projects/, { timeout: 30_000 });
+  // The page is prerendered; a click before the Blazor circuit attaches reaches no handler, so it is repeated until the page leaves.
+  await expect(async () => {
+    if (/\/all-projects/.test(page.url())) await vRow.locator('[data-testid^="open-"]').first().click();
+    await expect(page).not.toHaveURL(/\/all-projects/, { timeout: 3_000 });
+  }).toPass({ timeout: 60_000 });
   await expect(page.getByTestId('project-switch-name')).toHaveText(NAME_A, { timeout: 30_000 });
   await page.screenshot({ path: `${SHOTS}/all-projects-opened.png`, fullPage: true });
 });
 
+/** The pretend App Manager's store, as the other machine would read it (test-only route of the web harness). */
+async function storeRecords(aPage: Page): Promise<Array<{ deviceId: string; deviceName: string; json: string }>> {
+  const vResponse = await aPage.request.get('/test/role-sync');
+  expect(vResponse.ok()).toBeTruthy();
+  const vAll = (await vResponse.json()) as Record<string, Array<{ deviceId: string; deviceName: string; json: string }>>;
+  return Object.values(vAll).flat();
+}
+
+async function openAnalystRules(aPage: Page): Promise<void> {
+  await aPage.goto('/settings/agents', { waitUntil: 'domcontentloaded' });
+  await expect(aPage.getByTestId('agent-list')).toBeVisible({ timeout: 90_000 });
+  await aPage.waitForTimeout(2000);
+  await aPage.getByTestId('agent-analyst').click();
+  await expect(aPage.getByTestId('agent-detail-head')).toBeVisible();
+  await aPage.getByTestId('subtab-button').click();
+  await aPage.getByTestId('subtab-rules').click();
+  await aPage.waitForTimeout(400);
+}
+
+async function syncNow(aPage: Page): Promise<void> {
+  await openAllProjects(aPage);
+  await aPage.waitForTimeout(1500); // let the Blazor circuit attach before clicking
+  await aPage.getByTestId('sync-now').click();
+  await expect(aPage.getByTestId('sync-outcome')).toBeVisible({ timeout: 30_000 });
+}
+
 test('REQ-FN-078 roles and rules changed on one machine are on the other after syncing through App Manager', async ({ page }) => {
-  // REQ-FN-078: needs two machines under one account: change a rule on machine 1, sync, then see it on machine 2.
-  // The only seam the harness has is the 'Second' test user, which is a different account, so roles never cross to it.
-  // The screen's own sync panel (sync-panel, sync-now, sync-machine-*) would show machine 2's state; check it exists.
-  await openAllProjects(page);
-  const vPanel = await page.getByTestId('sync-panel').count();
-  const vNow = await page.getByTestId('sync-now').count();
-  const vMachines = await page.locator('[data-testid^="sync-machine-"]').count();
-  throw new Error(
-    `not measured: a second machine under the same account cannot be driven from this harness (the Second test user is a different account, ` +
-      `so its roles are separate), and a sync panel on All projects is the only place the other machine's state would show ` +
-      `(found sync-panel=${vPanel}, sync-now=${vNow}, machine rows=${vMachines}).`,
-  );
+  // REQ-FN-078: the web harness stands a file in for App Manager (appsettings RoleSync:StoreFile) and acts as a second
+  // machine, TR-WIN-DESK, under the same account. Machine 1 (the app) changes a rule on Settings > Agents and syncs: the
+  // store then holds it for the other machine. Machine 2 changes a rule and syncs; machine 1 syncs and then shows it on
+  // Settings > Agents. Decided: the second machine is driven through the harness's test-only routes, never App Manager.
+  const vSnap = snapshot(ROLE_TABLES);
+  const vFromHere = `Verify FN-078 rule from this machine ${Date.now()}.`;
+  const vFromThere = `Verify FN-078 rule from the other machine ${Date.now()}.`;
+  try {
+    expect((await page.request.delete('/test/role-sync')).ok()).toBeTruthy();
+    await syncNow(page); // baseline: this machine is in the store
+    await expect(page.getByTestId('sync-machine-this')).toBeVisible();
+    await expect(page.getByTestId('sync-state-this')).toHaveText(/up to date/);
+
+    // machine 1 changes a rule and syncs
+    await openAnalystRules(page);
+    const vRules = page.locator('textarea[data-testid="rules-text"], [data-testid="rules-text"] textarea').first();
+    await vRules.fill(`${await vRules.inputValue()}\n${vFromHere}`);
+    await page.getByTestId('save-agent').click();
+    await expect(page.getByText(/saved as v\d+/i).first()).toBeVisible({ timeout: 30_000 });
+    await syncNow(page);
+    await expect(page.getByTestId('sync-outcome')).toContainText(/Sent/);
+    const vHeld = await storeRecords(page);
+    expect(vHeld.some((r) => r.json.includes(vFromHere)), 'the store holds the rule changed here, for the other machine').toBeTruthy();
+
+    // machine 2 changes a rule and syncs; machine 1 syncs and has it
+    const vPeer = await page.request.post(`/test/role-sync/peer?addRule=${encodeURIComponent(vFromThere)}`);
+    expect(vPeer.ok()).toBeTruthy();
+    await syncNow(page);
+    await expect(page.getByTestId('sync-outcome')).toContainText(/Took/);
+    await expect(page.getByTestId('sync-machine-tr-win-desk')).toContainText('TR-WIN-DESK');
+    await expect(page.getByTestId('sync-state-tr-win-desk')).toHaveText(/up to date/);
+    await openAnalystRules(page);
+    await expect(page.locator('textarea[data-testid="rules-text"], [data-testid="rules-text"] textarea').first()).toHaveValue(new RegExp(vFromThere.replace(/\./g, '\\.')));
+    await openAllProjects(page);
+    await expect(page.getByTestId('sync-panel')).toBeVisible();
+    await page.getByTestId('projects-panel').screenshot({ path: `${SHOTS}/all-projects-table.png` });
+    await page.getByTestId('sync-panel').screenshot({ path: `${SHOTS}/all-projects-sync.png` });
+  } finally {
+    restore(vSnap);
+    await page.request.delete('/test/role-sync');
+  }
 });
 
 test.afterAll(async ({ browser }) => {
-  // Put the previously selected project back (the selection is one shared server-side value).
-  if (!objPrevious) return;
+  test.setTimeout(180_000);
+  // Put the previously selected project back (the selection is one shared server-side value), then remove what this
+  // spec made: the fixture projects' rows, the named root folder's row, and the folders on disk.
   const vPage = await browser.newPage({ baseURL: process.env.BASE_URL ?? 'http://localhost:5290' });
   try {
     await signIn(vPage, 'Owner');
-    await selectProject(vPage, objPrevious);
+    if (objPrevious && objPrevious !== NAME_A && objPrevious !== NAME_B) await selectProject(vPage, objPrevious);
   } catch {
-    // best effort; the fixture projects are the only ones that can differ
+    // best effort; the cleanup below still runs
   } finally {
     await vPage.close();
   }
+  try {
+    const vLike = `${ROOT}%`;
+    run('DELETE FROM Setting WHERE Key = ? AND Value IN (SELECT CAST(ProjectId AS TEXT) FROM Project WHERE Path LIKE ?)', 'SelectedProjectId', vLike);
+    run('DELETE FROM Project WHERE Path LIKE ?', vLike);
+    run('DELETE FROM ProjectFolder WHERE Path = ?', ROOT);
+    expect(query('SELECT 1 FROM Project WHERE Path LIKE ?', vLike)).toHaveLength(0);
+  } catch {
+    // a project with history cannot be deleted; the app's own folder removal hides it
+  }
+  rmSync(ROOT, { recursive: true, force: true });
 });

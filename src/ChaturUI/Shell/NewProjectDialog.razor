@@ -1,0 +1,133 @@
+@* New project, the one dialog of every state (BRD-244, BRD-247, BRD-276, REQ-UI-112, REQ-FN-310): this machine's own
+   `dotnet new` project templates, the names, the framework, and where things go. The folder that is open is shown as
+   "Will be created in", not typed, with "Change location" for the rare case; with nothing open there is one Location
+   field. Under it the two full paths Create will make, changing as the names are typed: the solution file, in that
+   folder itself, and the project folder, directly under it. A folder that already has a solution gets the project
+   added to it; a folder with projects and no solution is told its solution will take them in. *@
+<Dialog Open="Open" OpenChanged="OpenChanged">
+    <DialogContent Class="max-w-2xl" data-testid="new-project-dialog" data-in-solution="@(InSolution ? "yes" : "no")" data-open-folder="@(OpenFolder ?? string.Empty)">
+        <DialogHeader>
+            <DialogTitle>@Title</DialogTitle>
+            <DialogDescription>@Description</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-4">
+            @if (objLoading)
+            {
+                <div class="flex flex-col gap-2" data-testid="template-loading">
+                    <p class="text-sm text-muted-foreground">Reading this machine's templates</p>
+                    <Skeleton Class="h-24 w-full" />
+                </div>
+            }
+            else
+            {
+                <div class="max-h-56 overflow-y-auto rounded-md border" data-testid="template-list">
+                    @foreach (var vTemplate in objTemplates)
+                    {
+                        <Button Variant="@(IsSelected(vTemplate) ? ButtonVariant.Default : ButtonVariant.Ghost)"
+                                Class="h-auto w-full justify-start gap-3 rounded-none border-b px-3 py-1.5 text-left font-normal last:border-b-0"
+                                OnClick="@(() => SelectTemplateAsync(vTemplate))" data-testid="@($"template-{vTemplate.ShortName}")">
+                            <span class="min-w-0 flex-1 truncate text-sm">@vTemplate.Name</span>
+                            <span class="font-mono text-xs">@vTemplate.ShortName</span>
+                            <span class="hidden w-48 truncate text-xs sm:inline">@vTemplate.Tags</span>
+                        </Button>
+                    }
+                </div>
+            }
+            @if (AsksSolutionName)
+            {
+                <Field>
+                    <FieldLabel For="new-project-solution">Solution name</FieldLabel>
+                    <FieldContent>
+                        <Input Id="new-project-solution" Value="@objSolutionName" ValueChanged="OnSolutionNameChanged" Placeholder="A name for the new solution" data-testid="new-project-solution" />
+                    </FieldContent>
+                </Field>
+            }
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field>
+                    <FieldLabel For="new-project-name">@(AsksSolutionName ? "Project name" : "Name")</FieldLabel>
+                    <FieldContent>
+                        <Input Id="new-project-name" Value="@objName" ValueChanged="OnNameChanged" Placeholder="@NamePlaceholder" data-testid="new-project-name" />
+                    </FieldContent>
+                </Field>
+                <Field>
+                    <FieldLabel>Framework</FieldLabel>
+                    <FieldContent>
+                        @if (objFrameworks.Choices.Count == 0)
+                        {
+                            <p class="text-sm text-muted-foreground" data-testid="new-project-framework">@(objFrameworkLoading ? "Reading" : "The template's own")</p>
+                        }
+                        else
+                        {
+                            <Select TValue="string" Value="@objFramework" ValueChanged="OnFrameworkChanged" Class="w-full" data-testid="new-project-framework">
+                                <SelectTrigger data-testid="new-project-framework-button">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent data-testid="new-project-framework-pop">
+                                    @foreach (var vChoice in objFrameworks.Choices)
+                                    {
+                                        <SelectItem TValue="string" Value="@vChoice" Text="@vChoice" data-testid="@($"framework-{vChoice}")">@vChoice</SelectItem>
+                                    }
+                                </SelectContent>
+                            </Select>
+                        }
+                    </FieldContent>
+                </Field>
+            </div>
+            <div class="flex flex-col gap-2 rounded-md border p-3" data-testid="new-project-where">
+                @if (LocationIsFixed)
+                {
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span class="text-sm font-medium">Will be created in</span>
+                        <span class="min-w-0 break-all font-mono text-xs" data-testid="new-project-folder">@LocationValue</span>
+                        <Button Variant="ButtonVariant.Link" Class="h-auto p-0 text-xs" Disabled="objIsBusy" OnClick="ChangeLocation" data-testid="new-project-change-location">Change location</Button>
+                    </div>
+                }
+                else
+                {
+                    <Field>
+                        <FieldLabel For="new-project-location">Location</FieldLabel>
+                        <FieldContent>
+                            <div class="flex gap-2">
+                                <Input Id="new-project-location" Value="@objLocation" ValueChanged="OnLocationChanged" Placeholder="The folder the solution goes in" Class="min-w-0 flex-1 font-mono" data-testid="new-project-location" />
+                                <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="BrowseAsync" AriaLabel="Choose the folder" data-testid="new-project-browse">
+                                    <LucideIcon Name="folder-open" Size="14" />
+                                </Button>
+                            </div>
+                        </FieldContent>
+                    </Field>
+                }
+                <div class="grid grid-cols-1 gap-x-3 gap-y-1 text-xs sm:grid-cols-[auto_1fr]" data-testid="new-project-paths">
+                    <span class="text-muted-foreground">@(objPlan.SolutionExists ? "Solution file (already there)" : "Solution file")</span>
+                    <span class="min-w-0 break-all font-mono" data-testid="new-project-solution-path">@(objPlan.SolutionFile ?? "Shown when the solution has a name")</span>
+                    <span class="text-muted-foreground">Project folder</span>
+                    <span class="min-w-0 break-all font-mono" data-testid="new-project-project-path">@(objPlan.ProjectFolder ?? "Shown when the project has a name")</span>
+                </div>
+                @if (objPlan.ProjectsToAdd.Count > 0)
+                {
+                    <p class="text-xs" data-testid="new-project-found">
+                        This folder has @(objPlan.ProjectsToAdd.Count == 1 ? "a project" : $"{objPlan.ProjectsToAdd.Count} projects") and no solution. Create makes the solution here and adds
+                        @(objPlan.ProjectsToAdd.Count == 1 ? "it" : "them") to it: <span class="break-all font-mono">@string.Join(", ", objPlan.ProjectsToAdd)</span>
+                    </p>
+                }
+                @if (PlanProblem is not null)
+                {
+                    <p class="text-xs text-destructive" data-testid="new-project-problem">@PlanProblem</p>
+                }
+            </div>
+            @if (objErrorMessage is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="new-project-error">
+                    <AlertDescription Class="whitespace-pre-wrap font-mono text-xs">@objErrorMessage</AlertDescription>
+                </Alert>
+            }
+        </DialogBody>
+        <DialogFooter>
+            <DialogClose AsChild>
+                <Button Variant="ButtonVariant.Outline" data-testid="new-project-cancel">Cancel</Button>
+            </DialogClose>
+            <Button Disabled="@(!CanCreate)" OnClick="CreateAsync" data-testid="new-project-create">
+                @(objIsBusy ? "Working" : "Create")
+            </Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

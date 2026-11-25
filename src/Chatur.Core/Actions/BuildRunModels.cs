@@ -5,7 +5,8 @@ namespace Chatur.Core.Actions;
 /// <param name="Name">The target's display name, e.g. <c>"Mac Catalyst · Debug"</c>.</param>
 /// <param name="Platform">The platform the target builds for.</param>
 /// <param name="IsAvailableOnThisMachine">Whether this machine can build the target.</param>
-public sealed record RunTarget(int RunTargetId, string Name, string Platform, bool IsAvailableOnThisMachine);
+/// <param name="ProjectFile">The project or solution file the target builds, relative to the project's folder with forward slashes, so Files can offer "Set as the project to run" on it (BRD-228).</param>
+public sealed record RunTarget(int RunTargetId, string Name, string Platform, bool IsAvailableOnThisMachine, string ProjectFile = "");
 
 /// <summary>One line of a build or run's output (REQ-UI-014).</summary>
 /// <param name="Text">The line's text.</param>

@@ -10,6 +10,9 @@ namespace ChaturUI.Services;
 /// </summary>
 public sealed class ThemeInterop : IAsyncDisposable
 {
+    /// <summary>The page's script runtime, so a clean-up for a page that has gone is skipped (REQ-NFR-011).</summary>
+    private readonly IJSRuntime objJs;
+
     private const string ModulePath = "./_content/ChaturUI/js/theme.js";
 
     private readonly Lazy<Task<IJSObjectReference>> objModuleTask;
@@ -20,6 +23,7 @@ public sealed class ThemeInterop : IAsyncDisposable
     /// <param name="aJs">The JS runtime to import <c>theme.js</c> from.</param>
     public ThemeInterop(IJSRuntime aJs)
     {
+        objJs = aJs;
         objModuleTask = new Lazy<Task<IJSObjectReference>>(
             () => aJs.InvokeAsync<IJSObjectReference>("import", ModulePath).AsTask());
     }
@@ -72,7 +76,7 @@ public sealed class ThemeInterop : IAsyncDisposable
 
         // Never waits on a page that has gone, was never made interactive, or has lost its connection
         // (JsCleanUp, REQ-FN-009).
-        await JsCleanUp.RunAsync(async () =>
+        await JsCleanUp.RunAsync(objJs, async () =>
         {
             var vModule = await objModuleTask.Value.ConfigureAwait(false);
             await vModule.DisposeAsync().ConfigureAwait(false);

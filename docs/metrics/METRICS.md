@@ -1,68 +1,79 @@
 # Chatur — Development Metrics
 
-**Report date 2026-11-18.** Project type `app`. Schema v1. Every figure below comes from `bash .tfcore/telemetry/tf-metrics.sh --report .`, `--phases .` and `--estimates .`; nothing was worked out by hand. All records are live, none were rebuilt afterwards, so there is no backfilled column anywhere on this page. All records are one project type (`app`), so nothing is pooled across types. On 18 Nov the streams, this run's section and sections 1 to 3 were refreshed; sections 4 to 7 read as of 16 Nov, and the script's own printout holds today's detail for them.
+**Report date 2026-11-23.** Project type `app`. Schema v1. Every figure below comes from `bash .tfcore/telemetry/tf-metrics.sh --report .`; nothing was worked out by hand. All records are live, none rebuilt, so there is no backfilled column. One project type (`app`), so nothing is pooled across types. On 23 Nov the streams, this run's section and section 1 were refreshed; later sections read as of 16 Nov, and the script's own printout holds today's detail for them.
 
 ## Streams
 
 | Stream | Records |
 |---|---|
-| `runs.jsonl` | 194 (0 voided) |
-| `gates.jsonl` | 3,926 (0 backfilled, 0 malformed) |
-| `sessions.jsonl` | 32 sessions after 15 duplicate snapshots were collapsed |
-| `commits.jsonl` | 27 |
-| `misses.jsonl` | 800 miss + 799 miss-fix + 6 review + 2 miss-amend |
+| `runs.jsonl` | 225 (0 voided) |
+| `gates.jsonl` | 4,328 (0 backfilled) |
+| `sessions.jsonl` | 38 sessions |
+| `commits.jsonl` | 32 |
+| `misses.jsonl` | 889 misses (88 open, 801 resolved), 851 fix records |
 | `estimates.jsonl` | 0 |
 
-## This run — triage-and-fix started 2026-11-17T22:56:46Z
+## This run — build-phase started 2026-11-22T13:24:25Z
 
-**The owner's night paste of 18 Nov:** register test user 2, walk two live accounts, re-verify the three two-account rows and REQ-FN-017, fix the doubled `dotnet run` line, then the full verify of phases 1 to 3.
+The owner's brief of 22 Nov evening: Chatur's own measurements inside Chatur, the agents' command tables, nine commands run end to end, reinstall and the owner's test. 23 rows added to phase 4 (REQ-UI-115 to REQ-UI-123, REQ-FN-313 to REQ-FN-322, REQ-NFR-014 to REQ-NFR-017). Verify of phase 4: 59 of 60 rows Verified; REQ-FN-313 needs re-verify on one mockup finding at 390 px (TF-053).
 
-| Miss | Row | What | Found | Fix | Verdict after |
-|---|---|---|---|---|---|
-| MISS-Chatur-20261117-02 | REQ-UI-014 | The first Run after approving a change showed the `dotnet run` line twice | 27.2k tokens out, 2.0 min | 138.4k tokens out, shared 7 ways | Verified |
-| MISS-Chatur-20261117-03 | REQ-NFR-010 | The desktop test read the owner's own database to prove it untouched | 0.3k tokens out, 0.2 min (cause already known) | shared as above | Verified |
-| MISS-Chatur-20261117-04 | REQ-UI-095 | The second window kept the first account's Model providers after another account signed in | not measured by the tool (about 2 min) | shared as above | Verified |
+| Row | Miss | Cause | Time to find |
+|---|---|---|---|
+| REQ-UI-122 | MISS-Chatur-20261123-02 | A brief under 40 characters froze the chat | about 10 min |
+| REQ-FN-317 | -03 | The Analyst announced a step and made no tool call | about 10 min |
+| REQ-FN-315 | -04 | No way for an agent to list a folder | about 15 min |
+| REQ-FN-318 | -05 | 8 tool calls per reply was too few | about 5 min |
+| REQ-UI-122 | -06 | Test cleanup left run child rows; a reused id hit a UNIQUE key | about 10 min |
+| REQ-FN-318 | -07 | No output limit on agent calls; a cut-off edit-file call was dropped silently (TR-RAG-010) | about 50 min |
+| REQ-FN-312 | -08 | Test cleanup left conversation messages; a new chat showed a removed project's messages | about 15 min |
+| REQ-FN-082 | -09 | The Integrations test relied on a project left open | about 5 min |
+| REQ-FN-312 | -10 | The brainstorm test checked the date in UTC | about 2 min |
+| REQ-UI-117 | -11 | Rows column, across table overflow, two menu entries both "Measurements" | about 15 min |
+| REQ-UI-115 | -12 | Mockup sample data and dialogs unmarked, and no seed | about 10 min |
+| REQ-UI-109 | -13 | Recent projects listed the open project as a dead item | about 10 min |
+| REQ-UI-107 | -14 | Chosen target, model and conversation had no aria-checked; the screen check read a dead item | about 60 min |
+| REQ-NFR-017 | -15 | Owner's test 10 typed `*yolo` to the Verifier; parts 7 and 10 could not start alone | about 8 min |
 
-**Found by the full verify and logged by it** (MISS-Chatur-20261118-01 to -13): REQ-UI-018 read "unknown" for the commit because the separate copy has no `.git`; twelve rows on Settings ▸ Routing, Settings ▸ Appearance and Agent workspace fail only the mockup check's badge rule, which flags controls measured the same on both sides (TF-045, Blocked). Fixed inside the run without a miss of their own: the Process run estimate cell's border, a fixture project with no repository of its own (REQ-FN-007), two specs that signed in as test user 2 when they meant the owner, and a sign-in helper that took any signed-in account for the one asked for.
+The times to find are this session's own reckoning: no `tf-triage.sh look` mark was set, so each record says "not measured" with the estimate in its reason, and none enters an average.
 
 ## 1. First-pass rate
 
 | Provenance | project_type | REQs scored | Rate |
 |---|---|---|---|
-| Live | app | 221 | 26% |
+| Live | app | 275 | 38% |
 
 No REQ was left out for carrying rebuilt history (0 excluded).
 
 ## 2. Gate catch distribution
 
-### Live · `app` — 2,020 failures
+### Live · `app` — 2,028 failures
 
 | Gate | Caught | Share |
 |---|---|---|
 | acceptance | 131 | 6% |
-| render | 880 | 44% |
+| render | 880 | 43% |
 | visual | 59 | 3% |
-| mockup-parity | 861 | 43% |
-| **escaped** — no gate caught it | 89 | 4% |
+| mockup-parity | 861 | 42% |
+| **escaped** — no gate caught it | 97 | 5% |
 
 Gates added partway through the stream, read against the records that actually ran them:
 
 | Gate | Since | Ran on | Caught | Catch rate |
 |---|---|---|---|---|
 | perf | 2026-08-10 | 0 | 0 | not yet run on this data |
-| assets | 2026-08-31 | 2,409 | 0 | 0% |
-| mockup-parity | 2026-08-31 | 2,725 | 849 | 31% |
-| test-users | 2026-11-01 | 685 | 0 | 0% |
+| assets | 2026-08-31 | 2,523 | 0 | 0% |
+| mockup-parity | 2026-08-31 | 2,875 | 861 | 30% |
+| test-users | 2026-11-01 | 911 | 0 | 0% |
 
-The mockup-parity share above (42% of failures) is not the same thing as its catch rate (31% of the records it ran on).
+The mockup-parity share above (42% of failures) is not the same thing as its catch rate (30% of the records it ran on).
 
 ## 3. Escape rate
 
 | Provenance | project_type | Escape rate (from `gates.jsonl`) |
 |---|---|---|
-| Live | app | 43% |
+| Live | app | 42% |
 
-There are 89 escape records today: the three of this run's own findings (REQ-UI-014, REQ-NFR-010, REQ-UI-095). The 17 Nov report had 86.
+There are 97 escape records today: the eight of this run's own findings (the owner's crash and faults on Xpenser). The 18 Nov report had 89.
 
 ## 4. Throughput and rework — poolable
 

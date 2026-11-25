@@ -22,6 +22,13 @@ public interface IProcessLauncher
     Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default);
 
     /// <summary>
+    /// Opens a web address in the machine's own browser, as Visual Studio does once a web project is up (REQ-FN-306).
+    /// </summary>
+    /// <param name="aUrl">The address to open.</param>
+    /// <param name="aCt">A token that cancels the launch.</param>
+    Task OpenBrowserAsync(string aUrl, CancellationToken aCt = default) => OpenWithDefaultAppAsync(aUrl, aCt);
+
+    /// <summary>
     /// Runs a command to completion, streaming each output line as it is written.
     /// </summary>
     /// <param name="aCommand">The program to start.</param>

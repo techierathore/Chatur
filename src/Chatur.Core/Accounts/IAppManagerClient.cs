@@ -26,6 +26,7 @@ public sealed record AppManagerDeviceInfo(string DeviceId, string? DeviceName, s
 /// <param name="AccessToken">The bearer token for subsequent calls.</param>
 /// <param name="RefreshToken">The token used to obtain a new access token once this one expires.</param>
 /// <param name="TokenExpiresAtUtc">When <see cref="AccessToken"/> stops being valid.</param>
+/// <param name="DeviceCap">Where the account stands against its device cap, when a device-capped licence applies.</param>
 public sealed record AppManagerAuthResult(
     bool Success,
     string? ErrorMessage,
@@ -35,7 +36,8 @@ public sealed record AppManagerAuthResult(
     string? LastName,
     string? AccessToken,
     string? RefreshToken,
-    DateTime? TokenExpiresAtUtc);
+    DateTime? TokenExpiresAtUtc,
+    Chatur.Core.Actions.DeviceCapReport? DeviceCap = null);
 
 /// <summary>
 /// The App Manager calls Accounts needs: the public key for password encryption, the two device

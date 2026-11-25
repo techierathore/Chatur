@@ -27,10 +27,19 @@ test('REQ-FN-007 selected project named in the top bar with its branch, files li
   const vTree = page.getByTestId('file-tree');
   await expect(vTree.getByText('Program.cs', { exact: true })).toBeVisible({ timeout: 20_000 });
   await expect(vTree.getByText(`${NAME}.csproj`, { exact: true })).toBeVisible();
-  const vBranch = page.getByTestId('branch');
+  // BRD-222: the branch is named once, at the foot of Files; the toolbar has no branch picker.
+  const vBranch = page.getByTestId('files-panel').getByTestId('branch');
   await expect(vBranch).toBeVisible();
   await expect(vBranch).not.toHaveText(/^\s*—\s*$/, { timeout: 20_000 });
   await expect(vBranch).toHaveText(/\S/);
+  await expect(page.getByTestId('branch')).toHaveCount(1);
+  await expect(page.getByTestId('branch-name')).toHaveText('main');
+  const vToolbar = page.getByTestId('toolbar');
+  await expect(vToolbar).toBeVisible();
+  await expect(vToolbar.locator('[data-testid=branch-pick]')).toHaveCount(0);
+  await expect(vToolbar.locator('[data-testid=repo]')).toHaveCount(0);
+  await expect(vToolbar.locator('[data-testid=branch]')).toHaveCount(0);
+  await expect(vToolbar).not.toContainText('main');
 });
 
 test('REQ-FN-008 a project opens straight onto a conversation with a role already chosen', async () => {

@@ -5,7 +5,7 @@ import { Page, expect } from '@playwright/test';
 import { execFileSync } from 'child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { tmpdir } from 'os';
+import { SCRATCH, removeStampedProjects } from './support/cleanup';
 import { signIn } from './support/auth';
 import { run, query } from './support/db';
 import {
@@ -21,7 +21,13 @@ test.beforeAll(async ({ browser }) => {
   page = await vContext.newPage();
   await signIn(page, 'Owner');
 });
-test.afterAll(async () => { await page.close(); });
+// Every project this file made (MenuNew…, MenuSln…, MenuFolder…, MenuRecent…, clone-parent-…, StartFolder…) goes
+// with its folder and every row recorded against it (owner, 20 Nov 2026: they piled up to about 80).
+test.afterAll(async () => {
+  removeStampedProjects(ROOT, STAMP);
+  rmSync(join(SCRATCH, `chatur-clone-src-${STAMP}`), { recursive: true, force: true });
+  await page.close();
+});
 test.beforeEach(async () => {
   test.setTimeout(120_000);
   resetFixture();
@@ -77,15 +83,20 @@ async function submitProjectDialog(aPage: Page, aFields: { path: string; name?: 
 
 test('REQ-UI-073 File, Edit, View and Help each hold their items and none says Nothing to do yet', async () => {
   const vWanted: Record<string, string[]> = {
-    file: ['New project', 'Open a solution', 'Open a folder', 'Clone a repository', 'Recent projects', 'Save', 'Save all', 'Close project', 'Exit'],
+    file: ['New project', 'Open a solution', 'Open a folder', 'Clone a repository', 'Recent projects', 'Save', 'Save all', 'Exit'],
     edit: ['Undo', 'Redo', 'Cut', 'Copy', 'Paste', 'Find in files', 'Go to file'],
-    view: ['Files', 'Chat', 'Output', 'Prerequisites', 'Repository', 'Appearance', 'Zoom'],
+    view: ['Files', 'Chat', 'Output', 'Show hidden files', 'Prerequisites', 'Repository', 'Appearance', 'Zoom'],
     help: ['About Chatur', 'Send feedback', 'Check for updates'],
   };
   for (const [vMenu, vItems] of Object.entries(vWanted)) {
     await openMenu(page, vMenu);
     const vPop = page.getByTestId(`menu-${vMenu}-items`);
     for (const vItem of vItems) await expect(vPop).toContainText(vItem);
+    if (vMenu === 'file') {
+      // the close item says what it closes (the fixture is a folder), never "Close project" (BRD-229)
+      await expect(page.getByTestId('menu-file-close')).toHaveText('Close folder');
+      await expect(vPop).not.toContainText('Close project');
+    }
     await expect(vPop, 'no menu item ends in an ellipsis (owner, 2026-10-29)').not.toContainText('…');
     await page.keyboard.press('Escape');
   }
@@ -108,7 +119,7 @@ test('REQ-UI-073 File ▸ Recent projects ▸ and View ▸ Zoom ▸ are submenus
     // A keyboard user reaches the ▸ row with ArrowDown (the menu tracks the focus itself, so the row is not
     // focused from outside). Since TrBlazeUI 2.2.3 (TR-023 fixed) the ▸ row sits in the arrow order where it is
     // drawn, so File's rows are counted: New, Open a solution, Open a folder, Clone, then Recent projects on the
-    // fifth press (Save and Save all are off and skipped), and Close project on the sixth. View's Zoom row is
+    // fifth press (Save and Save all are off and skipped), and Close folder on the sixth. View's Zoom row is
     // still walked to, since the reply named File's order only.
     const active = () => page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? '');
     if (vMenu === 'file') {
@@ -212,7 +223,7 @@ test('REQ-UI-073 File ▸ New project makes a solution on disk and opens it', as
 });
 
 test('REQ-UI-073 File ▸ Clone a repository copies it and opens it; a bad address is refused with the reason', async () => {
-  const vSource = join(tmpdir(), `chatur-clone-src-${STAMP}`);
+  const vSource = join(SCRATCH, `chatur-clone-src-${STAMP}`);
   mkdirSync(vSource, { recursive: true });
   writeFileSync(join(vSource, 'cloned.txt'), 'from the source repository\n');
   const vGit = (...aArgs: string[]) => execFileSync('git', ['-C', vSource, '-c', 'user.name=t', '-c', 'user.email=t@t', ...aArgs], { stdio: 'ignore' });
@@ -223,7 +234,7 @@ test('REQ-UI-073 File ▸ Clone a repository copies it and opens it; a bad addre
   mkdirSync(vTarget, { recursive: true });
 
   await pick(page, 'file', 'clone');
-  await submitProjectDialog(page, { address: join(tmpdir(), 'chatur-no-such-repo'), path: vTarget });
+  await submitProjectDialog(page, { address: join(SCRATCH, 'chatur-no-such-repo'), path: vTarget });
   await expect(page.getByTestId('open-project-error')).toContainText('failed', { timeout: 30_000 });
 
   await submitProjectDialog(page, { address: vSource, path: vTarget });
@@ -280,7 +291,10 @@ test('REQ-UI-073 File ▸ Save and Save all write the open files to disk, and ar
   await expect.poll(() => readFileSync(join(PROJECT, 'Notes', 'notes.txt'), 'utf8'), { timeout: 10_000 }).toContain('beta line');
 });
 
-test('REQ-UI-073 File ▸ Close project leaves the project and shows the project list', async () => {
+test('REQ-UI-073 File ▸ Close folder (Close solution for a solution) leaves the project and shows the project list', async () => {
+  await openMenu(page, 'file');
+  await expect(page.getByTestId('menu-file-close')).toHaveText(/^Close (solution|folder)$/);
+  await page.keyboard.press('Escape');
   await pick(page, 'file', 'close');
   await expect(page).toHaveURL(/\/start/, { timeout: 20_000 });
   await expect(page.getByTestId('recent-list')).toBeVisible();

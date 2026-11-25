@@ -12,7 +12,7 @@ namespace Chatur.Tests.Support;
 /// </summary>
 public abstract class MigratedDatabaseFixture : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-{Guid.NewGuid():N}.db");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-{Guid.NewGuid():N}.db");
 
     /// <summary>Migrates a fresh database before every test in a derived class.</summary>
     protected MigratedDatabaseFixture()

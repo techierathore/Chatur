@@ -33,3 +33,20 @@ public sealed record CommitEntry(string Hash, string Message, string Author, Dat
 /// <param name="CheckInCount">How many check-ins the branch holds that no other branch does.</param>
 /// <param name="LastCheckInUtc">When the branch was last checked in to.</param>
 public sealed record ProcessBranch(string Name, IReadOnlyList<string> RequirementIds, int CheckInCount, DateTime LastCheckInUtc);
+
+/// <summary>The branches the picker at the foot of Files offers (BRD-222).</summary>
+/// <param name="Current">The branch checked out now; empty when none (a detached head).</param>
+/// <param name="Local">The repository's own branches.</param>
+/// <param name="Remote">The remotes' branches, as <c>origin/name</c>, without the remotes' <c>HEAD</c> pointers.</param>
+public sealed record BranchList(string Current, IReadOnlyList<string> Local, IReadOnlyList<string> Remote);
+
+/// <summary>What to do with uncommitted changes when switching branch (BRD-223).</summary>
+public enum BranchSwitchChanges
+{
+    /// <summary>Bring them along: git carries them to the new branch, and refuses when they would be overwritten.</summary>
+    BringAlong,
+
+    /// <summary>Put them aside: they are stashed under a name saying where they came from, then the branch switches.</summary>
+    PutAside
+}
+

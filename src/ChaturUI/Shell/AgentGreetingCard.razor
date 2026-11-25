@@ -1,0 +1,34 @@
+@* An agent's greeting in the conversation (REQ-FN-308): who it is, what it is for, and the commands it has, the way
+   the same agent introduces itself in Claude Code. Drawn like the mockup's `.msg.agent` line but not a message: it is
+   built from the agent's persona file when the person chooses the agent, so nothing is sent to a model. *@
+<div class="greet flex min-w-0 gap-3 text-sm" data-testid="agent-greeting">
+    <span class="who flex size-7 flex-none items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+        <LucideIcon Name="sparkles" Size="13" />
+    </span>
+    <div class="body flex min-w-0 flex-1 flex-col gap-2">
+        <span class="name flex items-center gap-2 text-xs font-semibold" data-testid="agent-greeting-name">@Greeting.RoleName</span>
+        <div class="said min-w-0 leading-relaxed [overflow-wrap:anywhere]">
+            <p data-testid="agent-greeting-who">@WhoLine</p>
+            @if (Greeting.Purpose.Length > 0)
+            {
+                <p class="mt-1" data-testid="agent-greeting-purpose">@Greeting.Purpose</p>
+            }
+            @if (Greeting.Commands.Count > 0)
+            {
+                <p class="mt-2 text-xs font-semibold uppercase text-muted-foreground">Commands</p>
+                <ul class="mt-1 flex flex-col gap-1">
+                    @foreach (var vCommand in Greeting.Commands)
+                    {
+                        <li data-testid="agent-greeting-command">
+                            <code class="font-mono text-xs">@vCommand.Command</code>
+                            @if (vCommand.Description.Length > 0)
+                            {
+                                <span class="text-muted-foreground"> — @vCommand.Description</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>

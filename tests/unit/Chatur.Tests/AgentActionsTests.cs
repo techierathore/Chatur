@@ -30,7 +30,7 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class AgentActionsTests : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-agent-tests-{Guid.NewGuid():N}.db");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-agent-tests-{Guid.NewGuid():N}.db");
     private readonly TestDbConnectionFactory objDb;
     private readonly GuardPipeline objGuards;
     private readonly FakeFileActions objFiles = new();
@@ -398,6 +398,111 @@ public sealed class AgentActionsTests : IDisposable
         vRouter.Pick = null;
         Assert.Equal("tier-model", await AnswerAsync(null));
         Assert.Equal(2, vRouter.Calls);
+    }
+
+    /// <summary>
+    /// REQ-UI-111: when Automatic routing picks the model, then the router's reason is on the final piece and is stored
+    /// with the reply, so it is still there when the session is read again; and when the owner picks the model there is
+    /// no reason, because nothing was routed.
+    /// </summary>
+    [Fact]
+    public async Task ReplyKeepsTheRoutersReasonWithItsModel()
+    {
+        var vProjectId = InsertProject("/tmp/chatur-tests/proj-reason");
+        var vRoleId = GetRoleId("flow-master");
+        var vModelId = InsertConnectedModel(3, "small-model", "Small Provider");
+        var vFactory = new RoutingFakeLlmProviderFactory(new Dictionary<int, ILlmProvider>
+        {
+            [vModelId] = new FakeLlmProvider(
+                new LlmResponse { Content = "First answer.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } },
+                new LlmResponse { Content = "Second answer.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } }) { ModelNameOverride = "small-model" },
+        });
+        var vRouter = new FakeAutoRouter(new ConnectedModel(vModelId, 0, "Small Provider", "Fake", "http://localhost", null, "small-model")) { Reason = "Automatic: short question, small model" };
+        var vSut = new AgentActions(objDb, new AgentSessionRegistry(), objGuards, vFactory, objFiles, objProcessLauncher, objCorrections, objMeasurements, new SystemClock(), new RoutingActions(objDb), vRouter);
+        var vSessionId = InsertSession(vProjectId, vRoleId, SessionMode.GoAhead);
+
+        var vRouted = new List<AgentReplyChunk>();
+        await foreach (var vChunk in vSut.SendAsync(vSessionId, "Hi", null, null, SessionMode.GoAhead))
+        {
+            vRouted.Add(vChunk);
+        }
+
+        var vPicked = new List<AgentReplyChunk>();
+        await foreach (var vChunk in vSut.SendAsync(vSessionId, "Hi again", null, vModelId, SessionMode.GoAhead))
+        {
+            vPicked.Add(vChunk);
+        }
+
+        Assert.Equal("Automatic: short question, small model", vRouted[^1].RoutingReason);
+        Assert.Null(vPicked[^1].RoutingReason);
+        var vReplies = (await vSut.ContinueSessionAsync(vSessionId)).Events.Where(aEvent => aEvent.Kind == "assistant").ToList();
+        Assert.Equal(2, vReplies.Count);
+        Assert.Equal("small-model", vReplies[0].Model);
+        Assert.Equal("Automatic: short question, small model", vReplies[0].RoutingReason);
+        Assert.Equal("small-model", vReplies[1].Model);
+        Assert.Null(vReplies[1].RoutingReason);
+    }
+
+    /// <summary>
+    /// REQ-UI-111: when the model service does not name the model that answered, then the reply still names it, by the
+    /// identifier it was asked for, so no reply is shown without a model.
+    /// </summary>
+    [Fact]
+    public async Task ReplyAlwaysNamesTheModelThatAnswered()
+    {
+        var vProjectId = InsertProject("/tmp/chatur-tests/proj-unnamed");
+        var vRoleId = GetRoleId("flow-master");
+        InsertConnectedModel(1, "asked-for-model");
+        var vSessionId = InsertSession(vProjectId, vRoleId, SessionMode.GoAhead);
+        var vProvider = new FakeLlmProvider(new LlmResponse { Content = "Hello.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } }) { ModelNameOverride = string.Empty };
+        var vSut = CreateSut(vProvider);
+
+        var vChunks = new List<AgentReplyChunk>();
+        await foreach (var vChunk in vSut.SendAsync(vSessionId, "Hi", null, null, SessionMode.GoAhead))
+        {
+            vChunks.Add(vChunk);
+        }
+
+        Assert.Equal("asked-for-model", vChunks[^1].ModelName);
+        var vReply = (await vSut.ContinueSessionAsync(vSessionId)).Events.Single(aEvent => aEvent.Kind == "assistant");
+        Assert.Equal("asked-for-model", vReply.Model);
+    }
+
+    /// <summary>
+    /// REQ-FN-308: when an agent answers, then the system prompt the model receives is the agent's persona file and its
+    /// commands, not only the one line of wording the role stores — the reason the analyst said nothing of its purpose
+    /// or its commands.
+    /// </summary>
+    [Fact]
+    public async Task ThePersonaFileReachesTheModelAsTheSystemPrompt()
+    {
+        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-persona-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(vFolder, ".tfcore", "agents"));
+            await File.WriteAllTextAsync(
+                Path.Combine(vFolder, ".tfcore", "agents", "analyst.md"),
+                "# analyst\n\n```yaml\nagent:\n  name: Chanakya\n  title: Business Analyst\n  whenToUse: Use for project briefs\ncommands:\n  - help: Show the commands\n  - create-project-brief {App}: Writes the brief\n```\n");
+            var vProjectId = InsertProject(vFolder);
+            var vRoleId = GetRoleId("analyst");
+            InsertConnectedModel(1);
+            var vSessionId = InsertSession(vProjectId, vRoleId, SessionMode.AskFirst);
+            var vProvider = new FakeLlmProvider(new LlmResponse { Content = "Hello.", Usage = new TokenUsage { InputTokens = 1, OutputTokens = 1 } });
+            var vSut = new AgentActions(objDb, new AgentSessionRegistry(), objGuards, new FakeLlmProviderFactory(vProvider), objFiles, objProcessLauncher, objCorrections, objMeasurements, new SystemClock(), new RoutingActions(objDb), null, new Chatur.Core.Roles.AgentPersonaActions(objDb));
+
+            await foreach (var _ in vSut.SendAsync(vSessionId, "What commands do you have?", null, null, SessionMode.AskFirst))
+            {
+            }
+
+            var vSystem = vProvider.Seen.Single()[0];
+            Assert.Contains("Chanakya", vSystem);
+            Assert.Contains("*create-project-brief {App}", vSystem);
+            Assert.Contains("Writes the brief", vSystem);
+        }
+        finally
+        {
+            Directory.Delete(vFolder, true);
+        }
     }
 
     /// <summary>
@@ -992,15 +1097,15 @@ public sealed class AgentActionsTests : IDisposable
     }
 
     /// <summary>
-    /// When a session turn runs in a project, then the project's <c>docs/metrics</c> holds all five
-    /// files and <c>sessions.jsonl</c> carries one line signed <c>"tool":"chatur"</c> with the session
-    /// id, model and tokens, and everything unmeasured empty (REQ-FN-040, REQ-FN-041, REQ-FN-042).
+    /// When a session turn runs in a project that has a <c>docs/metrics</c> folder, then <c>sessions.jsonl</c> carries
+    /// one line signed <c>"tool":"chatur"</c> with the session id, model and tokens, and everything unmeasured empty;
+    /// no other file is made, and never an empty one (REQ-FN-040, REQ-FN-041, REQ-FN-042; BRD-74 as changed 23 Nov 2026).
     /// </summary>
-    [Fact(DisplayName = "REQ-FN-040 a session turn writes the five metrics files")]
+    [Fact(DisplayName = "REQ-FN-040 a session turn in a measured project writes its record and no other file")]
     public async Task SendAsyncWritesASessionRecordIntoTheProjectMetrics()
     {
-        var vFolder = Path.Combine(Path.GetTempPath(), $"chatur-metrics-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(vFolder);
+        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-metrics-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.Combine(vFolder, "docs", "metrics"));
         try
         {
             var vProjectId = InsertProject(vFolder);
@@ -1014,10 +1119,7 @@ public sealed class AgentActionsTests : IDisposable
             }
 
             var vMetrics = Path.Combine(vFolder, "docs", "metrics");
-            foreach (var vName in new[] { "runs", "gates", "sessions", "commits", "misses" })
-            {
-                Assert.True(File.Exists(Path.Combine(vMetrics, vName + ".jsonl")), vName);
-            }
+            Assert.Equal(["sessions.jsonl"], new DirectoryInfo(vMetrics).GetFiles().Select(f => f.Name).ToArray());
 
             var vLine = Assert.Single(File.ReadAllLines(Path.Combine(vMetrics, "sessions.jsonl")));
             Assert.Contains("\"tool\":\"chatur\"", vLine);
@@ -1035,14 +1137,43 @@ public sealed class AgentActionsTests : IDisposable
     }
 
     /// <summary>
-    /// When no model provider is configured, then the turn still counts as a session that ran: the five
-    /// files exist and the sessions line has an empty model (REQ-FN-040, REQ-FN-042).
+    /// The owner's case of 23 Nov 2026: a chat turn in a folder that was only opened. The folder holds nothing
+    /// afterwards: no <c>docs</c>, no <c>docs/metrics</c>, no file of Chatur's (BRD-74 as changed that day).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-040 a session turn in a folder that was only opened leaves no file in it")]
+    public async Task SendAsyncLeavesAnOpenedFolderUntouched()
+    {
+        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-untouched-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(vFolder);
+        try
+        {
+            var vProjectId = InsertProject(vFolder);
+            InsertConnectedModel(1);
+            var vSessionId = InsertSession(vProjectId, GetRoleId("flow-master"), SessionMode.GoAhead);
+            var vProvider = new FakeLlmProvider(
+                new LlmResponse { Content = "Hello.", Usage = new TokenUsage { InputTokens = 10, OutputTokens = 5 } });
+
+            await foreach (var _ in CreateSut(vProvider).SendAsync(vSessionId, "Hi", null, null, SessionMode.GoAhead))
+            {
+            }
+
+            Assert.Empty(Directory.GetFileSystemEntries(vFolder));
+        }
+        finally
+        {
+            Directory.Delete(vFolder, true);
+        }
+    }
+
+    /// <summary>
+    /// When no model provider is configured, then the turn still counts as a session that ran: in a measured project
+    /// the sessions line is written with an empty model, and no other file is made (REQ-FN-040, REQ-FN-042).
     /// </summary>
     [Fact(DisplayName = "REQ-FN-041 REQ-FN-042 a no-provider turn writes a chatur-signed record with unmeasured fields empty")]
     public async Task SendAsyncWritesASessionRecordWhenNoProviderIsConfigured()
     {
-        var vFolder = Path.Combine(Path.GetTempPath(), $"chatur-metrics-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(vFolder);
+        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-metrics-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.Combine(vFolder, "docs", "metrics"));
         try
         {
             var vProjectId = InsertProject(vFolder);
@@ -1055,7 +1186,7 @@ public sealed class AgentActionsTests : IDisposable
             var vLine = Assert.Single(File.ReadAllLines(Path.Combine(vFolder, "docs", "metrics", "sessions.jsonl")));
             Assert.Contains("\"tool\":\"chatur\"", vLine);
             Assert.Contains("\"model\":\"\"", vLine);
-            Assert.True(File.Exists(Path.Combine(vFolder, "docs", "metrics", "runs.jsonl")));
+            Assert.False(File.Exists(Path.Combine(vFolder, "docs", "metrics", "runs.jsonl")));
         }
         finally
         {
@@ -1070,8 +1201,8 @@ public sealed class AgentActionsTests : IDisposable
     [Fact]
     public async Task SendAsyncWritesARunRecordForABuildAndSurvivesAnUnwritableMetricsFolder()
     {
-        var vFolder = Path.Combine(Path.GetTempPath(), $"chatur-metrics-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(vFolder);
+        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-metrics-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.Combine(vFolder, "docs", "metrics"));
         try
         {
             var vProjectId = InsertProject(vFolder);
@@ -1097,7 +1228,7 @@ public sealed class AgentActionsTests : IDisposable
         }
 
         // A project folder that is a file (so docs/metrics cannot exist) must not break the turn.
-        var vBlocker = Path.Combine(Path.GetTempPath(), $"chatur-blocker-{Guid.NewGuid():N}");
+        var vBlocker = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-blocker-{Guid.NewGuid():N}");
         await File.WriteAllTextAsync(vBlocker, "x");
         try
         {
@@ -1277,10 +1408,19 @@ public sealed class AgentActionsTests : IDisposable
 
         public int Calls { get; private set; }
 
+        /// <summary>Why the fake says it picked <see cref="Pick"/>; <see langword="null"/> uses the interface's plain default.</summary>
+        public string? Reason { get; set; }
+
         public Task<ConnectedModel?> ChooseAsync(string aRequest, int aSessionId, int aRoleId, CancellationToken aCt = default)
         {
             Calls++;
             return Task.FromResult(Pick);
+        }
+
+        public Task<RoutingDecision?> DecideAsync(string aRequest, int aSessionId, int aRoleId, CancellationToken aCt = default)
+        {
+            Calls++;
+            return Task.FromResult<RoutingDecision?>(Pick is null ? null : new RoutingDecision(Pick, Reason ?? "Automatic: chosen for this work"));
         }
     }
 
@@ -1347,6 +1487,9 @@ public sealed class AgentActionsTests : IDisposable
         /// <summary>How many times a stream was opened on this provider.</summary>
         public int StreamCount { get; private set; }
 
+        /// <summary>The text of every message each stream was opened with, in order (the system prompt first).</summary>
+        public List<IReadOnlyList<string>> Seen { get; } = [];
+
         public string ModelName => ModelNameOverride ?? "fake-model";
 
         public bool SupportsToolCalling => true;
@@ -1375,6 +1518,7 @@ public sealed class AgentActionsTests : IDisposable
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             StreamCount++;
+            Seen.Add(messages.Select(aMessage => aMessage.Content ?? string.Empty).ToList());
 
             if (objFailFirstWith is not null && !objHasFailedOnce)
             {

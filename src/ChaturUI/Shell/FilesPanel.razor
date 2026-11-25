@@ -1,6 +1,9 @@
 @* The project's file tree, with the branch beneath it (UI Design "Screen: Workbench", region
-   `files-panel`). IFileActions.TreeAsync feeds the tree (REQ-UI-039); selecting a file reads and
-   opens it into a tab (REQ-UI-040). ISourceControlActions for the branch row is not cluster H's row. *@
+   `files-panel`). IFileActions.TreeAsync gives the top level and ChildrenAsync each folder as it
+   opens (REQ-UI-039, BRD-217); a folder that cannot be read is shown marked not readable. Selecting
+   a file reads it into a tab (REQ-UI-040). A runnable project offers "Set as the project to run" on a
+   right-click (BRD-228). The branch picker at the foot lists local and remote branches and switches,
+   asking first when there are uncommitted changes (BRD-222, BRD-223). *@
 <Card Class="flex w-60 flex-none flex-col overflow-hidden" data-testid="files-panel">
     <div class="flex h-8 flex-none items-center justify-between border-b pl-3 pr-1 text-xs font-medium uppercase text-muted-foreground" data-testid="files-head">
         <span>Files</span>
@@ -14,19 +17,104 @@
         {
             <Empty Title="No project open" Description="Open a project from Start to see its files." Size="EmptySize.Small" />
         }
+        else if (objTreeProblem is not null)
+        {
+            <Empty Title="The files could not be read" Description="@objTreeProblem" Size="EmptySize.Small" data-testid="file-tree-problem" />
+        }
         else if (objTree.Count == 0)
         {
             <Empty Title="Nothing found" Description="This project's folder has no files yet." Size="EmptySize.Small" />
         }
         else
         {
-            <TreeView SelectedValue="@objSelectedPath" SelectedValueChanged="OnSelectedPathChangedAsync" AriaLabel="Files">
-                <FileTreeBranch Nodes="@objTree" />
-            </TreeView>
+            <CascadingValue Value="this" IsFixed="true">
+                <TreeView SelectedValue="@objSelectedPath" SelectedValueChanged="OnSelectedPathChangedAsync" AriaLabel="Files">
+                    <FileTreeBranch Nodes="@objTree" />
+                </TreeView>
+            </CascadingValue>
         }
     </div>
-    <button type="button" @onclick="@(() => SecondaryWindow.Open("/repository"))" class="flex h-8 w-full flex-none items-center gap-2 border-t px-3 text-left text-xs text-muted-foreground hover:bg-accent" data-testid="branch">
-        <LucideIcon Name="git-branch" Size="14" />
-        @(objBranchName ?? "—")
-    </button>
+    @* BRD-222: the one place the branch is named; a picker, never a way into the source-control window. *@
+    <div class="flex-none border-t" data-testid="branch-pick">
+        <DropdownMenu>
+            <DropdownMenuTrigger AsChild>
+                <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-8 w-full justify-start gap-2 rounded-none px-3 text-xs font-normal text-muted-foreground" Disabled="@(objBranch is null)" @onclick="StartBranchListRefresh" AriaLabel="Switch branch" data-testid="branch">
+                    <LucideIcon Name="git-branch" Size="14" />
+                    <span class="min-w-0 flex-1 truncate text-left font-mono" data-testid="branch-name">@(objBranch ?? "—")</span>
+                    @if (SwitchingTo is { } vTo)
+                    {
+                        @* Shown at once on a pick, while git checks for changes and switches: the name above changes only once the switch is done. *@
+                        <span class="min-w-0 truncate font-mono text-xs" data-testid="branch-switching">→ @vTo</span>
+                    }
+                    @if (objBranch is not null)
+                    {
+                        <LucideIcon Name="chevron-up" Size="14" />
+                    }
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent Class="max-h-80 w-72 overflow-y-auto overflow-x-hidden" data-testid="branch-pop">
+                @* The menu draws this list in its own component, after the panel may have read the branches
+                   again; it works from one snapshot so a switch never leaves it reading a list being replaced. *@
+                @{ var vList = objBranches; }
+                <DropdownMenuLabel>Local</DropdownMenuLabel>
+                @if (vList is null)
+                {
+                    <DropdownMenuItem Disabled="true">Reading the branches</DropdownMenuItem>
+                }
+                else
+                {
+                    @foreach (var vBranch in vList.Local)
+                    {
+                        <DropdownMenuItem OnClick="() => ChooseBranchAsync(vBranch)" data-testid="@($"branch-local-{vBranch}")">
+                            <span class="inline-flex w-4 flex-none">@if (vBranch == vList.Current) { <LucideIcon Name="check" Size="14" /> }</span>
+                            <span class="min-w-0 whitespace-normal break-all font-mono">@vBranch</span>
+                        </DropdownMenuItem>
+                    }
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Remote</DropdownMenuLabel>
+                    @if (vList.Remote.Count == 0)
+                    {
+                        <DropdownMenuItem Disabled="true">No remote branches</DropdownMenuItem>
+                    }
+                    @foreach (var vBranch in vList.Remote)
+                    {
+                        <DropdownMenuItem OnClick="() => ChooseBranchAsync(vBranch)" data-testid="@($"branch-remote-{vBranch}")">
+                            <span class="inline-flex w-4 flex-none"></span>
+                            <span class="min-w-0 whitespace-normal break-all font-mono">@vBranch</span>
+                        </DropdownMenuItem>
+                    }
+                }
+            </DropdownMenuContent>
+        </DropdownMenu>
+    </div>
 </Card>
+
+@* BRD-223: uncommitted changes are asked about before the switch, each choice saying what it does. *@
+<Dialog @bind-Open="objDirtyOpen">
+    <DialogContent Class="max-w-md" data-testid="branch-dirty">
+        <DialogHeader>
+            <DialogTitle>You have uncommitted changes</DialogTitle>
+            <DialogDescription>Switching from @objBranch to @objPendingBranch. What should happen to the changes?</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-2">
+            <Button Variant="ButtonVariant.Outline" Class="h-auto flex-col items-start gap-0.5 p-3 text-left" Disabled="objSwitching" OnClick="() => SwitchAsync(BranchSwitchChanges.BringAlong)" data-testid="branch-dirty-bring">
+                <span class="font-medium">Bring them along</span>
+                <span class="whitespace-normal text-xs text-muted-foreground">The changes move to @objPendingBranch as they are. Git refuses if they would overwrite something there.</span>
+            </Button>
+            <Button Variant="ButtonVariant.Outline" Class="h-auto flex-col items-start gap-0.5 p-3 text-left" Disabled="objSwitching" OnClick="() => SwitchAsync(BranchSwitchChanges.PutAside)" data-testid="branch-dirty-aside">
+                <span class="font-medium">Put them aside</span>
+                <span class="whitespace-normal text-xs text-muted-foreground">They are kept in the stash under a name saying where they came from, and the branch switches clean. Get them back from the stash later.</span>
+            </Button>
+            <Button Variant="ButtonVariant.Outline" Class="h-auto flex-col items-start gap-0.5 p-3 text-left" Disabled="objSwitching" OnClick="StayAsync" data-testid="branch-dirty-stay">
+                <span class="font-medium">Stay on @objBranch</span>
+                <span class="whitespace-normal text-xs text-muted-foreground">Nothing changes. The changes stay where they are.</span>
+            </Button>
+            @if (objSwitchProblem is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="branch-dirty-error">
+                    <AlertDescription>@objSwitchProblem</AlertDescription>
+                </Alert>
+            }
+        </DialogBody>
+    </DialogContent>
+</Dialog>

@@ -1,0 +1,17 @@
+{"v":1,"ts":"2026-11-18T09:00:00Z","kind":"miss","app":"Demo","miss_id":"m1","req_id":"REQ-FN-001","found_by":"gate","found_gate":"G2","miss_class":"logic","severity":"high"}
+{"v":1,"ts":"2026-11-18T09:30:00Z","kind":"miss","app":"Demo","miss_id":"m1","req_id":"REQ-FN-001","found_by":"owner","miss_class":"logic","severity":"high"}
+{"v":1,"ts":"2026-11-18T09:40:00Z","kind":"miss-amend","app":"Demo","miss_id":"m1","field":"what","value":"Late amend text"}
+{"v":1,"ts":"2026-11-18T12:00:00Z","kind":"miss-fix","app":"Demo","miss_id":"m1","fix_attempt":1,"verdict_after":"FAIL"}
+{"v":1,"ts":"2026-11-19T12:00:00Z","kind":"miss-fix","app":"Demo","miss_id":"m1","fix_attempt":2,"verdict_after":"Verified"}
+{"v":1,"ts":"2026-11-19T09:00:00Z","kind":"miss","app":"Demo","miss_id":"m2","req_id":"REQ-UI-001","found_by":"owner","what":"Button is clipped"}
+{"v":1,"ts":"2026-11-19T11:00:00Z","kind":"miss-fix","app":"Demo","miss_id":"m2","fix_attempt":1,"verdict_after":"FAIL"}
+{"v":1,"ts":"2026-11-17T09:00:00Z","kind":"miss","app":"Demo","miss_id":"m3","what":"A mistaken one"}
+{"v":1,"ts":"2026-11-17T10:00:00Z","kind":"miss-fix","app":"Demo","miss_id":"m3","fix_attempt":1,"verdict_after":"Verified"}
+{"v":1,"ts":"2026-11-17T11:00:00Z","kind":"miss-void","app":"Demo","miss_id":"m3","reason":"logged twice"}
+{"v":1,"ts":"2026-11-16T09:00:00Z","kind":"miss","app":"Demo","miss_id":"m4","req_id":"REQ-FN-001","found_by":"self-smoke"}
+{"v":1,"ts":"2026-11-16T10:00:00Z","kind":"miss-fix","app":"Demo","miss_id":"m4","fix_attempt":1,"verdict_after":"wont-fix"}
+{"v":1,"ts":"2026-09-01T09:00:00Z","kind":"miss","app":"Demo","miss_id":"m5","req_id":"REQ-FN-002","found_by":"production"}
+{"v":"1","at":"2026-11-20T07:00:00.0000000Z","tool":"chatur","kind":"miss","app":"Demo","miss_id":"m6","req_id":"REQ-UI-001","found_by":"agent-review","fix_attempt":"","what":"Written by Chatur"}
+{"v":1,"ts":"2026-11-12T09:00:00Z","kind":"miss","app":"Demo","miss_id":"m7","found_by":"library-feedback"}
+{"v":1,"ts":"2026-11-18T10:00:00Z","kind":"review","app":"Demo","miss_id":"m1"}
+[1,2]

@@ -14,7 +14,7 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class SerilogStartupTests : IDisposable
 {
-    private readonly string objLogFolder = Path.Combine(Path.GetTempPath(), $"chatur-nfr002-{Guid.NewGuid():N}");
+    private readonly string objLogFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-nfr002-{Guid.NewGuid():N}");
 
     public SerilogStartupTests()
     {

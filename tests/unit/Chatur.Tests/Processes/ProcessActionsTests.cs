@@ -16,7 +16,7 @@ namespace Chatur.Tests.Processes;
 /// </summary>
 public sealed class ProcessActionsTests : MigratedDatabaseFixture
 {
-    private readonly string objProjectRoot = Path.Combine(Path.GetTempPath(), $"chatur-proc-{Guid.NewGuid():N}");
+    private readonly string objProjectRoot = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-proc-{Guid.NewGuid():N}");
     private readonly ClockStub objClock = new(new DateTime(2026, 10, 6, 9, 0, 0, DateTimeKind.Utc));
     private readonly ProcessActions objSut;
     private readonly int objProjectId;

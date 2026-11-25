@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.JSInterop;
 
 namespace ChaturUI.Services;
@@ -16,6 +17,32 @@ public static class JsCleanUp
 {
     /// <summary>How long clean-up waits for the page's script to answer before it goes on without it.</summary>
     public static readonly TimeSpan Wait = TimeSpan.FromSeconds(1);
+
+    // The pages whose window has closed, by their script runtime: a clean-up for one of them is skipped, because a
+    // call into a web view that has gone makes the web view's own error report fail, and each such failure was an
+    // "Unobserved task exception" in the log (owner's log, 21 Nov 2026; REQ-NFR-011).
+    private static readonly ConditionalWeakTable<IJSRuntime, object> objGone = new();
+
+    /// <summary>Marks a page as gone: its window is closing, so nothing more is sent to its script.</summary>
+    /// <param name="aJs">The page's script runtime.</param>
+    public static void MarkGone(IJSRuntime aJs)
+    {
+        ArgumentNullException.ThrowIfNull(aJs);
+        objGone.AddOrUpdate(aJs, aJs);
+    }
+
+    /// <summary>Whether the page with this script runtime has been marked gone.</summary>
+    /// <param name="aJs">The page's script runtime, or null when the caller has none.</param>
+    public static bool IsGone(IJSRuntime? aJs) => aJs is not null && objGone.TryGetValue(aJs, out _);
+
+    /// <summary>
+    /// Runs <paramref name="aCleanUp"/> as <see cref="RunAsync(Func{ValueTask})"/> does, unless the page has been marked
+    /// gone, when there is nothing left to undo and nothing is sent.
+    /// </summary>
+    /// <param name="aJs">The page's script runtime.</param>
+    /// <param name="aCleanUp">The calls to the page's script that undo what the component or service set up.</param>
+    public static ValueTask RunAsync(IJSRuntime? aJs, Func<ValueTask> aCleanUp) =>
+        IsGone(aJs) ? ValueTask.CompletedTask : RunAsync(aCleanUp);
 
     /// <summary>
     /// Runs <paramref name="aCleanUp"/> and returns when it has finished, failed because the page is gone, or

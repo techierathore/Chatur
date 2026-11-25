@@ -106,13 +106,14 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Usage Guide</h1>
-    <div class="subtitle">Rendered 2026-11-18 &middot; source <code>Chatur-UsageGuide.md</code></div>
+    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>Chatur-UsageGuide.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
       <ol>
         <li><a href="#test-users">Test users</a></li>
         <li><a href="#execution-guide">Execution guide</a></li>
+        <li class="h3"><a href="#the-agents-and-their-commands">The agents and their commands</a></li>
         <li><a href="#how-to-test-screen-by-screen">How to test, screen by screen</a></li>
         <li class="h3"><a href="#first-task-1-start-the-windows-app-and-sign-in">First task 1: start the Windows app and sign in</a></li>
         <li class="h3"><a href="#first-task-2-open-the-practice-folder">First task 2: open the practice folder</a></li>
@@ -120,12 +121,23 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#first-task-4-ask-the-flow-master-for-one-small-change">First task 4: ask the Flow master for one small change</a></li>
         <li class="h3"><a href="#first-task-5-approve-the-change-and-press-run">First task 5: approve the change and press Run</a></li>
         <li class="h3"><a href="#first-task-6-open-a-file-from-the-start-window">First task 6: open a file from the start window</a></li>
+        <li class="h3"><a href="#owner-s-test-1-from-nothing-new-project-makes-a-solution-and-its-first-project">Owner&#x27;s test 1: from nothing, New project makes a solution and its first project</a></li>
+        <li class="h3"><a href="#owner-s-test-2-add-projects-from-this-machine-s-templates">Owner&#x27;s test 2: add projects from this machine&#x27;s templates</a></li>
+        <li class="h3"><a href="#owner-s-test-3-run-the-web-app">Owner&#x27;s test 3: run the web app</a></li>
+        <li class="h3"><a href="#owner-s-test-4-the-console-app-a-broken-build-and-the-exit-code">Owner&#x27;s test 4: the console app, a broken build and the exit code</a></li>
+        <li class="h3"><a href="#owner-s-test-5-the-test-project">Owner&#x27;s test 5: the test project</a></li>
+        <li class="h3"><a href="#owner-s-test-6-from-an-empty-folder-new-project-uses-that-folder">Owner&#x27;s test 6: from an empty folder, New project uses that folder</a></li>
+        <li class="h3"><a href="#owner-s-test-7-in-an-empty-folder-the-analyst-s-own-commands">Owner&#x27;s test 7: in an empty folder, the Analyst&#x27;s own commands</a></li>
+        <li class="h3"><a href="#owner-s-test-8-the-analyst-brainstorms-with-you-then-writes-the-brief">Owner&#x27;s test 8: the Analyst brainstorms with you, then writes the brief</a></li>
+        <li class="h3"><a href="#owner-s-test-9-the-measurements-screens">Owner&#x27;s test 9: the measurements screens</a></li>
+        <li class="h3"><a href="#owner-s-test-10-one-command-to-each-agent">Owner&#x27;s test 10: one command to each agent</a></li>
         <li class="h3"><a href="#if-the-key-is-refused">If the key is refused</a></li>
         <li class="h3"><a href="#sign-in-and-register">Sign in and Register</a></li>
         <li class="h3"><a href="#start-window">Start window</a></li>
         <li class="h3"><a href="#main-window">Main window</a></li>
         <li class="h3"><a href="#prerequisites">Prerequisites</a></li>
         <li class="h3"><a href="#settings">Settings</a></li>
+        <li class="h3"><a href="#measurements-and-measurements-across-projects">Measurements and Measurements across projects</a></li>
         <li class="h3"><a href="#repository">Repository</a></li>
         <li class="h3"><a href="#processes-and-a-process-run">Processes and a process run</a></li>
         <li class="h3"><a href="#requirements-board">Requirements board</a></li>
@@ -142,7 +154,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>App</td><td>Chatur</td></tr>
 <tr><td>Kind</td><td>app</td></tr>
 <tr><td>Size</td><td>Large</td></tr>
-<tr><td>Date</td><td>2026-11-17</td></tr>
+<tr><td>Date</td><td>2026-11-22</td></tr>
 </tbody>
 </table>
 <h2 id="test-users">Test users<a class="anchor-link" href="#test-users">#</a></h2>
@@ -161,15 +173,87 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <pre><code>git clone &lt;repo&gt;
 dotnet restore Chatur.sln
 dotnet build Chatur.sln
-dotnet run --project src/Chatur -f net10.0-windows10.0.19041.0
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-windows.ps1
 dotnet run --project src/Chatur.WebHarness --urls http://localhost:5280</code></pre>
-<p>The fourth line starts the Windows app; sign in as user 1. The fifth serves the same screens at http://localhost:5280 for the browser tests.</p>
+<p>The fourth line installs the Windows app to <code>%LOCALAPPDATA%\Programs\Chatur</code> with a Start menu entry "Chatur" (run it again to replace it in place); start Chatur from the Start menu and sign in as user 1. The fifth serves the same screens at http://localhost:5280 for the browser tests.</p>
+<h3 id="the-agents-and-their-commands">The agents and their commands<a class="anchor-link" href="#the-agents-and-their-commands">#</a></h3>
+<p>Type a command with its star in the agent's conversation. In the examples <code>MyApp</code> stands for your project's name, and <code>{App}</code> in a file name is replaced by it.</p>
+<h4 id="analyst">Analyst<a class="anchor-link" href="#analyst">#</a></h4>
+<table>
+<thead><tr><th>Command</th><th>What it does</th><th>Example to type</th><th>Where the result appears</th></tr></thead>
+<tbody>
+<tr><td><code>*help</code></td><td>Lists these commands, numbered.</td><td><code>*help</code></td><td>In the chat</td></tr>
+<tr><td><code>*day1-brownfield</code></td><td>Day 1 for a project that already has code: reads the code and its documents and writes the Architecture, BRD, Coding Standards, checklist, status, UsageGuide and DevGuide.</td><td><code>*day1-brownfield MyApp</code></td><td>A file: <code>docs/{App}-BRD.md</code></td></tr>
+<tr><td><code>*day1-greenfield</code></td><td>Day 1 for a new project: brief, BRD, Architecture, mockups, Coding Standards, checklist and status, as a process run with its checks.</td><td><code>*day1-greenfield MyApp</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*mockups</code></td><td>Draws the UI design and one HTML mockup per screen, as a process run with its checks.</td><td><code>*mockups MyApp</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*split-brd</code></td><td>Splits the BRD into the checklist (and into phases when the project is large), as a process run with its checks.</td><td><code>*split-brd MyApp</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*brainstorm</code></td><td>Holds a brainstorming session with you, one technique at a time, and saves it to docs/brainstorming-session-results.md.</td><td><code>*brainstorm a habit tracker</code></td><td>A file: <code>docs/brainstorming-session-results.md</code></td></tr>
+<tr><td><code>*amend-docs</code></td><td>Folds a change into the BRD, Architecture, mockups and checklist in place, as a process run with its checks.</td><td><code>*amend-docs MyApp add a search box</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*create-project-brief</code></td><td>Writes docs/{App}-Brief.md, the one page day 1 reads: what it is, who it is for, must do, out of scope, open questions.</td><td><code>*create-project-brief MyApp</code></td><td>A file: <code>docs/{App}-Brief.md</code></td></tr>
+<tr><td><code>*doc-out</code></td><td>Writes the whole document drafted in this conversation to its file.</td><td><code>*doc-out</code></td><td>A file: <code>docs/…</code></td></tr>
+<tr><td><code>*research-prompt</code></td><td>Writes a deep research prompt for a topic to docs/{App}-Research-Prompt.md.</td><td><code>*research-prompt a habit tracker</code></td><td>A file: <code>docs/{App}-Research-Prompt.md</code></td></tr>
+<tr><td><code>*yolo</code></td><td>Turns Go ahead on or off for this conversation: on, nothing waits for your approval.</td><td><code>*yolo</code></td><td>In the chat</td></tr>
+<tr><td><code>*exit</code></td><td>Says goodbye and closes this conversation.</td><td><code>*exit</code></td><td>In the chat</td></tr>
+</tbody>
+</table>
+<h4 id="architect">Architect<a class="anchor-link" href="#architect">#</a></h4>
+<table>
+<thead><tr><th>Command</th><th>What it does</th><th>Example to type</th><th>Where the result appears</th></tr></thead>
+<tbody>
+<tr><td><code>*help</code></td><td>Lists these commands, numbered.</td><td><code>*help</code></td><td>In the chat</td></tr>
+<tr><td><code>*doc-out</code></td><td>Writes the whole document drafted in this conversation to its file.</td><td><code>*doc-out</code></td><td>A file: <code>docs/…</code></td></tr>
+<tr><td><code>*research</code></td><td>Writes a deep research prompt for a topic to docs/{App}-Research-Prompt.md.</td><td><code>*research a habit tracker</code></td><td>A file: <code>docs/{App}-Research-Prompt.md</code></td></tr>
+<tr><td><code>*yolo</code></td><td>Turns Go ahead on or off for this conversation: on, nothing waits for your approval.</td><td><code>*yolo</code></td><td>In the chat</td></tr>
+<tr><td><code>*exit</code></td><td>Says goodbye and closes this conversation.</td><td><code>*exit</code></td><td>In the chat</td></tr>
+<tr><td><code>*architect</code></td><td>Designs the solution structure and the data model and writes docs/{App}-Architecture.md (Chatur's own, kept from phase 1).</td><td><code>*architect MyApp</code></td><td>A file: <code>docs/{App}-Architecture.md</code></td></tr>
+<tr><td><code>*create-doc</code></td><td>Writes a document from a template (Chatur's own, kept from phase 1).</td><td><code>*create-doc architecture</code></td><td>A file: <code>docs/…</code></td></tr>
+</tbody>
+</table>
+<h4 id="flow-master">Flow master<a class="anchor-link" href="#flow-master">#</a></h4>
+<table>
+<thead><tr><th>Command</th><th>What it does</th><th>Example to type</th><th>Where the result appears</th></tr></thead>
+<tbody>
+<tr><td><code>*develop-end-to-end</code></td><td>Takes the project to the owner's acceptance test unattended, step after step; --follow says where it is, --stop ends it, --resume carries it on.</td><td><code>*develop-end-to-end MyApp</code></td><td>A run on the End-to-end run page</td></tr>
+<tr><td><code>*develop-status</code></td><td>Says whether an end-to-end run is going, its step, its requirements and its tokens.</td><td><code>*develop-status MyApp</code></td><td>In the chat</td></tr>
+<tr><td><code>*estimate-phase</code></td><td>Estimates the phase's tokens and time from the runs so far.</td><td><code>*estimate-phase MyApp</code></td><td>In the chat</td></tr>
+<tr><td><code>*build-phase</code></td><td>Builds every open row of the phase's checklist, as a process run with its checks.</td><td><code>*build-phase MyApp</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*fix-issues</code></td><td>Works through reported bugs, fixes them and re-checks, as a process run with its checks.</td><td><code>*fix-issues MyApp docs/issues</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*triage-issues</code></td><td>Logs reported bugs against the checklist without changing code, as a process run with its checks.</td><td><code>*triage-issues MyApp docs/issues/bug-1.md</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*log-miss</code></td><td>Records one thing that was missed, in your words, in docs/metrics/misses.jsonl and docs/{App}-Misses.md.</td><td><code>*log-miss MyApp "the Run button stayed grey"</code></td><td>A file: <code>docs/metrics/misses.jsonl</code></td></tr>
+<tr><td><code>*triage-and-fix</code></td><td>Logs the reported bugs, then fixes them: a triage run first, the fix run queued after it.</td><td><code>*triage-and-fix MyApp docs/issues/bug-1.md</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*amend-docs</code></td><td>Folds a change into the BRD, Architecture, mockups and checklist in place, as a process run with its checks.</td><td><code>*amend-docs MyApp add a search box</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*devguide</code></td><td>Writes the developer's map from each screen to the code behind it.</td><td><code>*devguide MyApp</code></td><td>A file: <code>docs/{App}-DevGuide.md</code></td></tr>
+<tr><td><code>*productguide</code></td><td>Writes the end user's manual, screen by screen.</td><td><code>*productguide MyApp</code></td><td>A file: <code>docs/{App}-ProductGuide.md</code></td></tr>
+<tr><td><code>*handoff-phase</code></td><td>Finishes the UsageGuide and DevGuide and closes the phase, as a process run with its checks.</td><td><code>*handoff-phase MyApp</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*deploy-checklist</code></td><td>Writes the deployment checklist for one hosting target, as a process run with its checks.</td><td><code>*deploy-checklist MyApp azure-pipelines.yml</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*refresh-status</code></td><td>Rewrites PROJECT-STATUS.md from the checklists, as a process run with its checks.</td><td><code>*refresh-status MyApp</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*metrics</code></td><td>Writes the metrics report from docs/metrics, as a process run with its checks.</td><td><code>*metrics MyApp</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*generate-html</code></td><td>Turns one markdown file into an HTML page beside it.</td><td><code>*generate-html docs/MyApp-BRD.md</code></td><td>A file: <code>docs/…</code>, an HTML page beside the markdown</td></tr>
+<tr><td><code>*render-workflow-docs</code></td><td>Turns the BRDs, the Architecture and PROJECT-STATUS.md into HTML pages beside them.</td><td><code>*render-workflow-docs MyApp</code></td><td>A file: <code>docs/…</code>, an HTML page beside each document</td></tr>
+<tr><td><code>*yolo</code></td><td>Turns Go ahead on or off for this conversation: on, nothing waits for your approval.</td><td><code>*yolo</code></td><td>In the chat</td></tr>
+<tr><td><code>*help</code></td><td>Lists these commands, numbered.</td><td><code>*help</code></td><td>In the chat</td></tr>
+<tr><td><code>*exit</code></td><td>Says goodbye and closes this conversation.</td><td><code>*exit</code></td><td>In the chat</td></tr>
+</tbody>
+</table>
+<h4 id="verifier">Verifier<a class="anchor-link" href="#verifier">#</a></h4>
+<table>
+<thead><tr><th>Command</th><th>What it does</th><th>Example to type</th><th>Where the result appears</th></tr></thead>
+<tbody>
+<tr><td><code>*verify</code></td><td>Checks every row in scope against the running application and writes the verdicts, as a process run with its checks.</td><td><code>*verify all MyApp</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*report</code></td><td>Shows the status and remarks of the rows in scope (ui, functional, all, or ids) from the checklists, running nothing.</td><td><code>*report all MyApp</code></td><td>In the chat</td></tr>
+<tr><td><code>*help</code></td><td>Lists these commands, numbered.</td><td><code>*help</code></td><td>In the chat</td></tr>
+<tr><td><code>*exit</code></td><td>Says goodbye and closes this conversation.</td><td><code>*exit</code></td><td>In the chat</td></tr>
+<tr><td><code>*triage-issues</code></td><td>Sorts what has been reported into the checklist it belongs to, as a process run (Chatur's own, kept from phase 2).</td><td><code>*triage-issues docs/issues/bug-1.md</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*metrics-report</code></td><td>Reads the run records and says what they add up to, as a process run (Chatur's own, kept from phase 2).</td><td><code>*metrics-report</code></td><td>A run on the Processes page</td></tr>
+<tr><td><code>*log-miss</code></td><td>Records one thing that went wrong, in your words (Chatur's own, kept from phase 2).</td><td><code>*log-miss "the Run button stayed grey"</code></td><td>A file: <code>docs/metrics/misses.jsonl</code></td></tr>
+</tbody>
+</table>
 <h2 id="how-to-test-screen-by-screen">How to test, screen by screen<a class="anchor-link" href="#how-to-test-screen-by-screen">#</a></h2>
 <h3 id="first-task-1-start-the-windows-app-and-sign-in">First task 1: start the Windows app and sign in<a class="anchor-link" href="#first-task-1-start-the-windows-app-and-sign-in">#</a></h3>
 <ul>
 <li><strong>Sign in as:</strong> your own account, or user 1
 </li>
-<li><strong>Steps:</strong> 1) In PowerShell, type <code>cd C:\1MyCode\Chatur</code> and press Enter. 2) Type <code>dotnet run --project src\Chatur -f net10.0-windows10.0.19041.0</code> and press Enter. 3) On Sign in, type your email and password and press Sign in.
+<li><strong>Steps:</strong> 1) Press the Windows key, type <code>Chatur</code> and press Enter (the Start menu entry). 2) On Sign in, type your email and password and press Sign in.
 </li>
 <li><strong>Expected:</strong> A window named Chatur opens with your name at the top right. What you open belongs to your account. An account that has opened nothing, your common account included, sees "Nothing is open yet" with three buttons: Open a folder, Open a solution, Open a file. No project, file or chat, and nothing another account opened. An account with history sees "Open recent" with its own projects.
 </li>
@@ -215,7 +299,7 @@ dotnet run --project src/Chatur.WebHarness --urls http://localhost:5280</code></
 </li>
 <li><strong>Steps:</strong> 1) Press Approve on the card. 2) Press Run at the top left. 3) Read the Output strip at the bottom.
 </li>
-<li><strong>Expected:</strong> The card goes and <code>Greeter\Program.cs</code> now holds <code>Console.WriteLine("Good evening from Chatur");</code>. Output shows <code>&gt; dotnet run --project "C:\1MyCode\ChaturPractice\Greeter\Greeter.csproj" -c Debug --no-launch-profile</code>, then <code>Good evening from Chatur</code>, then <code>Process exited.</code>, and the label beside Output reads "stopped". Once in three runs on 17 Nov the first line was shown twice; pressing Run again showed it once.
+<li><strong>Expected:</strong> The card goes and <code>Greeter\Program.cs</code> now holds <code>Console.WriteLine("Good evening from Chatur");</code>. Output shows <code>&gt; dotnet build …</code>, the build's own lines, <code>Built in …s — starting it</code>, <code>&gt; dotnet run --project "C:\1MyCode\ChaturPractice\Greeter\Greeter.csproj" -c Debug --no-build --no-launch-profile</code>, then <code>Good evening from Chatur</code>, then <code>Process exited with code 0.</code>, and the label beside Output reads "ended, exit code 0".
 </li>
 <li><strong>Covers:</strong> REQ-UI-013, REQ-UI-014
 </li>
@@ -224,11 +308,121 @@ dotnet run --project src/Chatur.WebHarness --urls http://localhost:5280</code></
 <ul>
 <li><strong>Sign in as:</strong> your own account, or user 1
 </li>
-<li><strong>Steps:</strong> 1) Pick "All projects…" from the project name in the top bar to reach the start window, or start from the empty start. 2) Press "Open a file". 3) In the box "The file", type <code>C:\1MyCode\ChaturPractice\Greeter\Program.cs</code>. 4) Press Open.
+<li><strong>Steps:</strong> 1) File ▸ Recent projects ▸ Project list to reach the start window, or start from the empty start. 2) Press "Open a file". 3) In the box "The file", type <code>C:\1MyCode\ChaturPractice\Greeter\Program.cs</code>. 4) Press Open.
 </li>
 <li><strong>Expected:</strong> The main window opens with Program.cs open in a tab. The project is the nearest solution or repository folder above the file; ChaturPractice has neither, so it is the file's own folder, Greeter.
 </li>
 <li><strong>Covers:</strong> REQ-UI-094
+</li>
+</ul>
+<h3 id="owner-s-test-1-from-nothing-new-project-makes-a-solution-and-its-first-project"><a id="owners-test-1-from-nothing-new-project-makes-a-solution-and-its-first-project"></a>Owner's test 1: from nothing, New project makes a solution and its first project<a class="anchor-link" href="#owner-s-test-1-from-nothing-new-project-makes-a-solution-and-its-first-project">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Windows key, type <code>Chatur</code>, press Enter. 2) If a project opens, File ▸ Close. 3) Press "New project" (on "Nothing is open yet", or under Get started). 4) Click "Console App". 5) Solution name <code>OwnerTest</code>, Project name <code>TryConsole</code>, Solution folder a new one, e.g. <code>C:\1MyCode\OwnerTest</code>. 6) Press Create.
+</li>
+<li><strong>Expected:</strong> "Nothing is open yet" offers New project and the three Open ways. The dialog lists this machine's templates with Framework net10.0. The main window opens on OwnerTest and the target picker reads TryConsole. Run by the agent on the installed app from its Start menu entry on a fresh test data folder, 22 Nov.
+</li>
+<li><strong>Covers:</strong> REQ-UI-008, REQ-FN-310, REQ-FN-309, REQ-NFR-013
+</li>
+</ul>
+<h3 id="owner-s-test-2-add-projects-from-this-machine-s-templates"><a id="owners-test-2-add-projects-from-this-machines-templates"></a>Owner's test 2: add projects from this machine's templates<a class="anchor-link" href="#owner-s-test-2-add-projects-from-this-machine-s-templates">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) File ▸ New project. 2) Click "Blazor Web App", type <code>TryWeb</code> in Name, press Create. 3) The same with "Class Library" <code>TryLib</code> and "xUnit Test Project" <code>TryLib.Tests</code>.
+</li>
+<li><strong>Expected:</strong> The dialog reads "New project in OwnerTest" and only the name is typed. Each project appears in FILES and in the target picker; TryLib.Tests is offered (it runs its tests).
+</li>
+<li><strong>Covers:</strong> REQ-UI-112
+</li>
+</ul>
+<h3 id="owner-s-test-3-run-the-web-app"><a id="owners-test-3-run-the-web-app"></a>Owner's test 3: run the web app<a class="anchor-link" href="#owner-s-test-3-run-the-web-app">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Target picker ▸ TryWeb; press Run. 2) Press Stop.
+</li>
+<li><strong>Expected:</strong> Output opens by itself: <code>&gt; dotnet build …</code>, the build's lines, <code>Now listening on: http://localhost:&lt;port&gt;</code>, <code>Opening http://localhost:&lt;port&gt; in the browser</code>; your browser opens there. Stop writes <code>Run stopped.</code>.
+</li>
+<li><strong>Covers:</strong> REQ-UI-107, REQ-FN-306
+</li>
+</ul>
+<h3 id="owner-s-test-4-the-console-app-a-broken-build-and-the-exit-code"><a id="owners-test-4-the-console-app-a-broken-build-and-the-exit-code"></a>Owner's test 4: the console app, a broken build and the exit code<a class="anchor-link" href="#owner-s-test-4-the-console-app-a-broken-build-and-the-exit-code">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Target picker ▸ TryConsole; press Run. 2) FILES ▸ TryConsole ▸ Program.cs; delete the <code>;</code> at the end of its line; Ctrl+S; press Run. 3) Put the <code>;</code> back; Ctrl+S.
+</li>
+<li><strong>Expected:</strong> 1) <code>Hello, World!</code>, then <code>Process exited with code 0.</code>. 2) <code>The program was not started.</code>; the label reads "build failed".
+</li>
+<li><strong>Covers:</strong> REQ-UI-107, REQ-UI-108
+</li>
+</ul>
+<h3 id="owner-s-test-5-the-test-project"><a id="owners-test-5-the-test-project"></a>Owner's test 5: the test project<a class="anchor-link" href="#owner-s-test-5-the-test-project">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Target picker ▸ TryLib.Tests; press Run.
+</li>
+<li><strong>Expected:</strong> <code>&gt; dotnet test …</code>, a passed summary with 0 failed, and <code>Process exited with code 0.</code>.
+</li>
+<li><strong>Covers:</strong> REQ-UI-107
+</li>
+</ul>
+<h3 id="owner-s-test-6-from-an-empty-folder-new-project-uses-that-folder"><a id="owners-test-6-from-an-empty-folder-new-project-uses-that-folder"></a>Owner's test 6: from an empty folder, New project uses that folder<a class="anchor-link" href="#owner-s-test-6-from-an-empty-folder-new-project-uses-that-folder">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Make an empty folder, for example <code>C:\1MyCode\EmptyOne</code>. 2) File ▸ Close solution; press "Open a folder"; type the folder; press Open. 3) The target picker reads "No target found". 4) File ▸ New project; click "Console App"; Solution name <code>FromEmpty</code>. 5) Press Create.
+</li>
+<li><strong>Expected:</strong> Solution folder already reads <code>C:\1MyCode\EmptyOne</code>. After Create the main window is on FromEmpty, the solution file is in EmptyOne, and the target picker reads FromEmpty.
+</li>
+<li><strong>Covers:</strong> REQ-FN-310, REQ-FN-309
+</li>
+</ul>
+<h3 id="owner-s-test-7-in-an-empty-folder-the-analyst-s-own-commands"><a id="owners-test-7-in-an-empty-folder-the-analysts-own-commands"></a>Owner's test 7: in an empty folder, the Analyst's own commands<a class="anchor-link" href="#owner-s-test-7-in-an-empty-folder-the-analyst-s-own-commands">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account (a model provider connected; else First task 3)
+</li>
+<li><strong>Steps:</strong> 1) Open another empty folder, e.g. <code>C:\1MyCode\BrainTest</code>, as in test 6. 2) Model picker ▸ your model; agent picker ▸ Analyst. 3) Type <code>Don't you have brain-storm command ?</code>; Send. 4) <code>*help</code>; Send. 5) <code>*yolo</code>; Send.
+</li>
+<li><strong>Expected:</strong> The greeting lists 12 commands, brainstorm among them. 3) "Yes." with <code>*brainstorm {topic}</code>, named "Chatur (no model)". 4) The 12 commands as a numbered list, names drawn as code, no <code>**</code>. 5) "YOLO is on" with <strong>Go ahead</strong> in bold, and the switch on Go ahead.
+</li>
+<li><strong>Covers:</strong> REQ-FN-308, REQ-FN-311, REQ-UI-114
+</li>
+</ul>
+<h3 id="owner-s-test-8-the-analyst-brainstorms-with-you-then-writes-the-brief"><a id="owners-test-8-the-analyst-brainstorms-with-you-then-writes-the-brief"></a>Owner's test 8: the Analyst brainstorms with you, then writes the brief<a class="anchor-link" href="#owner-s-test-8-the-analyst-brainstorms-with-you-then-writes-the-brief">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) In BrainTest, type <code>*brainstorm a small to-do app for one person</code>; Send. 2) Answer its questions (e.g. one person, desktop, small, focused, yes save it; ideas: due dates, a today view, quick add). 3) Say "That is enough ideas, save the session". 4) <code>*create-project-brief BrainTest</code>; Send; say "take the sensible reading and write the brief now" if it asks.
+</li>
+<li><strong>Expected:</strong> 3) <code>docs\brainstorming-session-results.md</code> appears in FILES. 4) The reply ends "Chatur: *create-project-brief is done — docs/BrainTest-Brief.md is written"; FILES shows it, dated today.
+</li>
+<li><strong>Covers:</strong> REQ-FN-312
+</li>
+</ul>
+<h3 id="owner-s-test-9-the-measurements-screens"><a id="owners-test-9-the-measurements-screens"></a>Owner's test 9: the measurements screens<a class="anchor-link" href="#owner-s-test-9-the-measurements-screens">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Open a project that has <code>docs\metrics</code>, e.g. <code>C:\1MyCode\Chatur</code>. 2) Project ▸ Measurements. 3) Period ▸ Last 7 days, then All history. 4) Click the first run line; Esc. 5) Save as zip ▸ Save ▸ Close. 6) Click "Measurements across projects". 7) Click "Measurements" under Corrections, then its link.
+</li>
+<li><strong>Expected:</strong> 2) Seven tiles, splits, Misses with first-pass rate; a missing figure reads "not measured", a cost "no price". 3) Figures shrink. 4) The run's command, model, tokens, time, result, rows. 5) A .zip in the project folder. 6) One line per project. 7) Back on Project measurements.
+</li>
+<li><strong>Covers:</strong> REQ-UI-115 to REQ-UI-121, REQ-FN-313, REQ-FN-314, REQ-NFR-017
+</li>
+</ul>
+<h3 id="owner-s-test-10-one-command-to-each-agent"><a id="owners-test-10-one-command-to-each-agent"></a>Owner's test 10: one command to each agent<a class="anchor-link" href="#owner-s-test-10-one-command-to-each-agent">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account (a model provider connected)
+</li>
+<li><strong>Steps:</strong> 1) Before each agent: agent picker ▸ the agent; new chat; your model; <code>*yolo</code> (not the Verifier, which has none). 2) Analyst: <code>*research-prompt note-taking apps for one person that work offline</code>. 3) Architect: <code>*research which local database suits a desktop to-do app for one person</code>. 4) Flow master: <code>*develop-status &lt;project&gt;</code>. 5) Verifier: <code>*report all &lt;project&gt;</code>.
+</li>
+<li><strong>Expected:</strong> 2) <code>docs\&lt;project&gt;-Research-Prompt.md</code> appears in FILES. 3) The same file is written again. 4) "No end-to-end run", or its step, rows and tokens. 5) "… row(s) in scope" and a table of rows.
+</li>
+<li><strong>Covers:</strong> REQ-FN-317, REQ-FN-322, REQ-FN-320, REQ-NFR-017
 </li>
 </ul>
 <h3 id="if-the-key-is-refused">If the key is refused<a class="anchor-link" href="#if-the-key-is-refused">#</a></h3>
@@ -295,6 +489,17 @@ dotnet run --project src/Chatur.WebHarness --urls http://localhost:5280</code></
 <li><strong>Expected:</strong> Tier and chain changes are still there after closing and opening Chatur. The agent's new wording is used in its next reply. The theme repaints every window at once. No key appears on any screen.
 </li>
 <li><strong>Covers:</strong> REQ-FN-018 to REQ-FN-023, REQ-FN-025 to REQ-FN-043, REQ-UI-025 to REQ-UI-039
+</li>
+</ul>
+<h3 id="measurements-and-measurements-across-projects">Measurements and Measurements across projects<a class="anchor-link" href="#measurements-and-measurements-across-projects">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> user 1
+</li>
+<li><strong>Steps:</strong> 1) Open a project that has <code>docs\metrics</code>. 2) Project ▸ Measurements; pick each period; open a run line; Save as zip. 3) "Measurements across projects" in the side list; click a project's name.
+</li>
+<li><strong>Expected:</strong> Figures come only from the project's files; a missing figure reads "not measured", a run without cost "no price". The zip holds <code>docs/metrics/&lt;file&gt;.jsonl</code>. Across projects shows one line per project; a name opens its Measurements.
+</li>
+<li><strong>Covers:</strong> REQ-UI-115 to REQ-UI-121, REQ-FN-313, REQ-FN-314, REQ-NFR-014
 </li>
 </ul>
 <h3 id="repository">Repository<a class="anchor-link" href="#repository">#</a></h3>
@@ -364,15 +569,17 @@ npx playwright test</code></pre>
 </li>
 <li>REQ-FN-012 needs the Mac. REQ-NFR-006 needs a published nightly build.
 </li>
-<li>Sign out hangs on "Loading Chatur" until Chatur is reopened.
-</li>
 <li>The default agent, Analyst, explains a code change and does not make it; Flow master makes it.
 </li>
-<li>TF-034, TF-035, TF-036 (<code>docs/Chatur-TechieFlow-Feedback.md</code>): open with the framework's team; none blocks using the app.
+<li>TF-052 (<code>docs/Chatur-TechieFlow-Feedback.md</code>): late in a long verify the screen check reads three chat menus as "opens nothing"; they open by hand. Open with the framework's team; it does not block using the app.
 </li>
-<li>TR-025, TR-026 (<code>docs/Chatur-TrBlazeUI-Feedback.md</code>): a submenu's edge distance at 390 px; a picker's list cannot be wider than its button.
+<li>TR-025, TR-026 (<code>docs/Chatur-TrBlazeUI-Feedback.md</code>): a submenu's edge distance at 390 px; a picker's list cannot be wider than its button. TR-029: no read-only markdown view in TrBlazeUI; Chatur draws replies with Markdig.
 </li>
-<li>Phase 4 (licence, account, feedback, integrations, working copies, all projects) is not built: those pages are placeholders.
+<li>The screen check cannot drive the Windows app by address (its web view reloads); the Windows app is checked by its own test files, which click through it.
+</li>
+<li>A message for a window that has just closed is written to the log as one information line, not as an error (REQ-NFR-011).
+</li>
+<li>The install script reads the App Manager key from this project's user secrets; without it, it stops and says so.
 </li>
 </ul>
 <h2 id="platform-notes">Platform notes<a class="anchor-link" href="#platform-notes">#</a></h2>

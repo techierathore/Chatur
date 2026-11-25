@@ -21,7 +21,7 @@ public sealed class AutoRunHandedStepTests : MigratedDatabaseFixture
 {
     private const string Brief = "Finish the coverage panel and verify it before you stop, tagging every REQ id.";
 
-    private readonly string objFolder = Path.Combine(Path.GetTempPath(), $"chatur-auto-hand-{Guid.NewGuid():N}");
+    private readonly string objFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-auto-hand-{Guid.NewGuid():N}");
 
     /// <summary>
     /// When the model of a handed step reports a usage limit, then the run waits, resumes that same step in the same

@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Business Requirements — Phase 4: More users</h1>
-    <div class="subtitle">Rendered 2026-11-05 &middot; source <code>Chatur-P4-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>Chatur-P4-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -119,8 +119,12 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#all-projects">All projects</a></li>
         <li class="h3"><a href="#worktrees">Worktrees</a></li>
         <li class="h3"><a href="#integrations">Integrations</a></li>
-        <li><a href="#development-status">4. Development status</a></li>
-        <li><a href="#where-the-rest-lives">5. Where the rest lives</a></li>
+        <li class="h3"><a href="#the-owner-s-evening-test-21-nov-workbench-and-settings">The owner&#x27;s evening test, 21 Nov (Workbench and Settings)</a></li>
+        <li class="h3"><a href="#the-owner-s-test-of-22-nov-start-workbench">The owner&#x27;s test of 22 Nov (Start, Workbench)</a></li>
+        <li class="h3"><a href="#chatur-s-own-measurements-the-agents-commands-owner-22-nov-2026-evening">Chatur&#x27;s own measurements, the agents&#x27; commands (owner, 22 Nov 2026 evening)</a></li>
+        <li><a href="#non-functional-requirements">4. Non-functional requirements</a></li>
+        <li><a href="#development-status">5. Development status</a></li>
+        <li><a href="#where-the-rest-lives">6. Where the rest lives</a></li>
       </ol>
     </div>
 <table>
@@ -128,14 +132,14 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tbody>
 <tr><td>App</td><td>Chatur</td></tr>
 <tr><td>Kind</td><td>app</td></tr>
-<tr><td>Size</td><td>Small</td></tr>
+<tr><td>Size</td><td>Medium</td></tr>
 <tr><td>Phase</td><td>4 of 4</td></tr>
 <tr><td>Status</td><td>Draft</td></tr>
 <tr><td>Date</td><td>2026-09-21</td></tr>
 </tbody>
 </table>
 <h2 id="summary"><a id="1-summary"></a>1. Summary<a class="anchor-link" href="#summary">#</a></h2>
-<p>The first three phases make Chatur good enough for the owner. This one makes it something another developer can be given. Feedback, issues, licences and feature control go through App Manager, which already does all four, and role and rule data is synced between machines through it rather than carried in a file. Chatur's verifier gains the thing its own build needed all along: it drives the windows of the Mac and Windows applications it has built, so a native head is checked the way a web page already is. The owner, by now working on many projects at once, gets one view across all of them and the ability to work in separate working copies so two runs never fight over the same files. Chatur's actions are offered to other tools, so something outside can start a process. And the installers are signed, which is what turns a download the owner trusts into one a stranger can.</p>
+<p>The first three phases make Chatur good enough for the owner. This one makes it something another developer can be given. Feedback, issues, licences and feature control go through App Manager, which already does all four, and role and rule data is synced between machines through it rather than carried in a file. Chatur's verifier gains the thing its own build needed all along: it drives the windows of the Mac and Windows applications it has built, so a native head is checked the way a web page already is. The owner, by now working on many projects at once, gets one view across all of them and the ability to work in separate working copies so two runs never fight over the same files. Chatur's actions are offered to other tools, so something outside can start a process. And the installers are signed, which is what turns a download the owner trusts into one a stranger can. BRD-235 to BRD-246 hold the owner's evening test of 21 Nov 2026, BRD-247 to BRD-252 the owner's test of 22 Nov 2026 from the Start menu, and BRD-253 to BRD-275 the owner's request that evening.</p>
 <h2 id="screens-and-flow"><a id="2-screens-and-flow"></a>2. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
 <p>One row per routed page this phase adds; dialogs are written exactly as in the phase-1 BRD.</p>
 <table>
@@ -146,6 +150,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>All projects</td><td><code>/all-projects</code></td><td>Owner, Licensed developer</td><td><a href="mockups/all-projects.html">mockup</a></td><td>project, phase, open, verified, last worked</td></tr>
 <tr><td>Worktrees</td><td><code>/worktrees</code></td><td>Owner</td><td><a href="mockups/worktrees.html">mockup</a></td><td>working copy, branch, run, path, state</td></tr>
 <tr><td>Integrations</td><td><code>/integrations</code></td><td>Owner</td><td><a href="mockups/integrations.html">mockup</a></td><td>action, what starts it, address, state</td></tr>
+<tr><td>Measurements</td><td><code>/measurements</code></td><td>Owner, Licensed developer</td><td><a href="mockups/measurements.html">mockup</a></td><td>period, runs, tokens read, tokens written, cost, time, by model, by agent, by command, mistakes, found by, first-pass, estimate and actual, runs list</td></tr>
+<tr><td>Measurements across projects</td><td><code>/measurements/all</code></td><td>Owner, Licensed developer</td><td><a href="mockups/measurements-all.html">mockup</a></td><td>period, project, runs, tokens read, tokens written, cost, time, mistakes</td></tr>
 </tbody>
 </table>
 <p><strong>Primary journey:</strong></p>
@@ -296,26 +302,267 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h2 id="development-status"><a id="4-development-status"></a>4. Development status<a class="anchor-link" href="#development-status">#</a></h2>
+<h3 id="the-owner-s-evening-test-21-nov-workbench-and-settings"><a id="the-owners-evening-test-21-nov-workbench-and-settings"></a>The owner's evening test, 21 Nov (Workbench and Settings)<a class="anchor-link" href="#the-owner-s-evening-test-21-nov-workbench-and-settings">#</a></h3>
+<p>Added 2026-11-21 from fifteen minutes of the owner's own use (his notes of that evening and the day's log). Running code is the biggest requirement of this IDE: a web application ran with no output and no browser. The project switcher did not switch, agents did not say who they are, a reply did not say which model answered, and New project in a solution made a new solution instead. BRD-239 replaces the 20 Nov decision of "the 20 last opened, then All projects". BRD-245 and BRD-246 are under Non-functional requirements. These screens are phase 1's and phase 3's; the items live here because phase 3 is at its 100.</p>
+<ul>
+<li><strong>BRD-235</strong> — Run shows the build and the program's output live, in an Output panel that opens by itself. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person presses Run on Workbench, then Output opens by itself and shows the build and then the program's own lines as they come, error lines marked.
+</li>
+</ul>
+</li>
+<li><strong>BRD-236</strong> — A web project opens in the browser once it is up. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person runs a web project on Workbench, then once it is listening the browser opens at its launch-settings or listening address.
+</li>
+</ul>
+</li>
+<li><strong>BRD-237</strong> — A build that fails says so with its errors; a program that ends shows its exit code. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a run's build fails on Workbench, then Output says the build failed and lists each error with file and line; when the program ends, Output shows its exit code.
+</li>
+</ul>
+</li>
+<li><strong>BRD-238</strong> — Picking a project in the switcher switches to it. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person picks another project in the switcher on Workbench, then its files, its chat and its run targets show, and the switcher names it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-239</strong> — The switcher lists every project, scrolls, and filters. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens the switcher on Workbench, then every project of theirs is listed, the list scrolls, a filter narrows it, and no "All projects" shows.
+</li>
+</ul>
+</li>
+<li><strong>BRD-240</strong> — The bar clearly names the project open now. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a project is open on Workbench, then the switcher reads "Project:" and its name, and its list ticks that same project as "open now".
+</li>
+</ul>
+</li>
+<li><strong>BRD-241</strong> — An agent greets the person with what it is for and its commands, taken from its real command list. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person chooses an agent on Workbench or asks what commands it has, then the answer lists every command of its real list.
+</li>
+<li><em>Changed 2026-11-22:</em> the Analyst greeted with two commands and denied having brainstorm; the list is now Chatur's own, the same as the TechieFlow agent's (BRD-249).
+</li>
+</ul>
+</li>
+<li><strong>BRD-242</strong> — Every reply shows which model answered, and on Automatic why. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When an agent replies on Workbench, then the reply names the model that answered; with routing on Automatic, a few words say why that model was picked.
+</li>
+</ul>
+</li>
+<li><strong>BRD-243</strong> — Routing says in plain words how Automatic chooses. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-routing.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens Routing on Settings, then a plain paragraph says how Automatic chooses between the listed models, with one example.
+</li>
+</ul>
+</li>
+<li><strong>BRD-244</strong> — New project is one dialog in every state and always comes from this machine's templates. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person chooses New project in any state on Workbench, then one dialog lists this machine's templates, framework and location, and adds to an open solution.
+</li>
+<li><em>Changed 2026-11-22:</em> with no solution open, New project made an empty solution and showed no templates (BRD-247).
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="the-owner-s-test-of-22-nov-start-workbench"><a id="the-owners-test-of-22-nov-start-workbench"></a>The owner's test of 22 Nov (Start, Workbench)<a class="anchor-link" href="#the-owner-s-test-of-22-nov-start-workbench">#</a></h3>
+<p>Added 2026-11-22 from the owner's test of the installed Chatur, started from the Start menu. Starting from nothing, there was no New project on "Nothing is open yet"; New project from an empty folder made an empty solution with no templates, and Run then said "No target found". The Analyst greeted with two commands, said it had no brainstorm, and its reply showed raw <code>**</code> marks. Every agent now carries every command of its TechieFlow agent, done by Chatur itself. BRD-252 is under Non-functional requirements.</p>
+<ul>
+<li><strong>BRD-247</strong> — New project with no solution open makes the solution and its first project from a template, and opens it. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start-empty.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person creates a project with nothing or an empty folder open on Start, then the solution and its first project are made from the template and opened.
+</li>
+</ul>
+</li>
+<li><strong>BRD-248</strong> — After New project, Run has a target. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person creates a project with New project on Workbench, then Run's target list names the new project without anything more, and "No target found" does not stay.
+</li>
+</ul>
+</li>
+<li><strong>BRD-249</strong> — Every agent carries every command its TechieFlow agent has, done in Chatur. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types any TechieFlow command of an agent to that agent on Workbench, then Chatur runs it itself and *help lists it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-250</strong> — A reply is drawn as formatted text. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When an agent replies with bold, a list, code or a table on Workbench, then the reply shows them formatted and no raw ** or | marks are left.
+</li>
+</ul>
+</li>
+<li><strong>BRD-251</strong> — In an empty folder the Analyst brainstorms with the person and writes the brief. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person asks the Analyst on Workbench, in an empty folder, to brainstorm and then write the brief, then the brief's file is written under docs/.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="chatur-s-own-measurements-the-agents-commands-owner-22-nov-2026-evening"><a id="chaturs-own-measurements-the-agents-commands-owner-22-nov-2026-evening"></a>Chatur's own measurements, the agents' commands (owner, 22 Nov 2026 evening)<a class="anchor-link" href="#chatur-s-own-measurements-the-agents-commands-owner-22-nov-2026-evening">#</a></h3>
+<p>Added 2026-11-22. TfLens reaches only repositories it can see; these numbers are wanted inside Chatur for any project, private or offline, read from its own <code>docs/metrics</code> files with no network call, in TfLens's words. The agents' command tables go into the UsageGuide and the README from the command list in code. Nine commands not yet run end to end are each run to their end. BRD-261, BRD-263, BRD-264 and BRD-275 are under Non-functional requirements.</p>
+<ul>
+<li><strong>BRD-253</strong> — Measurements, in the main menu, for the open project, read from its own docs/metrics files and nothing else. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person chooses Project ▸ Measurements on Measurements, then the open project's figures show, read only from its docs/metrics files, with no network call.
+</li>
+</ul>
+</li>
+<li><strong>BRD-254</strong> — Pick the period. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person picks Today, 7 days, 30 days, All or two dates on Measurements, then every figure on the screen counts only the records inside that period.
+</li>
+</ul>
+</li>
+<li><strong>BRD-255</strong> — Runs, tokens, cost and time, split by model, by agent and by command. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person picks a period on Measurements, then runs, tokens, the cost or "no price", and time show, each split by model, agent and command.
+</li>
+</ul>
+</li>
+<li><strong>BRD-256</strong> — Mistakes: how many, who found each, the rows, and first-time passes. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person picks a period on Measurements, then the misses show with who found each and their rows, and how many rows passed the first time.
+</li>
+</ul>
+</li>
+<li><strong>BRD-257</strong> — Estimate beside actual for each phase, with the estimate table that exists. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When Measurements opens on a project with an estimate, then the phase's estimate stands beside its actual in the same table Process run and Run record show.
+</li>
+</ul>
+</li>
+<li><strong>BRD-258</strong> — One line per run, which opens. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens a run's line on Measurements, then its command, model, tokens, time, result and the rows it touched are shown.
+</li>
+</ul>
+</li>
+<li><strong>BRD-259</strong> — The same totals across every project. <em>Screen:</em> Measurements across projects · <em>Mockup:</em> <a href="mockups/measurements-all.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens Measurements across projects, then one line per project gives runs, tokens, cost, time and mistakes for the period, read from each project's docs/metrics files.
+</li>
+</ul>
+</li>
+<li><strong>BRD-260</strong> — Save the open project's measurements as one zip TfLens imports. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person presses Save as zip on Measurements, then one zip of the project's docs/metrics files is saved, in the shape TfLens imports.
+</li>
+</ul>
+</li>
+<li><strong>BRD-262</strong> — Settings ▸ Measurements stays the state of the files and links to the new screen. <em>Screen:</em> Settings · <em>Mockup:</em> <a href="mockups/settings-measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens Measurements on Settings, then it still shows the state of the six files and a link opens the Measurements screen.
+</li>
+</ul>
+</li>
+<li><strong>BRD-265</strong> — *day1-brownfield runs to its end from the chat. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types <code>*day1-brownfield {App}</code> to the Analyst on Workbench in a project with code, then its BRD and Architecture are written under docs/.
+</li>
+</ul>
+</li>
+<li><strong>BRD-266</strong> — *doc-out writes the document drafted in the conversation. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person drafts a document with the Analyst and types <code>*doc-out</code> on Workbench, then the whole document is written to its file.
+</li>
+</ul>
+</li>
+<li><strong>BRD-267</strong> — The Analyst's *research-prompt writes the research prompt. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types <code>*research-prompt {topic}</code> to the Analyst on Workbench, then docs/{App}-Research-Prompt.md is written.
+</li>
+</ul>
+</li>
+<li><strong>BRD-268</strong> — *devguide writes the developer's guide. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types <code>*devguide {App}</code> to the Flow master on Workbench, then docs/{App}-DevGuide.md is written.
+</li>
+</ul>
+</li>
+<li><strong>BRD-269</strong> — *productguide writes the end user's manual. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types <code>*productguide {App}</code> to the Flow master on Workbench, then docs/{App}-ProductGuide.md is written.
+</li>
+</ul>
+</li>
+<li><strong>BRD-270</strong> — *develop-end-to-end started from the chat starts the end-to-end run. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types <code>*develop-end-to-end {App} {brief}</code> to the Flow master on Workbench, then an end-to-end run starts and the reply links to its page.
+</li>
+</ul>
+</li>
+<li><strong>BRD-271</strong> — *develop-status says where the end-to-end run is. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types <code>*develop-status {App}</code> to the Flow master on Workbench, then the reply says whether a run is going, its step, its open rows and its tokens.
+</li>
+</ul>
+</li>
+<li><strong>BRD-272</strong> — *estimate-phase gives the phase's estimate. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types <code>*estimate-phase {App}</code> to the Flow master on Workbench, then the reply gives the phase's tokens and time, low, likely and high, or why none.
+</li>
+</ul>
+</li>
+<li><strong>BRD-273</strong> — The Architect's *research writes the research prompt. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types <code>*research {topic}</code> to the Architect on Workbench, then docs/{App}-Research-Prompt.md is written.
+</li>
+</ul>
+</li>
+<li><strong>BRD-274</strong> — A command that starts a process run says so and links to the run. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a command typed on Workbench starts a process run, then the reply says so and its link opens that run's page.
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="non-functional-requirements"><a id="4-non-functional-requirements"></a>4. Non-functional requirements<a class="anchor-link" href="#non-functional-requirements">#</a></h2>
+<table>
+<thead><tr><th>Id</th><th>Area</th><th>Requirement</th><th>Measure</th></tr></thead>
+<tbody>
+<tr><td>BRD-245</td><td>Reliability</td><td>A closed window leaves no errors behind</td><td>When the person closes the Settings window and switches project on Workbench, then the day's log holds no unobserved task exception</td></tr>
+<tr><td>BRD-246</td><td>Install</td><td>Chatur installs for the user on Windows</td><td>When the owner runs the install script on Windows, then Chatur opens from its Start menu entry and keeps the owner's data</td></tr>
+<tr><td>BRD-252</td><td>Testing</td><td>The owner's test and its tests start from the two states a person really meets</td><td>When the owner's test and its tests run, then they start from nothing open after install and from an empty folder, never a hand-made solution</td></tr>
+<tr><td>BRD-261</td><td>Correctness</td><td>Every number on the measurements screens is computed by code and equals the total added up again from the files</td><td>When a test adds up the fixture's files again on Measurements, then every figure equals it, unmeasured ones read "not measured", and the words are TfLens's</td></tr>
+<tr><td>BRD-263</td><td>Documentation</td><td>The UsageGuide has "The agents and their commands", one table per agent, from the one command list in the code</td><td>When a test compares the UsageGuide with the command list on Workbench, then each agent's table names every command once, with what, example and where, and nothing else</td></tr>
+<tr><td>BRD-264</td><td>Documentation</td><td>The README names the four agents and their commands in short and links to the guide's section</td><td>When a test compares the README with the command list on Workbench, then every command is named once under its agent and no other command is named</td></tr>
+<tr><td>BRD-275</td><td>Testing</td><td>The owner's test has a part for the measurements screens and one for typing a command of each agent</td><td>When the owner follows the Owner's test on Workbench, then one part walks the measurements screens, one types a command to each agent, and the eight parts stay</td></tr>
+</tbody>
+</table>
+<h2 id="development-status"><a id="5-development-status"></a>5. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-11-05.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P4-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-11-23.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P4-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>Feedback and issues</td><td>4</td><td>0</td><td>4</td><td>In progress</td></tr>
-<tr><td>Licence</td><td>4</td><td>0</td><td>4</td><td>In progress</td></tr>
-<tr><td>All projects</td><td>4</td><td>0</td><td>4</td><td>In progress</td></tr>
-<tr><td>Worktrees</td><td>3</td><td>0</td><td>3</td><td>In progress</td></tr>
-<tr><td>Integrations</td><td>4</td><td>0</td><td>4</td><td>In progress</td></tr>
+<tr><td>Feedback and issues</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
+<tr><td>Licence</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
+<tr><td>All projects</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
+<tr><td>Worktrees</td><td>3</td><td>3</td><td>0</td><td>Done</td></tr>
+<tr><td>Integrations</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
+<tr><td>The owner's evening test, 21 Nov (Workbench, Settings)</td><td>12</td><td>12</td><td>0</td><td>Done</td></tr>
+<tr><td>The owner's test of 22 Nov (Start, Workbench)</td><td>6</td><td>6</td><td>0</td><td>Done</td></tr>
+<tr><td>Measurements</td><td>7</td><td>7</td><td>0</td><td>Done</td></tr>
+<tr><td>Measurements across projects</td><td>1</td><td>0</td><td>1</td><td>In progress</td></tr>
+<tr><td>Settings</td><td>1</td><td>1</td><td>0</td><td>Done</td></tr>
+<tr><td>Workbench</td><td>10</td><td>10</td><td>0</td><td>Done</td></tr>
+<tr><td>Non-functional</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
 </tbody>
 </table>
-<h2 id="where-the-rest-lives"><a id="5-where-the-rest-lives"></a>5. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
+<h2 id="where-the-rest-lives"><a id="6-where-the-rest-lives"></a>6. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
 <table>
 <thead><tr><th>What</th><th>Where</th></tr></thead>
 <tbody>
 <tr><td>Scope, users and roles, the context diagram</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
 <tr><td>Non-functional requirements for the whole application</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
 <tr><td>Constraints, assumptions and risks</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
+<tr><td>The Start, Workbench and Settings screens BRD-235 to BRD-252 add to</td><td><a href="Chatur-BRD.html">phase 1 BRD</a>, <a href="Chatur-P3-BRD.html">phase 3 BRD</a></td></tr>
 <tr><td>Every phase, its screens and its BRD range</td><td><a href="Chatur-Phases.html">Chatur-Phases.md</a></td></tr>
 <tr><td>This phase's work list</td><td><a href="Chatur-P4-Checklist.md">Chatur-P4-Checklist.md</a></td></tr>
 </tbody>

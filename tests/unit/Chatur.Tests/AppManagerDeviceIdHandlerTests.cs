@@ -14,7 +14,7 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class AppManagerDeviceIdHandlerTests : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-deviceid-tests-{Guid.NewGuid():N}.db");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-deviceid-tests-{Guid.NewGuid():N}.db");
 
     /// <summary>Runs the real migrations against a fresh temporary database before every test.</summary>
     public AppManagerDeviceIdHandlerTests()

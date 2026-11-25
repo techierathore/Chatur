@@ -57,6 +57,25 @@ States of the estimate: empty: a run started before estimates existed shows "no 
 
 States of the estimate: empty: "No sister projects" with Add · loading: the list with dashes for run counts · error: a folder that has gone shows as missing, with Remove
 
+**Added to Start and Workbench, phase 1 screens (2026-11-18, BRD-217 to BRD-229).** Mockups: [mockups/start.html](mockups/start.html), [mockups/start-empty.html](mockups/start-empty.html), [mockups/main.html](mockups/main.html). From the owner's run on his own solution. Icons are Lucide, the name on each tile's `data-icon`.
+
+| Region | Control | Shows or binds |
+|---|---|---|
+| `clone-repo`, `open-solution`, `open-folder`, `open-file`, `new-project` (Start) | Button + LucideIcon | `git-branch`, `layers`, `folder`, `file`, `plus`: an 18 px icon centred in a 36 px accent-soft square (BRD-219) |
+| `start-close` (Start) | icon Button | top right of Open recent when opened from the project switcher, "Close the project list"; it and Escape return to the Workbench unchanged (BRD-220) |
+| `reopen-failed` (Start) | Alert (warning), one line | which project could not open last time, and why (BRD-218) |
+| `open-solution-dialog` › `solution-browse` (Start) | Dialog + Input + Button | Browse opens a file picker for .sln and .slnx files; the file chosen fills `solution-path` (BRD-221) |
+| `tree-unreadable` (Workbench) | TreeView item + lock | a folder Windows will not list, marked "not readable"; the rest still shows; a folder is read when opened (BRD-217) |
+| `menu-view-hidden` (Workbench) | MenubarCheckboxItem | View ▸ Show hidden files, off by default, kept for the account; off, Files lists no dot names and no .vs (BRD-225) |
+| `branch` › `branch-pop` (Workbench) | DropdownMenu | the one branch picker: Local and Remote groups, the current one ticked; never opens Repository. The toolbar's `branch-pick` is gone (BRD-222) |
+| `branch-dirty` (Workbench) | AlertDialog + Button ×3 | with uncommitted changes: Bring them along, Put them aside (stash), Stay on the branch, each saying what it does (BRD-223) |
+| `agent-pop` (Workbench) | DropdownMenu | the tick on the agent the closed picker names, or on "No agent" when chosen; no "suggested" (BRD-224) |
+| `stop` (Workbench) | Button | absent while idle; beside Run while a build or run goes, and ends it (BRD-226) |
+| `target-pop`, `menu-project-run`, `tree-set-run` (Workbench) | DropdownMenu, Menubar group, ContextMenu | the solution's runnable projects, the chosen one ticked in all three; right-click a project folder or `.csproj` for "Set as the project to run"; kept per account and solution (BRD-227, BRD-228) |
+| `menu-file-close` (Workbench) | MenubarItem | Close solution, or Close folder with a folder open; never Close project (BRD-229) |
+
+States: empty — a folder with no project offers no project to run, and File reads Close folder · loading — a folder's children show once it is opened and read · error — an unreadable folder is marked in place; a failed reopen is the one line on Start; a switch Git refuses leaves the branch and the changes as they were, with Git's reason.
+
 ### Screen: End-to-end run (`/auto`)
 
 **Mockup:** [mockups/auto-run.html](mockups/auto-run.html) · **Roles:** Owner · **BRD:** BRD-118 to BRD-125

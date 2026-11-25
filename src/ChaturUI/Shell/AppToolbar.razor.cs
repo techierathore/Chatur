@@ -1,8 +1,6 @@
 using Chatur.Core;
 using Chatur.Core.Actions;
-using Chatur.Core.Platform;
 using Microsoft.AspNetCore.Components;
-using TrBlazeUI.Components.Toast;
 
 namespace ChaturUI.Shell;
 
@@ -17,16 +15,14 @@ public partial class AppToolbar : IDisposable
 {
     // Lines BuildRunActions itself writes when a build or run ends, one way or another — watched here
     // only to know when Build/Run/Stop should be enabled again, never displayed twice.
-    private static readonly string[] TerminalMarkers =
-    [
-        "Build succeeded", "Build FAILED", "Build stopped.", "Process exited", "Run stopped.", "Failed to run:"
-    ];
+    // Since Run shows the build (REQ-UI-107), dotnet's own "Build succeeded." and "Build FAILED." lines appear in the
+    // output too, so only the lines Chatur writes itself, with their time or code, end a build or run.
+    private static readonly System.Text.RegularExpressions.Regex TerminalLine = new(
+        @"^(Build succeeded in \d|Build FAILED in \d|Build stopped\.|Process exited with code |Run stopped\.|Failed to run:|A solution builds but does not run)",
+        System.Text.RegularExpressions.RegexOptions.Compiled);
 
-    private int? objLoadedForProjectId;
+    private string? objLoadedForProjectKey;
     private int? objWatchingProjectId;
-    private int? objBranchLoadedForProjectId;
-    private SourceControlStatus? objBranchStatus;
-    private IReadOnlyList<string> objBranches = [];
     private CancellationTokenSource? objWatchCts;
 
     /// <summary>Whether the toolbar's Find in files dialog is open (REQ-UI-073).</summary>
@@ -38,10 +34,6 @@ public partial class AppToolbar : IDisposable
     private IReadOnlyList<RunTarget> objTargets => Workbench.RunTargets;
     private RunTarget? objSelectedTarget => Workbench.SelectedRunTarget;
 
-    /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
-    [Inject]
-    private ISecondaryWindow SecondaryWindow { get; set; } = default!;
-
     [Inject]
     private IBuildRunActions BuildRun { get; set; } = default!;
 
@@ -50,12 +42,6 @@ public partial class AppToolbar : IDisposable
 
     [Inject]
     private WorkbenchState Workbench { get; set; } = default!;
-
-    [Inject]
-    private ISourceControlActions SourceControl { get; set; } = default!;
-
-    [Inject]
-    private ToastService Toast { get; set; } = default!;
 
     private int? ProjectId => AppStateService.SelectedProject?.ProjectId;
 
@@ -67,83 +53,104 @@ public partial class AppToolbar : IDisposable
         Workbench.BranchChanged += OnBranchChanged;
         await EnsureTargetsLoadedAsync();
         EnsureWatching();
-        _ = LoadBranchAsync();
     }
-
-    /// <summary>
-    /// Reads the project's checked-out branch, what is to push and the branches it has, for the
-    /// branch picker (BRD-16). Runs beside the first render rather than before it, since reading the
-    /// status asks the server what is new. A project with no repository under it shows no branch
-    /// rather than a wrong guess.
-    /// </summary>
-    private async Task LoadBranchAsync()
-    {
-        var vProjectId = ProjectId;
-        objBranchLoadedForProjectId = vProjectId;
-        if (vProjectId is not { } vId)
-        {
-            objBranchStatus = null;
-            objBranches = [];
-            return;
-        }
-
-        try
-        {
-            var vStatus = await SourceControl.StatusAsync(vId);
-            var vBranches = await SourceControl.BranchesAsync(vId);
-            if (vProjectId == ProjectId)
-            {
-                objBranchStatus = vStatus;
-                objBranches = vBranches;
-            }
-        }
-        catch (Exception aException) when (aException is InvalidOperationException or IOException or System.ComponentModel.Win32Exception)
-        {
-            objBranchStatus = null;
-            objBranches = [];
-        }
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    /// <summary>Switches the project to another branch from the toolbar, then tells the other regions to re-read it (REQ-FN-047).</summary>
-    private async Task SwitchBranchAsync(string aBranchName)
-    {
-        if (ProjectId is not { } vProjectId || aBranchName == objBranchStatus?.Branch)
-        {
-            return;
-        }
-
-        try
-        {
-            await SourceControl.SwitchBranchAsync(vProjectId, aBranchName);
-            Toast.Success($"Switched to {aBranchName}.", "Branch");
-        }
-        catch (InvalidOperationException aException)
-        {
-            Toast.Error(aException.Message, "Could not switch branch");
-            return;
-        }
-
-        // The toolbar's own BranchChanged listener re-reads the branch, along with the files panel's.
-        Workbench.NotifyBranchChanged();
-    }
-
-    /// <summary>Re-reads the branch when another region switched it.</summary>
-    private void OnBranchChanged() => _ = LoadBranchAsync();
 
     private async Task EnsureTargetsLoadedAsync()
     {
-        if (ProjectId is not { } vProjectId || objLoadedForProjectId == vProjectId)
+        // Keyed by the project's id and path: a project removed and another opened can be given the same id, and the
+        // toolbar then kept the removed one's targets, whose Run could not start (21 Nov 2026).
+        var vKey = AppStateService.SelectedProject is { } vProject ? $"{vProject.ProjectId}|{vProject.Path}" : null;
+        if (ProjectId is not { } vProjectId || objLoadedForProjectKey == vKey)
         {
             return;
         }
 
         Workbench.SetRunTargets(await BuildRun.TargetsAsync(vProjectId));
-        objLoadedForProjectId = vProjectId;
+        objLoadedForProjectKey = vKey;
+        if (Workbench.RunTargets.Count == 0)
+        {
+            StartLookingForTargets(vProjectId, vKey!);
+        }
     }
 
-    private void SelectTarget(RunTarget aTarget) => Workbench.SelectRunTarget(aTarget);
+    /// <summary>
+    /// BRD-248, REQ-FN-309 (22 Nov 2026): "No target found" never stays once a project exists. While the open project
+    /// has no target, its targets are read again every few seconds, so a project made by New project, by an agent or
+    /// outside Chatur is offered without anything more; the looking stops at the first target or when the project changes.
+    /// </summary>
+    private void StartLookingForTargets(int aProjectId, string aKey)
+    {
+        if (objLookingForKey == aKey)
+        {
+            return;
+        }
+
+        objLookCts?.Cancel();
+        objLookCts = new CancellationTokenSource();
+        objLookingForKey = aKey;
+        _ = LookForTargetsAsync(aProjectId, aKey, objLookCts.Token);
+    }
+
+    private async Task LookForTargetsAsync(int aProjectId, string aKey, CancellationToken aCt)
+    {
+        try
+        {
+            using var vTimer = new PeriodicTimer(TimeSpan.FromSeconds(4));
+            while (await vTimer.WaitForNextTickAsync(aCt))
+            {
+                if (objLoadedForProjectKey != aKey || Workbench.RunTargets.Count > 0)
+                {
+                    break;
+                }
+
+                IReadOnlyList<RunTarget> vTargets;
+                try
+                {
+                    vTargets = await BuildRun.TargetsAsync(aProjectId, aCt);
+                }
+                catch (Exception aException) when (aException is IOException or InvalidOperationException or UnauthorizedAccessException)
+                {
+                    continue;
+                }
+
+                if (vTargets.Count > 0 && objLoadedForProjectKey == aKey)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        Workbench.SetRunTargets(vTargets);
+                        StateHasChanged();
+                    });
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The project changed or the toolbar went away.
+        }
+        finally
+        {
+            if (objLookingForKey == aKey)
+            {
+                objLookingForKey = null;
+            }
+        }
+    }
+
+    private string? objLookingForKey;
+    private CancellationTokenSource? objLookCts;
+
+    /// <summary>Chooses the target to build and run, and remembers it for this project and account (BRD-228).</summary>
+    private async Task SelectTarget(RunTarget aTarget)
+    {
+        if (ProjectId is not { } vProjectId || !aTarget.IsAvailableOnThisMachine)
+        {
+            return;
+        }
+
+        Workbench.SelectRunTarget(aTarget);
+        await BuildRun.SetRunTargetAsync(vProjectId, aTarget.RunTargetId);
+    }
 
     /// <summary>Builds the project on the chosen target (REQ-UI-012).</summary>
     private async Task BuildAsync()
@@ -225,9 +232,29 @@ public partial class AppToolbar : IDisposable
         {
             await foreach (var vLine in BuildRun.StreamOutputAsync(aProjectId, aCt))
             {
-                if (Array.Exists(TerminalMarkers, m => vLine.Text.Contains(m, StringComparison.Ordinal)))
+                if (TerminalLine.IsMatch(vLine.Text))
                 {
                     Workbench.SetBuildRunBusy(false);
+                }
+
+                // A run that could not start because its target was read again under a new id: the toolbar reads the
+                // project's targets again, so the next Run uses one that exists.
+                if (vLine.IsError && (vLine.Text.StartsWith("Failed to run:", StringComparison.Ordinal) || vLine.Text.StartsWith("Build FAILED in 0.0s", StringComparison.Ordinal)))
+                {
+                    _ = InvokeAsync(async () =>
+                    {
+                        objLoadedForProjectKey = null;
+                        try
+                        {
+                            await EnsureTargetsLoadedAsync();
+                        }
+                        catch (Exception aException) when (aException is IOException or InvalidOperationException)
+                        {
+                            Workbench.SetRunTargets([]);
+                        }
+
+                        StateHasChanged();
+                    });
                 }
             }
         }
@@ -243,16 +270,31 @@ public partial class AppToolbar : IDisposable
         {
             await EnsureTargetsLoadedAsync();
             EnsureWatching();
-            if (ProjectId != objBranchLoadedForProjectId)
-            {
-                _ = LoadBranchAsync();
-            }
 
             StateHasChanged();
         });
     }
 
     private void OnWorkbenchChanged() => InvokeAsync(StateHasChanged);
+
+    /// <summary>A branch switch can move or remove projects, so the targets are read again (BRD-227).</summary>
+    private async void OnBranchChanged()
+    {
+        await InvokeAsync(async () =>
+        {
+            objLoadedForProjectKey = null;
+            try
+            {
+                await EnsureTargetsLoadedAsync();
+            }
+            catch (Exception aException) when (aException is IOException or InvalidOperationException)
+            {
+                Workbench.SetRunTargets([]);
+            }
+
+            StateHasChanged();
+        });
+    }
 
     /// <inheritdoc />
     public void Dispose()
@@ -261,5 +303,6 @@ public partial class AppToolbar : IDisposable
         Workbench.Changed -= OnWorkbenchChanged;
         Workbench.BranchChanged -= OnBranchChanged;
         objWatchCts?.Cancel();
+        objLookCts?.Cancel();
     }
 }

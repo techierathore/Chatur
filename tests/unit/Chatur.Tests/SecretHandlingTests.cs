@@ -16,8 +16,8 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class SecretHandlingTests : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-{Guid.NewGuid():N}.db");
-    private readonly string objLogFolder = Path.Combine(Path.GetTempPath(), $"chatur-nfr001-{Guid.NewGuid():N}");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-{Guid.NewGuid():N}.db");
+    private readonly string objLogFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-nfr001-{Guid.NewGuid():N}");
 
     public SecretHandlingTests()
     {

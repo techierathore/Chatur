@@ -14,6 +14,10 @@
         <div>
             <h1 class="text-lg font-semibold">Measurements</h1>
             <p class="text-sm text-muted-foreground">The six files Chatur writes as it works, and what is in each one.</p>
+            @if (State.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.Measurements))
+            {
+                <a href="/measurements" class="text-sm text-primary hover:underline" data-testid="open-measurements-screen">See the runs, tokens, cost and misses ›</a>
+            }
         </div>
         <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="LoadAsync" Disabled="objIsLoading" data-testid="recount">
             <LucideIcon Name="refresh-cw" Size="14" />

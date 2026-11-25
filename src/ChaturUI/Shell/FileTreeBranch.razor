@@ -1,24 +1,33 @@
-@* Recursive helper for FilesPanel (REQ-UI-039): TreeView's ChildContent is markup, so a tree read
-   from IFileActions.TreeAsync as plain data needs one small component that renders itself again for
-   every folder's children. Selection (and so opening a file, REQ-UI-040) is handled by the enclosing
-   TreeView's own @bind-SelectedValue — this component only lays the rows out. Not a page of its own —
-   never routed, never listed anywhere else. *@
+@* Recursive helper for FilesPanel (REQ-UI-039): one level of the tree. A folder's own rows are read
+   the first time it opens (TreeItem HasChildren + OnExpand, BRD-217), and a folder Chatur cannot read
+   is shown with a lock and "not readable", and never opens. A runnable project's row offers "Set as the
+   project to run" on a right-click (BRD-228). Not a page of its own: never routed, never listed. *@
 @foreach (var vNode in Nodes)
 {
-    @if (vNode.IsFolder)
+    var vPath = vNode.RelativePath;
+    var vTarget = Panel?.RunTargetFor(vNode);
+    @if (vNode.IsFolder && !vNode.IsReadable)
     {
-        var vPath = vNode.RelativePath;
-        <TreeItem Label="@vNode.Name" Value="@vPath" Expanded="@objOpen.Contains(vPath)" ExpandedChanged="@(vOpen => SetOpen(vPath, vOpen))" data-testid="@($"tree-{vPath}")">
+        <TreeItem Label="@vNode.Name" Value="@vPath" Disabled="true" data-testid="@($"tree-{vPath}")" data-readable="false">
+            <Icon><LucideIcon Name="folder-lock" Size="16" /></Icon>
+            <LabelContent><span>@vNode.Name</span> <span class="text-xs text-muted-foreground" data-testid="@($"tree-{vPath}-unreadable")">not readable</span></LabelContent>
+        </TreeItem>
+    }
+    else if (vNode.IsFolder)
+    {
+        <TreeItem Label="@vNode.Name" LabelContent="@(vTarget is null ? null : RunLabel(vNode, vTarget))" Value="@vPath" HasChildren="true" OnExpand="@(() => Panel!.LoadChildrenAsync(vPath))" Loading="@(Panel?.IsLoading(vPath) ?? false)"
+                  Expanded="@objOpen.Contains(vPath)" ExpandedChanged="@(vOpen => SetOpen(vPath, vOpen))" data-testid="@($"tree-{vPath}")">
             <Icon><LucideIcon Name="@(objOpen.Contains(vPath) ? "folder-open" : "folder")" Size="16" /></Icon>
             <ChildContent>
-                <FileTreeBranch Nodes="@vNode.Children" />
+                <FileTreeBranch Nodes="@(Panel?.ChildrenOf(vPath) ?? [])" />
             </ChildContent>
         </TreeItem>
     }
     else
     {
-        <TreeItem Label="@vNode.Name" Value="@vNode.RelativePath" data-testid="@($"tree-{vNode.RelativePath}")">
+        <TreeItem Label="@vNode.Name" LabelContent="@(vTarget is null ? null : RunLabel(vNode, vTarget))" Value="@vPath" data-testid="@($"tree-{vPath}")">
             <Icon><LucideIcon Name="file" Size="16" /></Icon>
         </TreeItem>
     }
 }
+

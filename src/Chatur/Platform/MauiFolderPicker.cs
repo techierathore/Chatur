@@ -67,4 +67,21 @@ public sealed class MauiFolderPicker : IFolderPicker
         var vResult = await MainThread.InvokeOnMainThreadAsync(() => FilePicker.Default.PickAsync(new PickOptions { PickerTitle = aTitle }));
         return vResult?.FullPath;
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// MAUI's <see cref="FilePicker"/> with a file type made of the extensions: on Windows the dialog's
+    /// filter shows only those files (BRD-221: Open a solution shows .sln and .slnx); on Mac Catalyst any
+    /// file can be chosen, since a solution file has no system type there, and the path is checked after.
+    /// </remarks>
+    public async Task<string?> PickFileAsync(string aTitle, IReadOnlyList<string> aExtensions, CancellationToken aCt = default)
+    {
+        var vFileType = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+        {
+            [DevicePlatform.WinUI] = aExtensions,
+            [DevicePlatform.MacCatalyst] = new[] { "public.item" }
+        });
+        var vResult = await MainThread.InvokeOnMainThreadAsync(() => FilePicker.Default.PickAsync(new PickOptions { PickerTitle = aTitle, FileTypes = vFileType }));
+        return vResult?.FullPath;
+    }
 }

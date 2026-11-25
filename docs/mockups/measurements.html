@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" data-theme="amber">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Measurements</title>
+<link rel="stylesheet" href="chatur.css">
+<script>(function(){var t=localStorage.getItem('chatur-theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');})();</script>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="8" y="8" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></symbol>
+<symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+<symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15.5 7.5 3 3L22 7l-3-3"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></symbol>
+<symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-5-4.5-8.6-10-8.6Z"/></symbol>
+<symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+<symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+</defs></svg>
+<script>
+function say(m){alert(m);}
+function closeAll(keep){document.querySelectorAll('.menu.open,.popwrap.open').forEach(function(e){if(e!==keep)e.classList.remove('open');});}
+function pop(btn,ev){ev.stopPropagation();var w=btn.parentNode;var was=w.classList.contains('open');closeAll();if(!was)w.classList.add('open');}
+document.addEventListener('click',function(){closeAll();});
+function toggleTheme(){var d=document.documentElement.classList.toggle('dark');localStorage.setItem('chatur-theme',d?'dark':'light');}
+function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.setAttribute('data-theme',p);localStorage.setItem('chatur-palette',p);
+ var n=document.getElementById('palette-name');if(n)n.textContent=p.charAt(0).toUpperCase()+p.slice(1);
+ document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
+ var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
+document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=list.parentNode;
+ var v=wrap.querySelector('[data-value]');if(v)v.textContent=btn.getAttribute('data-choice')||'';
+ var h=wrap.querySelector('input[type=hidden]');if(h)h.value=btn.getAttribute('data-choice')||'';
+ list.querySelectorAll('.tick').forEach(function(s){s.innerHTML='';});
+ var t=btn.querySelector('.tick');if(t)t.innerHTML='✓';closeAll();}
+</script>
+
+<div class="subwin" data-testid="window">
+
+ <div class="subbar" data-testid="subbar">
+  <a class="logo" href="index.html" data-testid="logo" title="Chatur — click for the list of screens" aria-label="Chatur"></a>
+  <span class="t" data-testid="window-title">Measurements</span>
+  <span class="pill" data-testid="scope">TfLens</span>
+  <span class="grow"></span>
+  <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
+  <div class="popwrap" data-testid="palette" data-tf-state="mockup-only">
+   <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one is the Appearance page"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
+   <div class="pop right" id="palette-pop" data-testid="palette-pop" data-tf-state="popup-open">
+    <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber</button>
+    <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo</button>
+    <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal</button>
+    <button onclick="setPalette('slate',event)"><span class="tick" id="palette-tick-slate"></span>Slate</button>
+   </div>
+  </div>
+  <a class="pick" href="main.html" data-testid="close-window"><svg><use href="#i-x"/></svg>Close</a>
+ </div>
+
+ <div class="subbody">
+
+  <nav class="subnav" data-testid="subnav">
+   <div class="g">This project</div>
+   <a href="prerequisites.html" data-testid="nav-prerequisites"><svg><use href="#i-wrench"/></svg>Prerequisites</a>
+   <a href="repository.html" data-testid="nav-repository"><svg><use href="#i-branch"/></svg>Repository</a>
+   <a href="worktrees.html" data-testid="nav-worktrees"><svg><use href="#i-copy"/></svg>Working copies</a>
+   <a href="measurements.html" data-testid="nav-project-measurements" class="on"><svg><use href="#i-chart"/></svg>Project measurements</a>
+   <div class="g">Chatur</div>
+   <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
+   <a href="settings-routing.html" data-testid="nav-routing"><svg><use href="#i-route"/></svg>Routing</a>
+   <a href="settings-agents.html" data-testid="nav-agents"><svg><use href="#i-users"/></svg>Agents</a>
+   <a href="settings-corrections.html" data-testid="nav-corrections"><svg><use href="#i-refresh"/></svg>Corrections</a>
+   <a href="settings-measurements.html" data-testid="nav-measurements"><svg><use href="#i-chart"/></svg>Measurements</a>
+   <a href="settings-appearance.html" data-testid="nav-appearance"><svg><use href="#i-palette"/></svg>Appearance</a>
+   <a href="settings-account.html" data-testid="nav-account"><svg><use href="#i-person"/></svg>Account</a>
+   <div class="g">Your account</div>
+   <a href="licence.html" data-testid="nav-licence"><svg><use href="#i-key"/></svg>Licence</a>
+   <a href="feedback.html" data-testid="nav-feedback"><svg><use href="#i-alert"/></svg>Feedback</a>
+   <a href="integrations.html" data-testid="nav-integrations"><svg><use href="#i-route"/></svg>Integrations</a>
+   <a href="all-projects.html" data-testid="nav-all-projects"><svg><use href="#i-chart"/></svg>All projects</a>
+   <a href="measurements-all.html" data-testid="nav-measurements-all"><svg><use href="#i-chart"/></svg>Measurements across projects</a>
+  </nav>
+
+  <div class="subpage" data-testid="page">
+
+   <div class="row" data-testid="metrics-heading" style="flex-wrap:wrap;gap:10px">
+    <div><div class="h1">Measurements</div>
+     <div class="lead"><span data-testid="metrics-project">TfLens</span> · <span class="mono xs" data-testid="metrics-folder">~/code/TfLens/docs/metrics</span></div></div>
+    <span class="grow"></span>
+    <button class="pick" onclick="document.getElementById('zip').style.display='flex'" data-testid="save-zip"><svg><use href="#i-down"/></svg>Save as zip</button>
+    <button class="pick" onclick="say('Reads the files in docs/metrics again.')" data-testid="recount"><svg><use href="#i-refresh"/></svg>Count again</button>
+   </div>
+
+   <div class="row" style="flex-wrap:wrap;gap:8px" data-testid="metrics-period">
+    <div class="popwrap" data-testid="period-select">
+     <button class="pick" onclick="pop(this,event)" data-testid="period-button"><span class="lbl">Period</span><span data-value>All history</span><svg><use href="#i-chevron"/></svg></button>
+     <div class="pop" data-tf-state="popup-open">
+      <button data-choice="All history" onclick="choose(this,event)" data-testid="period-all"><span class="tick">✓</span>All history</button>
+      <button data-choice="Today" onclick="choose(this,event)" data-testid="period-today"><span class="tick"></span>Today</button>
+      <button data-choice="Last 7 days" onclick="choose(this,event)" data-testid="period-7"><span class="tick"></span>Last 7 days</button>
+      <button data-choice="Last 30 days" onclick="choose(this,event)" data-testid="period-30"><span class="tick"></span>Last 30 days</button>
+      <button data-choice="Between two dates" onclick="choose(this,event);document.getElementById('dates').style.display='flex'" data-testid="period-between"><span class="tick"></span>Between two dates</button>
+     </div>
+    </div>
+    <span id="dates" class="row" style="display:none;gap:8px" data-tf-state="only-for-between">
+     <label class="xs dim">From <input type="date" value="2026-09-01" data-testid="period-from" style="height:29px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);padding:0 10px"></label>
+     <label class="xs dim">To <input type="date" value="2026-09-22" data-testid="period-to" style="height:29px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);padding:0 10px"></label>
+    </span>
+    <span class="xs faint" data-testid="metrics-period-note">412 runs recorded over all history</span>
+   </div>
+
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px" data-testid="metrics-tiles">
+    <div class="panel" style="padding:11px 13px;gap:2px" data-testid="tile-runs"><span class="xs dim">Runs recorded</span><b style="font-size:19px" data-testid="tile-runs-value" data-tf-sample>412</b><span class="xs faint">&nbsp;</span></div>
+    <div class="panel" style="padding:11px 13px;gap:2px" data-testid="tile-tokens-in"><span class="xs dim">Tokens in</span><b style="font-size:19px" data-testid="tile-tokens-in-value" data-tf-sample>1,284,300</b><span class="xs faint">&nbsp;</span></div>
+    <div class="panel" style="padding:11px 13px;gap:2px" data-testid="tile-tokens-out"><span class="xs dim">Tokens out</span><b style="font-size:19px" data-testid="tile-tokens-out-value" data-tf-sample>3,906,120</b><span class="xs faint">&nbsp;</span></div>
+    <div class="panel" style="padding:11px 13px;gap:2px" data-testid="tile-cache-read"><span class="xs dim">Cache read</span><b style="font-size:19px" data-testid="tile-cache-read-value" data-tf-sample>41,220,880</b><span class="xs faint">&nbsp;</span></div>
+    <div class="panel" style="padding:11px 13px;gap:2px" data-testid="tile-cache-write"><span class="xs dim">Cache write</span><b style="font-size:19px" data-testid="tile-cache-write-value" data-tf-sample>2,310,455</b><span class="xs faint">&nbsp;</span></div>
+    <div class="panel" style="padding:11px 13px;gap:2px" data-testid="tile-usd"><span class="xs dim">Measured USD</span><b style="font-size:19px" data-testid="tile-usd-value" data-tf-sample>$48.27</b><span class="xs faint" data-testid="tile-usd-note" data-tf-state="with-unpriced-runs" data-tf-sample>3 runs no price</span></div>
+    <div class="panel" style="padding:11px 13px;gap:2px" data-testid="tile-wall"><span class="xs dim">Total wall clock</span><b style="font-size:19px" data-testid="tile-wall-value" data-tf-sample>23h 14m</b><span class="xs faint">&nbsp;</span></div>
+    </div>
+
+   <div class="panel" data-testid="metrics-split">
+    <div class="ph">Split<span class="grow"></span>
+     <span class="row" style="gap:4px;text-transform:none;letter-spacing:0">
+      <button class="pick" onclick="split('model')" data-testid="split-tab-model">By model</button>
+      <button class="pick" onclick="split('agent')" data-testid="split-tab-agent">By agent</button>
+      <button class="pick" onclick="split('command')" data-testid="split-tab-command">By command</button></span></div>
+    <div data-split="model" style="display:block">
+     <div class="wide"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px" data-testid="split-table-model">
+      <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 10px;font-weight:500">Model</th><th style="text-align:right;padding:8px 10px;font-weight:500">Runs</th><th style="text-align:right;padding:8px 10px;font-weight:500">Tokens in</th><th style="text-align:right;padding:8px 10px;font-weight:500">Tokens out</th><th style="text-align:right;padding:8px 10px;font-weight:500">Cache read</th><th style="text-align:right;padding:8px 10px;font-weight:500">Cache write</th><th style="text-align:right;padding:8px 10px;font-weight:500">Measured USD</th><th style="text-align:right;padding:8px 10px;font-weight:500">Wall clock</th></tr></thead>
+      <tbody>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-model-claude-opus-4-1" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">claude-opus-4-1</span></td><td class="" style="padding:9px 10px;text-align:right;">96</td><td class="" style="padding:9px 10px;text-align:right;">412,880</td><td class="" style="padding:9px 10px;text-align:right;">1,903,200</td><td class="" style="padding:9px 10px;text-align:right;">18,402,100</td><td class="" style="padding:9px 10px;text-align:right;">1,102,300</td><td class="" style="padding:9px 10px;text-align:right;">$31.40</td><td class="" style="padding:9px 10px;text-align:right;">9h 02m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-model-claude-sonnet-4-5" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">claude-sonnet-4-5</span></td><td class="" style="padding:9px 10px;text-align:right;">288</td><td class="" style="padding:9px 10px;text-align:right;">801,420</td><td class="" style="padding:9px 10px;text-align:right;">1,950,640</td><td class="" style="padding:9px 10px;text-align:right;">21,420,780</td><td class="" style="padding:9px 10px;text-align:right;">1,108,155</td><td class="" style="padding:9px 10px;text-align:right;">$16.87</td><td class="" style="padding:9px 10px;text-align:right;">11h 40m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-model-gpt-5-mini" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">gpt-5-mini</span></td><td class="" style="padding:9px 10px;text-align:right;">25</td><td class="" style="padding:9px 10px;text-align:right;">70,000</td><td class="" style="padding:9px 10px;text-align:right;">52,280</td><td class="" style="padding:9px 10px;text-align:right;">1,398,000</td><td class="" style="padding:9px 10px;text-align:right;">100,000</td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim">no price</span></td><td class="" style="padding:9px 10px;text-align:right;">2h 32m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-model-not-measured" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;">3</td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim">no price</span></td><td class="" style="padding:9px 10px;text-align:right;">—</td></tr>
+       </tbody></table></div></div>
+    <div data-split="agent" style="display:none">
+     <div class="wide"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px" data-testid="split-table-agent" data-tf-state="tab-agent">
+      <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 10px;font-weight:500">Agent</th><th style="text-align:right;padding:8px 10px;font-weight:500">Runs</th><th style="text-align:right;padding:8px 10px;font-weight:500">Tokens in</th><th style="text-align:right;padding:8px 10px;font-weight:500">Tokens out</th><th style="text-align:right;padding:8px 10px;font-weight:500">Cache read</th><th style="text-align:right;padding:8px 10px;font-weight:500">Cache write</th><th style="text-align:right;padding:8px 10px;font-weight:500">Measured USD</th><th style="text-align:right;padding:8px 10px;font-weight:500">Wall clock</th></tr></thead>
+      <tbody>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-agent-builder" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">builder</span></td><td class="" style="padding:9px 10px;text-align:right;">212</td><td class="" style="padding:9px 10px;text-align:right;">640,100</td><td class="" style="padding:9px 10px;text-align:right;">2,210,300</td><td class="" style="padding:9px 10px;text-align:right;">25,800,000</td><td class="" style="padding:9px 10px;text-align:right;">1,420,000</td><td class="" style="padding:9px 10px;text-align:right;">$27.10</td><td class="" style="padding:9px 10px;text-align:right;">12h 10m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-agent-verifier" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">verifier</span></td><td class="" style="padding:9px 10px;text-align:right;">118</td><td class="" style="padding:9px 10px;text-align:right;">402,300</td><td class="" style="padding:9px 10px;text-align:right;">1,005,900</td><td class="" style="padding:9px 10px;text-align:right;">11,200,000</td><td class="" style="padding:9px 10px;text-align:right;">620,400</td><td class="" style="padding:9px 10px;text-align:right;">$13.02</td><td class="" style="padding:9px 10px;text-align:right;">5h 51m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-agent-flow-master" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">flow-master</span></td><td class="" style="padding:9px 10px;text-align:right;">79</td><td class="" style="padding:9px 10px;text-align:right;">241,900</td><td class="" style="padding:9px 10px;text-align:right;">690,000</td><td class="" style="padding:9px 10px;text-align:right;">4,220,880</td><td class="" style="padding:9px 10px;text-align:right;">270,055</td><td class="" style="padding:9px 10px;text-align:right;">$8.15</td><td class="" style="padding:9px 10px;text-align:right;">3h 13m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-agent-not-measured" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;">3</td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim">no price</span></td><td class="" style="padding:9px 10px;text-align:right;">—</td></tr>
+       </tbody></table></div></div>
+    <div data-split="command" style="display:none">
+     <div class="wide"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px" data-testid="split-table-command" data-tf-state="tab-command">
+      <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 10px;font-weight:500">Command phase</th><th style="text-align:right;padding:8px 10px;font-weight:500">Runs</th><th style="text-align:right;padding:8px 10px;font-weight:500">Tokens in</th><th style="text-align:right;padding:8px 10px;font-weight:500">Tokens out</th><th style="text-align:right;padding:8px 10px;font-weight:500">Cache read</th><th style="text-align:right;padding:8px 10px;font-weight:500">Cache write</th><th style="text-align:right;padding:8px 10px;font-weight:500">Measured USD</th><th style="text-align:right;padding:8px 10px;font-weight:500">Wall clock</th></tr></thead>
+      <tbody>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-command-build-phase" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">build-phase</span></td><td class="" style="padding:9px 10px;text-align:right;">158</td><td class="" style="padding:9px 10px;text-align:right;">488,000</td><td class="" style="padding:9px 10px;text-align:right;">1,730,500</td><td class="" style="padding:9px 10px;text-align:right;">19,100,000</td><td class="" style="padding:9px 10px;text-align:right;">1,100,000</td><td class="" style="padding:9px 10px;text-align:right;">$20.31</td><td class="" style="padding:9px 10px;text-align:right;">9h 20m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-command-verify-phase" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">verify-phase</span></td><td class="" style="padding:9px 10px;text-align:right;">118</td><td class="" style="padding:9px 10px;text-align:right;">402,300</td><td class="" style="padding:9px 10px;text-align:right;">1,005,900</td><td class="" style="padding:9px 10px;text-align:right;">11,200,000</td><td class="" style="padding:9px 10px;text-align:right;">620,400</td><td class="" style="padding:9px 10px;text-align:right;">$13.02</td><td class="" style="padding:9px 10px;text-align:right;">5h 51m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-command-fix-issues" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">fix-issues</span></td><td class="" style="padding:9px 10px;text-align:right;">54</td><td class="" style="padding:9px 10px;text-align:right;">152,100</td><td class="" style="padding:9px 10px;text-align:right;">479,800</td><td class="" style="padding:9px 10px;text-align:right;">6,700,000</td><td class="" style="padding:9px 10px;text-align:right;">320,000</td><td class="" style="padding:9px 10px;text-align:right;">$6.79</td><td class="" style="padding:9px 10px;text-align:right;">2h 49m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-command-estimate-phase" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">estimate-phase</span></td><td class="" style="padding:9px 10px;text-align:right;">79</td><td class="" style="padding:9px 10px;text-align:right;">241,900</td><td class="" style="padding:9px 10px;text-align:right;">690,000</td><td class="" style="padding:9px 10px;text-align:right;">4,220,880</td><td class="" style="padding:9px 10px;text-align:right;">270,055</td><td class="" style="padding:9px 10px;text-align:right;">$8.15</td><td class="" style="padding:9px 10px;text-align:right;">3h 13m</td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="split-command-not-measured" data-tf-state="with-records"><td class="" style="padding:9px 10px;"><span class="mono xs">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;">3</td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim" data-tf-state="not-measured">not measured</span></td><td class="" style="padding:9px 10px;text-align:right;"><span class="dim">no price</span></td><td class="" style="padding:9px 10px;text-align:right;">—</td></tr>
+       </tbody></table></div></div>
+   </div>
+
+   <div class="panel" data-testid="metrics-misses">
+    <div class="ph">Misses<span class="grow"></span><span class="pill warn" data-testid="misses-count">18 misses</span></div>
+    <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+     <div class="row" style="flex-wrap:wrap;gap:6px" data-testid="misses-foundby"><span class="xs dim">Found by</span><span class="pill" data-testid="foundby-gate" data-tf-state="with-misses"><b style="font-weight:500">gate</b>&nbsp;7&nbsp;<span class="faint">— a check</span></span><span class="pill" data-testid="foundby-self-smoke" data-tf-state="with-misses"><b style="font-weight:500">self-smoke</b>&nbsp;4&nbsp;<span class="faint">— the builder's own check</span></span><span class="pill" data-testid="foundby-agent-review" data-tf-state="with-misses"><b style="font-weight:500">agent-review</b>&nbsp;3&nbsp;<span class="faint">— a reviewing agent</span></span><span class="pill" data-testid="foundby-owner" data-tf-state="with-misses"><b style="font-weight:500">owner</b>&nbsp;2&nbsp;<span class="faint">— you</span></span><span class="pill" data-testid="foundby-production" data-tf-state="with-misses"><b style="font-weight:500">production</b>&nbsp;1&nbsp;<span class="faint">— in use after release</span></span><span class="pill" data-testid="foundby-library-feedback" data-tf-state="with-misses"><b style="font-weight:500">library-feedback</b>&nbsp;1&nbsp;<span class="faint">— a library's team</span></span></div>
+     <div class="row" style="flex-wrap:wrap;gap:6px" data-testid="misses-byrow"><span class="xs dim">Rows</span><span class="pill" data-testid="byrow-req-ui-107" data-tf-state="with-misses">REQ-UI-107&nbsp;<b style="font-weight:500">5</b></span><span class="pill" data-testid="byrow-req-fn-301" data-tf-state="with-misses">REQ-FN-301&nbsp;<b style="font-weight:500">4</b></span><span class="pill" data-testid="byrow-req-fn-296" data-tf-state="with-misses">REQ-FN-296&nbsp;<b style="font-weight:500">3</b></span><span class="pill" data-testid="byrow-req-ui-099" data-tf-state="with-misses">REQ-UI-099&nbsp;<b style="font-weight:500">2</b></span><span class="pill" data-testid="byrow-req-fn-288" data-tf-state="with-misses">REQ-FN-288&nbsp;<b style="font-weight:500">2</b></span><span class="pill" data-testid="byrow-req-rag-020" data-tf-state="with-misses">REQ-RAG-020&nbsp;<b style="font-weight:500">2</b></span></div>
+     <div class="row" style="gap:8px" data-testid="misses-firstpass"><span class="xs dim">First-pass rate</span><b style="font-size:19px" data-testid="firstpass-rate">73%</b><span class="sm dim" data-testid="firstpass-text">41 of 56 rows passed the first time</span></div>
+    </div>
+    <div class="wide"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:620px" data-testid="misses-table">
+     <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 10px;font-weight:500">REQ</th><th style="padding:8px 10px;font-weight:500">Class</th><th style="padding:8px 10px;font-weight:500">Severity</th><th style="padding:8px 10px;font-weight:500">Found by</th><th style="padding:8px 10px;font-weight:500">Status</th></tr></thead>
+     <tbody>
+       <tr style="border-top:1px solid var(--line2)" data-testid="miss-row-1" data-tf-state="with-misses"><td class="" style="padding:9px 10px;">REQ-UI-107</td><td class="" style="padding:9px 10px;">ui</td><td class="" style="padding:9px 10px;">major</td><td class="" style="padding:9px 10px;">gate</td><td class="" style="padding:9px 10px;"><span class="pill warn">open</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="miss-row-2" data-tf-state="with-misses"><td class="" style="padding:9px 10px;">REQ-FN-301</td><td class="" style="padding:9px 10px;">logic</td><td class="" style="padding:9px 10px;">blocker</td><td class="" style="padding:9px 10px;">self-smoke</td><td class="" style="padding:9px 10px;"><span class="pill ok">Verified</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="miss-row-3" data-tf-state="with-misses"><td class="" style="padding:9px 10px;">REQ-UI-099</td><td class="" style="padding:9px 10px;">copy</td><td class="" style="padding:9px 10px;">minor</td><td class="" style="padding:9px 10px;">owner</td><td class="" style="padding:9px 10px;"><span class="pill ok">Verified</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="miss-row-4" data-tf-state="with-misses"><td class="" style="padding:9px 10px;">REQ-FN-288</td><td class="" style="padding:9px 10px;">logic</td><td class="" style="padding:9px 10px;">major</td><td class="" style="padding:9px 10px;">agent-review</td><td class="" style="padding:9px 10px;"><span class="pill ok">Verified</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="miss-row-5" data-tf-state="with-misses"><td class="" style="padding:9px 10px;">REQ-FN-296</td><td class="" style="padding:9px 10px;">spec</td><td class="" style="padding:9px 10px;">major</td><td class="" style="padding:9px 10px;">production</td><td class="" style="padding:9px 10px;"><span class="pill warn">open</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="miss-row-6" data-tf-state="with-misses"><td class="" style="padding:9px 10px;">REQ-RAG-020</td><td class="" style="padding:9px 10px;">library</td><td class="" style="padding:9px 10px;">minor</td><td class="" style="padding:9px 10px;">library-feedback</td><td class="" style="padding:9px 10px;"><span class="pill ">wont-fix</span></td></tr>
+       </tbody></table></div>
+   </div>
+
+   <div class="panel" data-testid="metrics-estimate">
+    <div class="ph">Estimate and actual — phase 4<span class="grow"></span><span class="pill warn" data-tf-state="optional">same table as Process run</span></div>
+    <div class="wide"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:620px" data-testid="metrics-estimate-table" data-tf-state="with-estimate">
+     <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 10px;font-weight:500">Line of work</th><th style="padding:8px 10px;font-weight:500">Estimate — low · middle · high</th><th style="padding:8px 10px;font-weight:500">Actual</th><th style="padding:8px 10px;font-weight:500">Where it fell</th></tr></thead>
+     <tbody>
+       <tr style="border-top:1px solid var(--line2)" data-testid="metrics-estimate-0" data-tf-state="with-estimate"><td class="" style="padding:9px 10px;">Build</td><td class="" style="padding:9px 10px;"><span class="mono xs">48,000 · 61,000 · 80,000 tokens</span><div class="xs dim">54m – 1h 10m</div></td><td class="" style="padding:9px 10px;"><span class="mono xs">83,200 tokens</span><div class="xs dim">1h 04m</div></td><td class="" style="padding:9px 10px;"><span class="pill ok">within</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="metrics-estimate-1" data-tf-state="with-estimate"><td class="" style="padding:9px 10px;">Machine QA (verify + fix)</td><td class="" style="padding:9px 10px;"><span class="mono xs">30,000 · 40,000 · 52,000 tokens</span><div class="xs dim">31m – 48m</div></td><td class="" style="padding:9px 10px;"><span class="mono xs">104,100 tokens</span><div class="xs dim">47m</div></td><td class="" style="padding:9px 10px;"><span class="pill ok">within</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="metrics-estimate-2" data-tf-state="with-estimate"><td class="" style="padding:9px 10px;">After handoff (triage)</td><td class="" style="padding:9px 10px;"><span class="mono xs"><span class="pill warn">no precedent</span></span><div class="xs dim"></div></td><td class="" style="padding:9px 10px;"><span class="mono xs">—</span><div class="xs dim">—</div></td><td class="" style="padding:9px 10px;"><span class="dim">—</span></td></tr>
+       <tr style="border-top:1px solid var(--line2)" data-testid="metrics-estimate-3" data-tf-state="with-estimate"><td class="" style="padding:9px 10px;">Your own testing</td><td class="" style="padding:9px 10px;"><span class="mono xs">—</span><div class="xs dim"></div></td><td class="" style="padding:9px 10px;"><span class="mono xs">not measured</span><div class="xs dim">not measured</div></td><td class="" style="padding:9px 10px;"><span class="dim">—</span></td></tr>
+       </tbody></table></div>
+    <div class="xs dim" style="padding:8px 14px" data-testid="metrics-estimate-note" data-tf-state="with-estimate">Within means the actual fell between low and high. Tokens and time are judged apart.</div>
+   </div>
+
+   <div class="panel" data-testid="metrics-runs">
+    <div class="ph">Runs<span class="grow"></span><span class="xs faint" style="text-transform:none;letter-spacing:0">5 of 412 shown · a line opens its detail</span></div>
+    <div class="wide"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:860px" data-testid="runs-table" data-tf-state="with-runs">
+     <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 10px;font-weight:500">When</th><th style="padding:8px 10px;font-weight:500">Command phase</th><th style="padding:8px 10px;font-weight:500">Agent</th><th style="padding:8px 10px;font-weight:500">Model</th><th style="text-align:right;padding:8px 10px;font-weight:500">Tokens in / out</th><th style="text-align:right;padding:8px 10px;font-weight:500">Wall clock</th><th style="padding:8px 10px;font-weight:500">Result</th><th style="padding:8px 10px;font-weight:500">Rows</th></tr></thead>
+     <tbody>
+       <tr style="border-top:1px solid var(--line2);cursor:pointer" onclick="openRun()" data-testid="run-row-1" data-tf-state="with-runs"><td class="dim" style="padding:9px 10px;">22 Sep 14:31</td><td class="" style="padding:9px 10px;"><span class="mono xs">build-phase</span></td><td class="" style="padding:9px 10px;">builder</td><td class="" style="padding:9px 10px;"><span class="mono xs">claude-sonnet-4-5</span></td><td class="" style="padding:9px 10px;text-align:right;"><div>52,300</div><div class="xs dim">81,900</div></td><td class="" style="padding:9px 10px;text-align:right;">38m</td><td class="" style="padding:9px 10px;"><span class="pill ok">pass</span></td><td class="" style="padding:9px 10px;"><span class="xs dim">REQ-UI-107 · REQ-UI-108</span></td></tr>
+       <tr style="border-top:1px solid var(--line2);cursor:pointer" onclick="openRun()" data-testid="run-row-2" data-tf-state="with-runs"><td class="dim" style="padding:9px 10px;">22 Sep 13:02</td><td class="" style="padding:9px 10px;"><span class="mono xs">verify-phase</span></td><td class="" style="padding:9px 10px;">verifier</td><td class="" style="padding:9px 10px;"><span class="mono xs">claude-opus-4-1</span></td><td class="" style="padding:9px 10px;text-align:right;"><div>18,200</div><div class="xs dim">40,100</div></td><td class="" style="padding:9px 10px;text-align:right;">21m</td><td class="" style="padding:9px 10px;"><span class="pill ok">pass</span></td><td class="" style="padding:9px 10px;"><span class="xs dim">REQ-UI-107</span></td></tr>
+       <tr style="border-top:1px solid var(--line2);cursor:pointer" onclick="openRun()" data-testid="run-row-3" data-tf-state="with-runs"><td class="dim" style="padding:9px 10px;">22 Sep 11:16</td><td class="" style="padding:9px 10px;"><span class="mono xs">estimate-phase</span></td><td class="" style="padding:9px 10px;">flow-master</td><td class="" style="padding:9px 10px;"><span class="mono xs">claude-sonnet-4-5</span></td><td class="" style="padding:9px 10px;text-align:right;"><div>9,800</div><div class="xs dim">21,400</div></td><td class="" style="padding:9px 10px;text-align:right;">7m</td><td class="" style="padding:9px 10px;"><span class="pill ok">pass</span></td><td class="" style="padding:9px 10px;"><span class="xs dim">—</span></td></tr>
+       <tr style="border-top:1px solid var(--line2);cursor:pointer" onclick="openRun()" data-testid="run-row-4" data-tf-state="with-runs"><td class="dim" style="padding:9px 10px;">21 Sep 17:40</td><td class="" style="padding:9px 10px;"><span class="mono xs">fix-issues</span></td><td class="" style="padding:9px 10px;">builder</td><td class="" style="padding:9px 10px;"><span class="mono xs">claude-sonnet-4-5</span></td><td class="" style="padding:9px 10px;text-align:right;"><div>31,000</div><div class="xs dim">64,000</div></td><td class="" style="padding:9px 10px;text-align:right;">26m</td><td class="" style="padding:9px 10px;"><span class="pill bad">fail</span></td><td class="" style="padding:9px 10px;"><span class="xs dim">REQ-FN-301</span></td></tr>
+       <tr style="border-top:1px solid var(--line2);cursor:pointer" onclick="openRun()" data-testid="run-row-5" data-tf-state="with-runs"><td class="dim" style="padding:9px 10px;">21 Sep 10:05</td><td class="" style="padding:9px 10px;"><span class="mono xs">build-phase</span></td><td class="" style="padding:9px 10px;">builder</td><td class="" style="padding:9px 10px;"><span class="mono xs">gpt-5-mini</span></td><td class="" style="padding:9px 10px;text-align:right;"><div><span class="dim" data-tf-state="not-measured">not measured</span></div><div class="xs dim"><span class="dim" data-tf-state="not-measured">not measured</span></div></td><td class="" style="padding:9px 10px;text-align:right;">—</td><td class="" style="padding:9px 10px;"><span class="pill ">not-run</span></td><td class="" style="padding:9px 10px;"><span class="xs dim">—</span></td></tr>
+       </tbody></table></div>
+   </div>
+
+   <div class="row" style="align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r2);color:var(--dim)" data-testid="metrics-offline-note">
+    <svg style="margin-top:2px"><use href="#i-check"/></svg>
+    <span class="sm">Read from the files in docs/metrics on this machine; nothing is sent anywhere. 2 lines were not JSON and were counted as unreadable, never guessed at.</span>
+   </div>
+
+  </div>
+ </div>
+</div>
+
+<div id="run" data-testid="run-detail" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--card);border-left:1px solid var(--line);padding:16px;flex-direction:column;gap:10px;overflow:auto;z-index:20" data-tf-state="run-open">
+ <div class="row"><b>Run 1 · build-phase</b><span class="grow"></span><button class="iconbtn" onclick="document.getElementById('run').style.display='none'" aria-label="Close"><svg><use href="#i-x"/></svg></button></div>
+ <div class="sm" style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px">
+  <span class="dim">Command</span><span class="mono" data-testid="detail-command">build-phase</span>
+  <span class="dim">Mode</span><span>yolo</span>
+  <span class="dim">Model</span><span class="mono" data-testid="detail-model">claude-sonnet-4-5</span>
+  <span class="dim">Tokens in</span><span>52,300</span><span class="dim">Tokens out</span><span>81,900</span>
+  <span class="dim">Cache read</span><span>940,100</span><span class="dim">Cache write</span><span>61,200</span>
+  <span class="dim">Measured USD</span><span>$0.84</span><span class="dim">Wall clock</span><span>38m</span>
+  <span class="dim">Result</span><span class="pill ok" style="width:fit-content">pass</span>
+  <span class="dim">Rows</span><span>REQ-UI-107 · REQ-UI-108</span></div>
+ <pre class="mono xs" data-testid="detail-raw" style="white-space:pre-wrap;border:1px solid var(--line2);border-radius:var(--r);padding:10px">{"ts":"2026-09-22T14:31:07Z","cmd":"build-phase","model":"claude-sonnet-4-5","tokens_in":52300,"tokens_out":81900,"cost_usd":0.84,"build_result":"pass","reqs_touched":["REQ-UI-107","REQ-UI-108"]}</pre>
+</div>
+<div id="zip" data-testid="zip-dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:30" data-tf-state="zip-open">
+ <div class="panel" style="width:min(460px,92%);padding:16px;gap:10px">
+  <b>Save as zip</b>
+  <label class="xs dim">Save to <input value="~/code/TfLens" data-testid="zip-folder" style="width:100%;height:29px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);padding:0 12px"></label>
+  <div class="row"><span class="grow"></span><button class="pick" onclick="document.getElementById('zip').style.display='none'">Cancel</button><button class="pick" onclick="document.getElementById('zip-done').style.display='block'" data-testid="zip-save">Save</button></div>
+  <div id="zip-done" class="sm mono" style="display:none" data-testid="zip-saved">Saved ~/code/TfLens/TfLens-metrics-2026-09-22.zip</div>
+ </div>
+</div>
+<script>
+function split(k){document.querySelectorAll('[data-split]').forEach(function(e){e.style.display=e.getAttribute('data-split')===k?'block':'none';});}
+function openRun(){document.getElementById('run').style.display='flex';}
+</script>
+</body>
+</html>

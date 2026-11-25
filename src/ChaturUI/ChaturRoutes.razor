@@ -1,6 +1,11 @@
 @* The one root component every host renders: a MAUI window's BlazorWebView RootComponent, or the
    web harness's own App.razor. Scans this assembly for every @page in Pages/ (Foundation brief
-   "Route guard"; Architecture §2 "ChaturUI"). Infrastructure, not a screen — no code-behind. *@
+   "Route guard"; Architecture §2 "ChaturUI"). Infrastructure, not a screen. As its window closes it draws
+   nothing, so every component is taken down while the web view is still there (WindowLifetime, REQ-NFR-011). *@
+@if (Lifetime.IsClosing)
+{
+    return;
+}
 <Router AppAssembly="@typeof(ChaturRoutes).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layouts.MainLayout)" />

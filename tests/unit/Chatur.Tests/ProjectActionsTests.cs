@@ -17,8 +17,8 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class ProjectActionsTests : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-{Guid.NewGuid():N}.db");
-    private readonly string objSearchRoot = Path.Combine(Path.GetTempPath(), $"chatur-tests-root-{Guid.NewGuid():N}");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-{Guid.NewGuid():N}.db");
+    private readonly string objSearchRoot = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-root-{Guid.NewGuid():N}");
     private readonly AppState objAppState = new();
     private readonly ProjectActions objSut;
 

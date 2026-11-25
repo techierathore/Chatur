@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — UI Design — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-11-10 &middot; source <code>Chatur-P3-UIDesign.md</code></div>
+    <div class="subtitle">Rendered 2026-11-19 &middot; source <code>Chatur-P3-UIDesign.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -175,6 +175,25 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <p>States of the estimate: empty: "No sister projects" with Add · loading: the list with dashes for run counts · error: a folder that has gone shows as missing, with Remove</p>
+<p><strong>Added to Start and Workbench, phase 1 screens (2026-11-18, BRD-217 to BRD-229).</strong> Mockups: <a href="mockups/start.html">mockups/start.html</a>, <a href="mockups/start-empty.html">mockups/start-empty.html</a>, <a href="mockups/main.html">mockups/main.html</a>. From the owner's run on his own solution. Icons are Lucide, the name on each tile's <code>data-icon</code>.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>clone-repo</code>, <code>open-solution</code>, <code>open-folder</code>, <code>open-file</code>, <code>new-project</code> (Start)</td><td>Button + LucideIcon</td><td><code>git-branch</code>, <code>layers</code>, <code>folder</code>, <code>file</code>, <code>plus</code>: an 18 px icon centred in a 36 px accent-soft square (BRD-219)</td></tr>
+<tr><td><code>start-close</code> (Start)</td><td>icon Button</td><td>top right of Open recent when opened from the project switcher, "Close the project list"; it and Escape return to the Workbench unchanged (BRD-220)</td></tr>
+<tr><td><code>reopen-failed</code> (Start)</td><td>Alert (warning), one line</td><td>which project could not open last time, and why (BRD-218)</td></tr>
+<tr><td><code>open-solution-dialog</code> › <code>solution-browse</code> (Start)</td><td>Dialog + Input + Button</td><td>Browse opens a file picker for .sln and .slnx files; the file chosen fills <code>solution-path</code> (BRD-221)</td></tr>
+<tr><td><code>tree-unreadable</code> (Workbench)</td><td>TreeView item + lock</td><td>a folder Windows will not list, marked "not readable"; the rest still shows; a folder is read when opened (BRD-217)</td></tr>
+<tr><td><code>menu-view-hidden</code> (Workbench)</td><td>MenubarCheckboxItem</td><td>View ▸ Show hidden files, off by default, kept for the account; off, Files lists no dot names and no .vs (BRD-225)</td></tr>
+<tr><td><code>branch</code> › <code>branch-pop</code> (Workbench)</td><td>DropdownMenu</td><td>the one branch picker: Local and Remote groups, the current one ticked; never opens Repository. The toolbar's <code>branch-pick</code> is gone (BRD-222)</td></tr>
+<tr><td><code>branch-dirty</code> (Workbench)</td><td>AlertDialog + Button ×3</td><td>with uncommitted changes: Bring them along, Put them aside (stash), Stay on the branch, each saying what it does (BRD-223)</td></tr>
+<tr><td><code>agent-pop</code> (Workbench)</td><td>DropdownMenu</td><td>the tick on the agent the closed picker names, or on "No agent" when chosen; no "suggested" (BRD-224)</td></tr>
+<tr><td><code>stop</code> (Workbench)</td><td>Button</td><td>absent while idle; beside Run while a build or run goes, and ends it (BRD-226)</td></tr>
+<tr><td><code>target-pop</code>, <code>menu-project-run</code>, <code>tree-set-run</code> (Workbench)</td><td>DropdownMenu, Menubar group, ContextMenu</td><td>the solution's runnable projects, the chosen one ticked in all three; right-click a project folder or <code>.csproj</code> for "Set as the project to run"; kept per account and solution (BRD-227, BRD-228)</td></tr>
+<tr><td><code>menu-file-close</code> (Workbench)</td><td>MenubarItem</td><td>Close solution, or Close folder with a folder open; never Close project (BRD-229)</td></tr>
+</tbody>
+</table>
+<p>States: empty — a folder with no project offers no project to run, and File reads Close folder · loading — a folder's children show once it is opened and read · error — an unreadable folder is marked in place; a failed reopen is the one line on Start; a switch Git refuses leaves the branch and the changes as they were, with Git's reason.</p>
 <h3 id="screen-end-to-end-run-auto">Screen: End-to-end run (<code>/auto</code>)<a class="anchor-link" href="#screen-end-to-end-run-auto">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/auto-run.html">mockups/auto-run.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-118 to BRD-125</p>
 <table>

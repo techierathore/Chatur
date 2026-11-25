@@ -38,8 +38,9 @@
             </SheetContent>
         </Sheet>
         <BrandMark />
-        @* min-w-0 + truncate: at 390px a long title ("Measurements") pushed Close past the window's edge, and the page scrolled sideways. *@
-        <span class="min-w-0 truncate text-sm font-semibold" data-testid="window-title">@CurrentTitle</span>
+        @* min-w-0 + two lines at most: at 390px a long title ("Measurements") pushed Close past the window's edge, and the page scrolled
+           sideways; cut to one line, "Measurements across projects" lost its end (mockup check, 23 Nov 2026), so it wraps once. *@
+        <span class="min-w-0 line-clamp-2 break-words text-sm font-semibold leading-tight" data-testid="window-title">@CurrentTitle</span>
         <Badge Variant="BadgeVariant.Secondary" Class="hidden rounded-full sm:inline-flex" data-testid="scope">@(State.SelectedProject?.Name ?? "Chatur")</Badge>
         <span class="flex-1"></span>
         <ThemeToggle />

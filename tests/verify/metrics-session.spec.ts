@@ -1,9 +1,9 @@
-// Acceptance check for REQ-FN-040: running an agent session in a project writes the five
-// docs/metrics files, and the sessions file carries Chatur's signature. With no provider configured
+// Acceptance check for REQ-FN-040 (BRD-74 as changed 23 Nov 2026): running an agent session in a project that has a
+// docs/metrics folder writes the turn's record there, signed by Chatur, and makes no empty file. With no provider configured
 // (TechieRag gap TR-RAG-003) the honest "no model provider" reply is the turn, and it still counts
 // as a session that ran.
 import { test, expect } from '@playwright/test';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { signIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
@@ -14,9 +14,12 @@ const FIXTURE_ROOT = resolve(__dirname, '../.artifacts/verify/fixtures/metrics/r
 const FIXTURE_PROJECT = 'metrics-a';
 const METRICS = resolve(FIXTURE_ROOT, FIXTURE_PROJECT, 'docs', 'metrics');
 
-test('REQ-FN-040 a session turn writes the five metrics files and a chatur-signed sessions line', async ({ page }) => {
+test('REQ-FN-040 a session turn in a measured project writes a chatur-signed sessions line and no empty file', async ({ page }) => {
   mkdirSync(resolve(FIXTURE_ROOT, FIXTURE_PROJECT), { recursive: true });
   writeFileSync(resolve(FIXTURE_ROOT, FIXTURE_PROJECT, 'notes.txt'), 'hello = 1\n');
+  // A measured project has docs/metrics; an earlier run's empty stream files are taken away, so any found were made now.
+  mkdirSync(METRICS, { recursive: true });
+  for (const vName of readdirSync(METRICS)) if (statSync(resolve(METRICS, vName)).size === 0) rmSync(resolve(METRICS, vName));
 
   await signIn(page, 'Owner'); // the owner's own account: test user 2 is a separate account since 18 Nov
   await page.goto('/start?all=1', { waitUntil: 'networkidle' });
@@ -43,9 +46,7 @@ test('REQ-FN-040 a session turn writes the five metrics files and a chatur-signe
   await expect(vInput).toBeEnabled({ timeout: 180_000 });
 
   await expect.poll(() => existsSync(resolve(METRICS, 'sessions.jsonl')), { timeout: 10_000 }).toBe(true);
-  for (const vName of ['runs', 'gates', 'sessions', 'commits', 'misses']) {
-    expect(existsSync(resolve(METRICS, `${vName}.jsonl`)), `${vName}.jsonl exists`).toBe(true);
-  }
+  for (const vName of readdirSync(METRICS)) expect(statSync(resolve(METRICS, vName)).size, `${vName} is not an empty file`).toBeGreaterThan(0);
   const vLines = readFileSync(resolve(METRICS, 'sessions.jsonl'), 'utf8').split('\n').filter((l) => l.trim());
   expect(vLines.length).toBeGreaterThanOrEqual(1);
   const vRecord = JSON.parse(vLines[vLines.length - 1]);

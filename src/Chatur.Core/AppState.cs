@@ -53,11 +53,56 @@ public sealed class AppState
         if (!string.Equals(CurrentUser?.UserId, aUser?.UserId, StringComparison.Ordinal))
         {
             SelectedProject = null;
+            OffFeatures = new HashSet<string>();
+            FeaturesReadFor = null;
+            DeviceCap = null;
         }
 
         CurrentUser = aUser;
         RaiseChanged();
     }
+
+    /// <summary>Codes of the features the signed-in account's licence has switched off (REQ-FN-075); empty until the licence is read.</summary>
+    public IReadOnlySet<string> OffFeatures { get; private set; } = new HashSet<string>();
+
+    /// <summary>The account whose feature switches <see cref="OffFeatures"/> holds, or <see langword="null"/> before any read.</summary>
+    public string? FeaturesReadFor { get; private set; }
+
+    /// <summary>Where the signed-in account stands against its device cap, as the last sign-in reported it; <see langword="null"/> when none was reported.</summary>
+    public DeviceCapReport? DeviceCap { get; private set; }
+
+    /// <summary>Whether a feature is on for this licence; a feature nobody switched off is on.</summary>
+    /// <param name="aCode">The feature's code.</param>
+    public bool IsFeatureOn(string aCode) => !OffFeatures.Contains(aCode);
+
+    /// <summary>Records which features the licence has off, and raises <see cref="Changed"/> when that differs from before.</summary>
+    /// <param name="aUserId">The account the licence belongs to; ignored when it is no longer the signed-in one.</param>
+    /// <param name="aOffCodes">Codes of the features that are off.</param>
+    public void SetOffFeatures(string aUserId, IEnumerable<string> aOffCodes)
+    {
+        if (!string.Equals(CurrentUser?.UserId, aUserId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var vOff = new HashSet<string>(aOffCodes, StringComparer.OrdinalIgnoreCase);
+        FeaturesReadFor = aUserId;
+        if (vOff.SetEquals(OffFeatures))
+        {
+            return;
+        }
+
+        OffFeatures = vOff;
+        RaiseChanged();
+    }
+
+    /// <summary>Notes that the feature switches of this account have been asked for, so they are asked once per sign-in.</summary>
+    /// <param name="aUserId">The account.</param>
+    public void MarkFeaturesRead(string aUserId) => FeaturesReadFor = aUserId;
+
+    /// <summary>Records the device-cap report a sign-in returned.</summary>
+    /// <param name="aReport">The report, or <see langword="null"/> when no device-capped licence applies.</param>
+    public void SetDeviceCap(DeviceCapReport? aReport) => DeviceCap = aReport;
 
     /// <summary>
     /// Records the chosen theme.

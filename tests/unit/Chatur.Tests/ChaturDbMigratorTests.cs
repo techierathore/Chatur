@@ -7,7 +7,7 @@ namespace Chatur.Tests;
 /// <summary>Tests for <see cref="ChaturDbMigrator"/> against a real, temporary SQLite file.</summary>
 public sealed class ChaturDbMigratorTests : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-{Guid.NewGuid():N}.db");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-{Guid.NewGuid():N}.db");
 
     /// <summary>
     /// When the migrations run against a fresh database, then every seeded role — Analyst, Architect,

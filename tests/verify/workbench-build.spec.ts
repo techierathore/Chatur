@@ -96,7 +96,10 @@ test('REQ-UI-014 a line the program writes appears in the output panel while the
 
 test('REQ-UI-015 stopping ends every program the run started and Run shows it as stopped', async () => {
   await openProject(page);
+  await expect(page.getByTestId('run')).toBeEnabled({ timeout: 30_000 });
+  await expect(page.getByTestId('toolbar').locator('[data-testid=stop]')).toHaveCount(0); // BRD-226: no Stop before the run
   await page.getByTestId('run').click();
+  await expect(page.getByTestId('toolbar').locator('[data-testid=stop]')).toBeVisible({ timeout: 30_000 });
   await expect(outputText(page)).toContainText('WBA tick 1', { timeout: 90_000 });
   await expect.poll(() => existsSync(PID_FILE), { timeout: 10_000 }).toBe(true);
   const vPid = Number(readFileSync(PID_FILE, 'utf8').trim());
@@ -108,6 +111,7 @@ test('REQ-UI-015 stopping ends every program the run started and Run shows it as
   await shot(page, 'ui-015-stopped');
   await expect(pill(page)).toContainText('stopped', { timeout: 5_000 });
   await expect(pill(page)).not.toContainText('running');
+  await expect(page.getByTestId('toolbar').locator('[data-testid=stop]')).toHaveCount(0, { timeout: 20_000 }); // and Stop is gone again
 });
 
 /** Text of the app's own log, for the launcher's "Would open ..." lines (the web harness only logs them). */

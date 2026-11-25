@@ -85,6 +85,7 @@ public sealed class AccountActions : IAccountActions
 
             await PersistSessionAsync(vResult, aRemember, aCt).ConfigureAwait(false);
             objAppState.SetCurrentUser(vUser);
+            objAppState.SetDeviceCap(vResult.DeviceCap);
             return new SignInResult(true, null, vUser);
         }
         catch (Exception vException)
@@ -136,6 +137,7 @@ public sealed class AccountActions : IAccountActions
 
             await PersistSessionAsync(vResult, aRemember: true, aCt).ConfigureAwait(false);
             objAppState.SetCurrentUser(vUser);
+            objAppState.SetDeviceCap(vResult.DeviceCap);
             return new SignInResult(true, null, vUser);
         }
         catch (Exception vException)

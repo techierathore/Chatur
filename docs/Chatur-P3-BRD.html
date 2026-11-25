@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Business Requirements — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-11-18 &middot; source <code>Chatur-P3-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>Chatur-P3-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -125,8 +125,11 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#brand-assets">Brand assets</a></li>
         <li class="h3"><a href="#estimate-before-actual-after">Estimate before, actual after</a></li>
         <li class="h3"><a href="#each-account-has-its-own-chatur">Each account has its own Chatur</a></li>
-        <li><a href="#development-status">4. Development status</a></li>
-        <li><a href="#where-the-rest-lives">5. Where the rest lives</a></li>
+        <li class="h3"><a href="#the-owner-s-run-on-his-own-solution">The owner&#x27;s run on his own solution</a></li>
+        <li class="h3"><a href="#rows-the-checklist-held-before-the-brd-named-them">Rows the checklist held before the BRD named them</a></li>
+        <li><a href="#non-functional-requirements">4. Non-functional requirements</a></li>
+        <li><a href="#development-status">5. Development status</a></li>
+        <li><a href="#where-the-rest-lives">6. Where the rest lives</a></li>
       </ol>
     </div>
 <table>
@@ -141,7 +144,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <h2 id="summary"><a id="1-summary"></a>1. Summary<a class="anchor-link" href="#summary">#</a></h2>
-<p>Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off. Since 2026-10-08 every work step goes to the agent owning its process, and its checks judge the result on disk (BRD-159 to BRD-179). Since 2026-10-09 a "writes documents" right covers <code>docs/</code> only (BRD-180 to BRD-183). From 2026-11-10, estimate before, actual after (BRD-192 to BRD-209). Per-account data: BRD-210 to BRD-216.</p>
+<p>Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off. Since 2026-10-08 every work step goes to the agent owning its process, and its checks judge the result on disk (BRD-159 to BRD-179). Since 2026-10-09 a "writes documents" right covers <code>docs/</code> only (BRD-180 to BRD-183). Estimates: BRD-192 to BRD-209. Per-account data: BRD-210 to BRD-216. Owner's Xpenser run: BRD-217 to BRD-229.</p>
 <h2 id="screens-and-flow"><a id="2-screens-and-flow"></a>2. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
 <p>One row per routed page this phase adds; dialogs are written exactly as in the phase-1 BRD.</p>
 <table>
@@ -713,9 +716,126 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
-<h2 id="development-status"><a id="4-development-status"></a>4. Development status<a class="anchor-link" href="#development-status">#</a></h2>
+<h3 id="the-owner-s-run-on-his-own-solution"><a id="the-owners-run-on-his-own-solution"></a>The owner's run on his own solution<a class="anchor-link" href="#the-owner-s-run-on-his-own-solution">#</a></h3>
+<p>Added 2026-11-18 from the owner's use of Chatur on his Xpenser solution (<code>docs/screenshots/16-Nov-26-Run</code>). Open a file stopped Chatur on a folder Windows would not list, and every start after it stopped on the same line; a solution offered no run target; and nine things on Start and the Workbench did not work the way Visual Studio and VS Code have taught him to expect. Icons come from the set the app already uses; no new icon pack.</p>
+<ul>
+<li><strong>BRD-217</strong> — A folder Chatur cannot read never stops it; folders are read as they open. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens on Workbench a folder holding one Windows will not list, then that folder shows as not readable and every other entry still shows.
+</li>
+</ul>
+</li>
+<li><strong>BRD-218</strong> — A last project that cannot open leaves Chatur on Start, saying why. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the last project cannot open as Chatur starts on Start, then one plain line says which project and why, and nothing stops.
+</li>
+</ul>
+</li>
+<li><strong>BRD-219</strong> — Each way in has an icon that says what it does. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person looks at the ways in on Start, then each tile shows a centred icon for its action: branch, solution, folder, file, plus.
+</li>
+</ul>
+</li>
+<li><strong>BRD-220</strong> — The project list closes back to where it was opened from. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens the project list from File ▸ Recent projects and presses its close button or Escape on Start, then the Workbench they came from shows again, unchanged.
+</li>
+</ul>
+</li>
+<li><strong>BRD-221</strong> — Open a solution browses for a solution file. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person presses Browse in Open a solution on Start, then a file picker opens that shows .sln and .slnx files, and the file chosen fills the path.
+</li>
+</ul>
+</li>
+<li><strong>BRD-222</strong> — One branch picker, at the foot of the files. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens the branch at the foot of Files on Workbench, then local and remote branches are listed and choosing one switches to it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-223</strong> — Uncommitted changes are asked about before a branch switch. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person picks another branch on Workbench with uncommitted changes, then Chatur first offers to bring them along, put them aside, or stay.
+</li>
+</ul>
+</li>
+<li><strong>BRD-224</strong> — The agent picker shows one chosen agent, ticked. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens the agent picker on Workbench, then the agent the closed picker names carries the tick in the list, and no entry says "suggested".
+</li>
+</ul>
+</li>
+<li><strong>BRD-225</strong> — Hidden files stay hidden until the person asks. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a project opens on Workbench, then dot-named files and .vs are hidden until View ▸ Show hidden files, which the account keeps.
+</li>
+</ul>
+</li>
+<li><strong>BRD-226</strong> — Stop shows only while something runs. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When nothing is building or running on Workbench, then the toolbar shows no Stop; while a build or run goes, Stop shows and ends it.
+</li>
+</ul>
+</li>
+<li><strong>BRD-227</strong> — A solution's runnable projects are its run targets. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a solution with .NET projects opens on Workbench, then the target picker lists its runnable projects, and choosing one and pressing Run runs that project.
+</li>
+</ul>
+</li>
+<li><strong>BRD-228</strong> — The project to run is set from three places and remembered. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person sets the project to run from the picker, Project menu or Files on Workbench, then that account is offered it next time.
+</li>
+</ul>
+</li>
+<li><strong>BRD-229</strong> — File says what it closes. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens File on Workbench, then it says Close solution with a solution open and Close folder with a folder open, never Close project.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="rows-the-checklist-held-before-the-brd-named-them">Rows the checklist held before the BRD named them<a class="anchor-link" href="#rows-the-checklist-held-before-the-brd-named-them">#</a></h3>
+<p>Added 2026-11-20: five checklist rows (REQ-UI-079 to REQ-UI-082, REQ-NFR-010) were built and verified from the owner's notes before this BRD carried them. Each now has its own item, worded as its row already was; BRD-234 is under Non-functional requirements.</p>
+<ul>
+<li><strong>BRD-230</strong> — Type @ to attach a project file in the chat. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner types @ in the chat box on Workbench, then the project's files are listed, narrowing as they type, and a pick puts its path in the message.
+</li>
+</ul>
+</li>
+<li><strong>BRD-231</strong> — Controls keep the mockup's inner spacing. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens any dialog or page, then every input, button and list row keeps the mockup's inner padding and no text touches its border.
+</li>
+</ul>
+</li>
+<li><strong>BRD-232</strong> — Labels carry no trailing dots. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner opens any menu, button or label in Chatur, then its text ends without three dots.
+</li>
+</ul>
+</li>
+<li><strong>BRD-233</strong> — Every button does something. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the owner presses any enabled button on any screen, then it does its job; no button exists only for looks.
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="non-functional-requirements"><a id="4-non-functional-requirements"></a>4. Non-functional requirements<a class="anchor-link" href="#non-functional-requirements">#</a></h2>
+<table>
+<thead><tr><th>Id</th><th>Area</th><th>Requirement</th><th>Measure</th></tr></thead>
+<tbody>
+<tr><td>BRD-234</td><td>Data</td><td>Tests never touch the owner's database</td><td>When the desktop or web tests run, then the app keeps its database under tests/.artifacts and refuses the owner's application-data database</td></tr>
+</tbody>
+</table>
+<h2 id="development-status"><a id="5-development-status"></a>5. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-11-18.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-11-23.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
@@ -724,12 +844,12 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Run report</td><td>7</td><td>7</td><td>0</td><td>Done</td></tr>
 <tr><td>Settings</td><td>8</td><td>8</td><td>0</td><td>Done</td></tr>
 <tr><td>Process run</td><td>22</td><td>22</td><td>0</td><td>Done</td></tr>
-<tr><td>Workbench</td><td>10</td><td>10</td><td>0</td><td>Done</td></tr>
-<tr><td>Start</td><td>7</td><td>7</td><td>0</td><td>Done</td></tr>
+<tr><td>Workbench</td><td>19</td><td>19</td><td>0</td><td>Done</td></tr>
+<tr><td>Start</td><td>11</td><td>11</td><td>0</td><td>Done</td></tr>
 <tr><td>Processes</td><td>9</td><td>9</td><td>0</td><td>Done</td></tr>
 </tbody>
 </table>
-<h2 id="where-the-rest-lives"><a id="5-where-the-rest-lives"></a>5. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
+<h2 id="where-the-rest-lives"><a id="6-where-the-rest-lives"></a>6. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
 <table>
 <thead><tr><th>What</th><th>Where</th></tr></thead>
 <tbody>

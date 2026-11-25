@@ -1,5 +1,6 @@
 using System.Data;
 using System.Diagnostics;
+using Chatur.Core.Actions;
 using Chatur.Core.Data;
 using Chatur.Core.SourceControl;
 using Microsoft.Data.Sqlite;
@@ -14,8 +15,8 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class SourceControlActionsTests : IDisposable
 {
-    private readonly string objRepositoryPath = Path.Combine(Path.GetTempPath(), $"chatur-tests-repo-{Guid.NewGuid():N}");
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-{Guid.NewGuid():N}.db");
+    private readonly string objRepositoryPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-repo-{Guid.NewGuid():N}");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-{Guid.NewGuid():N}.db");
     private readonly SourceControlActions objActions;
     private readonly int objProjectId;
 
@@ -159,7 +160,7 @@ public sealed class SourceControlActionsTests : IDisposable
     [Fact]
     public async Task HistoryOfARepositoryWithNoCheckInsIsEmpty()
     {
-        var vEmptyPath = Path.Combine(Path.GetTempPath(), $"chatur-tests-empty-{Guid.NewGuid():N}");
+        var vEmptyPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-empty-{Guid.NewGuid():N}");
         Directory.CreateDirectory(vEmptyPath);
         try
         {
@@ -238,6 +239,62 @@ public sealed class SourceControlActionsTests : IDisposable
         RunGit(objRepositoryPath, "branch", "run/REQ-FN-000");
 
         Assert.Empty(await objActions.ProcessBranchesAsync(objProjectId));
+    }
+
+    /// <summary>
+    /// When the repository has a remote, then the branch picker at the foot of Files lists the local
+    /// branches and the remote ones, and choosing a remote branch makes the local branch that tracks it
+    /// (BRD-222).
+    /// </summary>
+    [Fact(DisplayName = "REQ-UI-101 the branch picker lists local and remote branches and switches to a remote one")]
+    public async Task BranchListHasLocalAndRemoteAndSwitchesToRemote()
+    {
+        var vBare = objRepositoryPath + "-remote.git";
+        RunGit(Chatur.Tests.Support.TestScratch.Root, "clone", "--bare", objRepositoryPath, vBare);
+        RunGit(vBare, "branch", "feature/remote", "main");
+        RunGit(objRepositoryPath, "remote", "add", "origin", vBare);
+        RunGit(objRepositoryPath, "fetch", "origin");
+        try
+        {
+            var vList = await objActions.BranchListAsync(objProjectId);
+
+            Assert.Equal("main", vList.Current);
+            Assert.Contains("main", vList.Local);
+            Assert.Contains("origin/feature/remote", vList.Remote);
+            Assert.DoesNotContain(vList.Remote, aName => aName.EndsWith("HEAD", StringComparison.Ordinal));
+
+            await objActions.SwitchBranchAsync(objProjectId, "origin/feature/remote", BranchSwitchChanges.BringAlong);
+
+            Assert.Equal("feature/remote", CurrentBranch());
+        }
+        finally
+        {
+            foreach (var vFile in new DirectoryInfo(vBare).GetFiles("*", SearchOption.AllDirectories))
+            {
+                vFile.Attributes = FileAttributes.Normal;
+            }
+
+            Directory.Delete(vBare, true);
+        }
+    }
+
+    /// <summary>
+    /// When the working copy has uncommitted changes and the person chooses to put them aside, then the
+    /// branch switches and the changes are in the stash under a name saying where they came from (BRD-223).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-304 putting changes aside stashes them and switches the branch")]
+    public async Task PutAsideStashesTheChangesAndSwitches()
+    {
+        RunGit(objRepositoryPath, "branch", "feature/board");
+        File.WriteAllText(Path.Combine(objRepositoryPath, "readme.txt"), "changed but not checked in");
+
+        Assert.True(await objActions.HasUncommittedChangesAsync(objProjectId));
+
+        await objActions.SwitchBranchAsync(objProjectId, "feature/board", BranchSwitchChanges.PutAside);
+
+        Assert.Equal("feature/board", CurrentBranch());
+        Assert.Contains("Put aside by Chatur before switching from main to feature/board", RunGit(objRepositoryPath, "stash", "list"));
+        Assert.False(await objActions.HasUncommittedChangesAsync(objProjectId));
     }
 
     private string CurrentBranch() => RunGit(objRepositoryPath, "rev-parse", "--abbrev-ref", "HEAD").Trim();

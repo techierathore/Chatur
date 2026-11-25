@@ -216,6 +216,82 @@ public sealed partial class SourceControlActions : ISourceControlActions
     }
 
     /// <inheritdoc />
+    /// <remarks>One <c>git status --porcelain</c>, so the question before a branch switch comes at once (BRD-223).</remarks>
+    public async Task<bool> HasUncommittedChangesAsync(int aProjectId, CancellationToken aCt = default)
+    {
+        var vWorkingDirectory = await ResolveWorkingDirectoryAsync(aProjectId, aCt).ConfigureAwait(false);
+        var vResult = await RunGitAsync(vWorkingDirectory, aCt, "status", "--porcelain=v1").ConfigureAwait(false);
+        vResult.EnsureSuccess("read the changes of");
+        return vResult.StandardOutput.Trim().Length > 0;
+    }
+
+    /// <inheritdoc />
+    public async Task<BranchList> BranchListAsync(int aProjectId, CancellationToken aCt = default)
+    {
+        var vWorkingDirectory = await ResolveWorkingDirectoryAsync(aProjectId, aCt).ConfigureAwait(false);
+        var vCurrentResult = await RunGitAsync(vWorkingDirectory, aCt, "branch", "--show-current").ConfigureAwait(false);
+        vCurrentResult.EnsureSuccess("read the branch of");
+
+        var vLocalResult = await RunGitAsync(vWorkingDirectory, aCt, "branch", "--format=%(refname:short)").ConfigureAwait(false);
+        vLocalResult.EnsureSuccess("read the branches of");
+
+        // Remote branches as origin/name; a remote's HEAD pointer (origin/HEAD, or bare "origin") is not a branch.
+        var vRemoteResult = await RunGitAsync(vWorkingDirectory, aCt, "branch", "--remotes", "--format=%(refname:short)%09%(symref)").ConfigureAwait(false);
+        List<string> vRemote = vRemoteResult.ExitCode != 0
+            ? []
+            : vRemoteResult.StandardOutput
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(aLine => aLine.Split('\t'))
+                .Where(aParts => aParts.Length < 2 || aParts[1].Length == 0)
+                .Select(aParts => aParts[0])
+                .Where(aName => aName.Contains('/') && !aName.EndsWith("/HEAD", StringComparison.Ordinal))
+                .ToList();
+
+        return new BranchList(
+            vCurrentResult.StandardOutput.Trim(),
+            vLocalResult.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
+            vRemote);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// A remote branch is switched to with <c>git switch --track</c>, which makes the local branch that
+    /// follows it; when that local branch already exists it is simply switched to. Putting changes aside is
+    /// <c>git stash push --include-untracked</c> under a message naming the branch they came from, so the
+    /// person can find them again in the stash.
+    /// </remarks>
+    public async Task SwitchBranchAsync(int aProjectId, string aBranchName, BranchSwitchChanges aChanges, CancellationToken aCt = default)
+    {
+        var vWorkingDirectory = await ResolveWorkingDirectoryAsync(aProjectId, aCt).ConfigureAwait(false);
+        var vList = await BranchListAsync(aProjectId, aCt).ConfigureAwait(false);
+
+        if (aChanges == BranchSwitchChanges.PutAside)
+        {
+            var vStash = await RunGitAsync(vWorkingDirectory, aCt, "stash", "push", "--include-untracked", "-m", $"Put aside by Chatur before switching from {vList.Current} to {aBranchName}").ConfigureAwait(false);
+            vStash.EnsureSuccess("put the changes aside in");
+        }
+
+        GitResult vResult;
+        if (vList.Local.Contains(aBranchName))
+        {
+            vResult = await RunGitAsync(vWorkingDirectory, aCt, "switch", aBranchName).ConfigureAwait(false);
+        }
+        else if (vList.Remote.Contains(aBranchName))
+        {
+            var vLocalName = aBranchName[(aBranchName.IndexOf('/') + 1)..];
+            vResult = vList.Local.Contains(vLocalName)
+                ? await RunGitAsync(vWorkingDirectory, aCt, "switch", vLocalName).ConfigureAwait(false)
+                : await RunGitAsync(vWorkingDirectory, aCt, "switch", "--track", aBranchName).ConfigureAwait(false);
+        }
+        else
+        {
+            throw new InvalidOperationException($"There is no branch called {aBranchName} in this repository.");
+        }
+
+        vResult.EnsureSuccess($"switch to branch '{aBranchName}' of");
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<CommitEntry>> HistoryAsync(int aProjectId, int aCount, CancellationToken aCt = default)
     {
         var vWorkingDirectory = await ResolveWorkingDirectoryAsync(aProjectId, aCt).ConfigureAwait(false);

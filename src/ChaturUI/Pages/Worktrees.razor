@@ -1,20 +1,245 @@
 @page "/worktrees"
 @layout Layouts.SecondaryLayout
+@implements IDisposable
+@inject IProjectActions ProjectActions
+@inject IWorktreeActions Worktree
+@inject IProcessActions Processes
+@inject NavigationManager Nav
+@inject AppState AppStateService
+@inject ToastService ToastService
 
 @* UI Design phase 4 "Screen: Working copies" — mockups/worktrees.html. Cluster P4-D lists working
-   copies for branches and lets the owner add or remove them (REQ-FN-079, REQ-FN-080, REQ-UI-068). *@
+   copies for branches and lets the owner add one, start a run in one and remove one (REQ-FN-079,
+   REQ-FN-080, REQ-UI-068). *@
 <div class="flex flex-col gap-4" data-testid="page">
-    <div data-testid="page-heading">
-        <h1 class="text-lg font-semibold">Working copies</h1>
-        <p class="text-sm text-muted-foreground">A separate copy of the project for a branch or a run.</p>
+    <div class="flex flex-wrap items-start gap-3" data-testid="worktrees-heading">
+        <div data-testid="page-heading">
+            <h1 class="text-lg font-semibold">A run works in its own copy</h1>
+            <p class="text-sm text-muted-foreground" data-testid="worktrees-lead">@Lead</p>
+        </div>
+        <span class="flex-1"></span>
+        <Button Class="rounded-full" Disabled="@(objProject is null)" OnClick="OpenAddAsync" data-testid="add-worktree">
+            <LucideIcon Name="plus" Size="16" />
+            Add a working copy
+        </Button>
     </div>
 
     <Card data-testid="worktrees-panel">
         <CardHeader>
-            <CardTitle>Copies</CardTitle>
+            <CardTitle>
+                <span class="flex items-center gap-2">
+                    <LucideIcon Name="git-branch" Size="16" />
+                    Working copies
+                    <span class="flex-1"></span>
+                    <span class="text-xs text-muted-foreground" data-testid="worktrees-count">@objCopies.Count</span>
+                </span>
+            </CardTitle>
         </CardHeader>
         <CardContent>
-            <Empty Title="No working copies" Description="Add a copy to work on a branch without touching the owner's own folder." Size="EmptySize.Small" data-testid="worktrees-empty" />
+            @if (objProject is null)
+            {
+                <Empty Title="No project is open" Description="Open a project to see its working copies." Size="EmptySize.Small" data-testid="worktrees-empty" />
+            }
+            else if (objIsLoading)
+            {
+                <div class="flex justify-center p-6"><Spinner /></div>
+            }
+            else if (objCopies.Count == 0)
+            {
+                <Empty Title="No working copies" Description="This project is not in a git repository, so it has no copies." Size="EmptySize.Small" data-testid="worktrees-empty" />
+            }
+            else
+            {
+                <DataTable TData="WorkingCopy" Data="@objCopies" MinWidth="900px" ShowPagination="false" RowAttributes="@(aCopy => new Dictionary<string, object> { ["data-testid"] = $"wt-row-{Key(aCopy)}", ["class"] = "border-t border-solid border-border" })" data-testid="worktrees-table">
+                    <Columns>
+                        <DataTableColumn TData="WorkingCopy" TValue="string" Property="@(c => c.Path)" Header="Folder" CellClass="whitespace-nowrap" HeaderClass="whitespace-nowrap">
+                            <CellTemplate Context="row">
+                                <span class="font-mono" data-testid="@($"wt-path-{Key(row)}")">@row.Path</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="WorkingCopy" TValue="string" Property="@(c => c.Branch)" Header="Branch" CellClass="whitespace-nowrap" HeaderClass="whitespace-nowrap">
+                            <CellTemplate Context="row">
+                                <span class="inline-flex items-center gap-1" data-testid="@($"wt-branch-{Key(row)}")">
+                                    <LucideIcon Name="git-branch" Size="14" />
+                                    @(row.Branch.Length == 0 ? "(detached)" : row.Branch)
+                                </span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="WorkingCopy" TValue="string" Property="@(c => c.RunProcess)" Header="Used by" CellClass="whitespace-nowrap" HeaderClass="whitespace-nowrap">
+                            <CellTemplate Context="row">
+                                @if (row.IsMain)
+                                {
+                                    <span class="inline-flex items-center gap-2 whitespace-nowrap" data-testid="@($"wt-used-{Key(row)}")">
+                                        <Badge Variant="BadgeVariant.Outline" Class="h-5 w-5 justify-center rounded-full p-0">@OwnerInitials</Badge>
+                                        @OwnerName
+                                    </span>
+                                }
+                                else if (row.RunId is { } vRunId)
+                                {
+                                    <span class="inline-flex items-center gap-2 whitespace-nowrap">
+                                        <span class="@(row.State == "in use" ? "text-primary" : "text-muted-foreground")"><LucideIcon Name="sparkles" Size="14" /></span>
+                                        <Button Variant="ButtonVariant.Link" Class="@(row.State == "in use" ? "h-auto p-0" : "h-auto p-0 text-foreground")" OnClick="@(() => OpenRun(vRunId))" data-testid="@($"wt-run-{vRunId}")">
+                                            Run #@vRunId · @row.RunProcess
+                                        </Button>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted-foreground" data-testid="@($"wt-used-{Key(row)}")">nobody</span>
+                                }
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="WorkingCopy" TValue="string" Property="@(c => c.State)" Header="State">
+                            <CellTemplate Context="row">
+                                <Badge Variant="@StateVariant(row)" Class="border-0" data-testid="@($"wt-state-{Key(row)}")">@row.State</Badge>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="WorkingCopy" TValue="DateTime" Property="@(c => c.MadeUtc)" Header="Made" CellClass="whitespace-nowrap" HeaderClass="whitespace-nowrap">
+                            <CellTemplate Context="row">
+                                <span class="text-muted-foreground">@row.MadeUtc.ToLocalTime().ToString("d MMM yyyy HH:mm")</span>
+                            </CellTemplate>
+                        </DataTableColumn>
+                        <DataTableColumn TData="WorkingCopy" TValue="string" Property="@(c => c.Path)" Header="" Sortable="false">
+                            <CellTemplate Context="row">
+                                <div class="flex items-center gap-2">
+                                    @if (!row.IsMain)
+                                    {
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger AsChild>
+                                                <Button Variant="ButtonVariant.Outline" Class="rounded-full whitespace-nowrap" Disabled="@(objIsBusy || row.State == "in use")" data-testid="@($"wt-start-{Key(row)}")">
+                                                    <LucideIcon Name="sparkles" Size="14" />
+                                                    Run here
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent Class="max-h-80 overflow-y-auto" data-testid="@($"wt-start-pop-{Key(row)}")">
+                                                <DropdownMenuLabel>Start a process in this copy</DropdownMenuLabel>
+                                                @foreach (var vProcess in objProcesses)
+                                                {
+                                                    var vCode = vProcess.Code;
+                                                    <DropdownMenuItem OnClick="@(() => RunHereAsync(row, vCode))" data-testid="@($"wt-start-{Key(row)}-{vCode}")">
+                                                        <span class="font-mono">@vCode</span>
+                                                    </DropdownMenuItem>
+                                                }
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    }
+                                    <Button Variant="ButtonVariant.Outline" Class="rounded-full whitespace-nowrap" Disabled="objIsBusy" OnClick="@(() => AskRemove(row))" data-testid="@($"wt-remove-{Key(row)}")">
+                                        <LucideIcon Name="trash-2" Size="14" />
+                                        Remove
+                                    </Button>
+                                </div>
+                            </CellTemplate>
+                        </DataTableColumn>
+                    </Columns>
+                </DataTable>
+            }
         </CardContent>
     </Card>
+
+    <Card data-testid="isolation-note">
+        <CardHeader>
+            <CardTitle>Why a run gets its own copy</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-3 text-sm">
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="folder" Size="16" />
+                <span>Every file a run changes stays in its own copy, not in the folder open in this window — so your own editing is never disturbed, and a half-finished run never leaves you with a file you did not write.</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="git-branch" Size="16" />
+                <span>Each copy sits on its own branch. When the run is done you read its work on that branch, in the repository view, and take it across when you are happy with it.</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="triangle-alert" Size="16" />
+                <span>Two runs never share a copy. If both are going, each has one of its own, and neither can see the other half-written.</span>
+            </div>
+        </CardContent>
+    </Card>
+
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4" data-testid="worktree-facts">
+        <Card data-testid="fact-copies"><CardContent Class="flex flex-col gap-1 p-3"><span class="text-xs text-muted-foreground">Copies</span><b class="text-lg" data-testid="fact-copies-value">@objCopies.Count</b></CardContent></Card>
+        <Card data-testid="fact-disk"><CardContent Class="flex flex-col gap-1 p-3"><span class="text-xs text-muted-foreground">Disk they take</span><b class="text-lg" data-testid="fact-disk-value">@DiskText</b></CardContent></Card>
+        <Card data-testid="fact-oldest"><CardContent Class="flex flex-col gap-1 p-3"><span class="text-xs text-muted-foreground">Oldest</span><b class="text-lg" data-testid="fact-oldest-value">@OldestText</b></CardContent></Card>
+        <Card data-testid="fact-stale"><CardContent Class="flex flex-col gap-1 p-3"><span class="text-xs text-muted-foreground">Unused for a week</span><b class="text-lg text-alert-warning-foreground" data-testid="fact-stale-value">@StaleCount</b></CardContent></Card>
+    </div>
 </div>
+
+<Dialog Open="objAddOpen" OpenChanged="AddOpenChanged">
+    <DialogContent Class="max-w-lg" data-testid="add-worktree-dialog">
+        <DialogHeader>
+            <DialogTitle>Add a working copy</DialogTitle>
+            <DialogDescription>A second folder of this project on its own branch. Nothing is made until you press Add.</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-4" data-testid="add-worktree-form">
+            <Field>
+                <FieldLabel>Branch</FieldLabel>
+                <FieldContent>
+                    <Select TValue="string" Value="objBranch" ValueChanged="BranchChanged" Class="w-full" data-testid="new-wt-branch">
+                        <SelectTrigger data-testid="new-wt-branch-button">
+                            <SelectValue Placeholder="Choose a branch" />
+                        </SelectTrigger>
+                        <SelectContent data-testid="new-wt-branch-pop">
+                            @foreach (var vBranch in objChoices?.Branches ?? Array.Empty<string>())
+                            {
+                                <SelectItem Value="@vBranch" Text="@vBranch" TValue="string" data-testid="@($"branch-{vBranch}")">@vBranch</SelectItem>
+                            }
+                            <SelectItem Value="@NewBranchChoice" Text="Make a new branch" TValue="string" data-testid="branch-new">Make a new branch</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </FieldContent>
+            </Field>
+            @if (objBranch == NewBranchChoice)
+            {
+                <Field>
+                    <FieldLabel For="new-wt-new-branch">New branch name</FieldLabel>
+                    <FieldContent>
+                        <Input Id="new-wt-new-branch" Value="objNewBranchName" ValueChanged="NewBranchNameChanged" Placeholder="feat/req-ui-121" data-testid="new-wt-new-branch" />
+                        <FieldDescription>Made from the commit the project's folder is on now.</FieldDescription>
+                    </FieldContent>
+                </Field>
+            }
+            <Field>
+                <FieldLabel For="new-wt-path">Folder</FieldLabel>
+                <FieldContent>
+                    <Input Id="new-wt-path" Value="objFolder" ValueChanged="FolderChanged" Class="font-mono" data-testid="new-wt-path" />
+                    <FieldDescription>Must be empty, and outside the project's own folder.</FieldDescription>
+                </FieldContent>
+            </Field>
+            @if (objAddError is not null)
+            {
+                <Alert Variant="AlertVariant.Danger" data-testid="new-wt-error">
+                    <AlertDescription>@objAddError</AlertDescription>
+                </Alert>
+            }
+        </DialogBody>
+        <DialogFooter>
+            <Button Variant="ButtonVariant.Outline" OnClick="CloseAdd" data-testid="new-wt-cancel">Cancel</Button>
+            <Button Disabled="objIsBusy" OnClick="AddAsync" data-testid="new-wt-add">
+                <LucideIcon Name="plus" Size="14" />
+                Add
+            </Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>
+
+<AlertDialog @bind-Open="objRemoveOpen">
+    <AlertDialogContent Class="max-w-lg" data-testid="remove-worktree-dialog">
+        <AlertDialogHeader>
+            <AlertDialogTitle>Remove this working copy?</AlertDialogTitle>
+            <AlertDialogDescription>
+                Removes the copy and its folder <span class="break-all font-mono">@objRemoving?.Path</span>. What a run changed there and did not check in is lost.
+            </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+            <AlertDialogCancel>
+                <Button Variant="ButtonVariant.Outline" data-testid="remove-worktree-cancel">Cancel</Button>
+            </AlertDialogCancel>
+            <AlertDialogAction OnClick="RemoveAsync">
+                <Button data-testid="remove-worktree-confirm">
+                    <LucideIcon Name="trash-2" Size="14" />
+                    Remove
+                </Button>
+            </AlertDialogAction>
+        </AlertDialogFooter>
+    </AlertDialogContent>
+</AlertDialog>

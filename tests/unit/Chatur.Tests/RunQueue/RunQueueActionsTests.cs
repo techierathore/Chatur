@@ -16,7 +16,7 @@ public sealed class RunQueueActionsTests : MigratedDatabaseFixture
 {
     private const string Brief = "Build the coverage panel and verify every requirement of it.";
 
-    private readonly string objFolder = Path.Combine(Path.GetTempPath(), $"chatur-queue-{Guid.NewGuid():N}");
+    private readonly string objFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-queue-{Guid.NewGuid():N}");
     private readonly FakeAutoRuns objRuns = new();
 
     /// <summary>

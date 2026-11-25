@@ -10,6 +10,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { signIn } from './support/auth';
+import { removeProjectsUnder } from './support/cleanup';
 import { testUser } from './support/settings';
 import { INSTALL_DB, run, snapshot, restore, Snapshot } from './support/db';
 import { projectName, openSwitcher, editorText } from './support/workbench-a';
@@ -81,7 +82,7 @@ async function submitOpenDialog(aPage: Page, aPath: string): Promise<void> {
 }
 
 test.afterAll(() => {
-  rmSync(ROOT, { recursive: true, force: true });
+  removeProjectsUnder(ROOT); // the projects this file made, in every test account it signed in to, and the folder
 });
 
 test('REQ-UI-093 REQ-UI-091 what the install kept before accounts is shown to no account that signs in', async ({ browser }) => {
@@ -130,14 +131,15 @@ test('REQ-UI-093 REQ-UI-091 what the install kept before accounts is shown to no
   }
 });
 
-test('REQ-UI-008 REQ-UI-091 an account that has opened nothing gets the empty start with three plainly labelled ways on', async ({ browser }) => {
+test('REQ-UI-008 REQ-UI-091 an account that has opened nothing gets the empty start with four plainly labelled ways on, New project first', async ({ browser }) => {
   const vPage = await signedIn(browser);
   const vSaved = openedNothing();
   try {
     await freshStart(vPage);
     const vStart = vPage.getByTestId('empty-start');
     await expect(vPage.getByTestId('empty-start-title')).toHaveText('Nothing is open yet');
-    await expect(vStart.getByRole('button')).toHaveCount(4); // the three ways on, and the quiet Project folders
+    await expect(vStart.getByRole('button')).toHaveCount(5); // the four ways on, and the quiet Project folders
+    await expect(vPage.getByTestId('way-new-project')).toContainText('New project');
     await expect(vPage.getByTestId('way-open-folder')).toContainText('Open a folder');
     await expect(vPage.getByTestId('way-open-solution')).toContainText('Open a solution');
     await expect(vPage.getByTestId('way-open-file')).toContainText('Open a file');

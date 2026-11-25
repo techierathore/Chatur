@@ -1,4 +1,4 @@
-@* The main window's toolbar: run, stop, build, the run target, the branch, find (UI Design "Screen:
+@* The main window's toolbar: run, stop, build, the run target, find (UI Design "Screen:
    Workbench", region `toolbar`). Build/Run/Stop/target wire to IBuildRunActions (REQ-UI-011 through
    REQ-UI-013, REQ-UI-015); the branch and find controls are not cluster H's rows. *@
 <div class="flex h-9 flex-none items-center gap-2 border-b bg-card px-2" data-testid="toolbar">
@@ -8,10 +8,14 @@
         <LucideIcon Name="play" Size="14" />
         Run
     </Button>
-    <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null || !IsBusy)" OnClick="StopAsync" data-testid="stop">
-        <LucideIcon Name="square" Size="14" />
-        Stop
-    </Button>
+    @* BRD-226: Stop shows only while a build or run goes. *@
+    @if (ProjectId is not null && IsBusy)
+    {
+        <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7" OnClick="StopAsync" data-testid="stop">
+            <LucideIcon Name="square" Size="14" />
+            Stop
+        </Button>
+    }
     @* [fix 2026-09-23] Grouped so the narrow-width rule below (UIDesign "Rules": below 980 the
        toolbar drops what only reports) can hide the reporting controls as one unit, matching
        mockups/chatur.css's own `.toolbar [data-testid="build"],[data-testid="target"],[data-testid="repo"],.sep{display:none}`. *@
@@ -22,7 +26,8 @@
         </Button>
         <Separator Orientation="SeparatorOrientation.Vertical" Class="h-5" />
 
-        @* Only a target this machine can build is selectable (REQ-UI-011); the rest show, disabled. *@
+        @* Only a target this machine can build is selectable (REQ-UI-011); the rest show, disabled. A solution
+           lists its runnable projects, and the one chosen is remembered for it (BRD-227, BRD-228). *@
         <div class="inline-flex" data-testid="target">
         <DropdownMenu>
             <DropdownMenuTrigger AsChild>
@@ -34,11 +39,10 @@
             <DropdownMenuContent data-testid="target-pop">
                 @foreach (var vTarget in objTargets)
                 {
-                    <DropdownMenuItem OnClick="() => SelectTarget(vTarget)" Disabled="@(!vTarget.IsAvailableOnThisMachine)" data-testid="@($"target-{vTarget.RunTargetId}")">
-                        @if (vTarget == objSelectedTarget)
-                        {
-                            <LucideIcon Name="check" Size="14" />
-                        }
+                    @* The chosen target says so to assistive tools as well as with its tick (menuitemradio, aria-checked): choosing
+                       it again changes nothing, and the screen check of 23 Nov 2026 read that as a dead item. *@
+                    <DropdownMenuItem OnClick="() => SelectTarget(vTarget)" Disabled="@(!vTarget.IsAvailableOnThisMachine)" role="menuitemradio" aria-checked="@(vTarget == objSelectedTarget ? "true" : "false")" data-testid="@($"target-{vTarget.RunTargetId}")">
+                        <span class="inline-flex w-4 flex-none">@if (vTarget == objSelectedTarget) { <LucideIcon Name="check" Size="14" /> }</span>
                         <span>@vTarget.Name</span>
                         @if (!vTarget.IsAvailableOnThisMachine)
                         {
@@ -50,46 +54,7 @@
         </DropdownMenu>
         </div>
     </div>
-    @* The branch picker (BRD-16 "the toolbar names the project and its branch"; mockups/main.html `branch-pick`):
-       names the branch checked out, what is to push, and switches to another. Outside the reporting
-       group above because it acts on the project, so a narrow window keeps it. *@
-    <div data-testid="branch-pick">
-        <DropdownMenu>
-            <DropdownMenuTrigger AsChild>
-                <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null)" data-testid="repo">
-                    <LucideIcon Name="git-branch" Size="14" />
-                    @(string.IsNullOrEmpty(objBranchStatus?.Branch) ? "—" : objBranchStatus.Branch)
-                    @if (objBranchStatus is { Ahead: > 0 } vStatus)
-                    {
-                        <Badge Variant="BadgeVariant.Outline" Class="hidden sm:inline-flex" data-testid="toolbar-ahead">@vStatus.Ahead to push</Badge>
-                    }
-                    <LucideIcon Name="chevron-down" Size="14" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent Class="max-h-80 overflow-y-auto" data-testid="branch-pop">
-                @if (objBranches.Count == 0)
-                {
-                    <DropdownMenuItem Disabled="true">No branches found</DropdownMenuItem>
-                }
-                else
-                {
-                    @foreach (var vBranch in objBranches)
-                    {
-                        <DropdownMenuItem OnClick="() => SwitchBranchAsync(vBranch)" data-testid="@($"toolbar-branch-{vBranch}")">
-                            @if (vBranch == objBranchStatus?.Branch)
-                            {
-                                <LucideIcon Name="check" Size="14" />
-                            }
-                            <span class="ml-2 font-mono">@vBranch</span>
-                        </DropdownMenuItem>
-                    }
-                }
-                <DropdownMenuSeparator />
-                <DropdownMenuItem OnClick="@(() => SecondaryWindow.Open("/repository"))" data-testid="toolbar-open-repository">Open the repository</DropdownMenuItem>
-                <DropdownMenuLabel>Your uncommitted changes stay where they are when you switch.</DropdownMenuLabel>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    </div>
+    @* BRD-222: the branch is named once, at the foot of Files; the toolbar has no branch picker. *@
     <span class="flex-1"></span>
     @* Opens the same Find in files as Edit ▸ Find in files (REQ-UI-073). *@
     <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7 rounded-full" Disabled="@(ProjectId is null)" OnClick="@(() => objFindOpen = true)" AriaLabel="Find" data-testid="find">

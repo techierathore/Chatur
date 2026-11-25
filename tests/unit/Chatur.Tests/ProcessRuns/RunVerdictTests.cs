@@ -40,8 +40,8 @@ public sealed class RunVerdictTests : MigratedDatabaseFixture
         "  - *Acceptance:* When a, then b.\r\n" +
         "- **REQ-FN-005** — Fifth. *BRD:* BRD-5 — **Implemented**\r\n";
 
-    private readonly string objProjectPath = Path.Combine(Path.GetTempPath(), $"chatur-verdict-{Guid.NewGuid():N}");
-    private readonly string objAppData = Path.Combine(Path.GetTempPath(), $"chatur-verdict-data-{Guid.NewGuid():N}");
+    private readonly string objProjectPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-verdict-{Guid.NewGuid():N}");
+    private readonly string objAppData = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-verdict-data-{Guid.NewGuid():N}");
 
     /// <summary>
     /// When an approved verify run builds and tests a real project, then a requirement whose tests all

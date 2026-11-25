@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Developer Guide</h1>
-    <div class="subtitle">Rendered 2026-11-15 &middot; source <code>Chatur-DevGuide.md</code></div>
+    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>Chatur-DevGuide.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -132,6 +132,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#licence-licence">Licence (/licence)</a></li>
         <li class="h3"><a href="#feedback-feedback">Feedback (/feedback)</a></li>
         <li class="h3"><a href="#integrations-integrations">Integrations (/integrations)</a></li>
+        <li class="h3"><a href="#measurements-measurements">Measurements (/measurements)</a></li>
+        <li class="h3"><a href="#measurements-across-projects-measurements-all">Measurements across projects (/measurements/all)</a></li>
         <li><a href="#cross-cutting-flows">Cross-cutting flows</a></li>
         <li class="h3"><a href="#windows">Windows</a></li>
         <li class="h3"><a href="#sign-in">Sign-in</a></li>
@@ -150,8 +152,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Kind</td><td>app</td></tr>
 <tr><td>Size</td><td>Large</td></tr>
 <tr><td>Phase</td><td>1 of 4</td></tr>
-<tr><td>Verified on</td><td>2026-11-15</td></tr>
-<tr><td>Date</td><td>2026-11-15</td></tr>
+<tr><td>Verified on</td><td>2026-11-21</td></tr>
+<tr><td>Date</td><td>2026-11-21</td></tr>
 </tbody>
 </table>
 <h2 id="architecture-cheat-sheet">Architecture cheat-sheet<a class="anchor-link" href="#architecture-cheat-sheet">#</a></h2>
@@ -217,7 +219,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>View</td><td>Appearance</td><td>Secondary window, <code>/settings/appearance</code></td></tr>
 <tr><td>View</td><td>Zoom ▸ Zoom in, Zoom out, Actual size</td><td><code>IAppShell.ZoomBy</code>, <code>ResetZoom</code></td></tr>
 <tr><td>Project</td><td>Build, Run, Stop, Run target</td><td>Same commands as the toolbar; output goes to the output strip</td></tr>
-<tr><td>Project</td><td>Prerequisites, Repository</td><td>Secondary window</td></tr>
+<tr><td>Project</td><td>Prerequisites, Repository, Measurements</td><td>Secondary window</td></tr>
 <tr><td>Project</td><td>Processes, Board, Agent workspace, End-to-end run, Run queue, Run record</td><td>Tabs in the main window; built in later phases</td></tr>
 <tr><td>Tools</td><td>Settings (Ctrl+,)</td><td>Secondary window, <code>/settings/providers</code></td></tr>
 <tr><td>Tools</td><td>Model providers, Routing, Agents, Corrections, Measurements, Appearance</td><td>Secondary window, the matching <code>/settings/...</code> page</td></tr>
@@ -227,7 +229,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <p>Two more menus sit in the same bar. The project switcher (<code>MenuBar.razor:9</code>) lists other projects and ends with "All projects", which goes to <code>/start?all=1</code>, not to <code>/all-projects</code>. The account menu (<code>Shell/AccountMenu.razor:20</code> to <code>:24</code>) opens Account (<code>/settings/account</code>), Licence (<code>/licence</code>), Settings (<code>/settings/providers</code>) and Sign out.</p>
-<p>The secondary window's own list comes from <code>src/ChaturUI/Layouts/SecondaryNavigation.cs:11</code>: Prerequisites, Repository, Model providers, Routing, Agents, Corrections, Measurements, Appearance, Account, Licence, Feedback, Working copies, All projects, Integrations. Working copies, All projects and Integrations can only be reached from this list.</p>
+<p>The secondary window's own list comes from <code>src/ChaturUI/Layouts/SecondaryNavigation.cs:11</code>: Prerequisites, Repository, Model providers, Routing, Agents, Corrections, Project measurements, Measurements, Appearance, Account, Licence, Feedback, Working copies, All projects, Measurements across projects, Integrations. Working copies, All projects, Measurements across projects and Integrations can only be reached from this list.</p>
 <h2 id="screen-by-screen-code-map">Screen-by-screen code map<a class="anchor-link" href="#screen-by-screen-code-map">#</a></h2>
 <h3 id="sign-in-sign-in">Sign in (<code>/sign-in</code>)<a class="anchor-link" href="#sign-in-sign-in">#</a></h3>
 <p><img src="screenshots/Chatur/sign-in.png" alt="Sign in" style="max-width:100%"></p>
@@ -267,7 +269,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <p><strong>Call chain:</strong> <code>Start.razor.cs:OpenProjectAsync</code> → <code>ProjectActions.SelectProjectAsync</code> → tables <code>Project</code> (<code>LastOpenedUtc</code>) and <code>Setting</code> (key <code>SelectedProjectId</code>)</p>
 <p><code>StartLayout</code> wraps the page in <code>AuthGate</code>, so a person who is not signed in is sent to <code>/sign-in</code>. On load the page asks which project was selected last. If there is one, it goes straight to <code>/</code> unless the address carries <code>?all=1</code>. Otherwise <code>ReloadAsync</code> lists the named folders and scans them.</p>
 <p><code>ScanAsync</code> looks one level into each named folder. A sub-folder with a <code>.sln</code> file becomes a project of kind <code>Solution</code> whose <code>Path</code> is the <code>.sln</code> file itself; any other sub-folder becomes kind <code>Folder</code>. New ones are inserted into <code>Project</code>; rows with <code>RemovedUtc</code> set are left out of the list.</p>
-<p>"Project folders" opens <code>ProjectFoldersDialog</code>, which calls <code>AddFolderAsync</code> and <code>RemoveFolderAsync</code>. The four ways in (clone, open a solution, open a folder, new project) open <code>Shell/OpenProjectDialog</code>, which calls <code>ProjectOpenActions</code> and then goes to <code>/</code>. The remove button on a row calls <code>ForgetProjectAsync</code>, which sets <code>RemovedUtc</code> and deletes nothing on disk.</p>
+<p>"Project folders" opens <code>ProjectFoldersDialog</code>, which calls <code>AddFolderAsync</code> and <code>RemoveFolderAsync</code>. Clone, Open a solution, Open a folder and Open a file open <code>Shell/OpenProjectDialog</code>, which calls <code>ProjectOpenActions</code> and then goes to <code>/</code>. New project (<code>way-new-project</code> on the empty start, <code>new-project</code> under Get started) opens the same <code>OpenProjectDialog</code> in <code>NewProject</code> mode, which draws <code>NewProjectDialog</code> (Main window, below). The remove button on a row calls <code>ForgetProjectAsync</code>, which sets <code>RemovedUtc</code> and deletes nothing on disk.</p>
 <table>
 <thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
 <tbody>
@@ -281,11 +283,16 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <p><strong>Calculations on this screen:</strong> <code>FormatWhen</code> (<code>Start.razor.cs:138</code>) turns the last-opened time into "just now", minutes, hours or days ago, or a date after 30 days. <code>VisibleProjects</code> (<code>:37</code>) filters the list by the search text against name and path. <code>ProjectActions.FindCandidates</code> (<code>ProjectActions.cs:222</code>) decides the kind of each sub-folder.</p>
 <h3 id="main-window"><a id="main-window-"></a>Main window (<code>/</code>)<a class="anchor-link" href="#main-window">#</a></h3>
 <p><img src="screenshots/Chatur/main.png" alt="Main window" style="max-width:100%"></p>
+<p><img src="screenshots/Chatur/project-switcher.png" alt="Project switcher" style="max-width:100%"> <img src="screenshots/Chatur/new-project-in-solution.png" alt="New project in a solution" style="max-width:100%"></p>
 <p><strong>Call chain:</strong> <code>ConversationPanel.razor.cs:SendMessageAsync</code> → <code>AgentActions.SendAsync</code> → tables <code>SessionEvent</code>, <code>Session</code> and <code>Change</code></p>
 <p>This is the Workbench. <code>Pages/Workbench.razor</code> holds only <code>FilesPanel</code>, <code>EditorArea</code> and <code>ConversationPanel</code>. <code>Layouts/MainLayout.razor</code> adds <code>MenuBar</code> (line 85), <code>AppToolbar</code> (86), the sign-in check (87) and <code>OutputStrip</code> (95). The parts do not call each other. They share <code>WorkbenchState</code> (<code>Shell/WorkbenchState.cs</code>), which holds open tabs, the active tab, which parts are visible, the run targets and the busy flag, and raises <code>Changed</code>.</p>
 <p>What each part does:</p>
 <ul>
-<li><code>MenuBar</code>: menus, project switcher, account menu, Ctrl+, shortcut.
+<li><code>MenuBar</code>: menus, the project switcher (a <code>Popover</code>: "Project:" and the name, every project with its path, a filter from eight on, rows drawn as they scroll in), account menu, Ctrl+, shortcut.
+</li>
+<li><code>NewProjectDialog</code>: New project in every state. In a solution <code>CreateProjectAsync</code> adds; otherwise <code>ProjectTemplateActions.CreateSolutionAsync</code> (<code>:124</code>) makes the solution and first project. <code>AppToolbar.StartLookingForTargets</code> (<code>:81</code>) re-reads empty targets.
+</li>
+<li>Commands: <code>AgentActions.SendAsync</code> (<code>:259</code>) hands a <code>*command</code> to <code>AgentCommandRunner.TryRunAsync</code> (<code>:78</code>) first. Replies: <code>MarkdownHtml.Reply</code> in <code>Prose</code>.
 </li>
 <li><code>AppToolbar</code>: branch name and switch, run target, Build, Run, Stop.
 </li>
@@ -302,12 +309,14 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <table>
 <thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
 <tbody>
-<tr><td><code>src/ChaturUI/Shell/MenuBar.razor.cs:294</code></td><td><code>SwitchToAsync</code></td><td><code>aProjectId</code></td><td>the id picked in the switcher</td></tr>
+<tr><td><code>src/ChaturUI/Shell/MenuBar.razor.cs:411</code></td><td><code>SwitchToAsync</code></td><td><code>aProjectId</code>, <code>objSwitcherOpen</code></td><td>the id picked in the switcher; <code>false</code> after the pick</td></tr>
+<tr><td><code>src/ChaturUI/Shell/MenuBar.razor.cs:301</code></td><td><code>SwitcherProjects</code></td><td><code>objSwitcherFilter</code>, <code>.Count</code></td><td>the filter's text; every project whose name or path holds it</td></tr>
 <tr><td><code>src/ChaturUI/Shell/AppToolbar.razor.cs:164</code></td><td><code>BuildAsync</code></td><td><code>objSelectedTarget.RunTargetId</code>, <code>Workbench.IsBuildRunBusy</code></td><td>the chosen target; <code>true</code></td></tr>
 <tr><td><code>src/ChaturUI/Shell/FilesPanel.razor.cs:121</code></td><td><code>OnSelectedPathChangedAsync</code></td><td><code>aPath</code>, <code>vContent</code></td><td>a path with forward slashes, relative to the project; the file's text</td></tr>
 <tr><td><code>src/ChaturUI/Shell/EditorArea.razor.cs:87</code></td><td><code>SaveActiveAsync</code></td><td><code>vFile.RelativePath</code>, <code>vFile.IsDirty</code></td><td>the open file; <code>true</code> before, <code>false</code> after <code>MarkSaved</code></td></tr>
-<tr><td><code>src/ChaturUI/Shell/ConversationPanel.razor.cs:759</code></td><td><code>SendMessageAsync</code></td><td><code>vChunk.TextDelta</code>, <code>vChunk.IsFinal</code></td><td>pieces of text; the last chunk has <code>IsFinal</code> true, a model name and a token count</td></tr>
-<tr><td><code>src/ChaturUI/Shell/OutputStrip.razor.cs:115</code></td><td><code>ConsumeOutputAsync</code></td><td><code>vLine.Text</code>, <code>objStatusText</code></td><td>each output line; "running", "build passed", "build failed" or "stopped"</td></tr>
+<tr><td><code>src/ChaturUI/Shell/ConversationPanel.razor.cs:785</code></td><td><code>SendMessageAsync</code></td><td><code>vChunk.TextDelta</code>, <code>vChunk.IsFinal</code></td><td>text pieces; the last has a model name ("Chatur (no model)" for a command)</td></tr>
+<tr><td><code>src/ChaturUI/Shell/NewProjectDialog.razor.cs:191</code></td><td><code>CreateAsync</code></td><td><code>InSolution</code></td><td><code>false</code> with no solution open</td></tr>
+<tr><td><code>src/ChaturUI/Shell/OutputStrip.razor.cs:147</code></td><td><code>UpdateStatus</code></td><td><code>objStatusText</code></td><td>"building", "running", "testing", "build passed", "build failed", "ended, exit code 0", "failed, exit code N" or "stopped"</td></tr>
 </tbody>
 </table>
 <p><strong>Calculations on this screen:</strong> <code>OutputStrip.ParseError</code> (<code>OutputStrip.razor.cs:184</code>) turns a compiler error line into file, line number and message. <code>ConversationPanel.LoadTotalTokensAsync</code> (<code>:494</code>) sums the tokens of every recorded event in the session. <code>MenuBar.LoadRecentAsync</code> (<code>MenuBar.razor.cs:196</code>) picks the five most recently opened projects.</p>
@@ -554,6 +563,33 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <p><strong>Calculations on this screen:</strong> none</p>
+<h3 id="measurements-measurements">Measurements (<code>/measurements</code>)<a class="anchor-link" href="#measurements-measurements">#</a></h3>
+<p><img src="screenshots/measurements.png" alt="Measurements" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>Measurements.razor</code> → <code>Measurements.razor.cs:LoadAsync</code> → <code>IMetricsReportActions.ReportAsync</code> (<code>MetricsReportActions.cs:43</code>) → <code>MetricsCalculator.Compute</code> (<code>MetricsCalculator.cs:44</code>) → the open project's <code>docs/metrics/runs.jsonl</code>, <code>gates.jsonl</code> and <code>misses.jsonl</code>; no table is read and nothing is sent anywhere</p>
+<p>Opened from Project ▸ Measurements (<code>MenuBar.razor:192</code>) or the side list's "Project measurements" (<code>SecondaryNavigation.cs:36</code>).</p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/Measurements.razor.cs:130</code></td><td><code>LoadAsync</code></td><td><code>objReport.Totals</code></td><td>the period's runs and four token kinds, <code>null</code> sums shown as "not measured"</td></tr>
+<tr><td><code>src/Chatur.Core/Measurements/MetricsReportActions.cs:166</code></td><td><code>ComputeAsync</code></td><td><code>aPeriod</code></td><td>the picked period; records outside it are left out by <code>ts</code></td></tr>
+<tr><td><code>src/Chatur.Core/Measurements/MetricsCalculator.cs:44</code></td><td><code>Compute</code></td><td>the returned <code>Misses.RowsFirstPass</code></td><td>rows whose first gate (attempt 1) was Verified</td></tr>
+<tr><td><code>src/ChaturUI/Pages/Measurements.razor.cs:203</code></td><td><code>SaveZipAsync</code></td><td><code>objZip.Entries</code></td><td><code>docs/metrics/&lt;file&gt;.jsonl</code> for each non-empty stream file</td></tr>
+<tr><td><code>src/Chatur.Core/Measurements/MetricsReportActions.cs:128</code></td><td><code>ExportAsync</code></td><td>the <code>ZipArchive</code> entries</td><td>no manifest, entries named as TfLens imports them</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> every figure is summed by <code>MetricsCalculator.Compute</code>: four token kinds kept apart, cost only from <code>cost_usd</code> ("no price" when a run has none), wall clock from <code>duration_s</code> or the run's start and end, the first-pass rate as rows Verified at attempt 1 over rows graded. <code>tests/unit/Chatur.Tests/Measurements/MetricsReportTests.cs</code> re-adds a fixture by hand and compares.</p>
+<h3 id="measurements-across-projects-measurements-all"><a id="measurements-across-projects-measurementsall"></a>Measurements across projects (<code>/measurements/all</code>)<a class="anchor-link" href="#measurements-across-projects-measurements-all">#</a></h3>
+<p><img src="screenshots/measurements-all.png" alt="Measurements across projects" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>MeasurementsAcrossProjects.razor</code> → <code>MeasurementsAcrossProjects.razor.cs:48</code> → <code>IMetricsReportActions.AcrossProjectsAsync</code> (<code>MetricsReportActions.cs:74</code>) → table <code>Project</code> for the account's projects → each project's <code>docs/metrics</code> files through <code>MetricsCalculator.Compute</code></p>
+<table>
+<thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
+<tbody>
+<tr><td><code>src/ChaturUI/Pages/MeasurementsAcrossProjects.razor.cs:52</code></td><td><code>OnInitializedAsync</code></td><td><code>objAcross.Projects</code></td><td>one line per project, Last 7 days to begin with</td></tr>
+<tr><td><code>src/Chatur.Core/Measurements/MetricsReportActions.cs:74</code></td><td><code>AcrossProjectsAsync</code></td><td><code>FolderFound</code> of a line</td><td><code>false</code> when the project's folder or <code>docs/metrics</code> is gone; its figures read "not measured"</td></tr>
+<tr><td><code>src/ChaturUI/Pages/MeasurementsAcrossProjects.razor.cs:65</code></td><td><code>OpenProjectAsync</code></td><td><code>AppState.SelectedProject</code></td><td>the project whose name was clicked; the page then shows its Measurements</td></tr>
+</tbody>
+</table>
+<p><strong>Calculations on this screen:</strong> the same sums as Measurements, per project, then added across projects for the tiles.</p>
 <h2 id="cross-cutting-flows">Cross-cutting flows<a class="anchor-link" href="#cross-cutting-flows">#</a></h2>
 <h3 id="windows">Windows<a class="anchor-link" href="#windows">#</a></h3>
 <p><strong>Call chain:</strong> <code>App.xaml.cs:CreateWindow</code> → <code>WindowService.CreateStartWindow</code> → <code>StartWindowPage</code> (a <code>BlazorWebView</code> whose root is <code>ChaturUI.ChaturRoutes</code>)</p>
@@ -567,6 +603,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </li>
 </ul>
 <p><code>AppState</code> is a singleton, so all windows share it. Services registered as scoped, such as <code>WorkbenchState</code> and every action class, are separate per web view.</p>
+<p>A closing window takes its page down first (21 Nov 2026, REQ-NFR-011): <code>CloseSecondaryWindow</code> (<code>WindowService.cs:91</code>) and the window's own close button (<code>AppWindow.Closing</code>, <code>:63</code>) call <code>CloseSecondaryAsync</code> (<code>:103</code>), which asks the page to draw nothing (<code>SecondaryWindowPage.PrepareToCloseAsync</code>, <code>SecondaryWindowPage.xaml.cs:57</code>; <code>WindowLifetime.Close</code>, <code>WindowLifetime.cs:19</code>; <code>ChaturRoutes</code> renders nothing), then closes the window; <code>Destroying</code> releases the web view (<code>ReleaseWebView</code>, <code>:44</code>, which marks the page gone for <code>JsCleanUp.MarkGone</code>, <code>JsCleanUp.cs:28</code>, and calls <code>DisconnectHandler</code>). Before, a closed window's components stayed subscribed to <code>AppState</code> and drew into a web view that had gone at every project switch. <code>MauiProgram.IsClosedWebViewMessage</code> (<code>MauiProgram.cs:161</code>) notes the web view bridge's own last failed message as one information line.</p>
+<p>The installed app is built by <code>scripts/install-windows.ps1</code>: Release, win-x64, self-contained, unpackaged, into <code>src/Chatur/bin/Release/install</code>, copied to <code>%LOCALAPPDATA%\\Programs\\Chatur</code> with the Start menu entry <code>Chatur.lnk</code>. The App Manager values come from user secrets into <code>src/Chatur/obj/install/appsettings.json</code>, embedded through <code>-p:ChaturSettingsFile</code> (<code>Chatur.csproj</code>), and the file is deleted after the build.</p>
 <table>
 <thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
 <tbody>
@@ -649,18 +687,20 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <h3 id="build-and-run-output">Build and run output<a class="anchor-link" href="#build-and-run-output">#</a></h3>
-<p><strong>Call chain:</strong> <code>AppToolbar.razor.cs:BuildAsync</code> → <code>BuildRunActions.BuildAsync</code> → <code>IProcessLauncher.RunAsync</code> (<code>dotnet build</code>); <code>OutputStrip.razor.cs:ConsumeOutputAsync</code> → <code>BuildRunActions.StreamOutputAsync</code></p>
-<p>Build and Run are in the toolbar and in the Project menu; both call the same action. Run targets come from table <code>RunTarget</code>. The first time a project has none, <code>TargetsAsync</code> (<code>BuildRunActions.cs:49</code>) finds them in the project folder and stores them.</p>
-<p>Output is not pushed to the page. <code>BuildRunActions</code> keeps one <code>RunState</code> per project (<code>:456</code>) with a list of lines and a generation number. <code>BuildAsync</code> and <code>RunAsync</code> call <code>RunState.Begin</code> first, which clears the list, raises the generation and cancels the previous run. Each line the process prints is added with <code>Publish</code>. <code>StreamOutputAsync</code> (<code>:154</code>) is a loop that returns new lines every 150 milliseconds and starts again from the top when the generation changes.</p>
-<p>Two readers follow that stream. <code>OutputStrip</code> draws the lines, sets the status text and collects compiler errors. <code>AppToolbar.WatchOutputAsync</code> (<code>AppToolbar.razor.cs:222</code>) clears the busy flag when it sees an ending line such as "Build succeeded". The toolbar calls the action before it calls <code>NotifyBuildOrRunStarted</code> (<code>:164</code>, <code>:165</code>), so the list is already cleared when <code>OutputStrip</code> restarts its reader. Keep that order.</p>
-<p><code>RunAsync</code> returns at once and runs <code>dotnet run</code> in the background. Stop cancels the token; the launcher then ends the whole process tree (<code>MauiProcessLauncher.cs:157</code>).</p>
+<p><img src="screenshots/Chatur/run-web-app.png" alt="A web app run" style="max-width:100%"> <img src="screenshots/Chatur/run-failed-build.png" alt="A failed build" style="max-width:100%"></p>
+<p><strong>Call chain:</strong> <code>AppToolbar.razor.cs:RunAsync</code> → <code>BuildRunActions.RunAsync</code> (<code>:212</code>) → <code>RunGuardedAsync</code> (<code>:295</code>) → <code>RunInBackgroundAsync</code> (<code>:311</code>) → <code>BuildCoreAsync</code> (<code>:166</code>, <code>dotnet build</code>) → <code>IProcessLauncher.RunAsync</code> (<code>dotnet run --no-build</code> or <code>dotnet test --no-build</code>); <code>OutputStrip.razor.cs:ConsumeOutputAsync</code> → <code>BuildRunActions.StreamOutputAsync</code></p>
+<p>Build and Run are in the toolbar and in the Project menu; both call the same action. Run targets come from table <code>RunTarget</code>; a solution's targets are its runnable projects and its test projects (<code>SolutionProjects.TestProjects</code>, <code>SolutionProjects.cs:99</code>), whose run runs their tests.</p>
+<p>Since 21 Nov 2026 Run builds first, in the open: every line of <code>dotnet build</code> is shown, compiler errors marked. A failed build writes <code>BuildFailedLine</code> (<code>:207</code>) plus "The program was not started." and stops. A good one writes "Built in …s — starting it" and runs what it built with the project's first <code>Project</code> launch profile (<code>LaunchSettings.ProjectProfile</code>, <code>LaunchSettings.cs:33</code>; <code>--no-launch-profile</code> without one). A web project's "Now listening on" line (<code>LaunchSettings.ListeningAddress</code>, <code>:94</code>) opens the browser once per run at the profile's first address (<code>BrowserAddress</code>, <code>:106</code>) through <code>IProcessLauncher.OpenBrowserAsync</code>. The end is always "Process exited with code N." (<code>:377</code>).</p>
+<p><code>RunGuardedAsync</code> exists because the run is started without waiting for it: before it, an exception thrown before the program started (a target id no longer the project's, a project row gone) ended the task unseen, and Output kept "nothing run yet" while Run stayed busy (the owner's report of 21 Nov). Every such failure is now a "Failed to run:" line, which ends the run; <code>LoadTargetAsync</code> (<code>:424</code>) says why in plain words, and the toolbar reads the targets again (<code>AppToolbar.razor.cs:158</code>).</p>
+<p>Output is not pushed to the page. <code>BuildRunActions</code> keeps one <code>RunState</code> per project with a list of lines and a generation number; <code>StreamOutputAsync</code> returns new lines every 150 milliseconds. <code>OutputStrip</code> draws them and <code>WorkbenchState.NotifyBuildOrRunStarted</code> (<code>WorkbenchState.cs:76</code>) shows the strip if View ▸ Output had hidden it. <code>AppToolbar.WatchOutputAsync</code> (<code>:158</code>) clears the busy flag only on Chatur's own end lines (<code>TerminalLine</code>, <code>:164</code>): dotnet's "Build succeeded." inside a run is not one.</p>
 <table>
 <thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
 <tbody>
-<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:83</code></td><td><code>BuildAsync</code></td><td><code>vArguments</code></td><td><code>build</code>, the project path, <code>-c</code> and the configuration</td></tr>
-<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:118</code></td><td><code>BuildAsync</code></td><td><code>vExitCode</code>, <code>vErrors.Count</code></td><td>0 and 0 for a good build</td></tr>
-<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:168</code></td><td><code>StreamOutputAsync</code></td><td><code>vState.Generation</code>, <code>vGeneration</code></td><td>equal; a difference resets <code>vSent</code> to 0</td></tr>
-<tr><td><code>src/ChaturUI/Shell/OutputStrip.razor.cs:116</code></td><td><code>ConsumeOutputAsync</code></td><td><code>objStatusText</code></td><td>"build passed", "build failed", "running" or "stopped"</td></tr>
+<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:166</code></td><td><code>BuildCoreAsync</code></td><td><code>vArguments</code>, <code>vErrors.Count</code></td><td><code>build</code>, the project path, <code>-c</code> and the configuration; 0 for a good build</td></tr>
+<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:311</code></td><td><code>RunInBackgroundAsync</code></td><td><code>vProfile?.Name</code>, <code>vIsWeb</code>, <code>vArguments</code></td><td>the launch profile; <code>true</code> for a web project; <code>run … --no-build --launch-profile "…"</code></td></tr>
+<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:353</code></td><td><code>RunInBackgroundAsync</code></td><td><code>vBrowserOpened</code></td><td>0 until the first "Now listening on", then 1</td></tr>
+<tr><td><code>src/Chatur.Core/BuildRun/BuildRunActions.cs:295</code></td><td><code>RunGuardedAsync</code></td><td>the caught exception</td><td>none on a normal run</td></tr>
+<tr><td><code>src/ChaturUI/Shell/AppToolbar.razor.cs:58</code></td><td><code>EnsureTargetsLoadedAsync</code></td><td><code>vKey</code></td><td>the project's id and path: a reused id with a new path reloads the targets</td></tr>
 </tbody>
 </table>
 <h3 id="theme">Theme<a class="anchor-link" href="#theme">#</a></h3>

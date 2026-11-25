@@ -25,29 +25,29 @@
 
 ---
 project: Chatur
-last_updated: 2026-11-18
-current_phase: Phase 3 of 4 (End to end and unattended) · Verify — 1 to verify across phases 1, handoff done, 81 of 81 verified
+last_updated: 2026-11-23
+current_phase: Phase 3 of 4 (End to end and unattended) · UAT — handoff done, 94 of 94 verified
 last_verified_build: PASS
-last_verified_date: 2026-11-18
+last_verified_date: 2026-11-23
 ---
 
 # Chatur — Status
 
 ## Where I am
 
-Phase 3 of 4 (End to end and unattended): 81 of 81 Verified after a full verify of phases 1 to 3 on 18 Nov. Phase 1 has 83 of 98 Verified, phase 2 18 of 23: twelve rows wait only on a fault in the mockup check (TF-045), and REQ-UI-018 needs a build that carries its commit. Two live accounts were walked on the Windows app. Phase 4 is not built.
+Phase 3 of 4 (End to end and unattended): ready for the owner's test from the Start menu. The brief of 22 Nov evening added BRD-253 to BRD-275 to phase 4: the Measurements screens, the agents' command tables and nine commands run end to end. Phase 4 has 59 of 60 rows Verified; REQ-FN-313 needs re-verify on one mockup finding (TF-053). Chatur is installed again; Owner's test parts 1 to 10 pass on the install.
 
 ## Next command to run
 
 Claude Code:
 ```
-/TechieFlow:agents:verifier *verify ui Chatur --phase 1
+(owner) set current_phase to Released after UAT — no agent command
 ```
 OpenCode:
 ```
-/flow-verifier *verify ui Chatur --phase 1
+(owner) set current_phase to Released after UAT — no agent command
 ```
-Why: 1 rows of other phases are built and not verified — phase 1: 1 (REQ-UI-018); this phase alone would be: handoff done, 81 of 81 verified (every row in this phase's scope is terminal and handoff has run; waiting on the owner); working docs/Chatur-P3-Checklist.md.
+Why: every row in this phase's scope is terminal and handoff has run; waiting on the owner; working docs/Chatur-P3-Checklist.md.
 
 ## Open requirements
 
@@ -59,14 +59,17 @@ Why: 1 rows of other phases are built and not verified — phase 1: 1 (REQ-UI-01
 | Needs re-verify | 0 |
 | Blocked | 0 |
 
-- None
+- None in phase 3. Phase 4: REQ-FN-313 Needs re-verify (mockup check at 390 px, TF-053).
 
 ## Known blockers
 
-- TF-045 (mockup check): Blocked until fixed upstream — REQ-FN-018 to 021, REQ-FN-023, REQ-UI-037, REQ-UI-038 (phase 1) and REQ-UI-053, REQ-FN-058, REQ-UI-054, REQ-FN-059, REQ-FN-060 (phase 2).
-- REQ-UI-018 shows the build's commit only on a build made in the repository or a nightly; the separate copy has no `.git`.
-- Hand steps, once per release: REQ-FN-001, REQ-FN-002, REQ-FN-022, REQ-FN-030, REQ-FN-048; REQ-FN-012 needs the Mac; REQ-NFR-006 needs a published nightly.
-- Owner, before the next commit: the `[verify-seed]` check-ins and branches written into this repository on 15 Nov (TF-037); remove them by hand.
+- Phase 1, hand steps once per release: REQ-FN-001, REQ-FN-002, REQ-FN-022, REQ-FN-030, REQ-FN-048; REQ-FN-012 needs the Mac; REQ-NFR-006 needs a published nightly.
+- REQ-FN-078 is proven against the harness's stand-in for App Manager only: App Manager keeps no roles or rules yet (AM-002).
+- REQ-FN-083 and REQ-UI-069 are graded on recorded checks and a seeded release: a real window check needs the Mac or Windows verifier, a real signature needs the certificates.
+- TF-052, TF-053: the menu walk reads late or hidden menus as "opens nothing"; REQ-FN-313 waits on TF-053.
+- TR-RAG-010: a cut-off tool call is dropped silently; Chatur asks again with more room.
+- The screen check cannot drive the Windows app by address; its own test files click through it.
+- Owner, before the next commit: the `[verify-seed]` check-ins and branches written on 15 Nov (TF-037); remove them by hand.
 
 ## Verification log
 
@@ -74,17 +77,18 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 | Date | Phase | Result | Status table |
 |---|---|---|---|
-| 2026-11-14 | triage-and-fix | 74/74 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
-| 2026-11-15 | triage-and-fix + handoff | 74/74 Verified, ready for the owner's test | docs/Chatur-P3-Checklist.md#requirements-status |
-| 2026-11-16 | triage-and-fix | 74/74 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
-| 2026-11-18 | triage-and-fix | 78/81 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
-| 2026-11-18 | triage-and-fix | 81/81 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-20 | *verify ui Chatur --phase all | 63/94 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-21 | build-phase | 94/94 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-22 | handoff-phase | 94/94 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-22 | triage-and-fix | 94/94 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-23 | build-phase | 94/94 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
 
 ## Library feedback summary
 
-- TechieFlow: 2 open · 14 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 24 closed — docs/Chatur-TechieFlow-Feedback.md
-- TechieRag: 0 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
-- TrBlazeUI: 2 open · 24 closed — docs/Chatur-TrBlazeUI-Feedback.md
+- AppManager: 1 open · 1 closed — docs/Chatur-AppManager-Feedback.md
+- TechieFlow: 2 open · 18 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 28 closed — docs/Chatur-TechieFlow-Feedback.md
+- TechieRag: 1 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
+- TrBlazeUI: 5 open · 24 closed — docs/Chatur-TrBlazeUI-Feedback.md
 
 ## Standards compliance
 
@@ -93,8 +97,7 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 ## Deferred / future
 
 - No BRD row: Settings ▸ Account content, hiding output, merging or creating a branch.
+- Worktrees: the mockup's "Give the next run its own copy" box and its size line are not built; nothing stands behind them yet.
+- All projects shows "not opened" where the mockup draws "handed over": Chatur keeps no hand-over state per project.
 - The run queue moves only while its tab is open.
-- Feedback and Licence screens wait for phase 4 (REQ-UI-062, REQ-UI-064).
-- Once on 18 Nov an end-to-end run's step stopped with "Unable to find the specified file"; not reproduced since (note on REQ-FN-061).
 - Data kept before 17 Nov stays in the install's own chatur.db, shown to no account.
-- Owner reviews step wording for 11 processes.

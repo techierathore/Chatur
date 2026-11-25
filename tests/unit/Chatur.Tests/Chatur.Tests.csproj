@@ -18,6 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- REQ-NFR-014: hand-made runs/gates/misses lines the Measurements tests add up independently. -->
+    <None Include="Measurements\Fixtures\**\*.jsonl" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\src\Chatur.Core\Chatur.Core.csproj" />
     <ProjectReference Include="..\..\..\src\ChaturDb\ChaturDb.csproj" />
   </ItemGroup>

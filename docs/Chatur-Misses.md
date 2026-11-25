@@ -3,16 +3,60 @@
 | | |
 |---|---|
 | App | Chatur |
-| Count | 800 logged: 51 open, 749 fixed, 0 will not fix |
+| Count | 896 logged: 95 open, 801 fixed, 0 will not fix |
 | Source | `docs/metrics/misses.jsonl`, one row per miss record. Rewritten by `tf-misses-md.sh` on every new record. Never edit it: a wrong row is corrected by a new record. |
-| Updated | 2026-11-18 |
+| Updated | 2026-11-23 |
 
 **Whose gap** answers the four questions of the miss protocol: **the app's spec** did not say it, so the checklist line is fixed; **the framework never said it**, so one requirement line and a check are added; **the check was too weak** (a review, or a script that did not fire), so the check is fixed; **said and ignored**, so the rule becomes a hook or is deleted. **not sorted** means the record predates the sort or nobody has answered yet; `bash .tfcore/utils/tf-emit.sh --amend <miss> sort <spec|unsaid|weak-check|ignored>` completes it.
 
-## Open (51)
+## Open (95)
 
 | Miss | Found | Whose gap | What went wrong |
 |---|---|---|---|
+| MISS-Chatur-20261123-22 (REQ-NFR-019) | 2026-11-23 by owner | the app's spec | Your guide tells me to make my test folders beside my projects (C:\1MyCode\OwnerTest, EmptyOne, BrainTest); nothing that belongs to testing Chatur is made beside my projects or on the root of a drive |
+| MISS-Chatur-20261123-21 (REQ-NFR-013) | 2026-11-23 by owner | the check was too weak | Your owner's test 6 says 'Solution folder already reads EmptyOne' and passed, and I still got this |
+| MISS-Chatur-20261123-20 (REQ-UI-124) | 2026-11-23 by owner | the app's spec | In the same folder my first project, OwnerTest, has a project file and no solution |
+| MISS-Chatur-20261123-19 (REQ-UI-125) | 2026-11-23 by owner | the app's spec | After Create, FILES showed a solution folder I did not expect; the folder I opened must stay the root of FILES |
+| MISS-Chatur-20261123-18 (REQ-UI-112) | 2026-11-23 by owner | the app's spec | The dialog's folder fields are confusing: with a folder open the folder was a field to type, and nothing showed the paths that would exist |
+| MISS-Chatur-20261123-17 (REQ-FN-040) | 2026-11-23 by owner | the app's spec | Chatur wrote docs/metrics with five files into my folder, and I had asked for nothing |
+| MISS-Chatur-20261123-16 (REQ-FN-310) | 2026-11-23 by owner | the app's spec | I opened the empty folder ChaturOwnerTest, chose New project, name Checking-Chatur, and Chatur made ChaturOwnerTest/Checking-Chatur/Checking-Chatur.slnx and the project in ChaturOwnerTest/Checking-Chatur/Checking-Chatur: a folder inside a folder I never asked for |
+| MISS-Chatur-20261123-01 (REQ-FN-313) | 2026-11-23 by gate | not sorted | no sentence recorded (partial-implementation, src) |
+| MISS-Chatur-20261120-41 (REQ-UI-095) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-40 (REQ-UI-090) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-39 (REQ-UI-089) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-38 (REQ-UI-088) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-37 (REQ-UI-087) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-36 (REQ-UI-085) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-35 (REQ-UI-084) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-34 (REQ-UI-083) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-33 (REQ-UI-082) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-32 (REQ-UI-081) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-31 (REQ-UI-080) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-30 (REQ-UI-079) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-29 (REQ-UI-074) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-28 (REQ-UI-073) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-27 (REQ-UI-072) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-26 (REQ-UI-071) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-25 (REQ-UI-070) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-24 (REQ-UI-061) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-23 (REQ-UI-060) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-22 (REQ-UI-059) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-21 (REQ-UI-058) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-20 (REQ-UI-057) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-19 (REQ-UI-056) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-18 (REQ-UI-055) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-17 (REQ-UI-041) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-16 (REQ-UI-040) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-14 (REQ-UI-033) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-13 (REQ-UI-032) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-12 (REQ-UI-031) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-11 (REQ-UI-024) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-10 (REQ-UI-023) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-09 (REQ-UI-022) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-08 (REQ-UI-021) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-07 (REQ-UI-016) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-04 (REQ-UI-013) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-03 (REQ-UI-012) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261118-13 (REQ-FN-060) | 2026-11-18 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261118-12 (REQ-FN-059) | 2026-11-18 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261118-11 (REQ-UI-054) | 2026-11-18 by gate | not sorted | no sentence recorded (regression, src) |
@@ -65,10 +109,62 @@
 | MISS-Chatur-20261002-02 | 2026-10-02 by agent-review | not sorted | The Start mockup draws four active Get started buttons, but the app keeps them disabled and no row says which is right. |
 | MISS-Chatur-20260930-36 (REQ-FN-012) | 2026-09-30 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 
-## Fixed (749)
+## Fixed (801)
 
 | Miss | Found | Closed | Whose gap | What went wrong |
 |---|---|---|---|---|
+| MISS-Chatur-20261123-15 (REQ-NFR-017) | 2026-11-23 by self-smoke | 2026-11-23 by build-phase | not sorted | Owner's test 10 typed *yolo to the Verifier, which has no *yolo, and parts 7 and 10 could not run on their own start. |
+| MISS-Chatur-20261123-14 (REQ-UI-107) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | The chosen run target, model and conversation showed only a tick icon, not aria-checked or aria-selected; a click on the chosen one read as a dead item and the chat pickers after it failed the screen check. |
+| MISS-Chatur-20261123-13 (REQ-UI-109) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | File > Recent projects listed the open project as a live item that did nothing when clicked. |
+| MISS-Chatur-20261123-12 (REQ-UI-115) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | The measurements mockups anchored the sample data and dialogs without data-tf-state or data-tf-sample marks, and the screen had no seed, so the screen check found every region empty. |
+| MISS-Chatur-20261123-11 (REQ-UI-117) | 2026-11-23 by self-smoke | 2026-11-23 by build-phase | not sorted | Measurements: the Rows column wrapped one letter a line and ran off the window, the across table hid its last columns, and two side-menu entries were both called Measurements. |
+| MISS-Chatur-20261123-10 (REQ-FN-312) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | The brainstorm test checked the brief's date in UTC while Chatur writes the local date, so it failed after local midnight. |
+| MISS-Chatur-20261123-09 (REQ-FN-082) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | The Integrations test relied on a project left open by earlier tests; with none open Chatur rightly answered 400. |
+| MISS-Chatur-20261123-08 (REQ-FN-312) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | Test cleanup deleted sessions but not their messages, so a new conversation in a new project showed a removed project's messages. |
+| MISS-Chatur-20261123-07 (REQ-FN-318) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | Chatur set no output limit on agent calls, so the edit-file call writing a whole guide was cut off at max_tokens and dropped without a word; *devguide stopped four times with nothing written (TR-RAG-010). |
+| MISS-Chatur-20261123-06 (REQ-UI-122) | 2026-11-23 by self-smoke | 2026-11-23 by build-phase | not sorted | Test cleanup left AutoRunProcess rows behind, so a later end-to-end run failed on a UNIQUE key when SQLite reused the run id. |
+| MISS-Chatur-20261123-05 (REQ-FN-318) | 2026-11-23 by self-smoke | 2026-11-23 by build-phase | not sorted | The agent's limit of 8 tool calls per reply was too low for a guide that reads several files first. |
+| MISS-Chatur-20261123-04 (REQ-FN-315) | 2026-11-23 by self-smoke | 2026-11-23 by build-phase | not sorted | Agents had no way to list a folder, so *day1-brownfield could not find the code it had to read. |
+| MISS-Chatur-20261123-03 (REQ-FN-317) | 2026-11-23 by self-smoke | 2026-11-23 by build-phase | not sorted | In *research-prompt the Analyst announced a step and made no tool call, so the reply ended with nothing written. |
+| MISS-Chatur-20261123-02 (REQ-UI-122) | 2026-11-23 by self-smoke | 2026-11-23 by build-phase | not sorted | *develop-end-to-end with a brief under 40 characters threw an ArgumentException that froze the chat instead of answering in the reply. |
+| MISS-Chatur-20261122-09 (REQ-UI-008) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the app's spec | Nothing is open yet offers Open folder, Open a solution and Open a file but no New project, so the owner's test 1 could not be followed |
+| MISS-Chatur-20261122-08 (REQ-NFR-013) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the app's spec | The owner's test and its tests start from the two states a person really meets |
+| MISS-Chatur-20261122-07 (REQ-FN-312) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the app's spec | In an empty folder the Analyst brainstorms with the person and writes the brief |
+| MISS-Chatur-20261122-06 (REQ-UI-114) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the app's spec | A reply is drawn as formatted text |
+| MISS-Chatur-20261122-05 (REQ-FN-311) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the app's spec | Every agent carries every command its TechieFlow agent has, done in Chatur |
+| MISS-Chatur-20261122-04 (REQ-FN-310) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the app's spec | New project with no solution open makes the solution and its first project from a template, and opens it |
+| MISS-Chatur-20261122-03 (REQ-FN-309) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the app's spec | After New project, Run has a target |
+| MISS-Chatur-20261122-02 (REQ-FN-308) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the check was too weak | The Analyst greeted with only create-project-brief and split-brd, and when asked for brainstorm said it has none; TechieFlow's Analyst has ten commands |
+| MISS-Chatur-20261122-01 (REQ-UI-112) | 2026-11-22 by owner | 2026-11-22 by triage-and-fix | the check was too weak | File > New project with a folder open shows 'Makes a folder with a new, empty solution' with only a name and a folder: no templates, no framework, no first project |
+| MISS-Chatur-20261121-04 (REQ-FN-040) | 2026-11-21 by owner | 2026-11-21 by log-miss | the check was too weak | Measurement write refused for sessions.jsonl: Could not create docs/metrics: Cannot create MyTasks.sln (a solution's path taken for a folder; found in the owner's log) |
+| MISS-Chatur-20261121-03 (REQ-FN-308) | 2026-11-21 by owner | 2026-11-21 by log-miss | the app's spec | When I choose or change an agent, it greets me with what it is for and the commands it has. I asked the analyst and got nothing of the kind. |
+| MISS-Chatur-20261121-02 (REQ-NFR-011) | 2026-11-21 by owner | 2026-11-21 by log-miss | the app's spec | Your log of my test holds a burst of Unobserved task exception errors at 20:36:46 today. Find what caused them and fix it. |
+| MISS-Chatur-20261121-01 (REQ-UI-064) | 2026-11-21 by agent-review | 2026-11-21 by log-miss | the check was too weak | The phase 4 mockups were drawn without the marks the other phases' mockups carry (pop-ups open, mockup-only palette, a drawn-open dialog) and still showed 'later' pills on the phase 4 pages, so the screen check asked a fresh page for menu contents and sample rows it could never show. Marks added and |
+| MISS-Chatur-20261120-53 (REQ-NFR-010) | 2026-11-20 by owner | 2026-11-20 by log-miss | the framework never said it | The test runs left about 80 projects in the test account: workbench-menus and the Start-folder test made dated project folders in the shared workbench-a fixture and never removed them, five a run. Found in about 15 minutes by grouping the account's projects by folder. |
+| MISS-Chatur-20261120-52 (REQ-UI-010) | 2026-11-20 by owner | 2026-11-20 by log-miss | the check was too weak | The project switcher list (256 px) wrapped a long project name onto two lines; now one line per name, cut with an ellipsis, the whole name on hover, and at most 20 projects so it opens at once. Found in about 5 minutes from the markup. |
+| MISS-Chatur-20261120-51 (REQ-UI-101) | 2026-11-20 by owner | 2026-11-20 by log-miss | the check was too weak | Every item in the branch menu was greyed out on 6 of 10 phase 3 screens: the branches were read with git only on the click that opened the menu, over a second on /mnt/c, so a menu read at once held only the disabled placeholders. Found in about 10 minutes from the code. |
+| MISS-Chatur-20261120-50 (REQ-UI-073) | 2026-11-20 by agent-review | 2026-11-20 by log-miss | the check was too weak | Two project scans at once (the Start window and the menu bar's list) both inserted the same new folder and the second failed on the unique path, crashing Start. Found in about 10 minutes, when the background list of the menu fix ran beside Start on the 200-project test. |
+| MISS-Chatur-20261120-49 (REQ-UI-073) | 2026-11-20 by owner | 2026-11-20 by log-miss | the check was too weak | File and Edit opened only some of the time with about 80 projects: File's pointer-down rescanned every project folder on disk on the page's event path (Edit waited on the editor the same way), so the opening click queued behind it and the test's second click shut the menu. Found in about 45 minutes |
+| MISS-Chatur-20261120-48 (REQ-UI-106) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-47 (REQ-UI-105) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-46 (REQ-UI-104) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-45 (REQ-UI-103) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-44 (REQ-UI-102) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-43 (REQ-UI-101) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-42 (REQ-UI-096) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-15 (REQ-UI-039) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-06 (REQ-UI-015) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-05 (REQ-UI-014) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-02 (REQ-UI-011) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-01 (REQ-UI-010) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261118-21 (REQ-FN-024) | 2026-11-18 by owner | 2026-11-18 by triage-and-fix | the check was too weak | The agent picker: the closed picker says Analyst but the open list marks nothing as chosen (no tick, only the word suggested); the mockup draws a tick on the chosen agent |
+| MISS-Chatur-20261118-20 (REQ-UI-010) | 2026-11-18 by owner | 2026-11-18 by triage-and-fix | the check was too weak | The project list opened from the project switcher (All projects) has no way back: no close button and Escape does nothing, so the only way out is to open a project again |
+| MISS-Chatur-20261118-19 (REQ-UI-008) | 2026-11-18 by owner | 2026-11-18 by triage-and-fix | the check was too weak | Icons on the start screen and the project list: the five tiles use the same brown folder and file shapes and say nothing; the small glyph sits in the tile's corner, not its centre, and Open a solution shows a folder, not the solution mark the mockup draws |
+| MISS-Chatur-20261118-18 (REQ-UI-073) | 2026-11-18 by owner | 2026-11-18 by triage-and-fix | the check was too weak | Open a solution, Browse opens a folder picker; it must open a file picker that shows .sln and .slnx files (the dialog asks the folder picker for every way in except Open a file) |
+| MISS-Chatur-20261118-17 (REQ-UI-011) | 2026-11-18 by owner | 2026-11-18 by triage-and-fix | the check was too weak | No target found on a solution with .NET projects: a solution's saved path is its .sln file, the target search asks whether that path is a folder, it is not, so nothing is searched and the picker stays empty |
+| MISS-Chatur-20261118-16 (REQ-UI-094) | 2026-11-18 by owner | 2026-11-18 by triage-and-fix | the check was too weak | On the project list, Open a file then picking a file stopped Chatur |
+| MISS-Chatur-20261118-15 (REQ-FN-006) | 2026-11-18 by owner | 2026-11-18 by triage-and-fix | the check was too weak | Every start since stops at the same line, because Chatur reopens the last project and the files panel reads its tree again with nothing to catch the failure |
+| MISS-Chatur-20261118-14 (REQ-UI-039) | 2026-11-18 by owner | 2026-11-18 by triage-and-fix | the check was too weak | Open a file then picking a file stopped Chatur at FileActions.cs line 82 (Directory.EnumerateDirectories in BuildNodes): the tree read every folder below the opened one at once and a folder Windows will not list threw out of it |
 | MISS-Chatur-20261117-04 (REQ-UI-095) | 2026-11-17 by owner | 2026-11-18 by triage-and-fix | the check was too weak | In the two-account walk, the Model providers window the first account opened stayed open after its sign-out and still listed the first account's provider when the second account signed in. Cause: the second window keeps the page it loaded under the account that opened it; nothing closes or reloads i |
 | MISS-Chatur-20261117-03 (REQ-NFR-010) | 2026-11-17 by owner | 2026-11-18 by triage-and-fix | the check was too weak | The desktop test proves the owner's database is untouched by reading that database's own timestamp in the owner's data folder, so every desktop test, REQ-FN-017's among them, opens a folder the owner says is never opened. |
 | MISS-Chatur-20261117-02 (REQ-UI-014) | 2026-11-17 by owner | 2026-11-18 by triage-and-fix | the check was too weak | The first Run after approving a change showed the dotnet run line twice in the Output strip. Cause: a cancelled output subscription still delivers a line it had already read; neither the stream nor the strip checks the subscription is current before adding it. |

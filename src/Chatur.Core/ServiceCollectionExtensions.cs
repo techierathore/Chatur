@@ -7,7 +7,9 @@ using Chatur.Core.Corrections;
 using Chatur.Core.Data;
 using Chatur.Core.Files;
 using Chatur.Core.Guards;
+using Chatur.Core.Licences;
 using Chatur.Core.Measurements;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Chatur.Core.Models;
 using Chatur.Core.Prerequisites;
 using Chatur.Core.Projects;
@@ -88,8 +90,12 @@ public static class ServiceCollectionExtensions
         aServices.AddSingleton<IExternalCommandRunner, ProcessCommandRunner>();
 
         aServices.AddScoped<IAccountActions, AccountActions>();
+        // Licence (REQ-UI-064 to REQ-UI-066, REQ-FN-075): App Manager's licence by default; the web harness may replace ILicenceSource.
+        aServices.AddChaturLicences();
         aServices.AddScoped<IProjectActions, ProjectActions>();
         aServices.AddScoped<IProjectOpenActions, ProjectOpenActions>();
+        aServices.AddScoped<IProjectTemplateActions, ProjectTemplateActions>();
+        aServices.AddScoped<Agent.Commands.IAgentCommandRunner, Agent.Commands.AgentCommandRunner>();
         aServices.AddScoped<IFileActions, FileActions>();
         aServices.AddScoped<IFileSearchActions, FileSearchActions>();
         aServices.AddScoped<IBuildRunActions, BuildRunActions>();
@@ -109,10 +115,21 @@ public static class ServiceCollectionExtensions
         aServices.AddScoped<IAgentActions, AgentActions>();
         aServices.AddScoped<IChangeActions, ChangeActions>();
         aServices.AddScoped<IRoleActions, RoleActions>();
+        // An agent's greeting and the system prompt its model receives, both read from its persona file (REQ-FN-308).
+        aServices.AddScoped<IAgentPersonaActions, Roles.AgentPersonaActions>();
+        // All projects (REQ-FN-076..078, cluster P4-C): the project list with where each stands, and the roles sync.
+        // The sync store is the head's own; a head that names none has one that says App Manager keeps nothing yet.
+        aServices.AddScoped<IAllProjectsActions, Projects.AllProjectsActions>();
+        aServices.AddScoped<IRoleSyncActions, Roles.RoleSyncActions>();
+        aServices.TryAddSingleton<Platform.IRoleSyncStore, Platform.UnavailableRoleSyncStore>();
         aServices.AddScoped<ICorrectionActions, CorrectionActions>();
         aServices.AddScoped<IMeasurementActions, MeasurementActions>();
+        // Chatur's own measurements inside Chatur (REQ-UI-115, REQ-FN-313, REQ-FN-314): read from docs/metrics only, no network.
+        aServices.AddScoped<IMetricsReportActions, MetricsReportActions>();
         aServices.AddScoped<IProcessActions, Processes.ProcessActions>();
         aServices.AddScoped<ISourceControlActions, SourceControlActions>();
+        // Working copies (REQ-FN-079, REQ-FN-080, REQ-UI-068, cluster P4-D): the same class's git worktree half.
+        aServices.AddScoped<IWorktreeActions, SourceControlActions>();
         aServices.AddScoped<IThemeActions, ThemeActions>();
         aServices.AddScoped<IRequirementBoardActions, Board.RequirementBoardActions>();
         // Run report (REQ-UI-058..061, cluster E): read-only, from the project's measurement streams.
@@ -144,6 +161,10 @@ public static class ServiceCollectionExtensions
         aServices.AddScoped<IRunQueueActions, RunQueue.RunQueueActions>();
         // Estimate before, actual after (BRD-192 to BRD-209): worked out from run records, no model asked.
         aServices.AddScoped<IEstimateActions, Estimates.EstimateActions>();
+        // Integrations (REQ-FN-081..083, REQ-UI-069): what Chatur offers to outside tools.
+        aServices.AddScoped<IIntegrationActions, Integrations.IntegrationActions>();
+        // Feedback and issues (REQ-UI-062, REQ-FN-073, REQ-UI-063, REQ-FN-074): raised through App Manager; a test host may swap the source.
+        Feedback.FeedbackServiceCollectionExtensions.AddChaturFeedback(aServices);
 
         // GuardPipeline resolves every registered IToolGuard, in this order.
         aServices.AddScoped<IToolGuard, RoleRightsGuard>();

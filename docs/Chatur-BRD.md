@@ -126,8 +126,9 @@ What the window holds before a project is open: where the owner was, what Chatur
   - *Acceptance:* When the owner opens a project from the list, then the Workbench opens on it and it becomes the selected project.
 - **BRD-13** — The choice survives a restart. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
   - *Acceptance:* When the same account closes Chatur and opens it again on Start, then the same project is still selected; another account is never given it.
-- **BRD-14** — A new account starts empty, with three ways on. *Screen:* Start · *Mockup:* [mockup](mockups/start-empty.html)
-  - *Acceptance:* When an account with nothing opened signs in on Start, then it shows no project, file or chat, and offers Open a folder, Open a solution and Open a file.
+- **BRD-14** — A new account starts empty, with four ways on. *Screen:* Start · *Mockup:* [mockup](mockups/start-empty.html)
+  - *Acceptance:* When an account with nothing opened signs in on Start, then it shows no project, file or chat, and offers New project and the three Open ways.
+  - *Changed 2026-11-22:* New project added beside the three Open choices; without it the owner's first test could not start from nothing (phase 4 BRD-247).
 - **BRD-15** — Remove a folder. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
   - *Acceptance:* When the owner removes a folder in the dialog, then its projects leave the list and the folder is gone after a restart.
 
@@ -136,7 +137,7 @@ What the window holds before a project is open: where the owner was, what Chatur
 The top bar of the one working screen: which project, which branch, and the way out.
 
 - **BRD-16** — What the selected project is. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When a project is selected on Workbench, then the toolbar names it and its branch, and its files are listed down the left.
+  - *Acceptance:* When a project is selected on Workbench, then the menu bar names it, its files list down the left, and its branch shows once, under the files.
 - **BRD-17** — Straight into the work. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When a project opens on Workbench, then the signed-in account's own conversation is already there; an account that never chatted there starts an empty one.
 - **BRD-18** — Change project without going back. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
@@ -309,7 +310,8 @@ The corrections tab: what Chatur changed about itself, and the owner's word on i
 The measurements tab: the same numbers TechieFlow writes today, written by Chatur into each project.
 
 - **BRD-74** — The five files. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-measurements.html)
-  - *Acceptance:* When an agent session runs in a project, then runs, gates, misses, sessions and commits files exist in its `docs/metrics` folder.
+  - *Acceptance:* When a command needing a record runs in a project on Settings, then its file is in `docs/metrics`; a folder only opened or chatted in gets no file.
+  - *Changed 2026-11-23:* every chat turn made `docs/metrics` and all five files, four of them empty, in whatever folder was open (owner's test). A file is now made only when a command needs it; a chat turn is recorded only in a project that already has `docs/metrics`.
 - **BRD-75** — Chatur signs its work. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-measurements.html)
   - *Acceptance:* When Chatur writes a record on Settings, then the field naming the tool reads `chatur`.
 - **BRD-76** — What was not measured stays empty. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-measurements.html)
@@ -377,7 +379,7 @@ The owner's own hand on check-in, push and branches.
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-11-18.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
+**Snapshot as of 2026-11-22.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
@@ -385,8 +387,8 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | Register | 4 | 4 | 0 | Done |
 | Start | 6 | 6 | 0 | Done |
 | Workbench | 34 | 34 | 0 | Done |
-| Prerequisites | 5 | 3 | 2 | Partial |
-| Settings | 33 | 24 | 9 | Partial |
+| Prerequisites | 5 | 4 | 1 | Partial |
+| Settings | 33 | 31 | 2 | Partial |
 | Repository | 5 | 4 | 1 | Partial |
 | Non-functional | 6 | 5 | 1 | Partial |
 

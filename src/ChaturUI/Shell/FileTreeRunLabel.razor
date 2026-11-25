@@ -1,0 +1,20 @@
+@* A runnable project's row label in Files (BRD-228): its name, a small play mark when it is the
+   project to run, and a right-click menu that sets it as the one to run. Used only by FileTreeBranch. *@
+<ContextMenu>
+    <ContextMenuTrigger Class="inline" data-testid="@($"tree-{Node.RelativePath}-menu")">
+        <span>@Node.Name</span>
+        @if (IsChosen)
+        {
+            <LucideIcon Name="play" Size="12" Class="ml-1 inline text-primary" aria-label="The project to run" data-testid="@($"tree-{Node.RelativePath}-run")" />
+        }
+    </ContextMenuTrigger>
+    <ContextMenuContent Class="w-56">
+        <ContextMenuItem OnClick="SetAsync" data-testid="tree-set-run">
+            @if (IsChosen)
+            {
+                <LucideIcon Name="check" Size="14" />
+            }
+            Set as the project to run
+        </ContextMenuItem>
+    </ContextMenuContent>
+</ContextMenu>

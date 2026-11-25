@@ -15,7 +15,7 @@ namespace Chatur.Tests.StepAgents;
 /// </summary>
 public sealed class StepAgentActionsTests : MigratedDatabaseFixture
 {
-    private readonly string objProjectPath = Path.Combine(Path.GetTempPath(), $"chatur-step-{Guid.NewGuid():N}");
+    private readonly string objProjectPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-step-{Guid.NewGuid():N}");
 
     /// <summary>
     /// When a run reaches a work step, then a session starts with the process's agent, and the agent is given the

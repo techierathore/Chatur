@@ -26,5 +26,21 @@
     "baseUrl": "<provider address>",
     "model": "<model id>",
     "key": "<provider key>"
+  },
+  "testLicence": {
+    "enabled": true,
+    "name": "Test Professional",
+    "state": "Active",
+    "key": "TEST-PRO-0000-0000-0001",
+    "daysRemaining": 287,
+    "daysTotal": 365,
+    "deviceCap": 1,
+    "overCapWarning": "This licence allows one machine at a time. TR-WIN-DESK signed in while the test MacBook was still signed in. Forget one of them to carry on.",
+    "featuresOff": [],
+    "devices": [
+      { "id": "mac", "name": "Test MacBook", "platform": "Mac Catalyst", "appVersion": "0.1.0 · nightly", "daysSinceSeen": 0, "signInCount": 128, "thisDevice": true },
+      { "id": "win", "name": "TR-WIN-DESK", "platform": "Windows 11", "appVersion": "0.1.0 · nightly", "daysSinceSeen": 1, "signInCount": 41 },
+      { "id": "ci", "name": "TR-MINI-CI", "platform": "Mac Catalyst", "appVersion": "0.0.9", "daysSinceSeen": 84, "signInCount": 6, "blocked": true }
+    ]
   }
 }

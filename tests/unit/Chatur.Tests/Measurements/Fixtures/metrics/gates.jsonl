@@ -1,0 +1,11 @@
+{"v":1,"ts":"2026-11-18T10:00:00Z","kind":"gate","app":"Demo","run_id":"r1","req_id":"REQ-FN-001","attempt":1,"verdict":"Verified"}
+{"v":1,"ts":"2026-11-18T10:05:00Z","kind":"gate","app":"Demo","run_id":"r1","req_id":"REQ-FN-002","attempt":1,"verdict":"FAIL"}
+{"v":1,"ts":"2026-11-19T10:05:00Z","kind":"gate","app":"Demo","run_id":"r2","req_id":"REQ-FN-002","attempt":2,"verdict":"Verified"}
+{"v":1,"ts":"2026-11-17T10:00:00Z","kind":"gate","app":"Demo","run_id":"r1","req_id":"REQ-UI-001","verdict":"Verified"}
+{"v":1,"ts":"2026-11-16T10:00:00Z","kind":"gate","app":"Demo","run_id":"r1","req_id":"REQ-UI-002","verdict":"FAIL"}
+{"v":1,"ts":"2026-11-17T10:00:00Z","kind":"gate","app":"Demo","run_id":"r2","req_id":"REQ-UI-002","verdict":"Verified"}
+{"v":1,"ts":"2026-11-18T10:00:00Z","kind":"gate","app":"Other","run_id":"r9","req_id":"REQ-FN-001","attempt":1,"verdict":"FAIL"}
+{"v":1,"ts":"2026-09-01T10:00:00Z","kind":"gate","app":"Demo","run_id":"r0","req_id":"REQ-FN-009","attempt":1,"verdict":"Verified"}
+{"v":"1","at":"2026-11-20T08:00:00.0000000Z","tool":"chatur","kind":"gate","app":"Demo","run_id":"r3","req_id":"REQ-UI-003","attempt":"1","verdict":"Verified"}
+{"v":1,"kind":"gate","app":"Demo","run_id":"r4","req_id":"REQ-X","attempt":1,"verdict":"Verified"}
+{broken

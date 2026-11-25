@@ -54,9 +54,9 @@ function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=
   <span class="t" data-testid="window-title">All projects</span>
   <span class="grow"></span>
   <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
-  <div class="popwrap" data-testid="palette">
+  <div class="popwrap" data-testid="palette" data-tf-state="mockup-only">
    <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one is the Appearance page"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop right" id="palette-pop" data-testid="palette-pop">
+   <div class="pop right" id="palette-pop" data-testid="palette-pop" data-tf-state="popup-open">
     <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber</button>
     <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo</button>
     <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal</button>
@@ -72,7 +72,8 @@ function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=
    <div class="g">This project</div>
    <a href="prerequisites.html" data-testid="nav-prerequisites"><svg><use href="#i-wrench"/></svg>Prerequisites</a>
    <a href="repository.html" data-testid="nav-repository"><svg><use href="#i-branch"/></svg>Repository</a>
-   <a href="worktrees.html" data-testid="nav-worktrees"><svg><use href="#i-copy"/></svg>Working copies<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="worktrees.html" data-testid="nav-worktrees"><svg><use href="#i-copy"/></svg>Working copies</a>
+   <a href="measurements.html" data-testid="nav-project-measurements"><svg><use href="#i-chart"/></svg>Project measurements</a>
    <div class="g">Chatur</div>
    <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
    <a href="settings-routing.html" data-testid="nav-routing"><svg><use href="#i-route"/></svg>Routing</a>
@@ -82,10 +83,11 @@ function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=
    <a href="settings-appearance.html" data-testid="nav-appearance"><svg><use href="#i-palette"/></svg>Appearance</a>
    <a href="settings-account.html" data-testid="nav-account"><svg><use href="#i-person"/></svg>Account</a>
    <div class="g">Your account</div>
-   <a href="licence.html" data-testid="nav-licence"><svg><use href="#i-key"/></svg>Licence<span class="pill" style="margin-left:auto">later</span></a>
-   <a href="feedback.html" data-testid="nav-feedback"><svg><use href="#i-alert"/></svg>Feedback<span class="pill" style="margin-left:auto">later</span></a>
-   <a href="integrations.html" data-testid="nav-integrations"><svg><use href="#i-route"/></svg>Integrations<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="licence.html" data-testid="nav-licence"><svg><use href="#i-key"/></svg>Licence</a>
+   <a href="feedback.html" data-testid="nav-feedback"><svg><use href="#i-alert"/></svg>Feedback</a>
+   <a href="integrations.html" data-testid="nav-integrations"><svg><use href="#i-route"/></svg>Integrations</a>
    <a href="all-projects.html" data-testid="nav-all-projects" class="on"><svg><use href="#i-chart"/></svg>All projects</a>
+   <a href="measurements-all.html" data-testid="nav-measurements-all"><svg><use href="#i-chart"/></svg>Measurements across projects</a>
   </nav>
 
   <div class="subpage" data-testid="page">
@@ -103,7 +105,7 @@ function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=
      <input placeholder="Search projects and folders" data-testid="projects-search" style="border:none;background:none;outline:none;width:100%;color:var(--fg)"></label>
     <div class="popwrap" data-testid="projects-sort">
      <button class="pick" onclick="pop(this,event)" data-testid="projects-sort-button"><span class="lbl">Sort by</span><span data-value>Last worked on</span><svg><use href="#i-chevron"/></svg></button>
-     <div class="pop" data-testid="projects-sort-pop">
+     <div class="pop" data-testid="projects-sort-pop" data-tf-state="popup-open">
       <button data-choice="Last worked on" onclick="choose(this,event)" data-testid="sort-last-worked"><span class="tick">✓</span>Last worked on</button>
       <button data-choice="Name" onclick="choose(this,event)" data-testid="sort-name"><span class="tick"></span>Name</button>
       <button data-choice="Open requirements" onclick="choose(this,event)" data-testid="sort-open"><span class="tick"></span>Open requirements</button>
@@ -111,7 +113,7 @@ function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=
     </div>
     <div class="popwrap" data-testid="projects-view">
      <button class="pick" onclick="pop(this,event)" data-testid="projects-view-button"><span class="lbl">View</span><span data-value>Table</span><svg><use href="#i-chevron"/></svg></button>
-     <div class="pop right" data-testid="projects-view-pop">
+     <div class="pop right" data-testid="projects-view-pop" data-tf-state="popup-open">
       <button data-choice="Cards" onclick="choose(this,event)" data-testid="view-cards"><span class="tick"></span>Cards</button>
       <button data-choice="Table" onclick="choose(this,event)" data-testid="view-table"><span class="tick">✓</span>Table</button>
       <div class="note">Cards gives one tile per project, with its own chart. Table puts every project on one line.</div>
@@ -151,11 +153,11 @@ function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=
       <span class="sm dim grow">Last synced through App Manager <b style="color:var(--fg);font-weight:500" data-testid="sync-when">12 minutes ago</b> · 13:29 today</span>
       <button class="pick" onclick="say('Sends what changed here and takes what changed elsewhere. It takes a few seconds.')" data-testid="sync-now"><svg><use href="#i-refresh"/></svg>Sync now</button>
      </div>
-     <div class="row" style="gap:12px;padding:9px 0;border-top:1px solid var(--line2)" data-testid="sync-machine-mac">
+     <div class="row" style="gap:12px;padding:9px 0;border-top:1px solid var(--line2)" data-testid="sync-machine-this">
       <svg style="color:var(--dim)"><use href="#i-monitor"/></svg>
       <div class="grow"><div class="sm" style="font-weight:500">Techie&#39;s MacBook Pro <span class="xs faint">· this machine</span></div>
        <div class="xs dim">7 agents · 12 rules · 4 corrections</div></div>
-      <span class="pill ok" style="white-space:nowrap" data-testid="sync-state-mac">up to date</span>
+      <span class="pill ok" style="white-space:nowrap" data-testid="sync-state-this">up to date</span>
      </div>
      <div class="row" style="gap:12px;padding:9px 0;border-top:1px solid var(--line2)" data-testid="sync-machine-win">
       <svg style="color:var(--dim)"><use href="#i-monitor"/></svg>

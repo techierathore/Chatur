@@ -60,7 +60,7 @@ public sealed class MeasurementActions : IMeasurementActions
 
             if (vProjectPath is not null)
             {
-                var vFilePath = Path.Combine(vProjectPath, "docs", "metrics", vStreamName);
+                var vFilePath = Path.Combine(MetricsFolderOf(vProjectPath), vStreamName);
                 if (File.Exists(vFilePath))
                 {
                     var vLines = await File.ReadAllLinesAsync(vFilePath, aCt).ConfigureAwait(false);
@@ -116,7 +116,7 @@ public sealed class MeasurementActions : IMeasurementActions
             return null;
         }
 
-        var vFolder = Path.Combine(vProject.Value.Path, "docs", "metrics");
+        var vFolder = MetricsFolderOf(vProject.Value.Path);
         var vRunsPath = Path.Combine(vFolder, "runs.jsonl");
         string? vNewest = null;
         if (File.Exists(vRunsPath))
@@ -193,7 +193,20 @@ public sealed class MeasurementActions : IMeasurementActions
     /// (REQ-FN-042). Neither a refusal nor a disk failure throws — both are logged and recorded in
     /// <c>RefusedWrite</c>, and the caller's session carries on (REQ-UI-035).
     /// </remarks>
-    public async Task AppendAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, CancellationToken aCt = default)
+    public Task AppendAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, CancellationToken aCt = default) =>
+        AppendCoreAsync(aProjectId, aStreamName, aFields, true, aCt);
+
+    /// <inheritdoc />
+    public Task AppendWhenMeasuredAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, CancellationToken aCt = default) =>
+        AppendCoreAsync(aProjectId, aStreamName, aFields, false, aCt);
+
+    /// <summary>
+    /// The one writer behind both appends. On 23 Nov 2026 the owner found <c>docs/metrics</c> with five files, four
+    /// of them empty, in a folder he had only opened and chatted in: every chat turn's record made the folder and
+    /// all five stream files. Now the folder is made only for a record a command needs
+    /// (<paramref name="aMakeFolder"/>), only the stream written to gets a file, and no empty file is ever made.
+    /// </summary>
+    private async Task AppendCoreAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, bool aMakeFolder, CancellationToken aCt)
     {
         var vStreamFileName = NormalizeStreamName(aStreamName);
 
@@ -205,15 +218,10 @@ public sealed class MeasurementActions : IMeasurementActions
             return;
         }
 
-        var vMetricsFolder = Path.Combine(vProjectRow.Value.Path, "docs", "metrics");
-
-        try
+        var vMetricsFolder = MetricsFolderOf(vProjectRow.Value.Path);
+        if (!aMakeFolder && !Directory.Exists(vMetricsFolder))
         {
-            EnsureAllStreamsExist(vMetricsFolder);
-        }
-        catch (Exception aEx)
-        {
-            await RefuseAsync(aProjectId, vStreamFileName, $"Could not create docs/metrics: {aEx.Message}", aCt).ConfigureAwait(false);
+            // Not a refusal: the project is not measured, and nobody asked for a file in it.
             return;
         }
 
@@ -230,6 +238,7 @@ public sealed class MeasurementActions : IMeasurementActions
         await vLock.WaitAsync(aCt).ConfigureAwait(false);
         try
         {
+            Directory.CreateDirectory(vMetricsFolder);
             await File.AppendAllTextAsync(vFilePath, vLine + Environment.NewLine, aCt).ConfigureAwait(false);
         }
         catch (Exception aEx)
@@ -265,19 +274,6 @@ public sealed class MeasurementActions : IMeasurementActions
             """,
             new { aProjectId, aStreamFileName, aReason, vNowUtc = DateTime.UtcNow.ToString("O") },
             cancellationToken: aCt)).ConfigureAwait(false);
-    }
-
-    private static void EnsureAllStreamsExist(string aMetricsFolder)
-    {
-        Directory.CreateDirectory(aMetricsFolder);
-        foreach (var vStreamFileName in MeasurementSchema.StreamFileNames)
-        {
-            var vPath = Path.Combine(aMetricsFolder, vStreamFileName);
-            if (!File.Exists(vPath))
-            {
-                File.WriteAllText(vPath, string.Empty);
-            }
-        }
     }
 
     private static string BuildLine(string aStreamFileName, string aAppName, IReadOnlyDictionary<string, string?> aFields)
@@ -316,5 +312,17 @@ public sealed class MeasurementActions : IMeasurementActions
         public string Name { get; set; } = string.Empty;
 
         public string Path { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// A project's <c>docs/metrics</c> folder. A solution's path is its .sln or .slnx file, so its folder is the one
+    /// around that file: before, the file itself was taken for a folder and every write was refused with "Cannot
+    /// create '…\MyTasks.sln'" (owner's log, 21 Nov 2026).
+    /// </summary>
+    /// <param name="aProjectPath">The project's stored path: a folder, or a solution file.</param>
+    private static string MetricsFolderOf(string aProjectPath)
+    {
+        var vRoot = File.Exists(aProjectPath) ? Path.GetDirectoryName(aProjectPath) ?? aProjectPath : aProjectPath;
+        return Path.Combine(vRoot, "docs", "metrics");
     }
 }

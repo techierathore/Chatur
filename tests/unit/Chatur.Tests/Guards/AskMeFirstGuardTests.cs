@@ -12,7 +12,7 @@ namespace Chatur.Tests.Guards;
 /// </summary>
 public sealed class AskMeFirstGuardTests : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-{Guid.NewGuid():N}.db");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-{Guid.NewGuid():N}.db");
     private readonly string objConnectionString;
 
     /// <summary>Migrates a fresh database.</summary>

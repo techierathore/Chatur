@@ -4,6 +4,7 @@ using Chatur.Core.Platform;
 using ChaturUI.Layouts;
 using ChaturUI.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace ChaturUI.Shell;
@@ -17,14 +18,17 @@ namespace ChaturUI.Shell;
 /// <remarks>Owning cluster: H (REQ-UI-010, REQ-UI-018, REQ-UI-073). Sign out (REQ-FN-009) lives in <see cref="AccountMenu"/>.</remarks>
 public partial class MenuBar : IAsyncDisposable
 {
+    /// <summary>The page's script runtime, so a clean-up for a page that has gone is skipped (REQ-NFR-011).</summary>
+    [Inject]
+    private IJSRuntime PageJs { get; set; } = default!;
+
     private DotNetObjectReference<MenuBar>? objSelfRef;
     private IJSObjectReference? objShortcuts;
-    private IReadOnlyList<ProjectSummary> objOtherProjects = [];
+    private IReadOnlyList<ProjectSummary> objAllProjects = [];
     private IReadOnlyList<ProjectSummary> objRecent = [];
     private ChaturBuildInfo? objBuildInfo;
     private ProjectOpenMode objOpenProjectMode;
     private FileSearchMode objSearchMode;
-    private bool objProjectsLoaded;
     private bool objOpenProjectOpen;
     private bool objSearchOpen;
     private bool objAboutOpen;
@@ -98,7 +102,31 @@ public partial class MenuBar : IAsyncDisposable
         Workbench.SetRunTargets(await BuildRun.TargetsAsync(vProjectId));
     }
 
-    private void SelectTarget(RunTarget aTarget) => Workbench.SelectRunTarget(aTarget);
+    /// <summary>Project ▸ Project to run: chooses it now and remembers it for this solution and account (BRD-228).</summary>
+    private async Task SelectTarget(RunTarget aTarget)
+    {
+        if (ProjectId is not { } vProjectId || !aTarget.IsAvailableOnThisMachine)
+        {
+            return;
+        }
+
+        Workbench.SelectRunTarget(aTarget);
+        await BuildRun.SetRunTargetAsync(vProjectId, aTarget.RunTargetId);
+    }
+
+    /// <summary>Whether View ▸ Show hidden files is ticked for the signed-in account (BRD-225).</summary>
+    private bool objShowHidden;
+
+    /// <summary>File's close item names what is open: a solution or a folder (BRD-229).</summary>
+    private string CloseLabel => AppStateService.SelectedProject?.Kind == "Solution" ? "Close solution" : "Close folder";
+
+    /// <summary>View ▸ Show hidden files: keeps the choice for the account and has Files read its tree again (BRD-225).</summary>
+    private async Task SetShowHiddenAsync(bool aShow)
+    {
+        objShowHidden = aShow;
+        await Files.SetShowHiddenAsync(aShow);
+        Workbench.NotifyFilesViewChanged();
+    }
 
     /// <summary>Builds the project on the chosen target (REQ-UI-012).</summary>
     private async Task BuildAsync()
@@ -165,9 +193,11 @@ public partial class MenuBar : IAsyncDisposable
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        AppStateService.Changed += OnAppStateChanged;
+        AppStateService.Changed += OnSelectedProjectChanged;
         Workbench.Changed += OnAppStateChanged;
         await EnsureTargetsLoadedAsync();
+        objShowHidden = await Files.ShowHiddenAsync();
+        RefreshProjectListsInBackground();
     }
 
     /// <summary>Whether the open file can be saved now: it has changes, and no proposed change holds it read-only.</summary>
@@ -192,18 +222,107 @@ public partial class MenuBar : IAsyncDisposable
         objSearchOpen = true;
     }
 
-    /// <summary>Re-reads the projects opened most recently each time File opens, so the list never lags what was just opened.</summary>
-    private async Task LoadRecentAsync()
+    /// <summary>
+    /// Re-reads the project switcher's list and File ▸ Recent projects off the page's event path (owner, 20 Nov 2026).
+    /// Before, File's pointer-down and the switcher's click ran <see cref="IProjectActions.ScanAsync"/>, which walks
+    /// every named folder on disk and runs a statement per subfolder synchronously on the circuit; with 80 or more
+    /// projects the click that opens the menu queued behind it, and a second click toggled the menu shut.
+    /// </summary>
+    private void RefreshProjectListsInBackground()
     {
-        objRecent = (await Projects.ScanAsync())
-            .Where(p => p.LastOpenedUtc is not null)
-            .OrderByDescending(p => p.LastOpenedUtc)
-            .Take(5)
-            .ToList();
+        if (Interlocked.Exchange(ref objRefreshing, 1) == 1)
+        {
+            objRefreshAgain = true;
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var vChanged = false;
+                do
+                {
+                    objRefreshAgain = false;
+                    var vProjects = await Projects.KnownAsync().ConfigureAwait(false);
+                    // Decided (owner, 21 Nov 2026, replacing the 20 Nov "20 last opened, then All projects"): the
+                    // switcher lists every one of the account's projects, the most recently opened first, in a list
+                    // that scrolls and filters (REQ-UI-109).
+                    var vOthers = vProjects
+                        .OrderByDescending(p => p.LastOpenedUtc ?? DateTime.MinValue)
+                        .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    var vRecent = vProjects
+                        .Where(p => p.LastOpenedUtc is not null)
+                        .OrderByDescending(p => p.LastOpenedUtc)
+                        .Take(5)
+                        .ToList();
+                    if (!SameProjects(vOthers, objAllProjects) || !SameProjects(vRecent, objRecent))
+                    {
+                        objAllProjects = vOthers;
+                        objRecent = vRecent;
+                        vChanged = true;
+                    }
+                }
+                while (objRefreshAgain);
+
+                // Only a list that changed redraws the menu bar: a redraw while a submenu is open moved it after
+                // the menu library had placed it (TR-024 check at 390 px, 21 Nov 2026).
+                if (vChanged)
+                {
+                    await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+                }
+            }
+            catch (Exception aException) when (aException is InvalidOperationException or IOException or ObjectDisposedException or Microsoft.Data.Sqlite.SqliteException)
+            {
+                // the lists keep what they last held; the next project change reads them again
+            }
+            finally
+            {
+                Interlocked.Exchange(ref objRefreshing, 0);
+            }
+        });
     }
 
-    /// <summary>Asks the editor what it can undo and redo each time Edit opens, so Redo is off when there is nothing to redo.</summary>
-    private async Task RefreshEditStateAsync()
+    /// <summary>Whether two project lists name the same projects, by the same names, in the same order.</summary>
+    private static bool SameProjects(IReadOnlyList<ProjectSummary> aLeft, IReadOnlyList<ProjectSummary> aRight) =>
+        aLeft.Select(p => (p.ProjectId, p.Name)).SequenceEqual(aRight.Select(p => (p.ProjectId, p.Name)));
+
+    /// <summary>From how many projects on the switcher shows its filter box (REQ-UI-109).</summary>
+    private const int SwitcherFilterFrom = 8;
+
+    /// <summary>Whether the project switcher's list is open.</summary>
+    private bool objSwitcherOpen;
+
+    /// <summary>What the switcher's filter box holds.</summary>
+    private string objSwitcherFilter = string.Empty;
+
+    /// <summary>The projects the switcher shows: all of them, or those whose name or path holds the filter's text.</summary>
+    private List<ProjectSummary> SwitcherProjects => string.IsNullOrWhiteSpace(objSwitcherFilter)
+        ? objAllProjects.ToList()
+        : objAllProjects.Where(p => p.Name.Contains(objSwitcherFilter.Trim(), StringComparison.OrdinalIgnoreCase)
+            || p.Path.Contains(objSwitcherFilter.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private void OnSwitcherFilterChanged(string? aText) => objSwitcherFilter = aText ?? string.Empty;
+
+    /// <summary>Escape closes the switcher, from its button, its filter box or its list, as it closes every menu.</summary>
+    private void OnSwitcherKeyDown(KeyboardEventArgs aArgs)
+    {
+        if (aArgs.Key == "Escape" && objSwitcherOpen)
+        {
+            objSwitcherOpen = false;
+            objSwitcherFilter = string.Empty;
+        }
+    }
+
+    private int objRefreshing;
+    private volatile bool objRefreshAgain;
+
+    /// <summary>
+    /// Asks the editor what it can redo as Edit opens, without holding the click back: the menu opens at once and
+    /// Redo's state follows when the editor answers.
+    /// </summary>
+    private void StartEditStateRefresh()
     {
         if (Workbench.ActiveFile is null)
         {
@@ -211,7 +330,18 @@ public partial class MenuBar : IAsyncDisposable
             return;
         }
 
-        objCanRedo = (await Editor.StateAsync()).CanRedo;
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                objCanRedo = (await Editor.StateAsync()).CanRedo;
+                StateHasChanged();
+            }
+            catch (Exception aException) when (aException is JSException or JSDisconnectedException or TaskCanceledException or InvalidOperationException)
+            {
+                objCanRedo = false;
+            }
+        });
     }
 
     /// <summary>Runs undo, redo, cut or copy on the open file's editor.</summary>
@@ -248,10 +378,10 @@ public partial class MenuBar : IAsyncDisposable
         Workbench.MarkSaved(aFile.Id);
     }
 
-    /// <summary>File ▸ Close project: nothing stays selected, and the project list is shown.</summary>
     /// <summary>File ▸ Recent projects ▸ Project list: the Start window with every project, the open one left open (<c>/start?all=1</c>).</summary>
     private void ShowProjectList() => Nav.NavigateTo("/start?all=1");
 
+    /// <summary>File ▸ Close solution or Close folder (BRD-229): nothing stays selected, and the project list is shown.</summary>
     private async Task CloseProjectAsync()
     {
         await Opener.CloseProjectAsync();
@@ -277,22 +407,13 @@ public partial class MenuBar : IAsyncDisposable
     /// Loads the other known projects the first time the switcher opens, so a project with nothing
     /// selected yet still shows a normal, empty menu bar rather than an eager background fetch.
     /// </summary>
-    private async Task EnsureProjectsLoadedAsync()
-    {
-        if (objProjectsLoaded)
-        {
-            return;
-        }
-
-        objOtherProjects = await Projects.ScanAsync();
-        objProjectsLoaded = true;
-    }
-
     /// <summary>Selects another project without leaving the Workbench (REQ-UI-010).</summary>
     private async Task SwitchToAsync(int aProjectId)
     {
+        objSwitcherOpen = false;
+        objSwitcherFilter = string.Empty;
         await Projects.SelectProjectAsync(aProjectId);
-        objProjectsLoaded = false;
+        RefreshProjectListsInBackground();
     }
 
     /// <summary>Opens the Agent workspace in a tab, on the agent already shown there or the first one.</summary>
@@ -300,17 +421,24 @@ public partial class MenuBar : IAsyncDisposable
 
     private void OnAppStateChanged() => InvokeAsync(StateHasChanged);
 
+    /// <summary>Another project was opened somewhere: the switcher and Recent projects read the list again, in the background.</summary>
+    private void OnSelectedProjectChanged()
+    {
+        RefreshProjectListsInBackground();
+        OnAppStateChanged();
+    }
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        AppStateService.Changed -= OnAppStateChanged;
+        AppStateService.Changed -= OnSelectedProjectChanged;
         Workbench.Changed -= OnAppStateChanged;
         if (objShortcuts is { } vShortcuts)
         {
             // Never waits on a page that has gone: Sign out reloads the page, and waiting here for the old page's
             // script left the window on "Loading Chatur" (REQ-FN-009, miss of 2026-11-16).
             objShortcuts = null;
-            await JsCleanUp.RunAsync(async () =>
+            await JsCleanUp.RunAsync(PageJs, async () =>
             {
                 await vShortcuts.InvokeVoidAsync("dispose");
                 await vShortcuts.DisposeAsync();

@@ -13,7 +13,7 @@ public sealed class ProjectCommandRunnerTests
     [Fact(DisplayName = "REQ-FN-052 a command past its time limit is stopped")]
     public async Task CommandPastItsLimitIsStopped()
     {
-        var vCommand = new ProjectCommand(SleepProgram, SleepArguments, Path.GetTempPath(), TimeSpan.FromSeconds(1), 1000);
+        var vCommand = new ProjectCommand(SleepProgram, SleepArguments, Chatur.Tests.Support.TestScratch.Root, TimeSpan.FromSeconds(1), 1000);
 
         var vResult = await objRunner.RunAsync(vCommand);
 
@@ -27,7 +27,7 @@ public sealed class ProjectCommandRunnerTests
     public async Task CancellingStopsTheCommand()
     {
         using var vSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
-        var vCommand = new ProjectCommand(SleepProgram, SleepArguments, Path.GetTempPath(), TimeSpan.FromMinutes(5), 1000);
+        var vCommand = new ProjectCommand(SleepProgram, SleepArguments, Chatur.Tests.Support.TestScratch.Root, TimeSpan.FromMinutes(5), 1000);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => objRunner.RunAsync(vCommand, vSource.Token));
     }
@@ -36,7 +36,7 @@ public sealed class ProjectCommandRunnerTests
     [Fact(DisplayName = "REQ-FN-052 a missing program is reported not started")]
     public async Task MissingProgramIsNotStarted()
     {
-        var vResult = await objRunner.RunAsync(new ProjectCommand("chatur-no-such-program", string.Empty, Path.GetTempPath(), TimeSpan.FromSeconds(5), 1000));
+        var vResult = await objRunner.RunAsync(new ProjectCommand("chatur-no-such-program", string.Empty, Chatur.Tests.Support.TestScratch.Root, TimeSpan.FromSeconds(5), 1000));
 
         Assert.False(vResult.Started);
         Assert.Contains("could not be started", vResult.Error, StringComparison.Ordinal);

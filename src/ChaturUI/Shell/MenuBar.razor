@@ -4,45 +4,72 @@
     <BrandMark />
     <span class="mx-2 text-sm font-semibold" data-testid="wordmark">Chatur</span>
 
-    @* The project switcher (REQ-UI-010): picking another project here updates AppState, which every
-       other region and every other screen already reads — no navigation happens. *@
-    <DropdownMenu>
-        <DropdownMenuTrigger AsChild>
-            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7 gap-1" @onclick="EnsureProjectsLoadedAsync" data-testid="project-switch">
+    @* The project switcher (REQ-UI-010, REQ-FN-307, REQ-UI-109, REQ-UI-110): "Project:" and the name of the project
+       open now; its list holds every one of the account's projects, scrolls, ticks the open one, and has a filter box
+       when it is long. Each row shows the path under the name, so two projects of the same name are told apart (the
+       owner's two "Xpenser", 21 Nov 2026: picking the other one looked like nothing happened). Picking one updates
+       AppState, which every other region and screen reads; no navigation happens. *@
+    <div class="inline-flex min-w-0">
+    <Popover @bind-Open="objSwitcherOpen">
+        <PopoverTrigger AsChild>
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Class="h-7 min-w-0 gap-1" @onpointerdown="RefreshProjectListsInBackground" @onkeydown="OnSwitcherKeyDown"
+                    title="@(AppStateService.SelectedProject is { } vOpen ? $"The project open now: {vOpen.Name} — {vOpen.Path}. Click to switch." : "No project is open. Click to open one.")"
+                    data-testid="project-switch">
                 <LucideIcon Name="folder" Size="14" />
-                <span data-testid="project-switch-name">@(AppStateService.SelectedProject?.Name ?? "No project")</span>
+                <span class="text-xs text-muted-foreground" data-testid="project-switch-label">Project:</span>
+                <span class="max-w-[14rem] truncate font-semibold" data-testid="project-switch-name">@(AppStateService.SelectedProject?.Name ?? "None open")</span>
                 <LucideIcon Name="chevron-down" Size="14" />
             </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent Class="max-h-80 w-64 overflow-y-auto" data-testid="project-switch-pop">
-            <DropdownMenuLabel>Switch project</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            @if (objOtherProjects.Count == 0)
-            {
-                <DropdownMenuItem Disabled="true">No other projects found</DropdownMenuItem>
-            }
-            else
-            {
-                @foreach (var vProject in objOtherProjects)
+        </PopoverTrigger>
+        <PopoverContent Class="w-80 p-0" data-testid="project-switch-pop">
+            <div @onkeydown="OnSwitcherKeyDown">
+            <div class="flex flex-col gap-2 border-b p-2">
+                <span class="px-1 text-xs font-medium text-muted-foreground">Switch project</span>
+                @if (objAllProjects.Count > SwitcherFilterFrom)
                 {
-                    var vIsCurrent = vProject.ProjectId == AppStateService.SelectedProject?.ProjectId;
-                    <DropdownMenuItem OnClick="() => SwitchToAsync(vProject.ProjectId)" data-testid="@($"project-switch-{vProject.ProjectId}")">
-                        @if (vIsCurrent)
-                        {
-                            <LucideIcon Name="check" Size="14" />
-                        }
-                        <span>@vProject.Name</span>
-                    </DropdownMenuItem>
+                    <Input Value="@objSwitcherFilter" ValueChanged="OnSwitcherFilterChanged" DebounceMilliseconds="100" Type="InputType.Search"
+                           Placeholder="Filter by name or path" AriaLabel="Filter the projects" data-testid="project-switch-filter" />
                 }
-            }
-            <DropdownMenuSeparator />
-            <DropdownMenuItem Href="/start?all=1">All projects</DropdownMenuItem>
-        </DropdownMenuContent>
-    </DropdownMenu>
+            </div>
+            @* Only the rows in view are drawn (Virtualize), so the list opens at once with 200 projects or more. *@
+            <div class="max-h-80 overflow-y-auto p-1" data-testid="project-switch-list" data-count="@SwitcherProjects.Count">
+                @if (objAllProjects.Count == 0)
+                {
+                    <p class="px-2 py-1.5 text-sm text-muted-foreground" data-testid="project-switch-none">No projects yet: open one from File.</p>
+                }
+                else if (SwitcherProjects.Count == 0)
+                {
+                    <p class="px-2 py-1.5 text-sm text-muted-foreground" data-testid="project-switch-no-match">No project has that in its name or path.</p>
+                }
+                <Virtualize Items="@SwitcherProjects" ItemSize="48" OverscanCount="8" Context="vProject">
+                    @{ var vIsCurrent = vProject.ProjectId == AppStateService.SelectedProject?.ProjectId; }
+                    <button type="button" class="@($"flex h-12 w-full min-w-0 items-start gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent {(vIsCurrent ? "bg-accent/60" : string.Empty)}")"
+                            title="@vProject.Name" aria-current="@(vIsCurrent ? "true" : null)" @onclick="() => SwitchToAsync(vProject.ProjectId)"
+                            data-testid="@($"project-switch-{vProject.ProjectId}")">
+                        <span class="mt-0.5 inline-flex w-4 flex-none">@if (vIsCurrent) { <LucideIcon Name="check" Size="14" /> }</span>
+                        <span class="flex min-w-0 flex-1 flex-col">
+                            <span class="flex min-w-0 items-center gap-2">
+                                <span class="min-w-0 truncate whitespace-nowrap font-medium" data-testid="project-switch-item-name">@vProject.Name</span>
+                                @if (vIsCurrent)
+                                {
+                                    <span class="flex-none text-xs text-muted-foreground" data-testid="project-switch-current">open now</span>
+                                }
+                            </span>
+                            <span class="min-w-0 truncate whitespace-nowrap font-mono text-xs text-muted-foreground" title="@vProject.Path" data-testid="project-switch-item-path">@vProject.Path</span>
+                        </span>
+                    </button>
+                </Virtualize>
+            </div>
+            </div>
+        </PopoverContent>
+    </Popover>
+    </div>
 
     <Menubar Class="h-7 border-0 bg-transparent p-0">
         <MenubarMenu>
-            <MenubarTrigger @onpointerdown="LoadRecentAsync" data-testid="menu-file">File</MenubarTrigger>
+            @* Nothing slow runs on the click that opens a menu (owner, 20 Nov 2026): pressing File starts a read of the project
+               lists in the background and returns at once, so the menu opens at once and Recent projects is never stale. *@
+            <MenubarTrigger @onpointerdown="RefreshProjectListsInBackground" data-testid="menu-file">File</MenubarTrigger>
             <MenubarContent data-testid="menu-file-items">
                 @* The four ways into a project open one dialog (REQ-UI-073); each ends with the project selected. *@
                 <MenubarItem OnClick="@(() => OpenProjectDialog(ProjectOpenMode.NewProject))" data-testid="menu-file-new">New project</MenubarItem>
@@ -56,7 +83,15 @@
                     <MenubarSubContent data-testid="menu-file-recent-list">
                         @foreach (var vRecent in objRecent)
                         {
-                            <MenubarItem OnClick="@(() => SwitchToAsync(vRecent.ProjectId))" data-testid="@($"menu-file-recent-{vRecent.ProjectId}")">@vRecent.Name</MenubarItem>
+                            @* The project open now is listed but greyed and marked "open": a click on it did nothing (verify of 23 Nov 2026). *@
+                            var vIsOpen = vRecent.ProjectId == ProjectId;
+                            <MenubarItem Disabled="vIsOpen" OnClick="@(() => SwitchToAsync(vRecent.ProjectId))" data-testid="@($"menu-file-recent-{vRecent.ProjectId}")">
+                                <span>@vRecent.Name</span>
+                                @if (vIsOpen)
+                                {
+                                    <span class="ml-auto pl-3 text-xs text-muted-foreground">open</span>
+                                }
+                            </MenubarItem>
                         }
                         @* The mockup's "Recent projects" leads to the Start window (main.html href="start.html"); the list
                            ends with that way in, so every project, not only the recent ones, is one click away. *@
@@ -71,12 +106,13 @@
                 <MenubarItem Disabled="@(!CanSave)" OnClick="SaveAsync" data-testid="menu-file-save">Save</MenubarItem>
                 <MenubarItem Disabled="@(!CanSaveAll)" OnClick="SaveAllAsync" data-testid="menu-file-save-all">Save all</MenubarItem>
                 <MenubarSeparator />
-                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="CloseProjectAsync" data-testid="menu-file-close">Close project</MenubarItem>
+                @* BRD-229: says what it closes, a solution or a folder; never "Close project". *@
+                <MenubarItem Disabled="@(AppStateService.SelectedProject is null)" OnClick="CloseProjectAsync" data-testid="menu-file-close">@CloseLabel</MenubarItem>
                 <MenubarItem OnClick="@(() => AppShell.Exit())" data-testid="menu-file-exit">Exit</MenubarItem>
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
-            <MenubarTrigger @onpointerdown="RefreshEditStateAsync" data-testid="menu-edit">Edit</MenubarTrigger>
+            <MenubarTrigger @onpointerdown="StartEditStateRefresh" data-testid="menu-edit">Edit</MenubarTrigger>
             <MenubarContent data-testid="menu-edit-items">
                 @* Undo, redo and the clipboard act on the open file's editor (REQ-UI-073). *@
                 <MenubarItem Disabled="@(!CanEdit)" OnClick="@(() => EditAsync("undo"))" data-testid="menu-edit-undo">Undo</MenubarItem>
@@ -97,6 +133,9 @@
                 <MenubarCheckboxItem Checked="Workbench.FilesVisible" CheckedChanged="Workbench.SetFilesVisible" data-testid="menu-view-files">Files</MenubarCheckboxItem>
                 <MenubarCheckboxItem Checked="Workbench.ConversationVisible" CheckedChanged="Workbench.SetConversationVisible" data-testid="menu-view-chat">Chat</MenubarCheckboxItem>
                 <MenubarCheckboxItem Checked="Workbench.OutputVisible" CheckedChanged="Workbench.SetOutputVisible" data-testid="menu-view-output">Output</MenubarCheckboxItem>
+                <MenubarSeparator />
+                @* BRD-225: names starting with a dot, and .vs, stay out of Files until this is ticked; kept for the account. *@
+                <MenubarCheckboxItem Checked="objShowHidden" CheckedChanged="SetShowHiddenAsync" data-testid="menu-view-hidden">Show hidden files</MenubarCheckboxItem>
                 <MenubarSeparator />
                 <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-view-prerequisites">Prerequisites</MenubarItem>
                 <MenubarItem OnClick="@(() => OpenSecondary("/repository"))" data-testid="menu-view-repository">Repository</MenubarItem>
@@ -120,22 +159,21 @@
                 @* The same build/run/stop commands as the toolbar (REQ-UI-012, REQ-UI-013, REQ-UI-015). *@
                 <MenubarItem Disabled="@(ProjectId is null || objSelectedTarget is null || objIsBusy)" OnClick="BuildAsync" data-testid="menu-project-build">Build<span class="ml-auto pl-4 text-xs text-muted-foreground">⌘B</span></MenubarItem>
                 <MenubarItem Disabled="@(ProjectId is null || objSelectedTarget is null || objIsBusy)" OnClick="RunAsync" data-testid="menu-project-run">Run<span class="ml-auto pl-4 text-xs text-muted-foreground">⌘R</span></MenubarItem>
+                @* A menu keeps its Stop, greyed while nothing runs, as mockups/main.html draws it; BRD-226 is the toolbar's. *@
                 <MenubarItem Disabled="@(ProjectId is null || !objIsBusy)" OnClick="StopAsync" data-testid="menu-project-stop">Stop<span class="ml-auto pl-4 text-xs text-muted-foreground">⇧⌘R</span></MenubarItem>
                 <MenubarSeparator />
                 @if (objTargets.Count == 0)
                 {
-                    <MenubarLabel>No run target</MenubarLabel>
+                    <MenubarLabel>No project to run</MenubarLabel>
                 }
                 else
                 {
-                    <MenubarLabel>Run target</MenubarLabel>
+                    @* BRD-228: setting the project to run here is remembered for this solution and account. *@
+                    <MenubarLabel>Project to run</MenubarLabel>
                     @foreach (var vTarget in objTargets)
                     {
                         <MenubarItem OnClick="() => SelectTarget(vTarget)" Disabled="@(!vTarget.IsAvailableOnThisMachine)" data-testid="@($"menu-project-target-{vTarget.RunTargetId}")">
-                            @if (vTarget == objSelectedTarget)
-                            {
-                                <LucideIcon Name="check" Size="14" />
-                            }
+                            <span class="inline-flex w-4 flex-none">@if (vTarget == objSelectedTarget) { <LucideIcon Name="check" Size="14" /> }</span>
                             <span class="whitespace-nowrap">@vTarget.Name</span>
                             @if (!vTarget.IsAvailableOnThisMachine)
                             {
@@ -148,14 +186,26 @@
                 @* REQ-FN-106: these open the secondary window, never the main window's own route. *@
                 <MenubarItem OnClick="@(() => OpenSecondary("/prerequisites"))" data-testid="menu-project-prerequisites">Prerequisites</MenubarItem>
                 <MenubarItem OnClick="@(() => OpenSecondary("/repository"))" data-testid="menu-project-repository">Repository</MenubarItem>
+                @* REQ-UI-115: the open project's own measurements, in the secondary window; off with the licence feature (REQ-FN-075). *@
+                @if (AppStateService.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.Measurements))
+                {
+                    <MenubarItem Disabled="@(ProjectId is null)" OnClick="@(() => OpenSecondary("/measurements"))" data-testid="menu-project-measurements">Measurements</MenubarItem>
+                }
                 @* Phase 2: each opens as a tab in this window, the conversation still on the right. *@
                 <MenubarItem OnClick="@(() => Workbench.OpenProcesses())" data-testid="menu-project-processes">Processes</MenubarItem>
-                <MenubarItem OnClick="Workbench.OpenBoard" data-testid="menu-project-board">Board</MenubarItem>
+                @* REQ-FN-075: a feature the licence has off is not offered here either. *@
+                @if (AppStateService.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.Board))
+                {
+                    <MenubarItem OnClick="Workbench.OpenBoard" data-testid="menu-project-board">Board</MenubarItem>
+                }
                 <MenubarItem OnClick="OpenAgentWorkspace" data-testid="menu-project-agents">Agent workspace</MenubarItem>
                 @* Phase 3: the end-to-end run, its queue and its record, each a tab in this window. *@
-                <MenubarItem OnClick="Workbench.OpenAutoRun" data-testid="menu-project-auto">End-to-end run</MenubarItem>
-                <MenubarItem OnClick="Workbench.OpenRunQueue" data-testid="menu-project-queue">Run queue</MenubarItem>
-                <MenubarItem OnClick="Workbench.OpenRunReport" data-testid="menu-project-report">Run record</MenubarItem>
+                @if (AppStateService.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.AutoRun))
+                {
+                    <MenubarItem OnClick="Workbench.OpenAutoRun" data-testid="menu-project-auto">End-to-end run</MenubarItem>
+                    <MenubarItem OnClick="Workbench.OpenRunQueue" data-testid="menu-project-queue">Run queue</MenubarItem>
+                    <MenubarItem OnClick="Workbench.OpenRunReport" data-testid="menu-project-report">Run record</MenubarItem>
+                }
             </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>

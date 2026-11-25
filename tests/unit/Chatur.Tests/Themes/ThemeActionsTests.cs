@@ -81,7 +81,7 @@ public sealed class ThemeActionsTests : MigratedDatabaseFixture
     [Fact]
     public async Task AddFromFileAsyncAddsAThemeWithAFullShape()
     {
-        var vPath = Path.Combine(Path.GetTempPath(), $"sunset-{Guid.NewGuid():N}.json");
+        var vPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"sunset-{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(vPath, ValidThemeJson);
         try
         {
@@ -103,7 +103,7 @@ public sealed class ThemeActionsTests : MigratedDatabaseFixture
     [Fact]
     public async Task AddFromFileAsyncRefusesAFileMissingATokenAndAddsNothing()
     {
-        var vPath = Path.Combine(Path.GetTempPath(), $"incomplete-{Guid.NewGuid():N}.json");
+        var vPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"incomplete-{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(vPath, """{"light":{"bg":"oklch(1 0 0)"},"dark":{"bg":"oklch(0 0 0)"}}""");
         try
         {
@@ -123,14 +123,14 @@ public sealed class ThemeActionsTests : MigratedDatabaseFixture
     [Fact]
     public async Task AddFromFileAsyncRefusesADuplicateName()
     {
-        var vPath = Path.Combine(Path.GetTempPath(), $"amber-{Guid.NewGuid():N}.json");
+        var vPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"amber-{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(vPath, ValidThemeJson);
         try
         {
             var vActions = new ThemeActions(CreateFactory(), new AppState());
             var vFirst = await vActions.AddFromFileAsync(vPath);
 
-            var vSecondPath = Path.Combine(Path.GetTempPath(), $"{vFirst.Name}.json");
+            var vSecondPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"{vFirst.Name}.json");
             await File.WriteAllTextAsync(vSecondPath, ValidThemeJson);
             try
             {

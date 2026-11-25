@@ -14,9 +14,17 @@ public sealed class WindowService : IWindowService
     private Window? objSecondaryWindow;
     private SecondaryWindowPage? objSecondaryPage;
 
+    /// <summary>Whether the secondary window's page has been taken down and the window may now close.</summary>
+    private bool objSecondaryReadyToClose;
+
     /// <inheritdoc />
-    public Window CreateStartWindow() =>
-        new(new StartWindowPage()) { Title = "Chatur" };
+    public Window CreateStartWindow()
+    {
+        var vPage = new StartWindowPage();
+        var vWindow = new Window(vPage) { Title = "Chatur" };
+        vWindow.Destroying += (_, _) => vPage.ReleaseWebView();
+        return vWindow;
+    }
 
     /// <inheritdoc />
     public void ShowMainWindow()
@@ -26,8 +34,13 @@ public sealed class WindowService : IWindowService
             return;
         }
 
-        objMainWindow = new Window(new MainWindowPage()) { Title = "Chatur" };
-        objMainWindow.Destroying += (_, _) => objMainWindow = null;
+        var vPage = new MainWindowPage();
+        objMainWindow = new Window(vPage) { Title = "Chatur" };
+        objMainWindow.Destroying += (_, _) =>
+        {
+            vPage.ReleaseWebView();
+            objMainWindow = null;
+        };
         Application.Current?.OpenWindow(objMainWindow);
     }
 
@@ -36,10 +49,33 @@ public sealed class WindowService : IWindowService
     {
         if (objSecondaryWindow is null || objSecondaryPage is null)
         {
-            objSecondaryPage = new SecondaryWindowPage(aRoute);
-            objSecondaryWindow = new Window(objSecondaryPage) { Title = "Chatur" };
+            var vPage = new SecondaryWindowPage(aRoute);
+            objSecondaryReadyToClose = false;
+            objSecondaryPage = vPage;
+            objSecondaryWindow = new Window(vPage) { Title = "Chatur" };
+            var vWindow = objSecondaryWindow;
+#if WINDOWS
+            // The window's own close button: the page is taken down first, then the window closes (REQ-NFR-011).
+            vWindow.HandlerChanged += (_, _) =>
+            {
+                if (vWindow.Handler?.PlatformView is Microsoft.UI.Xaml.Window vNative)
+                {
+                    vNative.AppWindow.Closing += async (_, aArgs) =>
+                    {
+                        if (objSecondaryReadyToClose)
+                        {
+                            return;
+                        }
+
+                        aArgs.Cancel = true;
+                        await CloseSecondaryAsync(vWindow, vPage);
+                    };
+                }
+            };
+#endif
             objSecondaryWindow.Destroying += (_, _) =>
             {
+                vPage.ReleaseWebView();
                 objSecondaryWindow = null;
                 objSecondaryPage = null;
             };
@@ -54,9 +90,20 @@ public sealed class WindowService : IWindowService
     /// <inheritdoc />
     public void CloseSecondaryWindow()
     {
-        if (objSecondaryWindow is not null)
+        if (objSecondaryWindow is { } vWindow && objSecondaryPage is { } vPage)
         {
-            Application.Current?.CloseWindow(objSecondaryWindow);
+            _ = CloseSecondaryAsync(vWindow, vPage);
         }
+    }
+
+    /// <summary>
+    /// Closes the secondary window once its page has been taken down while its web view is still there, so nothing
+    /// is sent to a web view that has gone (REQ-NFR-011).
+    /// </summary>
+    private async Task CloseSecondaryAsync(Window aWindow, SecondaryWindowPage aPage)
+    {
+        await aPage.PrepareToCloseAsync();
+        objSecondaryReadyToClose = true;
+        Application.Current?.CloseWindow(aWindow);
     }
 }

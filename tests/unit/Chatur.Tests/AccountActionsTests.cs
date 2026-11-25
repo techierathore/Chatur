@@ -20,7 +20,7 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class AccountActionsTests : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-account-tests-{Guid.NewGuid():N}.db");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-account-tests-{Guid.NewGuid():N}.db");
     private readonly RSA objRsa = RSA.Create();
 
     /// <summary>Runs the real migrations against a fresh temporary database before every test.</summary>

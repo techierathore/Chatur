@@ -49,6 +49,21 @@ function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.se
  document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
  var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
 document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+// BRD-226: Stop shows only while a build or run goes.
+function busy(on,m){var s=document.querySelector('[data-testid="stop"]');if(s)s.style.display=on?'':'none';say(m);}
+// BRD-225: View ▸ Show hidden files, off by default.
+function toggleHidden(b,ev){ev.stopPropagation();var on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',on?'true':'false');
+ b.querySelector('.tick').innerHTML=on?'✓':'';document.querySelector('[data-testid="file-tree"]').classList.toggle('show-hidden',on);closeAll();}
+// BRD-228: the project to run, set from the target picker, the Project menu or a right-click in Files; one tick everywhere.
+function setRun(name,ev){if(ev)ev.stopPropagation();var v=document.querySelector('[data-testid="target"] [data-value]');if(v)v.textContent=name;
+ document.querySelectorAll('[data-run]').forEach(function(b){var t=b.querySelector('.tick');if(t)t.innerHTML=b.getAttribute('data-run')===name?'✓':'';});closeAll();}
+// BRD-222, BRD-223: choosing another branch with uncommitted changes asks first.
+function askSwitch(name,ev){ev.stopPropagation();closeAll();document.querySelectorAll('#branch-dirty [data-to]').forEach(function(s){s.textContent=name;});
+ document.getElementById('branch-dirty').classList.add('open');}
+function doSwitch(m){var n=document.querySelector('#branch-dirty [data-to]').textContent.replace(/^origin\//,'');var w=document.querySelector('[data-testid="branch"]');
+ w.querySelector('[data-value]').textContent=n;w.querySelectorAll('.pop button').forEach(function(b){var t=b.querySelector('.tick');if(t)t.innerHTML=b.textContent.trim()===n?'✓':'';});closeDlg('branch-dirty',m);}
+function closeDlg(id,m){document.getElementById(id).classList.remove('open');if(m)say(m);}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=document.querySelector('.scrim.open');if(d)d.classList.remove('open');closeAll();}});
 </script>
 
 <div class="win" data-testid="window">
@@ -69,7 +84,8 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Saves the open file.')">Save<span class="sub">⌘S</span></button>
     <button onclick="say('Saves every open file.')">Save all<span class="sub">⌥⌘S</span></button>
     <hr>
-    <a href="start.html">Close project</a>
+    <!-- BRD-229: names what is open — "Close solution" with a solution open, "Close folder" with a folder open; never "Close project". -->
+    <a href="start.html" data-testid="menu-file-close" data-tf-sample style="white-space:nowrap" title="Reads &quot;Close folder&quot; when a folder is open">Close solution<span class="sub" style="margin-left:auto;padding-left:14px">a folder: Close folder</span></a>
     <button onclick="say('Quits Chatur.')">Exit<span class="sub">⌘Q</span></button>
    </div>
   </div>
@@ -94,6 +110,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Hides or shows the conversation. Hidden, the file view takes the window.')"><span class="tick">✓</span>Chat</button>
     <button onclick="say('Hides or shows the output strip.')"><span class="tick">✓</span>Output</button>
     <hr>
+    <!-- BRD-225: a check item, off by default; the choice is kept for the account. -->
+    <button role="menuitemcheckbox" aria-checked="false" onclick="toggleHidden(this,event)" data-testid="menu-view-hidden"><span class="tick"></span>Show hidden files</button>
+    <hr>
     <a href="prerequisites.html"><span class="tick"></span>Prerequisites</a>
     <a href="repository.html"><span class="tick"></span>Repository</a>
     <hr>
@@ -108,11 +127,11 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Runs the chosen target.')">Run<span class="sub">⌘R</span></button>
     <button onclick="say('Stops the run and everything it started.')">Stop<span class="sub">⇧⌘R</span></button>
     <hr>
-    <div class="grouplbl">Run target</div>
-    <button data-tf-sample onclick="say('Mac Catalyst · Debug is already the target.')"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button data-tf-sample onclick="say('Switches the target to Mac Catalyst · Release.')"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button data-tf-sample onclick="say('Switches the target to the web harness.')"><span class="tick"></span>Web harness</button>
-    <button data-tf-sample onclick="say('Switches the target to the tests.')"><span class="tick"></span>Tests</button>
+    <!-- BRD-227, BRD-228: the solution's runnable projects; the same list as the target picker, the chosen one ticked. -->
+    <div class="grouplbl" data-testid="menu-project-run">Project to run</div>
+    <button data-tf-sample data-run="TfLens" onclick="setRun('TfLens',event)"><span class="tick">✓</span>TfLens</button>
+    <button data-tf-sample data-run="TfLens.Api" onclick="setRun('TfLens.Api',event)"><span class="tick"></span>TfLens.Api</button>
+    <button data-tf-sample data-run="TfLens.DbMigration" onclick="setRun('TfLens.DbMigration',event)"><span class="tick"></span>TfLens.DbMigration</button>
     <hr>
     <a href="prerequisites.html">Prerequisites…</a>
     <a href="repository.html">Repository…</a>
@@ -168,29 +187,20 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
  </div>
 
  <div class="toolbar" data-testid="toolbar">
-  <button class="tb primary" onclick="say('Builds and runs TfLens on this machine.')" data-testid="run"><svg><use href="#i-play"/></svg>Run</button>
-  <button class="tb" onclick="say('Stops the run and every program it started.')" data-testid="stop"><svg><use href="#i-stop"/></svg>Stop</button>
-  <button class="tb" onclick="say('Builds without running.')" data-testid="build"><svg><use href="#i-hammer"/></svg>Build</button>
+  <button class="tb primary" onclick="busy(true,'Builds and runs the project to run on this machine. Stop shows while it goes.')" data-testid="run"><svg><use href="#i-play"/></svg>Run</button>
+  <!-- BRD-226: drawn idle, so Stop is not shown. It appears beside Run while a build or run goes, and ends it. -->
+  <button class="tb" style="display:none" onclick="busy(false,'Stops the run and every program it started. Stop goes away again.')" data-testid="stop" data-tf-state="running"><svg><use href="#i-stop"/></svg>Stop</button>
+  <button class="tb" onclick="busy(true,'Builds without running. Stop shows while it goes.')" data-testid="build"><svg><use href="#i-hammer"/></svg>Build</button>
   <span class="sep"></span>
+  <!-- BRD-227, BRD-228: the solution's runnable projects; a test project or a class library is not offered. -->
   <div class="popwrap" data-testid="target">
-   <button class="tb bordered" onclick="pop(this,event)"><span data-value>Mac Catalyst · Debug</span><svg><use href="#i-chevron"/></svg></button>
+   <button class="tb bordered" onclick="pop(this,event)"><span data-value>TfLens</span><svg><use href="#i-chevron"/></svg></button>
    <div class="pop" data-testid="target-pop" data-tf-state="popup-open">
-    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Debug',event)"><span class="tick">✓</span>Mac Catalyst · Debug</button>
-    <button data-tf-sample onclick="choose(this,'Mac Catalyst · Release',event)"><span class="tick"></span>Mac Catalyst · Release</button>
-    <button data-tf-sample onclick="choose(this,'Web harness',event)"><span class="tick"></span>Web harness</button>
-    <button data-tf-sample onclick="choose(this,'Tests',event)"><span class="tick"></span>Tests</button>
-    <div class="note">Only what this machine can build. A Windows head needs the Windows machine.</div>
-   </div>
-  </div>
-  <span class="sep"></span>
-  <div class="popwrap" data-testid="branch-pick">
-   <button class="tb" onclick="pop(this,event)"><svg><use href="#i-branch"/></svg><span data-value>main</span><span class="pill" style="margin-left:2px">2 to push</span><svg><use href="#i-chevron"/></svg></button>
-   <div class="pop" data-testid="branch-pop" data-tf-state="popup-open">
-    <button data-tf-sample onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
-    <button data-tf-sample onclick="choose(this,'feature/board',event)"><span class="tick"></span>feature/board</button>
-    <button data-tf-sample onclick="choose(this,'run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
-    <hr>
-    <a href="repository.html">Open the repository…</a>
+    <div class="grouplbl">Project to run</div>
+    <button data-tf-sample data-run="TfLens" onclick="setRun('TfLens',event)"><span class="tick">✓</span>TfLens</button>
+    <button data-tf-sample data-run="TfLens.Api" onclick="setRun('TfLens.Api',event)"><span class="tick"></span>TfLens.Api</button>
+    <button data-tf-sample data-run="TfLens.DbMigration" onclick="setRun('TfLens.DbMigration',event)"><span class="tick"></span>TfLens.DbMigration</button>
+    <div class="note">Only projects that run. Your choice is kept for this solution and offered next time you open it.</div>
    </div>
   </div>
   <button class="find" onclick="say('Finds a file, a symbol or some text in TfLens.')" data-testid="find"><svg><use href="#i-search"/></svg>Find in TfLens<span class="grow"></span><span class="xs faint">⌘P</span></button>
@@ -210,7 +220,22 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d2"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
     <a href="main.html" data-tf-state="sample-data" data-tf-sample class="d1"><svg><use href="#i-folder"/></svg>docs</a>
    </div>
-   <a class="branch" href="repository.html" data-testid="branch" data-tf-state="sample-data" data-tf-sample><svg><use href="#i-branch"/></svg>main<span class="ab">2 to push</span></a>
+   <!-- BRD-222: the one branch picker. It never opens the Repository window. -->
+   <div class="popwrap branchwrap" data-testid="branch" data-tf-state="sample-data" data-tf-sample>
+    <button class="branch" onclick="pop(this,event)" aria-haspopup="menu" title="Switch branch"><svg><use href="#i-branch"/></svg><span data-value>main</span><svg><use href="#i-chevron"/></svg><span class="ab">2 to push</span></button>
+    <div class="pop up" data-testid="branch-pop" data-tf-state="popup-open">
+     <div class="grouplbl">Local</div>
+     <button data-tf-sample onclick="choose(this,'main',event)"><span class="tick">✓</span>main</button>
+     <button data-tf-sample onclick="askSwitch('feature/board',event)"><span class="tick"></span>feature/board</button>
+     <button data-tf-sample onclick="askSwitch('run/BRD-96-101',event)"><span class="tick"></span>run/BRD-96-101</button>
+     <hr>
+     <div class="grouplbl">Remote</div>
+     <button data-tf-sample onclick="askSwitch('origin/main',event)"><span class="tick"></span>origin/main</button>
+     <button data-tf-sample onclick="askSwitch('origin/feature/board',event)"><span class="tick"></span>origin/feature/board</button>
+     <button data-tf-sample onclick="askSwitch('origin/feature/paging',event)"><span class="tick"></span>origin/feature/paging</button>
+     <div class="note">A remote branch is switched to as a local branch that follows it.</div>
+    </div>
+   </div>
   </div>
 
   <div class="split">
@@ -470,6 +495,16 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     </div>
    </div>
 
+  </div>
+ </div>
+ <!-- BRD-223: shown when another branch is chosen while there are uncommitted changes. Escape is Stay. -->
+ <div class="scrim" id="branch-dirty" role="alertdialog" aria-modal="true" aria-labelledby="branch-dirty-title" data-testid="branch-dirty" data-tf-state="dialog-open">
+  <div class="dlg">
+   <div><h2 id="branch-dirty-title">You have uncommitted changes</h2>
+    <div class="sm dim">Your changes on <b>main</b> are not committed. You chose <b data-to>feature/board</b>. What should happen to them?</div></div>
+   <button class="choice" onclick="doSwitch('The changes came with you to the new branch.')" data-testid="branch-dirty-bring"><b>Bring them along</b><span>The changes move to the new branch with you. If they would be overwritten there, Git refuses and nothing changes.</span></button>
+   <button class="choice" onclick="doSwitch('The changes are stashed under a name, and the branch switched. Get them back from the stash later.')" data-testid="branch-dirty-stash"><b>Put them aside</b><span>They are stashed under a name and the branch switches. Get them back from the stash later.</span></button>
+   <button class="choice" onclick="closeDlg('branch-dirty','Nothing changed. You are still on main, with your changes.')" data-testid="branch-dirty-stay"><b>Stay on main</b><span>Nothing changes.</span></button>
   </div>
  </div>
 </div>

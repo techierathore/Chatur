@@ -181,7 +181,7 @@ public sealed class PrerequisiteActionsTests : MigratedDatabaseFixture
 
     private string CreateTempProjectFolder()
     {
-        var vRoot = Path.Combine(Path.GetTempPath(), $"chatur-doctor-tests-{Guid.NewGuid():N}");
+        var vRoot = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-doctor-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(vRoot);
         objTempFolders.Add(vRoot);
         return vRoot;

@@ -59,14 +59,68 @@ public sealed class BuildRunActions : IBuildRunActions
             "SELECT RunTargetId, Name, Command, Platform, IsLastUsed FROM RunTarget WHERE ProjectId = @aProjectId ORDER BY IsLastUsed DESC, RunTargetId",
             new { aProjectId }).ConfigureAwait(false)).ToList();
 
-        if (vRows.Count == 0 && !string.IsNullOrEmpty(vProjectPath) && Directory.Exists(vProjectPath))
+        // A solution's path is its .sln file, not a folder: the search used to ask Directory.Exists of it,
+        // find nothing, and offer "No target found" (owner, 18 Nov 2026, Xpenser). A solution whose
+        // stored targets are only the solution itself was stored by that older search; it is read again.
+        var vIsSolution = !string.IsNullOrEmpty(vProjectPath) && File.Exists(vProjectPath) && SolutionProjects.IsSolutionFile(vProjectPath);
+        string? vRememberedName = null;
+        if (vIsSolution && vRows.Count > 0)
         {
-            vRows = await DiscoverAndStoreTargetsAsync(vConnection, aProjectId, vProjectPath).ConfigureAwait(false);
+            // Read again when the stored targets are the older search's (the solution itself) or no longer on
+            // disk: a branch switch can move a project (Xpenser's saurabhdev keeps them under Source/), and a
+            // stale target ran "The provided file path does not exist". The chosen one is kept by its name.
+            var vRoot = Path.GetDirectoryName(vProjectPath!)!;
+            var vStored = vRows.Select(r => Path.GetFullPath(Path.Combine(vRoot, SpecOf(r).Path))).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var vStale = vRows.All(r => SolutionProjects.IsSolutionFile(SpecOf(r).Path))
+                || vRows.Any(r => !File.Exists(Path.Combine(vRoot, SpecOf(r).Path)))
+                || SolutionProjects.TestProjects(vProjectPath!).Any(t => !vStored.Contains(t));
+            if (vStale && (SolutionProjects.Runnable(vProjectPath!).Count > 0 || SolutionProjects.TestProjects(vProjectPath!).Count > 0))
+            {
+                vRememberedName = vRows.FirstOrDefault(r => r.IsLastUsed)?.Name;
+                await vConnection.ExecuteAsync("DELETE FROM RunTarget WHERE ProjectId = @aProjectId", new { aProjectId }).ConfigureAwait(false);
+                vRows = [];
+            }
+        }
+
+        if (vRows.Count == 0 && !string.IsNullOrEmpty(vProjectPath))
+        {
+            if (vIsSolution)
+            {
+                vRows = await StoreTargetsAsync(vConnection, aProjectId, DiscoverSolutionTargets(vProjectPath!)).ConfigureAwait(false);
+                if (vRows.FirstOrDefault(r => r.Name == vRememberedName) is { } vRemembered)
+                {
+                    await vConnection.ExecuteAsync(
+                        "UPDATE RunTarget SET IsLastUsed = CASE WHEN RunTargetId = @RunTargetId THEN 1 ELSE 0 END WHERE ProjectId = @aProjectId",
+                        new { vRemembered.RunTargetId, aProjectId }).ConfigureAwait(false);
+                    vRemembered.IsLastUsed = true;
+                    vRows = [vRemembered, .. vRows.Where(r => r != vRemembered)];
+                }
+            }
+            else if (Directory.Exists(vProjectPath))
+            {
+                vRows = await StoreTargetsAsync(vConnection, aProjectId, DiscoverTargets(vProjectPath)).ConfigureAwait(false);
+            }
         }
 
         return vRows
-            .Select(r => new RunTarget(r.RunTargetId, r.Name, r.Platform, IsAvailableOnThisMachine(r.Platform)))
+            .Select(r => new RunTarget(r.RunTargetId, r.Name, r.Platform, IsAvailableOnThisMachine(r.Platform), SpecOf(r).Path.Replace('\\', '/')))
             .ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task SetRunTargetAsync(int aProjectId, int aRunTargetId, CancellationToken aCt = default) =>
+        await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+
+    private static TargetSpec SpecOf(RunTargetRow aRow)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<TargetSpec>(aRow.Command) ?? new TargetSpec(string.Empty, "Debug", null);
+        }
+        catch (JsonException)
+        {
+            return new TargetSpec(string.Empty, "Debug", null);
+        }
     }
 
     /// <inheritdoc />
@@ -79,11 +133,41 @@ public sealed class BuildRunActions : IBuildRunActions
         var vState = GetOrCreateState(aProjectId);
         var vGeneration = vState.Begin();
 
-        var (vProjectPath, vSpec) = await LoadTargetAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+        string vProjectPath;
+        TargetSpec vSpec;
+        try
+        {
+            (vProjectPath, vSpec) = await LoadTargetAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException aException)
+        {
+            vState.Publish(vGeneration, new OutputLine($"Build FAILED in 0.0s — {aException.Message}", true));
+            return new BuildResult(false, TimeSpan.Zero, []);
+        }
 
-        var vFullPath = Path.Combine(vProjectPath, vSpec.Path);
-        var vArguments = $"build \"{vFullPath}\" -c {vSpec.Config}" + (vSpec.Tfm is null ? string.Empty : $" -f {vSpec.Tfm}");
-        vState.Publish(vGeneration, new OutputLine($"> dotnet {vArguments}", false));
+        var vResult = await BuildCoreAsync(vState, vGeneration, vProjectPath, vSpec, aCt).ConfigureAwait(false);
+        if (vResult is null)
+        {
+            return new BuildResult(false, TimeSpan.Zero, []);
+        }
+
+        vState.Publish(vGeneration, new OutputLine(
+            vResult.Succeeded ? $"Build succeeded in {vResult.Duration.TotalSeconds:0.0}s" : BuildFailedLine(vResult),
+            !vResult.Succeeded));
+
+        await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+        return vResult;
+    }
+
+    /// <summary>
+    /// Builds one target with <c>dotnet build</c>, every line shown as it comes and each compiler error marked
+    /// (REQ-UI-012, REQ-UI-107). Returns null when the build was stopped.
+    /// </summary>
+    private async Task<BuildResult?> BuildCoreAsync(RunState aState, int aGeneration, string aProjectPath, TargetSpec aSpec, CancellationToken aCt)
+    {
+        var vFullPath = Path.Combine(aProjectPath, aSpec.Path);
+        var vArguments = $"build \"{vFullPath}\" -c {aSpec.Config}" + (aSpec.Tfm is null ? string.Empty : $" -f {aSpec.Tfm}");
+        aState.Publish(aGeneration, new OutputLine($"> dotnet {vArguments}", false));
 
         var vErrors = new List<BuildError>();
         var vStopwatch = Stopwatch.StartNew();
@@ -93,38 +177,36 @@ public sealed class BuildRunActions : IBuildRunActions
             vExitCode = await objLauncher.RunAsync(
                 "dotnet",
                 vArguments,
-                vProjectPath,
+                aProjectPath,
                 aLine =>
                 {
-                    var vError = ParseBuildError(aLine, vProjectPath);
-                    if (vError is not null)
+                    var vError = ParseBuildError(aLine, aProjectPath);
+                    if (vError is not null && !vErrors.Contains(vError))
                     {
                         vErrors.Add(vError);
                     }
 
-                    vState.Publish(vGeneration, new OutputLine(aLine, vError is not null));
+                    aState.Publish(aGeneration, new OutputLine(aLine, vError is not null));
                 },
-                vState.LinkedToken(aCt)).ConfigureAwait(false);
+                aState.LinkedToken(aCt)).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
-            vState.Publish(vGeneration, new OutputLine("Build stopped.", true));
-            vStopwatch.Stop();
-            return new BuildResult(false, vStopwatch.Elapsed, vErrors);
+            aState.Publish(aGeneration, new OutputLine("Build stopped.", true));
+            return null;
         }
         finally
         {
             vStopwatch.Stop();
         }
 
-        var vSucceeded = vExitCode == 0;
-        vState.Publish(vGeneration, new OutputLine(
-            vSucceeded ? $"Build succeeded in {vStopwatch.Elapsed.TotalSeconds:0.0}s" : $"Build FAILED in {vStopwatch.Elapsed.TotalSeconds:0.0}s",
-            !vSucceeded));
-
-        await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
-        return new BuildResult(vSucceeded, vStopwatch.Elapsed, vErrors);
+        return new BuildResult(vExitCode == 0, vStopwatch.Elapsed, vErrors);
     }
+
+    /// <summary>"Build FAILED", how long it took and how many errors, so a failed build says so in words (REQ-UI-108).</summary>
+    private static string BuildFailedLine(BuildResult aResult) =>
+        $"Build FAILED in {aResult.Duration.TotalSeconds:0.0}s — {aResult.Errors.Count} error{(aResult.Errors.Count == 1 ? string.Empty : "s")}"
+        + (aResult.Errors.Count > 0 ? $"; first: {aResult.Errors[0].FilePath}({aResult.Errors[0].Line}): {aResult.Errors[0].Message}" : string.Empty);
 
     /// <inheritdoc />
     public Task RunAsync(int aProjectId, int aRunTargetId, CancellationToken aCt = default)
@@ -136,7 +218,7 @@ public sealed class BuildRunActions : IBuildRunActions
         var vState = GetOrCreateState(aProjectId);
         var vGeneration = vState.Begin();
 
-        _ = RunInBackgroundAsync(aProjectId, aRunTargetId, aCt, vState, vGeneration, objDb.CurrentUserId);
+        _ = RunGuardedAsync(aProjectId, aRunTargetId, aCt, vState, vGeneration, objDb.CurrentUserId);
         return Task.CompletedTask;
     }
 
@@ -202,6 +284,30 @@ public sealed class BuildRunActions : IBuildRunActions
         }
     }
 
+    /// <summary>
+    /// Runs <see cref="RunInBackgroundAsync"/> so that nothing it meets can end it unseen. Root cause of the owner's
+    /// evening test (21 Nov 2026, "Chatur said it was running, no output showed anywhere, and Stop only ended it"): the
+    /// run was started fire-and-forget, and an exception before the program started (a run target read again and
+    /// stored under a new id, a project row no longer there) ended that task with nobody to see it. Output kept
+    /// "nothing run yet", no end line was written, so Run stayed busy and only Stop cleared it. Now every such failure
+    /// is a "Failed to run:" line in Output, which also ends the run.
+    /// </summary>
+    private async Task RunGuardedAsync(int aProjectId, int aRunTargetId, CancellationToken aCt, RunState aState, int aGeneration, string? aUserId)
+    {
+        try
+        {
+            await RunInBackgroundAsync(aProjectId, aRunTargetId, aCt, aState, aGeneration, aUserId).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            aState.Publish(aGeneration, new OutputLine("Run stopped.", false));
+        }
+        catch (Exception aException)
+        {
+            aState.Publish(aGeneration, new OutputLine($"Failed to run: {aException.Message}", true));
+        }
+    }
+
     private async Task RunInBackgroundAsync(int aProjectId, int aRunTargetId, CancellationToken aCt, RunState aState, int aGeneration, string? aUserId)
     {
         // The run outlives the request that started it: it stays the starting account's (BRD-216).
@@ -209,22 +315,66 @@ public sealed class BuildRunActions : IBuildRunActions
         var (vProjectPath, vSpec) = await LoadTargetAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
         var vState = aState;
 
+        // Run builds first, in the open, then runs what it built (REQ-UI-107, owner's evening test of 21 Nov 2026):
+        // `dotnet run` alone builds silently, so a first build showed nothing but its own command line for as long as
+        // it took, and a failed one was only the program's exit.
+        var vBuild = await BuildCoreAsync(vState, aGeneration, vProjectPath, vSpec, aCt).ConfigureAwait(false);
+        if (vBuild is null)
+        {
+            return;
+        }
+
+        if (!vBuild.Succeeded)
+        {
+            vState.Publish(aGeneration, new OutputLine(BuildFailedLine(vBuild) + ". The program was not started.", true));
+            await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+            return;
+        }
+
+        vState.Publish(aGeneration, new OutputLine($"Built in {vBuild.Duration.TotalSeconds:0.0}s — starting it", false));
+
         var vFullPath = Path.Combine(vProjectPath, vSpec.Path);
-        var vArguments = $"run --project \"{vFullPath}\" -c {vSpec.Config} --no-launch-profile" + (vSpec.Tfm is null ? string.Empty : $" -f {vSpec.Tfm}");
+        if (SolutionProjects.IsSolutionFile(vFullPath))
+        {
+            vState.Publish(aGeneration, new OutputLine("A solution builds but does not run by itself: choose one of its projects to run.", true));
+            await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+            return;
+        }
+
+        var vProfile = vSpec.Test ? null : LaunchSettings.ProjectProfile(vFullPath);
+        var vIsWeb = !vSpec.Test && IsWebProjectFile(vFullPath);
+        var vTfm = vSpec.Tfm is null ? string.Empty : $" -f {vSpec.Tfm}";
+        var vArguments = vSpec.Test
+            ? $"test \"{vFullPath}\" -c {vSpec.Config} --no-build{vTfm}"
+            : $"run --project \"{vFullPath}\" -c {vSpec.Config} --no-build"
+                + (vProfile is null ? " --no-launch-profile" : $" --launch-profile \"{vProfile.Name}\"") + vTfm;
         vState.Publish(aGeneration, new OutputLine($"> dotnet {vArguments}", false));
 
+        var vBrowserOpened = 0;
         try
         {
             var vExitCode = await objLauncher.RunAsync(
                 "dotnet",
                 vArguments,
                 vProjectPath,
-                aLine => vState.Publish(aGeneration, new OutputLine(aLine, false)),
+                aLine =>
+                {
+                    vState.Publish(aGeneration, new OutputLine(aLine, IsProgramErrorLine(aLine)));
+
+                    // A web project opens in the browser once it says it is listening (REQ-FN-306), once per run.
+                    if ((vIsWeb || vProfile?.LaunchBrowser == true)
+                        && LaunchSettings.ListeningAddress(aLine) is { } vListening
+                        && Interlocked.Exchange(ref vBrowserOpened, 1) == 0)
+                    {
+                        var vAddress = LaunchSettings.BrowserAddress(vProfile, vListening);
+                        vState.Publish(aGeneration, new OutputLine($"Opening {vAddress} in the browser", false));
+                        _ = objLauncher.OpenBrowserAsync(vAddress, CancellationToken.None);
+                    }
+                },
                 vState.LinkedToken(aCt)).ConfigureAwait(false);
 
-            vState.Publish(aGeneration, new OutputLine(
-                vExitCode == 0 ? "Process exited." : $"Process exited with code {vExitCode}.",
-                vExitCode != 0));
+            // The exit code is always shown, 0 included (REQ-UI-108).
+            vState.Publish(aGeneration, new OutputLine($"Process exited with code {vExitCode}.", vExitCode != 0));
         }
         catch (OperationCanceledException)
         {
@@ -238,6 +388,34 @@ public sealed class BuildRunActions : IBuildRunActions
         await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
     }
 
+    /// <summary>Whether the project file is a web project, read from its SDK; a project that cannot be read is not.</summary>
+    private static bool IsWebProjectFile(string aProjectFile)
+    {
+        try
+        {
+            return File.Exists(aProjectFile) && LaunchSettings.IsWebProject(File.ReadAllText(aProjectFile));
+        }
+        catch (Exception aException) when (aException is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A line of the running program's own output that reports a failure: a log line at fail or crit level, an
+    /// unhandled exception, or a compiler-style error (REQ-UI-107: errors marked).
+    /// </summary>
+    private static bool IsProgramErrorLine(string aLine)
+    {
+        var vText = aLine.TrimStart();
+        return vText.StartsWith("fail:", StringComparison.Ordinal)
+            || vText.StartsWith("crit:", StringComparison.Ordinal)
+            || vText.StartsWith("Unhandled exception", StringComparison.Ordinal)
+            || vText.StartsWith("[FAIL]", StringComparison.Ordinal)
+            || vText.StartsWith("Failed ", StringComparison.Ordinal)
+            || ErrorLineRegex.IsMatch(aLine);
+    }
+
     private RunState GetOrCreateState(int aProjectId) =>
         objRunStates.GetOrAdd(StateKey(aProjectId), _ => new RunState());
 
@@ -246,16 +424,39 @@ public sealed class BuildRunActions : IBuildRunActions
     private async Task<(string ProjectPath, TargetSpec Spec)> LoadTargetAsync(int aProjectId, int aRunTargetId, CancellationToken aCt)
     {
         using var vConnection = objDb.OpenConnection();
-        var vProjectPath = await vConnection.QuerySingleAsync<string>(
+        var vProjectPath = await vConnection.QuerySingleOrDefaultAsync<string>(
             "SELECT Path FROM Project WHERE ProjectId = @aProjectId",
-            new { aProjectId }).ConfigureAwait(false);
+            new { aProjectId }).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("this project is no longer in your list. Open it again from File.");
 
-        var vCommand = await vConnection.QuerySingleAsync<string>(
-            "SELECT Command FROM RunTarget WHERE RunTargetId = @aRunTargetId",
-            new { aRunTargetId }).ConfigureAwait(false);
+        var vCommand = await vConnection.QuerySingleOrDefaultAsync<string>(
+            "SELECT Command FROM RunTarget WHERE RunTargetId = @aRunTargetId AND ProjectId = @aProjectId",
+            new { aRunTargetId, aProjectId }).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("the chosen target is no longer one of this project's: its targets were read again. Choose it in the target picker and press Run again.");
 
-        var vSpec = JsonSerializer.Deserialize<TargetSpec>(vCommand) ?? throw new InvalidOperationException("The run target's own command could not be read.");
-        return (vProjectPath, vSpec);
+        TargetSpec? vSpec;
+        try
+        {
+            vSpec = JsonSerializer.Deserialize<TargetSpec>(vCommand);
+        }
+        catch (JsonException)
+        {
+            vSpec = null;
+        }
+
+        if (vSpec is null)
+        {
+            throw new InvalidOperationException("the run target's own command could not be read. Choose the target again.");
+        }
+
+        // A target's path is relative to the folder around a solution file, never to the file itself.
+        var vRoot = File.Exists(vProjectPath) ? Path.GetDirectoryName(vProjectPath) ?? vProjectPath : vProjectPath;
+        if (!Directory.Exists(vRoot))
+        {
+            throw new InvalidOperationException($"the project's folder is not there any more: {vRoot}");
+        }
+
+        return (vRoot, vSpec);
     }
 
     private async Task MarkLastUsedAsync(int aProjectId, int aRunTargetId, CancellationToken aCt)
@@ -266,10 +467,9 @@ public sealed class BuildRunActions : IBuildRunActions
             new { aProjectId, aRunTargetId }).ConfigureAwait(false);
     }
 
-    private static async Task<List<RunTargetRow>> DiscoverAndStoreTargetsAsync(System.Data.IDbConnection aConnection, int aProjectId, string aProjectPath)
+    private static async Task<List<RunTargetRow>> StoreTargetsAsync(System.Data.IDbConnection aConnection, int aProjectId, List<RunTargetRow> aDiscovered)
     {
-        var vDiscovered = DiscoverTargets(aProjectPath);
-        foreach (var vRow in vDiscovered)
+        foreach (var vRow in aDiscovered)
         {
             var vId = await aConnection.ExecuteScalarAsync<long>(
                 "INSERT INTO RunTarget (ProjectId, Name, Command, Platform, IsLastUsed) VALUES (@aProjectId, @Name, @Command, @Platform, 0); SELECT last_insert_rowid();",
@@ -277,7 +477,49 @@ public sealed class BuildRunActions : IBuildRunActions
             vRow.RunTargetId = (int)vId;
         }
 
-        return vDiscovered;
+        return aDiscovered;
+    }
+
+    /// <summary>
+    /// A solution's targets (BRD-227): each runnable project it lists, by name, once per platform for a
+    /// project that targets several; with none runnable, the solution itself, so Build still works.
+    /// </summary>
+    private static List<RunTargetRow> DiscoverSolutionTargets(string aSolutionPath)
+    {
+        var vRoot = Path.GetDirectoryName(aSolutionPath)!;
+        var vResult = new List<RunTargetRow>();
+        foreach (var vProject in SolutionProjects.Runnable(aSolutionPath))
+        {
+            var vName = Path.GetFileNameWithoutExtension(vProject.Path);
+            var vPlatformTfms = vProject.TargetFrameworks.Where(t => PlatformFor(t).Platform.Length > 0).ToList();
+            if (vPlatformTfms.Count == 0)
+            {
+                vResult.Add(NewTargetRow(vName, vProject.Path, vRoot, "Debug", vProject.TargetFrameworks.Count > 1 ? vProject.TargetFrameworks[0] : null, string.Empty));
+                continue;
+            }
+
+            foreach (var vTfm in vPlatformTfms)
+            {
+                var (vPlatform, vLabel) = PlatformFor(vTfm);
+                vResult.Add(NewTargetRow($"{vName} · {vLabel}", vProject.Path, vRoot, "Debug", vTfm, vPlatform));
+            }
+        }
+
+        // A class library is tested through its test project: running that project runs its tests (REQ-UI-107).
+        foreach (var vTests in SolutionProjects.TestProjects(aSolutionPath))
+        {
+            vResult.Add(NewTargetRow(Path.GetFileNameWithoutExtension(vTests), vTests, vRoot, "Debug", null, string.Empty, true));
+        }
+
+        if (vResult.Count == 0)
+        {
+            foreach (var vConfig in BuildConfigurations)
+            {
+                vResult.Add(NewTargetRow($"{Path.GetFileNameWithoutExtension(aSolutionPath)} · {vConfig}", aSolutionPath, vRoot, vConfig, null, string.Empty));
+            }
+        }
+
+        return vResult;
     }
 
     /// <summary>
@@ -369,15 +611,15 @@ public sealed class BuildRunActions : IBuildRunActions
         foreach (var vTestProject in vTestProjects)
         {
             var vName = Path.GetFileNameWithoutExtension(vTestProject);
-            vResult.Add(NewTargetRow(vName, vTestProject, aProjectPath, "Debug", null, string.Empty));
+            vResult.Add(NewTargetRow(vName, vTestProject, aProjectPath, "Debug", null, string.Empty, true));
         }
 
         return vResult;
     }
 
-    private static RunTargetRow NewTargetRow(string aName, string aFullPath, string aProjectPath, string aConfig, string? aTfm, string aPlatform)
+    private static RunTargetRow NewTargetRow(string aName, string aFullPath, string aProjectPath, string aConfig, string? aTfm, string aPlatform, bool aTest = false)
     {
-        var vSpec = new TargetSpec(Path.GetRelativePath(aProjectPath, aFullPath), aConfig, aTfm);
+        var vSpec = new TargetSpec(Path.GetRelativePath(aProjectPath, aFullPath), aConfig, aTfm, aTest);
         return new RunTargetRow
         {
             RunTargetId = 0,
@@ -448,7 +690,7 @@ public sealed class BuildRunActions : IBuildRunActions
     }
 
     /// <summary>A run target's command, serialised into the <c>RunTarget.Command</c> column.</summary>
-    private sealed record TargetSpec(string Path, string Config, string? Tfm);
+    private sealed record TargetSpec(string Path, string Config, string? Tfm, bool Test = false);
 
     /// <summary>A mutable projection of a <c>RunTarget</c> row, so a newly discovered row can be given its id after the insert.</summary>
     private sealed class RunTargetRow

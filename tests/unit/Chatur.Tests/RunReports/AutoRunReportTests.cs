@@ -18,7 +18,7 @@ public sealed class AutoRunReportTests : MigratedDatabaseFixture
 {
     private const string Brief = "Finish the coverage panel and verify it before you stop, tagging every REQ id.";
 
-    private readonly string objFolder = Path.Combine(Path.GetTempPath(), $"chatur-report-{Guid.NewGuid():N}");
+    private readonly string objFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-report-{Guid.NewGuid():N}");
 
     /// <summary>Creates the project folder with a checklist and the three measurement streams.</summary>
     public AutoRunReportTests()

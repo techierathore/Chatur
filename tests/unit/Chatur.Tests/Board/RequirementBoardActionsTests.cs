@@ -27,7 +27,7 @@ public sealed class RequirementBoardActionsTests : IDisposable
         + "- **REQ-FN-056** — Narrow it down. *BRD:* BRD-109 · *Mockup:* mockups/board.html\n"
         + "  - *Acceptance:* When the owner filters, then only the matching requirements are listed.\n";
 
-    private readonly string objFolder = Path.Combine(Path.GetTempPath(), $"chatur-board-{Guid.NewGuid():N}");
+    private readonly string objFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-board-{Guid.NewGuid():N}");
     private readonly RequirementBoardActions objSut;
 
     /// <summary>Creates a project folder holding a phase 1 and a phase 2 checklist.</summary>
@@ -213,7 +213,7 @@ public sealed class RequirementBoardActionsTests : IDisposable
     [Fact]
     public async Task MissingFolderIsNamedNotReportedAsNoProject()
     {
-        var vGone = Path.Combine(Path.GetTempPath(), $"chatur-gone-{Guid.NewGuid():N}");
+        var vGone = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-gone-{Guid.NewGuid():N}");
         var vBoard = await new RequirementBoardActions(new FixedProjectActions(new ProjectSummary(1, "SmokeProj", vGone, "Folder", null)))
             .LoadAsync(RequirementFilter.None);
 

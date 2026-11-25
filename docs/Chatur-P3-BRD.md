@@ -11,7 +11,7 @@
 
 ## 1. Summary
 
-Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off. Since 2026-10-08 every work step goes to the agent owning its process, and its checks judge the result on disk (BRD-159 to BRD-179). Since 2026-10-09 a "writes documents" right covers `docs/` only (BRD-180 to BRD-183). From 2026-11-10, estimate before, actual after (BRD-192 to BRD-209). Per-account data: BRD-210 to BRD-216.
+Phase 2 makes every command a process. Phase 3 chains them: one flow master command takes a brief and runs the whole chain to "ready for the owner's acceptance test", starting each role as it is needed. Step-by-step working stays the normal way. What makes it usable is that a run survives the things that stop runs today: a usage limit, a stall, a crash. It waits and resumes, it can be queued, and it never reports complete while work is unfinished, which is the failure the owner already has with TechieFlow's unattended runner. Afterwards there is a report to read: every requirement and its verdict, every miss and whose gap it was, and the models, tokens and time the run used. Model routing also becomes automatic in this phase: a small model inside TechieRag picks the model for each piece of work, and the owner can turn that off. Since 2026-10-08 every work step goes to the agent owning its process, and its checks judge the result on disk (BRD-159 to BRD-179). Since 2026-10-09 a "writes documents" right covers `docs/` only (BRD-180 to BRD-183). Estimates: BRD-192 to BRD-209. Per-account data: BRD-210 to BRD-216. Owner's Xpenser run: BRD-217 to BRD-229.
 
 ## 2. Screens and flow
 
@@ -285,11 +285,61 @@ Added 2026-11-17 from the owner's first sign-in with his common App Manager acco
 - **BRD-216** — Signing in as another account leaves nothing of the last one on screen. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When one account signs out in a window and another signs in there, then no project, open file, chat or output of the first account is shown.
 
-## 4. Development status
+### The owner's run on his own solution
+
+Added 2026-11-18 from the owner's use of Chatur on his Xpenser solution (`docs/screenshots/16-Nov-26-Run`). Open a file stopped Chatur on a folder Windows would not list, and every start after it stopped on the same line; a solution offered no run target; and nine things on Start and the Workbench did not work the way Visual Studio and VS Code have taught him to expect. Icons come from the set the app already uses; no new icon pack.
+
+- **BRD-217** — A folder Chatur cannot read never stops it; folders are read as they open. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the person opens on Workbench a folder holding one Windows will not list, then that folder shows as not readable and every other entry still shows.
+- **BRD-218** — A last project that cannot open leaves Chatur on Start, saying why. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the last project cannot open as Chatur starts on Start, then one plain line says which project and why, and nothing stops.
+- **BRD-219** — Each way in has an icon that says what it does. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the person looks at the ways in on Start, then each tile shows a centred icon for its action: branch, solution, folder, file, plus.
+- **BRD-220** — The project list closes back to where it was opened from. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the person opens the project list from File ▸ Recent projects and presses its close button or Escape on Start, then the Workbench they came from shows again, unchanged.
+- **BRD-221** — Open a solution browses for a solution file. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the person presses Browse in Open a solution on Start, then a file picker opens that shows .sln and .slnx files, and the file chosen fills the path.
+- **BRD-222** — One branch picker, at the foot of the files. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the person opens the branch at the foot of Files on Workbench, then local and remote branches are listed and choosing one switches to it.
+- **BRD-223** — Uncommitted changes are asked about before a branch switch. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the person picks another branch on Workbench with uncommitted changes, then Chatur first offers to bring them along, put them aside, or stay.
+- **BRD-224** — The agent picker shows one chosen agent, ticked. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the person opens the agent picker on Workbench, then the agent the closed picker names carries the tick in the list, and no entry says "suggested".
+- **BRD-225** — Hidden files stay hidden until the person asks. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When a project opens on Workbench, then dot-named files and .vs are hidden until View ▸ Show hidden files, which the account keeps.
+- **BRD-226** — Stop shows only while something runs. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When nothing is building or running on Workbench, then the toolbar shows no Stop; while a build or run goes, Stop shows and ends it.
+- **BRD-227** — A solution's runnable projects are its run targets. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When a solution with .NET projects opens on Workbench, then the target picker lists its runnable projects, and choosing one and pressing Run runs that project.
+- **BRD-228** — The project to run is set from three places and remembered. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the person sets the project to run from the picker, Project menu or Files on Workbench, then that account is offered it next time.
+- **BRD-229** — File says what it closes. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the person opens File on Workbench, then it says Close solution with a solution open and Close folder with a folder open, never Close project.
+
+### Rows the checklist held before the BRD named them
+
+Added 2026-11-20: five checklist rows (REQ-UI-079 to REQ-UI-082, REQ-NFR-010) were built and verified from the owner's notes before this BRD carried them. Each now has its own item, worded as its row already was; BRD-234 is under Non-functional requirements.
+
+- **BRD-230** — Type @ to attach a project file in the chat. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the owner types @ in the chat box on Workbench, then the project's files are listed, narrowing as they type, and a pick puts its path in the message.
+- **BRD-231** — Controls keep the mockup's inner spacing. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the owner opens any dialog or page, then every input, button and list row keeps the mockup's inner padding and no text touches its border.
+- **BRD-232** — Labels carry no trailing dots. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the owner opens any menu, button or label in Chatur, then its text ends without three dots.
+- **BRD-233** — Every button does something. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the owner presses any enabled button on any screen, then it does its job; no button exists only for looks.
+
+## 4. Non-functional requirements
+
+| Id | Area | Requirement | Measure |
+|---|---|---|---|
+| BRD-234 | Data | Tests never touch the owner's database | When the desktop or web tests run, then the app keeps its database under tests/.artifacts and refuses the owner's application-data database |
+
+## 5. Development status
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-11-18.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
+**Snapshot as of 2026-11-23.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
@@ -298,11 +348,11 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | Run report | 7 | 7 | 0 | Done |
 | Settings | 8 | 8 | 0 | Done |
 | Process run | 22 | 22 | 0 | Done |
-| Workbench | 10 | 10 | 0 | Done |
-| Start | 7 | 7 | 0 | Done |
+| Workbench | 19 | 19 | 0 | Done |
+| Start | 11 | 11 | 0 | Done |
 | Processes | 9 | 9 | 0 | Done |
 
-## 5. Where the rest lives
+## 6. Where the rest lives
 
 | What | Where |
 |---|---|

@@ -69,8 +69,18 @@ public sealed class WorkbenchState : IDisposable
     /// </summary>
     public event Action? BuildOrRunStarted;
 
-    /// <summary>Announces that a build or run was just asked for, for <see cref="BuildOrRunStarted"/>'s listener.</summary>
-    public void NotifyBuildOrRunStarted() => BuildOrRunStarted?.Invoke();
+    /// <summary>
+    /// Announces that a build or run was just asked for, for <see cref="BuildOrRunStarted"/>'s listener, and opens the
+    /// output strip if View ▸ Output had hidden it: what runs is always shown (REQ-UI-107).
+    /// </summary>
+    public void NotifyBuildOrRunStarted()
+    {
+        BuildOrRunStarted?.Invoke();
+        if (!OutputVisible)
+        {
+            SetOutputVisible(true);
+        }
+    }
 
     /// <summary>Whether a build or run is in progress for the selected project.</summary>
     public bool IsBuildRunBusy { get; private set; }
@@ -121,6 +131,12 @@ public sealed class WorkbenchState : IDisposable
 
     /// <summary>Announces that the project's checked-out branch may have changed, for <see cref="BranchChanged"/>'s listener.</summary>
     public void NotifyBranchChanged() => BranchChanged?.Invoke();
+
+    /// <summary>Raised when View ▸ Show hidden files changes, so Files reads its tree again (BRD-225).</summary>
+    public event Action? FilesViewChanged;
+
+    /// <summary>Announces that the account's hidden-files choice changed, for <see cref="FilesViewChanged"/>'s listener.</summary>
+    public void NotifyFilesViewChanged() => FilesViewChanged?.Invoke();
 
     /// <summary>
     /// Whether the file view (the tabs and the editor) is showing beside the conversation. Closing it

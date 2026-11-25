@@ -40,6 +40,19 @@ public partial class AuthGate
                 return;
             }
 
+            // Which features this licence has off is read before the window is drawn, so no menu or list ever
+            // shows a feature that is off (REQ-FN-075). A licence that is slow or down never holds the window.
+            SecondaryNavigation.Bind(State);
+            using var vFeatureTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+            try
+            {
+                await Licence.EnsureFeatureSwitchesAsync(vFeatureTimeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                Logger.LogWarning("The licence did not answer in time; every feature is offered until it does");
+            }
+
             objIsSignedIn = true;
         }
         catch (Exception vException)

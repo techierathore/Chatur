@@ -1,0 +1,16 @@
+@* One split of Measurements (mockups/measurements.html "metrics-split"; REQ-UI-117): a line per model, agent or command phase,
+   with the runs, the four token kinds, the measured cost and the wall clock. Figures come ready from IMetricsReportActions. *@
+<DataTable TData="RunSplitLine" Data="@Lines" ShowPagination="false" MinWidth="780px" Class="border-0"
+           RowAttributes="@(aLine => new Dictionary<string, object> { ["data-testid"] = $"split-{Kind}-{MetricsFormat.Slug(aLine.Key)}", ["class"] = "border-t" })"
+           data-testid="@($"split-table-{Kind}")">
+    <Columns>
+        <DataTableColumn TData="RunSplitLine" TValue="string" Property="@(aLine => aLine.Key)" Header="@KeyHeader" CellClass="font-mono text-xs whitespace-nowrap" />
+        <DataTableColumn TData="RunSplitLine" TValue="int" Property="@(aLine => aLine.Totals.Runs)" Header="Runs" Align="DataTableColumnAlign.End" />
+        <DataTableColumn TData="RunSplitLine" TValue="string" Property="@(aLine => MetricsFormat.Sum(aLine.Totals.TokensIn))" Header="Tokens in" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap" />
+        <DataTableColumn TData="RunSplitLine" TValue="string" Property="@(aLine => MetricsFormat.Sum(aLine.Totals.TokensOut))" Header="Tokens out" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap" />
+        <DataTableColumn TData="RunSplitLine" TValue="string" Property="@(aLine => MetricsFormat.Sum(aLine.Totals.CacheRead))" Header="Cache read" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap" />
+        <DataTableColumn TData="RunSplitLine" TValue="string" Property="@(aLine => MetricsFormat.Sum(aLine.Totals.CacheWrite))" Header="Cache write" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap" />
+        <DataTableColumn TData="RunSplitLine" TValue="string" Property="@(aLine => MetricsFormat.Usd(aLine.Totals.Cost))" Header="Measured USD" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap" />
+        <DataTableColumn TData="RunSplitLine" TValue="string" Property="@(aLine => MetricsFormat.Wall(aLine.Totals.WallClockS))" Header="Wall clock" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap" />
+    </Columns>
+</DataTable>

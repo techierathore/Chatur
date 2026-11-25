@@ -4,17 +4,13 @@
 |---|---|
 | App | Chatur |
 | Upstream | TechieFlow |
-| Updated | 2026-11-14 (TF-026 and TF-028 re-checked and closed; TF-027 reopened for the Board; TF-029 to TF-031 filed) · 2026-11-10, later (TF-023, TF-024 and TF-025 fixed upstream, in `.tfcore/` from the framework update of the same day) · 2026-11-10 (TF-023 to TF-025 filed; TF-022 re-checked and closed) · 2026-11-10 (five stale `Status: open` lines corrected: TF-008, TF-009, TF-018, TF-019, TF-021; no new fix) · 2026-11-05 (TF-022 fixed upstream, ships in TechieFlow v1.3.0) |
+| Updated | 2026-11-21 (TF-049, TF-050 and TF-051 fixed upstream, in `.tfcore/` from the framework update of the same day) · 2026-11-20 (TF-049 and TF-050 filed) · 2026-11-14 (TF-026 and TF-028 re-checked and closed; TF-027 reopened for the Board; TF-029 to TF-031 filed) · 2026-11-10, later (TF-023, TF-024 and TF-025 fixed upstream, in `.tfcore/` from the framework update of the same day) · 2026-11-10 (TF-023 to TF-025 filed; TF-022 re-checked and closed) · 2026-11-10 (five stale `Status: open` lines corrected: TF-008, TF-009, TF-018, TF-019, TF-021; no new fix) · 2026-11-05 (TF-022 fixed upstream, ships in TechieFlow v1.3.0) |
 
 ## Summary
 
-40 entries: 1 blocking now (TF-045), 3 filed and not blocking (TF-037, TF-038, TF-039), 12 fixed upstream and not yet re-checked here (TF-008, TF-010, TF-013 to TF-019, TF-021, TF-024, TF-025), 24 closed.
+48 entries: 2 open and not blocking (TF-052, TF-053), 18 fixed upstream and not yet re-checked here (TF-008, TF-010, TF-013 to TF-019, TF-021, TF-024, TF-025, TF-037 to TF-039, TF-046 to TF-048), 28 closed (TF-049 to TF-051 re-checked and closed on 2026-11-21).
 
-Nothing is blocked. TF-034, TF-035 and TF-036 were re-checked on the running app on 2026-11-16 and closed. TF-037 was found on 2026-11-16: the artifact sweep half-deleted a test project's `.git` folder, and a seed then wrote into Chatur's own repository.
-
-TF-007 was re-checked here on 2026-10-03: no list box on Start, Workbench, Prerequisites, Providers or Corrections reports "app carries an icon the mockup does not" at either width, and Start, Prerequisites, Providers and Corrections now pass mockup parity outright.
-
-TF-006 was re-checked here on 2026-10-03: after the seed, neither table box reports a finding at either width. The three Repository rows still will not reach Verified on mockup parity, though. The rows themselves are paired with the mockup's sample rows by position, and the seeded rows come in a different order of process and hand check-ins than the mockup draws. The TechieFlow side tracks that as MISS-TechieFlow-20261003-02 (see the TF-006 reply).
+Nothing is blocked. TF-052 (21 Nov 2026): late in a long verify the menu walk reads three chat-panel menus as "opens nothing"; they open by hand. TF-053 (23 Nov 2026): the walk clicks a trigger hidden at 390 px, and the mockup check counts icons of sample rows it dropped; REQ-FN-313 waits on the second.
 
 ## Entries
 
@@ -542,7 +538,7 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 
 ### TF-038 — Run from a separate copy, the verify scripts write telemetry into the repository named by `CLAUDE_PROJECT_DIR`, not into the copy
 
-- **Status:** filed 2026-11-17.
+- **Status:** fixed upstream 2026-11-19, in TechieFlow v1.4.0; in Chatur's `.tfcore/` from the framework update of 2026-11-19 (morning); not yet re-checked here.
 - **Severity:** minor
 - **Blocks:** no — the lost gate records were written again from the verdicts; the run carried on.
 - **Repro:** copy the repository to a folder outside it (no `.git`) and, from that copy, run `tf-verify-verdict.sh` and `tf-verify-emit.sh`. `tf-emit.sh` resolves the metrics folder through `CLAUDE_PROJECT_DIR`, so the records land in the repository while the checklist cells and `docs/.last-verify.json` land in the copy.
@@ -551,10 +547,11 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Encountered in:** `*triage-and-fix Chatur`, 2026-11-17; the owner asked that every build, test and app run go to a separate copy.
 - **Workaround:** gate records re-emitted with `tf-emit.sh gates`; the two run records left out and named in METRICS.md.
 - **Suggested fix:** a supported "separate copy" mode: `tf-emit.sh` honours `TF_METRICS_ROOT` set by the verify scripts to the folder that holds the checklist they rewrite, or `--where` is printed by every script that emits, so a copy-back can skip `docs/metrics/`.
+- **Reply (TechieFlow team, 2026-11-19):** Fixed upstream in `tf-verify-verdict.py` and `tf-verify-emit.sh`, the second way your Expected allows: "the repository for all of it". When the session names a project (`CLAUDE_PROJECT_DIR`, or `TF_PROJECT_DIR`/`TF_METRICS_ROOT`) that holds the checklist the verify graded, and the verify runs in another folder, the verdict writes the checklist cells and `docs/.last-verify.json` there, prints one `home:` line saying so, and the emit sends the gate, miss and run records to the same project (`verdicts.json` carries `home`). So a verify run from a separate copy needs no copy-back of `docs/`, and nothing overwrites the repository's streams. Case `ch_038`: a repository and a copy of it; on the scripts you have, the copy's checklist gets the cells and the repository the gate record; now both go to the repository and the copy is untouched. Control half: a verify run with no project named keeps everything in the folder it runs in. The two run records lost on 17 Nov cannot be brought back from here. **Check it here:** a verify run from your copy prints `home: … go to <the repository>`, and the repository's checklist and `docs/metrics/` change while the copy's do not.
 
 ### TF-039 — `tf-register-test-users.mjs` always sends `applicationId`, which App Manager refuses when the API key names its own application
 
-- **Status:** filed 2026-11-18.
+- **Status:** fixed upstream 2026-11-19, in TechieFlow v1.4.0; in Chatur's `.tfcore/` from the framework update of 2026-11-19 (morning); not yet re-checked here.
 - **Severity:** minor
 - **Blocks:** no — test user 2 was registered once through Chatur's own Register screen instead, with the owner's leave.
 - **Repro:** `node .tfcore/utils/tf-register-test-users.mjs --appsettings src/Chatur/appsettings.json --appsettings <user secrets.json>` with `AppManager:ApiKey` and `AppManager:ApplicationId` both set.
@@ -563,10 +560,13 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Encountered in:** `*triage-and-fix Chatur`, 2026-11-18.
 - **Workaround:** registered through Chatur's Register screen on the web harness of a separate copy; the generated password went straight into `tests/verify/test-settings.json`, never printed.
 - **Suggested fix:** send `applicationId` only when no API key is configured, and stop requiring it when one is.
+- **Reply (TechieFlow team, 2026-11-19):** Fixed upstream in `tf-register-test-users.mjs`, as you suggested: with an API key the register call names no `applicationId` (the key names the application), and only BaseUrl plus the key, or BaseUrl plus the ApplicationId, is needed. With no key, the ApplicationId is sent as before. Case `ch_039`, against a stand-in AppManager that answers as yours did: on the script you have, `400 The applicationId parameter does not match the API key's application`; now registered. Control half: with no key the ApplicationId is sent; with neither, the script stops with exit 2; no key is printed. The older case `sv_015d` expected the id beside a key and was changed to your rule. **Check it here:** the Repro's command registers the next test user that has no password; the password goes only into `tests/verify/testsettings.Local.json`.
 
 ### TF-045 — The mockup check's badge rule flags a Select whose structure matches its mockup exactly
 
-- **Status:** filed 2026-11-18.
+> ✅ **Closed 2026-11-20** — re-checked here: Re-checked 2026-11-20 on :9263 (phase 1 verify of build-phase): tf-mockup-parity.sh on settings-routing and settings-appearance, signed in as test user 1, both PASS with no badge finding at 1280 and 390, light and dark.
+
+- **Status:** fixed upstream 2026-11-19, in TechieFlow v1.4.0; in Chatur's `.tfcore/` from the framework update of 2026-11-19 (morning); not yet re-checked here.
 - **Severity:** major
 - **Blocks:** yes — REQ-FN-018, REQ-FN-019, REQ-FN-020, REQ-FN-021, REQ-FN-023 (Settings ▸ Routing), REQ-UI-037, REQ-UI-038 (Settings ▸ Appearance) and REQ-UI-053, REQ-FN-058, REQ-UI-054, REQ-FN-059, REQ-FN-060 (Agent workspace: `run-verify-phase > span[0]`, 0px corner on 20px both sides) cannot reach Verified; every other check passes.
 - **Repro:** `bash .tfcore/utils/tf-mockup-parity.sh --base <url> --screen settings-routing=/settings/routing --screen settings-appearance=/settings/appearance` (login as test user 1).
@@ -575,8 +575,152 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Encountered in:** `*triage-and-fix Chatur`, full verify of phase 1, 2026-11-18.
 - **Workaround:** none; the seven rows are Blocked with this id.
 - **Suggested fix:** when both sides measure the same corner, height, fill and ring, the badge clause agrees; and judge `near` the same way on both sides when the anchor is a wrapper around a control.
+- **Reply (TechieFlow team, 2026-11-19):** Fixed upstream in `tf-mockup-parity.mjs`, the first way you suggested. The cause was the 16 Nov rule for Sevak TF-042 (my own slip): when either side is a control, or has one "one element away", both sides are judged by the control's pill rule. Your two wrappers measure the same, but only the mockup's counted its rounded button as one element away (the app's Select root has the button and something more, or a button taller than the wrapper; which one was not read on your page), so the mockup read "pill" and the app "plain". Now, when the two anchored elements measure alike (corner within 1 px, height within 2 px, fill and ring both there or both not), the badge clause agrees, whatever sits one element away. The pill on the button itself is still compared at the button's own key. Your second suggestion (judge "near" the same way on both sides) was not done: the first one clears every line you filed, and the second would change the border clause too, on every project, with no failing page to prove it. Case `ch_045`, from your `analyst-tier` and `mode-button` shapes: on the scripts you have, `badge on analyst-tier` with your exact measured line (0 px on 28 px on both sides); now none; the same page passes on the scripts of 16 Nov morning, so the 16 Nov change was the cause. Control half: a trigger the app draws square where the mockup's is round is still reported, at `analyst-tier-button`. Sevak's tab cases (`sv_042`, `sv_042c`, `sv_042d`) still pass. **Check it here:** your Repro's command: no `badge` finding on any tier picker or on `mode-button > span[0]`.
+
+### TF-046 — `tf-build.sh` calls a CsWinRT compile error a host problem (NOT-RUN) and tries every other rung
+
+- **Status:** fixed upstream 2026-11-19, in TechieFlow v1.4.0; in Chatur's `.tfcore/` from the framework update of 2026-11-19 (morning); not yet re-checked here.
+- **Severity:** minor
+- **Blocks:** no — the log named the error; it was fixed and the build passed.
+- **Repro:** in a MAUI Windows head, a collection expression targeting `IEnumerable<string>` (`[DevicePlatform.MacCatalyst] = ["public.item"]`). Run `bash .tfcore/utils/tf-build.sh build` from WSL.
+- **Expected:** `FAIL real compile errors … CsWinRT1032 …`, exit 1, on the first rung, as for a CS error.
+- **Actual:** every rung (cmd.exe, winrun, powershell.exe) builds and fails with the same `error CsWinRT1032`, then `NOT-RUN no rung could build on wsl … This is a host issue, never a project blocker`, exit 2.
+- **Encountered in:** `*triage-and-fix Chatur`, 2026-11-18 (`src/Chatur/Platform/MauiFolderPicker.cs`).
+- **Workaround:** read the log; the first `error` line names the file.
+- **Suggested fix:** count `error [A-Za-z]+[0-9]+:` from an analyzer or source generator (CsWinRT, XC, XA) as code, the way CS and RZ are.
+- **Reply (TechieFlow team, 2026-11-19):** Fixed upstream in `tf-build.sh`, close to your suggestion: any error that points at a line of a source file (`.cs`, `.razor`, `.xaml`, `.cshtml`, as `File.cs(23,9): error XX1234`) is the code's, whatever raised it (CsWinRT, an analyzer, a source generator), so the verdict is FAIL on the first rung and no other rung is tried. A bare `error XA…` with no file line can be a missing SDK, a host fault, so the code prefix alone was not made a rule. Case `ch_046`, with a stand-in dotnet printing your CsWinRT1032 line: on the script you have, the next rung was tried; now `FAIL real errors … CsWinRT1032`, exit 1, rung 1. Control half: a workload error with no source line still moves to the next rung. **Check it here:** the next compile error from an analyzer reads FAIL on the first rung.
+
+### TF-047 — On a desktop head, a menu item that opens the secondary window is reported as "does nothing when clicked"
+
+- **Status:** fixed upstream 2026-11-19, in TechieFlow v1.4.0; in Chatur's `.tfcore/` from the framework update of 2026-11-19 (morning); not yet re-checked here.
+- **Severity:** minor
+- **Blocks:** no — the visual check passed; the items were checked by hand.
+- **Repro:** `tf-verify-screens.sh --cdp http://localhost:9263 --screen main=/` on Chatur's Windows head. The account menu's Licence and Settings, the model picker's "Which model does which work" and the agent picker's "Agents" each call `ISecondaryWindow.Open`, which shows the page in a second web view.
+- **Expected:** a click that opens a new web view (a new CDP target) counts as doing something.
+- **Actual:** `"TRTechie Rathore › Settings" does nothing when clicked` and three like it make render FAIL on Start and Workbench, though the secondary window opened.
+- **Encountered in:** `*triage-and-fix Chatur`, 2026-11-18, the owner's screen check in light and dark.
+- **Workaround:** none in the tool; noted in the run.
+- **Suggested fix:** in `tf-menus.mjs`, compare the browser's targets before and after the click, as it compares the page.
+- **Reply (TechieFlow team, 2026-11-19):** Fixed upstream in `tf-menus.mjs`, as you suggested: when a click changed nothing the walk could see (page, address, dialog, zoom, text, theme, a new page in any context), it compares the browser's page targets before and after; a new one is "opened a window". Case `ch_047`, over CDP like your Windows head: a menu item asks a helper to open a page in a browser context of its own, which the check's page lists do not show. On the scripts you have, `"Account › Settings" does nothing when clicked`; now none. Control half: an item that does nothing is still reported. Not proved on a WebView2 head: if your secondary window runs in a browser process of its own (its own data folder), it is no target of the attached browser and would still read "does nothing"; say so here if it does [Likely shared, not read]. **Check it here:** the screen check on Start: no "does nothing" line for Licence, Settings, "Which model does which work" or Agents.
+
+### TF-048 — `tf-doc-tests.sh` builds and runs the unit tests in the folder it is started from, with no way to point it at a separate copy
+
+- **Status:** fixed upstream 2026-11-19 (morning), in TechieFlow v1.4.0; in Chatur's `.tfcore/` from the framework update of 2026-11-19 (morning); not yet re-checked here.
+- **Severity:** minor
+- **Blocks:** no — the run was stopped and the tests were run in the copy instead.
+- **Repro:** an owner rule that every build and test runs in a separate copy. At the status gate, `bash .tfcore/utils/tf-doc-tests.sh docs/Chatur-BRD.md …` from the repository, as `_status-update-gate.md` step 4 says.
+- **Expected:** a document test run that honours the separate copy the rest of the run used, or says before it starts that it will build here.
+- **Actual:** it ran `dotnet test` in the repository and wrote build output into `src/Chatur.Core/bin|obj` and `tests/unit/Chatur.Tests/bin|obj` of the repository before it was stopped.
+- **Encountered in:** `*triage-and-fix Chatur`, 2026-11-19.
+- **Workaround:** copy the changed documents to the copy and run the script there.
+- **Suggested fix:** a `--root <copy>` option, or the copy the boot record names, used by both `tf-doc-tests.sh` and the status gate's step 4.
+- **Reply (TechieFlow team, 2026-11-19, morning):** Fixed upstream in `tf-doc-tests.sh` and the status gate's step 4. Most of your suggestion was already in v1.4.0 from Sevak's TF-045 the night before: `--root <copy>`, or `buildCopy: <copy>` in `.tfcore/core-config.yaml`, copies the changed documents into that copy and builds and runs the doc tests there; a copy that does not exist is `NOT-RUN`, never a build here. Two gaps were left for a run shaped like yours, and both are closed now. **1.** Your copy is a Windows path, `C:\ChaturRuns\fix-20261118-night`. On WSL the script could not see that form and said the copy does not exist. A Windows path given to `--root` or written as `buildCopy` is now read through `wslpath` (`/mnt/c/ChaturRuns/…`). **2.** With no copy named, the step built in the repository without a word. It now prints first: `note     no separate copy named (--root or buildCopy): the tests build and run here, in <folder>; a run that builds in a copy passes --root <copy>`. The gate's step 4 (and `*amend-docs` step 11) now say to add `--root <copy>` when the run builds in a copy. Your copy's name changes each night, so `--root` per run fits you better than a fixed `buildCopy`. **Not done:** the copy is not taken from a boot record. A boot record names the published copy of the app (`tests/.artifacts/verify/run-<port>/`), not the source copy you build in, and one made from your copy is kept in your copy [Likely, read in `tf-verify-boot.sh`, not run]. The note comes in the same call as the build, so an agent that forgets `--root` is told, not stopped. **Proved** by case `ch_048` (in `tests/faults/n19-cases.sh`), shaped like your run: a test project under `tests/unit/`, a test that reads the BRD, and a copy at `C:\FxRuns\fix-night` (a stand-in `wslpath` maps `C:\` onto the case's own folder). On last night's scripts, `--root 'C:\…'` and `buildCopy: C:\…` were both "does not exist", and with no copy the step built here with no note. Now both build and run in the copy, on the changed BRD, with nothing built in the repository, and the run with no copy prints the note before its result. Control half: a Windows path to a copy that is not there is still `NOT-RUN`, and nothing is built. **Check it here:** at the next status gate after a document change, `bash .tfcore/utils/tf-doc-tests.sh <doc> --root 'C:\ChaturRuns\<that run's copy>'` prints `note     the tests build and run in the separate copy /mnt/c/ChaturRuns/…`, and nothing changes under `src/Chatur.Core/bin|obj` or `tests/unit/Chatur.Tests/bin|obj` in the repository. **Fixed in Chatur's `.tfcore`** by the framework update of 2026-11-19 (morning).
+
+### TF-049 — "View › Show hidden files does nothing when clicked" when the open project has no hidden file to show
+
+> ✅ **Closed 2026-11-21** — re-checked here: Checked 21 Nov 2026 with only .git in the open project (no dotfile Chatur lists): tf-verify-screens.sh on Workbench, Processes, Requirements board and Agent workspace read render OK; View > Show hidden files reads 'toggled its tick', no 'does nothing' line (tests/.artifacts/verify/screens.json).
+
+- **Status:** fixed upstream 2026-11-21; in Chatur's `.tfcore/` from the framework update of 2026-11-21; not yet re-checked here.
+- **Severity:** minor
+- **Blocks:** no — the screens were checked again with a hidden file put in the open project, and the finding went away.
+- **Repro:** `tf-verify-screens.sh --list … --base http://localhost:9263` on Chatur, with a test project open whose only hidden entry is `.git` (Chatur never lists `.git`, `bin`, `obj`). View › Show hidden files is a ticked menu item: its tick shows only inside the menu, which closes on the click, and its other effect is that Files reads its tree again.
+- **Expected:** a ticked menu item whose `aria-checked` changes counts as doing something, or the item is reported as not measured when nothing it could change is on the page.
+- **Actual:** `"View › Show hidden files" does nothing when clicked` made render EMPTY on the Workbench (phase 1) and on Processes, Process run, Board and Agent workspace (phase 2). With a temporary `.verify-hidden` file in the open project, all of them read render OK.
+- **Encountered in:** `*verify ui Chatur --phase all`, 2026-11-20.
+- **Workaround:** a temporary dotfile in the open project during the screen check, removed afterwards.
+- **Suggested fix:** in `tf-menus.mjs`, read `aria-checked` of a `menuitemcheckbox` before and after the click, and count a change as an effect.
+- **Reply (TechieFlow team, 2026-11-21):** Fixed upstream in `tf-menus.mjs`, as you suggested. When a tickable menu item (`menuitemcheckbox`, or any item with `aria-checked`) changed nothing the walk could see, the walk opens the menu again and reads the item's tick. A tick that moved counts as an effect, "toggled its tick", and the walk puts it back as it found it. This needs no hidden file in the open project. **Rule that changed:** "does nothing when clicked" for a tickable item. It can only take that finding away, from an item whose tick moves. **Proved** by case `ch_049` (`tests/faults/n21-cases.sh`): a View menu whose "Show hidden files" item flips `aria-checked` and closes the menu, with nothing else on the page changing. On the scripts you have it reads `"View › Show hidden files" does nothing when clicked`; now it reads "toggled its tick" and gives no finding. Control half: a tickable item whose tick never moves, and a plain item that does nothing, are still reported. Not run on Chatur's own head. **Check it here:** the screen check with no dotfile in the open project gives no "does nothing" line for View › Show hidden files, and Workbench, Processes, Process run, Board and Agent workspace are not EMPTY for it.
+
+### TF-050 — The unit-test leg of `tf-verify-tests.sh` cannot finish inside one 10-minute call, and nothing is kept when it is cut off
+
+> ✅ **Closed 2026-11-21** — re-checked here: Checked 21 Nov 2026: tf-verify-tests.sh --no-browser --filter DisplayName~REQ-UI-04 --from-log tests/.artifacts/build/20261120T070249Z-test-29448.log wrote tests-filter-DisplayName-REQ-UI-04.json (REQ-UI-048 PASS) and built nothing.
+
+- **Status:** fixed upstream 2026-11-21; in Chatur's `.tfcore/` from the framework update of 2026-11-21; not yet re-checked here.
+- **Severity:** minor
+- **Blocks:** no — the run was split by row id, and one completed log was read with the script's own parser.
+- **Repro:** `tf-verify-tests.sh --no-browser --filter "DisplayName~REQ-UI-04" --target tests/unit/Chatur.Tests/Chatur.Tests.csproj` on the `cmd.exe` rung. The build alone takes 2 to 9 minutes on a busy machine, even when nothing changed, and the REQ-UI-048 tests take 6.4 minutes.
+- **Expected:** a part that fits, for example a `--no-build` switch after one build, or a way to read a finished log (`--from-log <log>`) after the call was cut off.
+- **Actual:** the call is stopped at 10 minutes. The `dotnet test` on Windows carries on and finishes (24 of 24 passed), but no JSON is written, and the hook refuses to run the leg in the background.
+- **Encountered in:** `*verify ui Chatur --phase all`, 2026-11-20.
+- **Workaround:** the parser block of `tf-verify-tests.sh` (lines 378 to 598) run by hand on the finished log `tests/.artifacts/build/20261120T070249Z-test-29448.log`.
+- **Suggested fix:** a `--no-build` switch passed through to `tf-build.sh test`, and a `--from-log` switch that only parses.
+- **Reply (TechieFlow team, 2026-11-21):** Fixed upstream in `tf-verify-tests.sh`, with both switches you suggested. **1.** `--no-build` is handed to `dotnet test` (through `tf-build.sh test`), so after one build the tests run without building again. **2.** `--from-log <log>` runs nothing. It reads a finished `dotnet test` log into the same JSON the unit leg writes (with `--filter`, the same part file, ready to `--merge`). A log with no end-of-run line yet (`Passed!`, `Failed!`, `Test Run Successful/Failed`, `Total tests:`) is refused and nothing is written, so a run that is still going is never read as finished. **3.** Before the unit run starts it now prints where its log goes and how to read it if the call is cut off: `unit tests: running; if this call is cut off, dotnet still writes the newest tests/.artifacts/build/*-test-*.log: once it ends, run again with --from-log <that log>`. **Proved** by case `ch_050`, shaped like your run: a test project under `tests/unit/` and a stand-in `tf-build.sh`. On the scripts you have, both switches are `unknown argument`. Now `--no-build` reaches `dotnet test`. `--from-log` on a log like yours (two REQ-UI-048 passes, one REQ-UI-049 failure, then `Failed!  - Failed: 1, Passed: 2 …`) writes REQ-UI-048 PASS and REQ-UI-049 FAIL and builds nothing. Control half: a log with no end line, and a log that is not there, are refused, and nothing is written or run. **Not changed:** the hook still refuses a test run in the background. The cut-off call is now recovered with `--from-log` instead. **Check it here:** cut-off or not, `bash .tfcore/utils/tf-verify-tests.sh --no-browser --filter "DisplayName~REQ-UI-04" --from-log tests/.artifacts/build/20261120T070249Z-test-29448.log` writes `tests-filter-DisplayName-REQ-UI-04.json` with the 24 tests' rows, and nothing builds.
+
+### TF-051 — The overlap check counts an open side panel's own cover over the page as an overlap
+
+> ✅ **Closed 2026-11-21** — re-checked here: Checked 21 Nov 2026: tf-verify-screens.sh on Settings > Agents with its seed reads render OK, visual OK at 1280 and 390 px in light and dark; no 'subbar overlaps subnav-sheet'; the 390 dark screenshot shows the side panel closed. REQ-UI-072 re-verified in this run.
+
+- **Status:** fixed upstream 2026-11-21; in Chatur's `.tfcore/` from the framework update of 2026-11-21; not yet re-checked here.
+- **Severity:** minor
+- **Blocks:** no — the row (REQ-UI-072) keeps a named reason until the check is fixed; the app is right.
+- **Repro:** `tf-verify-screens.sh` on Settings ▸ Agents (`/settings/agents`) at 390 px in dark mode. The menu walk presses the subbar's menu button, which opens the TrBlazeUI `Sheet` holding the side navigation (`data-testid="subnav-sheet"`, `position: fixed`, `z-index: 50`, `data-state="open"`), and leaves it open; the screenshot (`tests/.artifacts/verify/screens/settings-agents-390-dark.png`) is taken with it open.
+- **Expected:** a modal panel that is open is on top of the page by design and is not an overlap; the screen is graded with every menu and panel the walk opened shut again, or the open panel's descendants are left out of the overlap pairs.
+- **Actual:** "subbar overlaps subnav-sheet at 390px in dark mode". Measured 20 Nov 2026: with the panel closed the sheet is not in the page at all (no overlap); open, it is a fixed layer at x 0, y 0, 256 × 844 over a 390 × 44 subbar, as a slide-in panel is meant to be.
+- **Encountered in:** `*verify ui Chatur --phase all`, 2026-11-20; measured again in `*build-phase Chatur`, 2026-11-20.
+- **Workaround:** none in the app (it is right); the row's Remark names this entry.
+- **Suggested fix:** in `tf-verify-screens.sh`, close every popup the menu walk opened before the visual check (the `shut()` of `tf-menus.mjs` does not close a `Sheet`), and skip pairs where one element is a `role="dialog"` or `data-state="open"` fixed layer.
+- **Reply (TechieFlow team, 2026-11-21):** Fixed upstream in `tf-dropdowns.mjs`, the first part of your suggestion. The panel was not left open by the menu walk. It was left open by the dropdown walk [Likely, read in the code and in TrBlazeUI's `SheetTrigger`, not run on Chatur]. In the light pass that walk opens every `aria-haspopup="dialog"` trigger once, and TrBlazeUI's SheetTrigger is one. It pressed Escape and moved on without checking. Your Sheet stays open on Escape, so the dark pass measured it over the subbar. That is why the finding said "in dark mode" only. Now a dialog that Escape leaves open is closed by its own Close button. If that fails, the walk clicks beside it, on its backdrop, at a spot with no control under it. A dialog that still stays open is named (`could not close the list of subnav-trigger; … overlap not measured at 390px`), and the overlap check at that width is "not measured", never an overlap, as Sevak TF-043 does for a list. **Not done:** the second part, leaving every open modal layer out of the overlap pairs. A panel that is open when the screen loads is still measured. **Rule that changed:** the dropdown walk now closes a dialog it opened more firmly. It can take away overlap findings caused by a dialog it left open, and it can make the overlap check "not measured" at one width when the dialog will not close. **Proved** by case `ch_051`, shaped like your subbar: a 390 px page with a subbar, an "Open navigation" trigger, and a fixed 256 px sheet with a backdrop that Escape does not close. On the scripts you have it reads `subbar overlaps subnav-sheet … in dark mode`. Now there is none when the sheet closes by its backdrop or by its Close button. A sheet nothing closes is named and gives "not measured". Control half: two buttons that really overlap are still reported. **Check it here:** the screen check on Settings ▸ Agents at 390 px in dark mode gives no `subbar overlaps subnav-sheet`, and REQ-UI-072 can lose its named reason.
+
+### TF-052 — The menu walk reads a slow-to-open menu as "opens nothing", because its next try clicks the menu shut
+
+- **Status:** open
+- **Severity:** minor
+- **Blocks:** no — every row on the screen has passing tests; the Workbench rows REQ-UI-104 to REQ-UI-106 keep their verdict of the morning and name this entry.
+- **Repro:** `tf-verify-screens.sh --list … --base http://localhost:9263` on Chatur's web harness late in a long verify (many tests have run, static files answer in about 400 ms). The Workbench reads `the menu "history" opens nothing when clicked`, the same for "Claude Opus 5" (`model-pick`) and "Flow master" (`agent-pick`). Driven by hand in the same state, in the same order of pages, each of the three opens on the first click (21 Nov 2026, a Playwright script clicking each `data-testid` and reading its `-pop`).
+- **Expected:** a menu that takes longer than the first wait to draw is read once it is drawn, not clicked again.
+- **Actual:** `open()` in `tf-menus.mjs` clicks the trigger, waits 250 ms and reads the popup 8 times 150 ms apart; when nothing is drawn yet, the next entry of `tries` clicks the trigger's inner button, which toggles the menu that was just opening shut. Early in a run the three menus pass (phase 4 graded them OK); late in a run they fail on every pass.
+- **Encountered in:** `*triage-and-fix Chatur`, 21 Nov 2026 (phase 3 re-verify of REQ-UI-104 to REQ-UI-106).
+- **Workaround:** none in the app (the menus open); the Workbench rows were not re-graded on the screen check that night.
+- **Suggested fix:** before the next try, wait for the popup the trigger names (`aria-controls`, or the mockup's `-pop` id) for up to the render wait, and click again only when the trigger's `aria-expanded` still reads false.
+
+### TF-053 — The menu walk clicks a trigger hidden at that width; the mockup check counts icons of sample rows it dropped
+
+- **Status:** open
+- **Severity:** minor
+- **Blocks:** no — every row involved has passing tests; the Workbench passes when both widths are walked in one run; REQ-FN-313 reads "Needs re-verify" on the second point only.
+- **Repro:** (1) `tf-verify-screens.sh … --widths 390` on Chatur's Workbench with an enabled run target: `target` and the Files panel are `display: none` at 390 px, as the mockup's CSS hides them. (2) `tf-mockup-parity.sh --screen measurements-all=/measurements/all` at 390 px.
+- **Expected:** (1) a trigger hidden at this width counts as "not at this width". (2) icons inside `data-tf-sample` rows the app does not draw are taken off every box around them.
+- **Actual:** (1) `findTrigger` in `tf-menus.mjs` returns the hidden element and the finding reads `the menu "TfLens" opens nothing when clicked`. (2) `icon on window > div[1] @390: mockup carries an icon here; the app does not`, naming no element.
+- **Encountered in:** `*build-phase Chatur`, verify of 23 Nov 2026 (REQ-UI-107 to REQ-UI-123, REQ-FN-313).
+- **Workaround:** (1) walk both widths in one run. (2) none.
+- **Suggested fix:** (1) skip a trigger whose `isVisible()` is false. (2) name the element, and remove sample-row icons at every ancestor.
 
 ## Replies from TechieFlow
+
+### Resolution status (TechieFlow team, 2026-11-21)
+
+From `/mnt/c/1MyCode/Chatur/docs/Chatur-TechieFlow-Feedback.md`, read on 2026-11-21 (read only).
+
+**Fixed in Chatur's `.tfcore`** through the framework update of 2026-11-21. The replies were written in the TechieFlow repository's copy of this file and merged into Chatur's at the update. Nothing of Chatur's was run for them. Each has a case in `tests/faults/n21-cases.sh` that fails on the scripts you have and passes now, with a control half that shows a real finding is still reported.
+
+| ID | Fix | Case | Check it here |
+|---|---|---|---|
+| TF-049 | A tickable menu item that changed nothing visible is read again from the menu reopened; a tick that moved is "toggled its tick", put back after. | `ch_049` | the screen check with no dotfile in the open project: no "does nothing" for View › Show hidden files. |
+| TF-050 | `--no-build` goes to `dotnet test`; `--from-log <log>` reads a finished log and runs nothing; the unit run says first where its log goes. | `ch_050` | `--from-log` on `tests/.artifacts/build/20261120T070249Z-test-29448.log`. |
+| TF-051 | A dialog the dropdown walk opened and Escape left open (your Sheet) is closed by its Close button or its backdrop; one that stays open is named and that width's overlap is not measured. | `ch_051` | Settings ▸ Agents at 390 px in dark mode: no `subbar overlaps subnav-sheet`. |
+
+**Rules that changed, and which way they move a finding.** `tf-menus.mjs`: "does nothing when clicked" can only go away, from a tickable item whose tick moves. `tf-dropdowns.mjs`: an overlap that came from a dialog the walk left open goes away; where a dialog will not close, the overlap check at that width reads "not measured". `tf-theme.mjs` (AstroLyfe TF-065, not yours): a page whose colour scheme says light only gets no dark pass; your app does not say so, so nothing changes for you [Likely, read in your sources]. `tf-verify-tests.sh`: two new switches and one printed line; a run without them behaves as before.
+
+**The table** (`measure-projects.py --base deployed`), your row: rows whose verdict moves: not measured for 90 row(s) with a screen; 0 of 4 without one (the last verify covered 94 of the project's 234 rows; the others are not measured); tests a phase verify stops running: 0 of 287 stop; findings that appear or go: none; build list and next command: same. The screen and mockup checks changed, so a row with a screen reads "not measured" there: the saved records were written by the old checks. What they now do is in the cases above.
+
+### Resolution status (TechieFlow team, 2026-11-19)
+
+From `/mnt/c/1MyCode/Chatur/docs/Chatur-TechieFlow-Feedback.md`, read on 2026-11-19.
+
+**Fixed in Chatur's `.tfcore`** through the framework update of 2026-11-19 (morning), **TechieFlow v1.4.0**. The replies were written on the night of 18 to 19 Nov, when Chatur was read only, and merged into this file at the update; nothing of Chatur's was run for them. Each has a case in `tests/faults/n19-cases.sh` (run by `tests/faults/run.sh`) that fails on the scripts this project had before the update and passes now, with a control half that shows a real finding is still reported.
+
+| ID | Fix | Case | Check it here |
+|---|---|---|---|
+| TF-045 | Two anchors that measure alike agree in the badge clause. | `ch_045` | the Repro: no `badge` on a tier picker. |
+| TF-039 | `applicationId` is sent, and needed, only with no API key. | `ch_039` | the Repro registers. |
+| TF-038 | A verify run from a copy writes cells, ledger and records into the project the session names. | `ch_038` | a verify from the copy prints `home:`. |
+| TF-046 | An error on a source-file line is a code error on the first rung. | `ch_046` | the next analyzer error reads FAIL. |
+| TF-047 | A click that opens a new browser target is "opened a window". | `ch_047` | the screen check on Start. |
+| TF-048 (morning) | The doc-test step reads a Windows copy path (`--root 'C:\…'` or `buildCopy:`) and says first when it builds here; the gate's step 4 says to pass `--root <copy>`. | `ch_048` | the next gate after a document change, with `--root` set to that run's copy. |
+
+**One more change that reaches your verify, not filed by you (TfLens TF-060).** A row of phase 2 or later that no screen of its own phase owns is now resolved against the earlier phases' UIDesigns (by the mockup its entry names, its screen's name, or a route its entry names), and that screen is checked for it. On your documents (read only), 65 rows of phase 3 gain a screen (for example REQ-UI-073 on `/`, REQ-FN-084 on `/processes/{id}/run`): their next verify runs the screen and mockup checks they skipped, so a row Verified on its tests alone can move.
+
+**The table** (`measure-projects.py --base v1.3.1`), your row: rows whose verdict moves: not measured for 13 row(s) with a screen; 0 of 0 without one (the last verify covered 13 of the project's 234 rows; the others are not measured); tests a phase verify stops running: 0 of 267 stop; findings that appear or go: none; build list and next command: same. The screen and mockup checks changed, so a row with a screen reads "not measured" there: the saved records were written by the old checks. What they now do is in the cases above, and the earlier-phase screens (TfLens TF-060) are counted from your documents, not from a verify.
 
 ### Resolution status (TechieFlow team, 2026-11-16, afternoon)
 

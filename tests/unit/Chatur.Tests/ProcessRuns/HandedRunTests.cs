@@ -19,8 +19,8 @@ public sealed class HandedRunTests : MigratedDatabaseFixture
         "# X — Checklist\n\n## Requirements Status\n\n| ID | Requirement | Status | % | Remarks | Details |\n|----|-------------|--------|---|---------|---------|\n"
         + "| REQ-FN-001 | One | Implemented | 100% | | |\n| REQ-FN-002 | Two | Not Started | 0% | | |\n";
 
-    private readonly string objProjectPath = Path.Combine(Path.GetTempPath(), $"chatur-handed-{Guid.NewGuid():N}");
-    private readonly string objAppData = Path.Combine(Path.GetTempPath(), $"chatur-handed-app-{Guid.NewGuid():N}");
+    private readonly string objProjectPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-handed-{Guid.NewGuid():N}");
+    private readonly string objAppData = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-handed-app-{Guid.NewGuid():N}");
 
     private static UnattendedAdvance Policy => new(TimeSpan.FromMinutes(5));
 

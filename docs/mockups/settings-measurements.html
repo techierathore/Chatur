@@ -75,6 +75,7 @@ function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
    <a href="prerequisites.html" data-testid="nav-prerequisites"><svg><use href="#i-wrench"/></svg>Prerequisites</a>
    <a href="repository.html" data-testid="nav-repository"><svg><use href="#i-branch"/></svg>Repository</a>
    <a href="worktrees.html" data-testid="nav-worktrees" data-tf-state="later-phase"><svg><use href="#i-copy"/></svg>Working copies<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="measurements.html" data-testid="nav-project-measurements"><svg><use href="#i-chart"/></svg>Project measurements</a>
    <div class="g">Chatur</div>
    <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
    <a href="settings-routing.html" data-testid="nav-routing"><svg><use href="#i-route"/></svg>Routing</a>
@@ -88,13 +89,15 @@ function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
    <a href="feedback.html" data-testid="nav-feedback" data-tf-state="later-phase"><svg><use href="#i-alert"/></svg>Feedback<span class="pill" style="margin-left:auto">later</span></a>
    <a href="integrations.html" data-testid="nav-integrations" data-tf-state="later-phase"><svg><use href="#i-route"/></svg>Integrations<span class="pill" style="margin-left:auto">later</span></a>
    <a href="all-projects.html" data-testid="nav-all-projects" data-tf-state="later-phase"><svg><use href="#i-chart"/></svg>All projects<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="measurements-all.html" data-testid="nav-measurements-all"><svg><use href="#i-chart"/></svg>Measurements across projects</a>
   </nav>
 
   <div class="subpage" data-testid="page">
 
    <div class="row" data-testid="measurements-heading">
     <div><div class="h1">Measurements</div>
-     <div class="lead">The six files Chatur writes as it works, and what is in each one.</div></div>
+     <div class="lead">The six files Chatur writes as it works, and what is in each one.</div>
+     <a href="measurements.html" class="sm" style="color:var(--accent)" data-testid="open-measurements-screen">See the runs, tokens, cost and misses ›</a></div>
     <span class="grow"></span>
     <button class="pick" onclick="say('Reads the five files again and counts what is in them.')" data-testid="recount"><svg><use href="#i-refresh"/></svg>Count again</button>
    </div>
@@ -160,7 +163,7 @@ function choose(b,ev){if(ev)ev.stopPropagation();var w=b.parentNode.parentNode;
      <div class="sm dim" data-testid="sister-rule">Used only where this project has fewer than three runs of a kind, and the estimate then says it borrowed them. Chatur reads their run records and never writes to them.</div>
      <div class="row" style="flex-wrap:wrap" data-testid="sister-1" data-tf-state="sample-data" data-tf-sample><svg style="color:var(--dim)"><use href="#i-folder"/></svg><span>Sevak</span><code class="mono xs dim">~/code/Sevak</code><span class="grow"></span><span class="xs faint">212 runs</span><button class="iconbtn" title="Remove" onclick="say('Sevak is no longer used for estimates.')" data-testid="sister-remove-1"><svg><use href="#i-x"/></svg></button></div>
      <div class="row" style="flex-wrap:wrap" data-testid="sister-2" data-tf-state="sample-data" data-tf-sample><svg style="color:var(--dim)"><use href="#i-folder"/></svg><span>TechieBlog</span><code class="mono xs dim">~/code/TechieBlog</code><span class="grow"></span><span class="xs faint">87 runs</span><button class="iconbtn" title="Remove" onclick="say('TechieBlog is no longer used for estimates.')" data-testid="sister-remove-2"><svg><use href="#i-x"/></svg></button></div>
-     <div class="row"><button class="pick" onclick="say('Pick a project folder that has docs/metrics/runs.jsonl.')" data-testid="sister-add"><svg><use href="#i-plus"/></svg>Add a sister project</button></div>
+     <div class="row" style="flex-wrap:wrap" data-testid="sister-add-row"><input style="flex:1;min-width:16rem;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:inherit;font:inherit;font-size:13px" placeholder="A project folder that has a docs/metrics run record" aria-label="Sister project folder" data-testid="sister-path"><button class="pick" onclick="say('Pick a project folder that has docs/metrics/runs.jsonl.')" data-testid="sister-add"><svg><use href="#i-plus"/></svg>Add a sister project</button></div>
     </div>
    </div>
 

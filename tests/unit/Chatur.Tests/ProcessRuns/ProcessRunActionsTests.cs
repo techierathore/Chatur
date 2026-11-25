@@ -20,7 +20,7 @@ public sealed class ProcessRunActionsTests : MigratedDatabaseFixture
 {
     private const string Process = "verify-phase";
 
-    private readonly string objProjectPath = Path.Combine(Path.GetTempPath(), $"chatur-run-{Guid.NewGuid():N}");
+    private readonly string objProjectPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-run-{Guid.NewGuid():N}");
 
     private string RunsFile => Path.Combine(objProjectPath, "docs", "metrics", "runs.jsonl");
 

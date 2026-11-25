@@ -25,7 +25,7 @@ public sealed class AutoRunWiringTests : MigratedDatabaseFixture
     [Fact(DisplayName = "REQ-FN-061 the registered end-to-end run starts and the background launcher carries it to acceptance")]
     public async Task RegisteredRunIsCarriedOnInTheBackground()
     {
-        var vFolder = Path.Combine(Path.GetTempPath(), $"chatur-wire-{Guid.NewGuid():N}");
+        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-wire-{Guid.NewGuid():N}");
         Directory.CreateDirectory(vFolder);
         try
         {

@@ -154,7 +154,12 @@
             <CardContent Class="flex flex-col gap-3">
                 @if (objRun.Now is { } vNow)
                 {
-                    <div class="flex flex-wrap items-baseline gap-2"><span class="w-28 text-sm text-muted-foreground">Agent</span><span data-testid="running-agent">@vNow.Agent</span>@if (!string.IsNullOrWhiteSpace(vNow.Model)) { <span class="text-sm text-muted-foreground" data-testid="running-model">@vNow.Model</span> }</div>
+                    <div class="flex flex-wrap items-baseline gap-2"><span class="w-28 text-sm text-muted-foreground">Agent</span><span data-testid="running-agent">@vNow.Agent</span>
+                        @if (!string.IsNullOrWhiteSpace(vNow.Model))
+                        {
+                            <span class="text-sm text-muted-foreground" data-testid="running-model">@vNow.Model</span>
+                        }
+                    </div>
                     <div class="flex flex-wrap items-baseline gap-2">
                         <span class="w-28 text-sm text-muted-foreground">Process</span>
                         <span class="font-mono" data-testid="running-process">@vNow.ProcessCode</span>
@@ -307,8 +312,11 @@
                 </div>
                 <div class="text-sm text-muted-foreground" data-testid="complete-rule">
                     A run never reports complete while a single requirement is open. It reports where it got to instead.
-                    <Button Variant="ButtonVariant.Link" Class="h-auto !p-0 text-sm" OnClick="WorkbenchTabs.OpenBoard" data-testid="open-board">Open the board</Button>
-                    to see all @objRun.Open.Total.
+                    @if (LicenceState.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.Board))
+                    {
+                        <Button Variant="ButtonVariant.Link" Class="h-auto !p-0 text-sm" OnClick="WorkbenchTabs.OpenBoard" data-testid="open-board">Open the board</Button>
+                        <span>to see all @objRun.Open.Total.</span>
+                    }
                 </div>
             </CardContent>
         </Card>

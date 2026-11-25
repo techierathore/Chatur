@@ -15,7 +15,7 @@ public sealed class AutoRunEstimateTests : MigratedDatabaseFixture
 {
     private const string Brief = "Build the fixture phase and verify it before you stop, tagging every REQ id.";
 
-    private readonly string objFolder = Path.Combine(Path.GetTempPath(), $"chatur-estimate-auto-{Guid.NewGuid():N}");
+    private readonly string objFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-estimate-auto-{Guid.NewGuid():N}");
 
     /// <summary>Creates the project folder with phase 2's checklist and F1's runs.</summary>
     public AutoRunEstimateTests()

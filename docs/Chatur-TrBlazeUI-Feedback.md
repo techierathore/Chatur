@@ -8,13 +8,11 @@
 
 ## Summary
 
-26 entries, none blocking. 2 open: TR-025 (a pulled-back submenu's margin at 390 px) and TR-026 (a Select's list can never be wider than its button). 24 closed; TR-023 and TR-024 re-checked and closed 2026-11-10 on 2.2.3, which every Chatur project now uses.
+29 entries, none blocking. 5 open: TR-025, TR-026, TR-027 (the stylesheet lacks `place-items-center`), TR-028 (`SelectSeparator` is listed but does not compile) and TR-029 (no read-only markdown view). 24 closed; TR-023 and TR-024 re-checked and closed 2026-11-10 on 2.2.3, which every Chatur project now uses.
 
 All ten were answered on 2026-09-22 and all ten have now been re-checked in Chatur against
 2.0.9. Six were fixed in code; four needed no code, because the control already existed. Each
 entry below carries the control that now does the job and the Chatur requirement that uses it.
-
-The first ten were found on day one, against the 2.0.7 reference; each entry says what was used instead.
 
 > **Upstream reply 2026-09-22 — read it before acting on this file. The action is: upgrade
 > to 2.0.9.** Four entries (TR-001, TR-002, TR-005, TR-009) and most of a fifth (TR-008)
@@ -369,6 +367,42 @@ The first ten were found on day one, against the 2.0.7 reference; each entry say
 - **Encountered in:** `*triage-and-fix Chatur`, 2026-11-14 (opening every dropdown on the screens under check)
 - **Workaround:** a wider button (`w-64`).
 - **Suggested fix:** pass `MatchTriggerWidth` through on the component's `SelectContent`, or make the trigger's width a `min-width` for the list rather than a fixed width.
+
+### TR-027 — The shipped stylesheet has no `place-items-center`, so a grid tile's icon sits in its corner
+
+- **Status:** open. Filed 2026-11-18.
+- **Severity:** minor
+- **Blocks:** no. Chatur's Start tiles use `flex items-center justify-center` instead, which the stylesheet has.
+- **Repro:** TrBlazeUI 2.2.3 (also 2.2.5). `<span class="grid h-9 w-9 place-items-center rounded-lg bg-accent"><LucideIcon Name="folder" Size="18" /></span>` inside a `Button`. Search `staticwebassets/trblazeui.css` for `place-items-center`.
+- **Expected:** the precompiled stylesheet carries the Tailwind layout utilities a consuming app uses alongside `grid` (`place-items-center`, `place-content-center`), or the AI reference says which utilities are absent.
+- **Actual:** the class is not in the file, so the icon falls to the grid cell's top-left corner. The owner saw five tiles on Start "with the same brown shapes that say nothing" (`docs/screenshots/16-Nov-26-Run/Project -Selection-Icons.png`).
+- **Encountered in:** `*triage-and-fix Chatur`, 2026-11-18 (the owner's run on his own solution)
+- **Workaround:** `flex items-center justify-center`.
+- **Suggested fix:** add `place-items-center` (and the other `place-*` utilities) to the shipped stylesheet's safelist.
+
+### TR-028 — The reference lists `SelectSeparator`, but the markup compiler does not know it, and `AlertDialogAction` does not say its child must be a `Button`
+
+- **Status:** open. Filed 2026-11-20.
+- **Severity:** minor
+- **Blocks:** no. The separator was left out of the Add a working copy picker; the dialog buttons use `AsChild` with a `Button`.
+- **Repro:** TrBlazeUI 2.2.5. (1) `<SelectContent><SelectItem …/><SelectSeparator /></SelectContent>` in a page with `@using TrBlazeUI.Components.Select`: `RZ10012: Found markup element with unexpected name 'SelectSeparator'`, although the reference's Select section lists it among the sub-components. (2) `<AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction OnClick="…">Remove</AlertDialogAction>` with plain text renders unstyled text, not buttons: `AsChild` is true by default and expects a `Button` child.
+- **Expected:** `SelectSeparator` resolves under the Select namespace (or the reference names the namespace it lives in); the AlertDialog example shows the `Button` child that the default `AsChild` needs.
+- **Actual:** the first fails to compile; the second compiles and looks wrong until a `Button` is put inside.
+- **Encountered in:** REQ-UI-068, Working copies, 2026-11-20.
+- **Workaround:** no separator; `Button` children inside `AlertDialogCancel` / `AlertDialogAction`.
+- **Suggested fix:** check the `SelectSeparator` export, and add the `Button` child to the reference's AlertDialog example.
+
+### TR-029 — There is no read-only view that draws markdown, so a chat reply shows raw `**` marks
+
+- **Status:** open. Filed 2026-11-22.
+- **Severity:** minor
+- **Blocks:** no. Chatur turns a reply's markdown into HTML with Markdig (the version TrBlazeUI 2.2.3 already brings) and draws it inside `Prose`.
+- **Repro:** TrBlazeUI 2.2.3. A chat reply holding `**bold**`, a list, `` `code` `` or a table. `ChatMessage`'s documentation says its body is "plain text, or rendered markdown through `Prose`", but nothing in the library renders markdown for display: `MarkdownEditor` renders only inside its own editor's preview, and its pipeline and sanitizer are private.
+- **Expected:** a `Markdown` (or `MarkdownView`) component: `<Markdown Text="@reply" />`, raw HTML off, unsafe links dropped, inside `Prose`.
+- **Actual:** each app writes its own Markdig call and its own link check.
+- **Encountered in:** REQ-UI-114, Workbench conversation, 2026-11-22 (the owner's test of 22 Nov).
+- **Workaround:** `Chatur.Core.Documents.MarkdownHtml.Reply` and `<Prose>@((MarkupString)html)</Prose>`.
+- **Suggested fix:** expose the `MarkdownEditor` preview pipeline and sanitizer as a read-only component.
 
 ## Replies from TrBlazeUI
 

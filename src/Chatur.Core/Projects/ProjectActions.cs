@@ -195,16 +195,30 @@ public sealed class ProjectActions : IProjectActions
                     continue;
                 }
 
+                // Two scans can run at once (the Start window and the menu bar's list); the one that comes second
+                // finds the row already there instead of failing on the unique path (owner, 20 Nov 2026).
                 await vConnection.ExecuteAsync(
                     new CommandDefinition(
-                        "INSERT INTO Project (ProjectFolderId, Name, Path, Kind, LastOpenedUtc) VALUES (@ProjectFolderId, @Name, @Path, @Kind, NULL);",
+                        "INSERT INTO Project (ProjectFolderId, Name, Path, Kind, LastOpenedUtc) VALUES (@ProjectFolderId, @Name, @Path, @Kind, NULL) ON CONFLICT (Path) DO NOTHING;",
                         new { vFolder.ProjectFolderId, vCandidate.Name, vCandidate.Path, vCandidate.Kind },
                         cancellationToken: aCt))
                     .ConfigureAwait(false);
             }
         }
 
-        var vRows = await vConnection.QueryAsync<RawProjectRow>(
+        return await ReadKnownAsync(vConnection, aCt).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ProjectSummary>> KnownAsync(CancellationToken aCt = default)
+    {
+        using var vConnection = objConnections.OpenConnection();
+        return await ReadKnownAsync(vConnection, aCt).ConfigureAwait(false);
+    }
+
+    private static async Task<IReadOnlyList<ProjectSummary>> ReadKnownAsync(System.Data.IDbConnection aConnection, CancellationToken aCt)
+    {
+        var vRows = await aConnection.QueryAsync<RawProjectRow>(
             new CommandDefinition(
                 "SELECT ProjectId, Name, Path, Kind, LastOpenedUtc FROM Project WHERE RemovedUtc IS NULL ORDER BY (LastOpenedUtc IS NULL), LastOpenedUtc DESC, Name;",
                 cancellationToken: aCt))
@@ -314,6 +328,66 @@ public sealed class ProjectActions : IProjectActions
         var vProject = vRow is null ? null : ToProjectSummary(vRow);
         objAppState.SetSelectedProject(vProject);
         return vProject;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Checks only what the Workbench needs first: that the project's folder (a solution's, the folder
+    /// around its file) is there and that its top level can be listed. Either failing clears the selection,
+    /// so the next start does not try again, and returns one plain line (BRD-218). Before this a start
+    /// whose last folder could not be read stopped on the Files tree every time (owner, 16 Nov 2026).
+    /// </remarks>
+    public async Task<ProjectReopen> ReopenAsync(CancellationToken aCt = default)
+    {
+        var vProject = await SelectedProjectAsync(aCt).ConfigureAwait(false);
+        if (vProject is null)
+        {
+            return new ProjectReopen(null, null);
+        }
+
+        var vProblem = OpenProblem(vProject.Path);
+        if (vProblem is null)
+        {
+            return new ProjectReopen(vProject, null);
+        }
+
+        // The stored selection is kept: Start may be drawn twice (a web page is rendered once on the server
+        // and again in the browser), and a selection cleared by the first pass left the second with nothing to
+        // say. Kept, every start says why, and the project opens again by itself once its folder is back.
+        objAppState.SetSelectedProject(null);
+        return new ProjectReopen(null, $"Chatur could not open {vProject.Name} last time: {vProblem}");
+    }
+
+    /// <summary>Why a project's folder cannot be opened now, in plain words, or <see langword="null"/> when it can.</summary>
+    /// <param name="aPath">The project's own path: a folder, or a solution file.</param>
+    public static string? OpenProblem(string aPath)
+    {
+        var vIsSolutionFile = aPath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) || aPath.EndsWith(".slnx", StringComparison.OrdinalIgnoreCase);
+        if (vIsSolutionFile && !File.Exists(aPath))
+        {
+            return $"the solution file {aPath} is no longer there.";
+        }
+
+        var vFolder = vIsSolutionFile ? Path.GetDirectoryName(aPath) ?? aPath : aPath;
+        if (!Directory.Exists(vFolder))
+        {
+            return $"the folder {vFolder} is no longer there.";
+        }
+
+        try
+        {
+            using var vEntries = Directory.EnumerateFileSystemEntries(vFolder).GetEnumerator();
+            vEntries.MoveNext();
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return $"Chatur is not allowed to read {vFolder}.";
+        }
+        catch (IOException aException)
+        {
+            return $"{vFolder} could not be read ({aException.Message.TrimEnd('.')}).";
+        }
     }
 
     /// <inheritdoc />

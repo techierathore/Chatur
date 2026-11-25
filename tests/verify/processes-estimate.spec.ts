@@ -18,6 +18,7 @@ import { signIn } from './support/auth';
 import { query, restore, run, snapshot, Snapshot } from './support/db';
 import { openProcessesTab, tab } from './support/phase2-tabs';
 import { openStepProject, STEP_ROOT } from './support/step-work';
+import { removeProjectsUnder } from './support/cleanup';
 import { test, APP_LOG } from './support/workbench-a';
 
 const NAME = 'Fixture';
@@ -183,6 +184,9 @@ test.beforeAll(async ({ browser }) => {
 test.afterAll(async () => {
   await page.close();
   await new Promise<void>((ok) => counter.close(() => ok()));
+  // The project this file made goes, with its folder and its rows (owner, 20 Nov 2026): settings-estimate's
+  // project carried the same name "Fixture" once, and two of them in Start's list broke every click on the name.
+  removeProjectsUnder(PROJECT);
 });
 test.beforeEach(() => {
   test.setTimeout(180_000);

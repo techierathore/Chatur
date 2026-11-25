@@ -5,11 +5,15 @@
 // test here is skipped, never passed. The web harness's own specs carry each row's acceptance line;
 // these carry what the browser cannot show: that the desktop app reaches the screen at all.
 import { test, expect, chromium, Browser, Page } from '@playwright/test';
-import { existsSync, readdirSync, statSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
 import { testProvider, connectorItem } from './support/provider';
 import { credentials } from './support/auth';
 import { ROOT as FIXTURE_ROOT, NAME as FIXTURE_PROJECT, resetFixture } from './support/workbench-a';
+import { removeProjectsUnder } from './support/cleanup';
+import {
+  CONSOLE_BROKEN, CONSOLE_PROGRAM, ProofSolution, deleteProofSolution, makeProofSolution, webLaunchAddress, writeConsole,
+} from './support/run-proof';
 
 // A desktop head started for the tests keeps its own database under tests/.artifacts/app-data/desktop, never the
 // owner's application-data database (REQ-NFR-010): it starts signed out with no project, so the run signs in and
@@ -184,6 +188,175 @@ test('REQ-UI-073 REQ-FN-007 REQ-FN-044 no menu of the desktop app shows "Nothing
   }
 });
 
+// ---- The owner's evening test of 21 Nov 2026, in the desktop app itself -------------------------------------------
+// Run (points 1.1 to 1.4) on a real Blazor web app, a console app and a class library with tests made with the Windows
+// dotnet under this test project's bin folder; the project switcher (point 2); and a closed window that leaves no
+// "Unobserved task exception" behind (point 5). The proof solution is removed from the test account and deleted after.
+const PROOF_STAMP = Date.now();
+let proof: ProofSolution | undefined;
+const LOGS = path.resolve('tests/.artifacts/app-data/desktop/logs');
+
+/** How many "Unobserved task exception" lines the desktop head's own logs hold. */
+function unobservedCount(): number {
+  if (!existsSync(LOGS)) return 0;
+  return readdirSync(LOGS).filter((f) => f.endsWith('.log'))
+    .reduce((aSum, f) => aSum + (readFileSync(path.join(LOGS, f), 'utf8').match(/Unobserved task exception/g)?.length ?? 0), 0);
+}
+
+/** Opens the proof solution in the main window through File > Open a solution. */
+async function openProof(aMain: Page): Promise<void> {
+  if (!proof) proof = makeProofSolution('windows', PROOF_STAMP);
+  // The open project must be this run's proof solution, not one of the same name an earlier run made and removed.
+  if (((await aMain.getByTestId('project-switch').getAttribute('title')) ?? '').includes(proof.solutionForApp)) return;
+  await choose(aMain, 'menu-file', 'menu-file-open-solution');
+  await aMain.locator('input[data-testid=open-project-path], [data-testid=open-project-path] input').first().fill(proof.solutionForApp);
+  await aMain.getByTestId('open-project-go').click();
+  await expect(aMain.getByTestId('project-switch-name')).toHaveText('ProofApps', { timeout: 60_000 });
+}
+
+/** Chooses a run target by its name. */
+async function chooseRunTarget(aMain: Page, aName: string): Promise<void> {
+  await expect(async () => {
+    if (!(await aMain.getByTestId('target-pop').isVisible())) await aMain.locator('[data-testid=target] button').first().click();
+    await expect(aMain.getByTestId('target-pop')).toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 30_000 });
+  await aMain.getByTestId('target-pop').getByText(aName, { exact: true }).click();
+  await expect(aMain.locator('[data-testid=target] button').first()).toContainText(aName);
+}
+
+test.afterAll(async () => {
+  if (!proof) return;
+  // The app lets go of the proof folder first (it watches the open project's folder), and every program the runs
+  // started is ended, so Windows lets the folder be deleted.
+  try {
+    const vMain = mainWindow();
+    if (((await vMain.getByTestId('project-switch').getAttribute('title')) ?? '').includes(proof.solutionForApp)) {
+      await vMain.getByTestId('project-switch').click();
+      await vMain.getByTestId('project-switch-pop').locator('button[data-testid^=project-switch-]').filter({ has: vMain.getByTestId('project-switch-item-name').getByText(FIXTURE_PROJECT, { exact: true }) }).first().click();
+      await expect(vMain.getByTestId('project-switch-name')).toHaveText(FIXTURE_PROJECT, { timeout: 30_000 });
+    }
+  } catch {
+    /* the window is gone: nothing holds the folder */
+  }
+  deleteProofSolution({ ...proof, root: proof.root }, 'windows');
+  removeProjectsUnder(proof.root);
+});
+
+test('REQ-UI-107 REQ-UI-108 in the desktop app, running the console app opens Output by itself and shows the build, the program live and its exit code', async () => {
+  test.setTimeout(600_000);
+  const vMain = mainWindow();
+  await openProof(vMain);
+  writeConsole(proof!, CONSOLE_PROGRAM);
+  await chooseRunTarget(vMain, 'ProofConsole');
+  if (await vMain.getByTestId('output').isVisible()) {
+    await choose(vMain, 'menu-view', 'menu-view-output');
+    await vMain.keyboard.press('Escape');
+    await expect(vMain.getByTestId('output')).toBeHidden({ timeout: 10_000 });
+  }
+  await vMain.getByTestId('run').click();
+  const vOutput = vMain.getByTestId('output');
+  await expect(vOutput, 'Output opened by itself').toBeVisible({ timeout: 10_000 });
+  await expect(vOutput).toContainText('> dotnet build', { timeout: 30_000 });
+  await expect(vOutput).toContainText(/Built in \d+(\.\d+)?s/, { timeout: 300_000 });
+  await expect(vOutput).toContainText('Proof console starting', { timeout: 120_000 });
+  await expect(vOutput).toContainText('Process exited with code 3.', { timeout: 60_000 });
+  await expect(vMain.getByTestId('output-status')).toHaveText('failed, exit code 3');
+  await vMain.screenshot({ path: 'tests/.artifacts/verify/shots/desktop-REQ-UI-107-console.png' });
+});
+
+test('REQ-UI-108 in the desktop app, a run whose build fails says so with its errors and starts nothing', async () => {
+  test.setTimeout(400_000);
+  const vMain = mainWindow();
+  await openProof(vMain);
+  writeConsole(proof!, CONSOLE_BROKEN);
+  try {
+    await chooseRunTarget(vMain, 'ProofConsole');
+    await vMain.getByTestId('run').click();
+    const vOutput = vMain.getByTestId('output');
+    await expect(vOutput).toContainText('The program was not started.', { timeout: 300_000 });
+    await expect(vOutput).toContainText('error CS1002');
+    await expect(vMain.getByTestId('output-status')).toHaveText('build failed');
+    await expect(vMain.getByTestId('output-error').first()).toContainText('ProofConsole/Program.cs:1');
+  } finally {
+    writeConsole(proof!, CONSOLE_PROGRAM);
+  }
+});
+
+test('REQ-FN-306 in the desktop app, running the Blazor web app opens the browser at its launch-settings address once it is up', async () => {
+  test.setTimeout(600_000);
+  const vMain = mainWindow();
+  await openProof(vMain);
+  const vAddress = webLaunchAddress(proof!);
+  await chooseRunTarget(vMain, 'ProofWeb');
+  await vMain.getByTestId('run').click();
+  const vOutput = vMain.getByTestId('output');
+  await expect(vOutput).toContainText('--launch-profile', { timeout: 300_000 });
+  await expect(vOutput).toContainText('Now listening on:', { timeout: 180_000 });
+  await expect(vOutput).toContainText(`Opening ${vAddress} in the browser`, { timeout: 30_000 });
+  await expect(vMain.getByTestId('stop')).toBeVisible();
+  const vResponse = await vMain.request.get(vAddress, { ignoreHTTPSErrors: true, timeout: 30_000 });
+  expect(vResponse.status()).toBe(200);
+  await vMain.screenshot({ path: 'tests/.artifacts/verify/shots/desktop-REQ-FN-306-web.png' });
+  await vMain.getByTestId('stop').click();
+  await expect(vOutput).toContainText('Run stopped.', { timeout: 60_000 });
+});
+
+test('REQ-UI-107 in the desktop app, running the class library\'s test project runs its tests and shows the exit code', async () => {
+  test.setTimeout(600_000);
+  const vMain = mainWindow();
+  await openProof(vMain);
+  await chooseRunTarget(vMain, 'ProofLib.Tests');
+  await vMain.getByTestId('run').click();
+  const vOutput = vMain.getByTestId('output');
+  await expect(vOutput).toContainText('> dotnet test', { timeout: 300_000 });
+  await expect(vOutput).toContainText('Process exited with code 0.', { timeout: 300_000 });
+  await expect(vMain.getByTestId('output-status')).toHaveText('ended, exit code 0');
+});
+
+test('REQ-FN-307 REQ-UI-109 REQ-UI-110 in the desktop app, the switcher names the open project, lists every project and switches on a pick', async () => {
+  const vMain = mainWindow();
+  await openProof(vMain);
+  await expect(vMain.getByTestId('project-switch-label')).toHaveText('Project:');
+  await vMain.getByTestId('project-switch').click();
+  const vPop = vMain.getByTestId('project-switch-pop');
+  await expect(vPop).toBeVisible({ timeout: 10_000 });
+  await expect(vPop).not.toContainText('All projects');
+  const vOther = vPop.locator('button[data-testid^=project-switch-]').filter({ has: vMain.getByTestId('project-switch-item-name').getByText(FIXTURE_PROJECT, { exact: true }) }).first();
+  await vOther.click();
+  await expect(vMain.getByTestId('project-switch-name')).toHaveText(FIXTURE_PROJECT, { timeout: 30_000 });
+  await expect(vMain.getByTestId('file-tree')).toBeVisible();
+  await vMain.getByTestId('project-switch').click();
+  await expect(vMain.getByTestId('project-switch-pop').locator('[aria-current=true]')).toContainText(FIXTURE_PROJECT);
+  await vMain.getByTestId('project-switch-pop').locator('button[data-testid^=project-switch-]').filter({ has: vMain.getByTestId('project-switch-item-name').getByText('ProofApps', { exact: true }) }).first().click();
+  await expect(vMain.getByTestId('project-switch-name')).toHaveText('ProofApps', { timeout: 30_000 });
+});
+
+test('REQ-NFR-011 in the desktop app, closing the secondary window and switching project after leaves no unobserved task exception', async () => {
+  test.setTimeout(300_000);
+  const vMain = mainWindow();
+  await openProof(vMain);
+  const vBefore = unobservedCount();
+  for (let vRound = 0; vRound < 2; vRound++) {
+    await choose(vMain, 'menu-tools', 'menu-tools-settings');
+    const vSettings = await secondaryOn(vMain, '/settings/providers');
+    await vSettings.getByTestId('close-window').click();
+    await expect.poll(() => views().filter((aPage) => aPage !== vMain).length, { timeout: 30_000 }).toBe(0);
+  }
+  // Every app-wide change a closed window's pages used to draw for: two project switches, then time for the
+  // finalizer that reports unobserved task exceptions to run.
+  for (const vName of [FIXTURE_PROJECT, 'ProofApps', FIXTURE_PROJECT, 'ProofApps']) {
+    await vMain.getByTestId('project-switch').click();
+    await vMain.getByTestId('project-switch-pop').locator('button[data-testid^=project-switch-]').filter({ has: vMain.getByTestId('project-switch-item-name').getByText(vName, { exact: true }) }).first().click();
+    await expect(vMain.getByTestId('project-switch-name')).toHaveText(vName, { timeout: 30_000 });
+  }
+  for (let vI = 0; vI < 6; vI++) {
+    await choose(vMain, 'menu-view', 'menu-view-files');
+    await vMain.keyboard.press('Escape');
+    await vMain.waitForTimeout(5_000);
+  }
+  expect(unobservedCount() - vBefore, 'new "Unobserved task exception" lines in the desktop log').toBe(0);
+});
+
 test('REQ-FN-009 Sign out chosen in the main window of the desktop app shows Sign in, and signing in again works', async () => {
   // MISS of 2026-11-16: with a project open, Sign out left the window on "Loading Chatur" until the app was
   // closed and opened again. The page reloads on sign-out, and the menu bar's clean-up waited for an answer from
@@ -222,3 +395,4 @@ test('REQ-NFR-010 the desktop head under test keeps its database under tests/.ar
   const vNewest = Math.max(...vWritten.map((aDb) => statSync(aDb).mtimeMs));
   expect(vNewest, 'the signed-in account wrote its chat to the test folder during this run').toBeGreaterThanOrEqual(RUN_STARTED - 1_000);
 });
+

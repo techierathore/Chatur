@@ -127,8 +127,11 @@ public sealed class AppManagerClient : IAppManagerClient
         }
 
         var vData = vEnvelope.Data;
-        return new AppManagerAuthResult(true, null, vData.UserId, vData.Email, vData.FirstName, vData.LastName, vData.AccessToken, vData.RefreshToken, vData.TokenExpiresAt);
+        return new AppManagerAuthResult(true, null, vData.UserId, vData.Email, vData.FirstName, vData.LastName, vData.AccessToken, vData.RefreshToken, vData.TokenExpiresAt, ToReport(vData.DeviceCap));
     }
+
+    private static Actions.DeviceCapReport? ToReport(DeviceCapData? aCap) =>
+        aCap is null ? null : new Actions.DeviceCapReport(aCap.DeviceCount, aCap.MaxDevices, aCap.IsOverCap, aCap.Warning, aCap.LicenseKey);
 
     private static object ToDeviceInfoBody(AppManagerDeviceInfo aDevice) => new
     {
@@ -189,6 +192,21 @@ public sealed class AppManagerClient : IAppManagerClient
         public string RefreshToken { get; set; } = string.Empty;
 
         public DateTime TokenExpiresAt { get; set; }
+
+        public DeviceCapData? DeviceCap { get; set; }
+    }
+
+    private sealed class DeviceCapData
+    {
+        public int DeviceCount { get; set; }
+
+        public int MaxDevices { get; set; }
+
+        public bool IsOverCap { get; set; }
+
+        public string? Warning { get; set; }
+
+        public string? LicenseKey { get; set; }
     }
 
     private sealed class RefreshData

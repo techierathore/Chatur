@@ -62,8 +62,12 @@
     <ProjectReference Include="..\ChaturDb\ChaturDb.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
   </ItemGroup>
 
+  <!-- The settings the app embeds. A local install (scripts/install-windows.ps1, REQ-NFR-012) names its own copy
+       under obj/, which carries the installed-app key a Release build needs to sign in, written there from the
+       owner's user secrets and never into this folder, so it can never be committed. -->
   <ItemGroup>
-    <EmbeddedResource Include="appsettings.json" />
+    <EmbeddedResource Include="appsettings.json" LogicalName="Chatur.appsettings.json" Condition="'$(ChaturSettingsFile)' == ''" />
+    <EmbeddedResource Include="$(ChaturSettingsFile)" LogicalName="Chatur.appsettings.json" Condition="'$(ChaturSettingsFile)' != ''" />
   </ItemGroup>
 
 </Project>

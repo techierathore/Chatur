@@ -1,6 +1,15 @@
-@* The File menu's ways into a project (REQ-UI-073): New project, Open a solution, Open a folder and
-   Clone a repository share one dialog. Each asks for a place (typed, or chosen with the machine's own
-   folder picker) and, for a new project or a clone, a name or an address; doing it selects the project. *@
+@* The File menu's and Start's ways into a project (REQ-UI-073): Open a solution, Open a folder, Open a file and
+   Clone a repository share one dialog. Each asks for a place (typed, or chosen with the machine's own picker) and,
+   for a clone, an address; doing it selects the project. New project has its own dialog (NewProjectDialog). *@
+@if (Mode == ProjectOpenMode.NewProject)
+{
+    @* BRD-244, BRD-247 (22 Nov 2026): New project is one dialog in every state, always from this machine's templates.
+       With a solution open on the Workbench it adds a project to it; otherwise it makes the solution and its first
+       project, in the empty folder that is open when there is one. *@
+    <NewProjectDialog Open="Open" OpenChanged="OpenChanged" InSolution="objInSolution" OpenFolder="@objOpenFolder" />
+}
+else
+{
 <Dialog Open="Open" OpenChanged="OpenChanged">
     <DialogContent Class="max-w-lg" data-testid="open-project-dialog">
         <DialogHeader>
@@ -14,15 +23,6 @@
                     <FieldLabel For="open-project-address">Repository address</FieldLabel>
                     <FieldContent>
                         <Input Id="open-project-address" @bind-Value="objAddress" Placeholder="https://github.com/owner/name.git" data-testid="open-project-address" />
-                    </FieldContent>
-                </Field>
-            }
-            @if (Mode == ProjectOpenMode.NewProject)
-            {
-                <Field>
-                    <FieldLabel For="open-project-name">Project name</FieldLabel>
-                    <FieldContent>
-                        <Input Id="open-project-name" @bind-Value="objName" Placeholder="A name for the new solution" data-testid="open-project-name" />
                     </FieldContent>
                 </Field>
             }
@@ -55,3 +55,4 @@
         </DialogFooter>
     </DialogContent>
 </Dialog>
+}

@@ -137,10 +137,33 @@ public static class MauiProgram
 
         TaskScheduler.UnobservedTaskException += (_, aArgs) =>
         {
+            // A window's web view that has closed can still be sent one last message by the web view's own bridge
+            // (MAUI's IpcSender), which fails inside MAUI and is reported here. Its cause, pages of closed windows that
+            // kept drawing, is gone (REQ-NFR-011); this exact failure is noted in one line, not as an error.
+            if (IsClosedWebViewMessage(aArgs.Exception))
+            {
+                Log.Information("A message for a window that has closed was not delivered (its web view is gone).");
+                aArgs.SetObserved();
+                return;
+            }
+
             Log.Error(aArgs.Exception, "Unobserved task exception");
             aArgs.SetObserved();
         };
     }
+
+    /// <summary>
+    /// Whether an unobserved exception is only the web view's bridge failing to send to a web view that has closed: every
+    /// inner exception a <see cref="NullReferenceException"/> thrown in <c>WebView2WebViewManager.SendMessage</c> or in
+    /// <c>IpcSender</c>'s error report (REQ-NFR-011).
+    /// </summary>
+    /// <param name="aException">The exception the finalizer found unobserved.</param>
+    private static bool IsClosedWebViewMessage(AggregateException aException) =>
+        aException.InnerExceptions.Count > 0
+        && aException.InnerExceptions.All(aInner => aInner is NullReferenceException
+            && (aInner.StackTrace ?? string.Empty) is { } vTrace
+            && (vTrace.Contains("WebView2WebViewManager.SendMessage", StringComparison.Ordinal)
+                || vTrace.Contains("Components.WebView.IpcSender", StringComparison.Ordinal)));
 
     /// <summary>
     /// Adds the embedded <c>appsettings.json</c> — non-secret configuration only (Architecture §1 Q2).

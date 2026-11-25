@@ -46,8 +46,15 @@ public sealed class AutoRouter : IAutoRouter
         objClock = aClock;
     }
 
+    /// <summary>The longest reason shown beside a reply; the full reason stays in the routing log.</summary>
+    private const int ReasonLimit = 90;
+
     /// <inheritdoc />
-    public async Task<ConnectedModel?> ChooseAsync(string aRequest, int aSessionId, int aRoleId, CancellationToken aCt = default)
+    public async Task<ConnectedModel?> ChooseAsync(string aRequest, int aSessionId, int aRoleId, CancellationToken aCt = default) =>
+        (await DecideAsync(aRequest, aSessionId, aRoleId, aCt).ConfigureAwait(false))?.Model;
+
+    /// <inheritdoc />
+    public async Task<RoutingDecision?> DecideAsync(string aRequest, int aSessionId, int aRoleId, CancellationToken aCt = default)
     {
         if (!await objRouting.AutoRoutingAsync(aCt).ConfigureAwait(false))
         {
@@ -74,7 +81,7 @@ public sealed class AutoRouter : IAutoRouter
                 ?? throw new InvalidOperationException($"The chooser answered \"{vChoice.ModelId}\", which is not one of the candidates.");
 
             await LogAsync(aSessionId, aRoleId, vChosen.Model.ModelIdentifier, vChoice.Source.ToString(), vChoice.Reason, aCt).ConfigureAwait(false);
-            return vChosen.Model;
+            return new RoutingDecision(vChosen.Model, ReasonFor(vChoice.Source, vChoice.Reason, vCandidates.Count));
         }
         catch (OperationCanceledException)
         {
@@ -84,9 +91,47 @@ public sealed class AutoRouter : IAutoRouter
         {
             // The small model itself failed: the owner's tiers and chains decide, and the log says so.
             await LogAsync(aSessionId, aRoleId, "-", TiersAndChainsSource, $"The small model could not choose: {vException.Message}", aCt).ConfigureAwait(false);
-            return null;
+            return new RoutingDecision(null, TiersDecidedReason);
         }
     }
+
+    /// <summary>
+    /// The few words shown beside a reply for why a model was picked (REQ-UI-111): <c>Automatic:</c>, then what the
+    /// small model said, cut to one short sentence; or, when there was nothing to choose between or the small model's
+    /// answer was not clear, the plain statement of that.
+    /// </summary>
+    /// <param name="aSource">How TechieRag reached the choice.</param>
+    /// <param name="aReason">What the small model said about the choice.</param>
+    /// <param name="aCandidateCount">How many models were offered.</param>
+    public static string ReasonFor(ModelChoiceSource aSource, string aReason, int aCandidateCount)
+    {
+        if (aSource == ModelChoiceSource.OnlyCandidate || aCandidateCount == 1)
+        {
+            return "Automatic: only one model is connected";
+        }
+
+        if (aSource == ModelChoiceSource.Fallback)
+        {
+            return "Automatic: the small model gave no clear answer, so the first model was used";
+        }
+
+        var vWords = (aReason ?? string.Empty).Replace('\n', ' ').Trim();
+        var vStop = vWords.IndexOfAny(['.', '!', '?']);
+        if (vStop > 0)
+        {
+            vWords = vWords[..vStop];
+        }
+
+        if (vWords.Length > ReasonLimit)
+        {
+            vWords = vWords[..(ReasonLimit - 1)].TrimEnd() + "…";
+        }
+
+        return vWords.Length == 0 ? "Automatic: chosen by the small model" : "Automatic: " + vWords;
+    }
+
+    /// <summary>The reason stored with a reply when the small model failed and the owner's tiers and chains picked the model.</summary>
+    public const string TiersDecidedReason = "Automatic: the small model could not choose, so the tiers decided";
 
     private async Task<List<RoutedCandidate>> CandidatesAsync(CancellationToken aCt)
     {

@@ -13,7 +13,7 @@ public sealed class VerdictConventionTests
     private static readonly Regex objVerdict = new(
         @"\[REQ-[A-Z]+-\d+\]\s+Mac:\s*(?<mac>[^;]+);\s*Windows:\s*(?<win>.+)$", RegexOptions.Compiled);
 
-    private static string Checklist()
+    private static string Architecture()
     {
         var vDirectory = new DirectoryInfo(AppContext.BaseDirectory);
         while (vDirectory is not null && !File.Exists(Path.Combine(vDirectory.FullName, "Chatur.sln")))
@@ -22,7 +22,7 @@ public sealed class VerdictConventionTests
         }
 
         Assert.NotNull(vDirectory);
-        return File.ReadAllText(Path.Combine(vDirectory!.FullName, "docs", "Chatur-Checklist.md"));
+        return File.ReadAllText(Path.Combine(vDirectory!.FullName, "docs", "Chatur-Architecture.md"));
     }
 
     /// <summary>
@@ -32,9 +32,11 @@ public sealed class VerdictConventionTests
     [Fact(DisplayName = "REQ-NFR-004 the checklist states the two-machine verdict form")]
     public void ChecklistStatesTheTwoMachineVerdictForm()
     {
-        var vText = Checklist();
+        // Since 20 Nov 2026 the convention lives in the Architecture's cross-cutting rules: the checklist's
+        // template has no section for it.
+        var vText = Architecture();
 
-        Assert.Contains("## Verdict convention (REQ-NFR-004)", vText);
+        Assert.Contains("**Verdict convention (REQ-NFR-004):**", vText);
         Assert.Contains("[REQ-xxx] Mac: <verdict>; Windows: <verdict>", vText);
         Assert.Contains("verified on Mac Catalyst first", vText);
     }

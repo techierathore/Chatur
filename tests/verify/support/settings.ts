@@ -22,6 +22,17 @@ interface TestUserSettings {
 
 interface TestSettings {
   testUsers: Record<TestUser, TestUserSettings>;
+  /** The licence the web harness holds in memory when `enabled` (never the shared App Manager account). */
+  testLicence?: {
+    enabled: boolean;
+    name: string;
+    state: string;
+    key: string;
+    daysRemaining: number;
+    deviceCap: number;
+    overCapWarning: string;
+    devices: { id: string; name: string; thisDevice?: boolean; blocked?: boolean }[];
+  };
   testProvider: { name: string; connector?: string; baseUrl: string; model: string; key: string };
 }
 

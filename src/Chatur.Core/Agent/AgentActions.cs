@@ -25,7 +25,53 @@ public sealed class AgentActions : IAgentActions
     /// The tool-calling turns one <see cref="SendAsync"/> call allows before it gives up and answers
     /// in words instead — a runaway loop must end, not run forever.
     /// </summary>
-    private const int MaxToolIterations = 8;
+    private const int MaxToolIterations = 40;
+
+    /// <summary>How many times in one reply a guided command's stalled turn is told to go on.</summary>
+    private const int MaxStallNudges = 2;
+
+    /// <summary>What a stalled turn of a guided command is told (never shown as the person's words; it is the loop's own).</summary>
+    private const string StallNudge =
+        "Chatur: you described a step but made no tool call. Make the call now, without describing it first, and keep going until the command's file is written.";
+
+    /// <summary>The output room a turn is given again after it was cut off at the provider's default limit.</summary>
+    private const int CutOffMaxTokens = 32000;
+
+    /// <summary>Whether the model's turn ended because it reached its output limit (Anthropic "max_tokens", OpenAI "length").</summary>
+    /// <param name="aFinishReason">The finish reason the stream reported.</param>
+    public static bool IsCutOff(string? aFinishReason) =>
+        string.Equals(aFinishReason, "max_tokens", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(aFinishReason, "length", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>What a turn cut off at the output limit is told when it is asked again with more room.</summary>
+    private const string CutOffNudge =
+        "Chatur: your last turn was cut off at the output limit before its tool call was complete, so nothing was written. There is more room now: make the call again, whole.";
+
+    /// <summary>The step the activity panel shows when a stalled turn is told to go on.</summary>
+    private const string StallStep = "The agent stopped before the command's file was written; Chatur told it to go on.";
+
+    /// <summary>
+    /// Whether a turn that made no tool call stopped short: it said nothing, or only announced its next step ("I'll list
+    /// the project first.", "Let me read the pages:").
+    /// </summary>
+    /// <param name="aText">The turn's text.</param>
+    public static bool IsStall(string aText)
+    {
+        var vText = aText.Trim();
+        if (vText.Length == 0)
+        {
+            return true;
+        }
+
+        return vText.Length <= 400
+            && System.Text.RegularExpressions.Regex.IsMatch(
+                vText,
+                @"^(?:(?:first|now|next|ok(?:ay)?|sure|right)[,.]?\s+)?(?:i['’]ll|i will|let me|i['’]m going to|i am going to)\b",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    }
+
+    /// <summary>The name a reply Chatur gave itself carries where a model's name would be: a command answered with no model (BRD-249).</summary>
+    public const string ChaturAnswered = "Chatur (no model)";
 
     /// <summary>Written between the reply text of two model turns of one send (before and after a tool run), so the pieces do not run together.</summary>
     private const string TurnSeparator = "\n\n";
@@ -41,6 +87,8 @@ public sealed class AgentActions : IAgentActions
     private readonly IClock objClock;
     private readonly IRoutingActions objRouting;
     private readonly Routing.IAutoRouter? objAutoRouter;
+    private readonly IAgentPersonaActions? objPersonas;
+    private readonly Commands.IAgentCommandRunner? objCommands;
 
     /// <summary>
     /// Creates the action set.
@@ -56,6 +104,8 @@ public sealed class AgentActions : IAgentActions
     /// <param name="aClock">Timestamps a session event as it is recorded.</param>
     /// <param name="aRouting">Reads a tier's fallback chain so a limited or unavailable model steps aside for the next one (REQ-FN-021).</param>
     /// <param name="aAutoRouter">When automatic routing is on, a small model chooses the model for a turn (REQ-FN-071); <see langword="null"/> never consults it, so the tiers and chains always decide.</param>
+    /// <param name="aPersonas">Reads the agent's persona file, so the model is told who the agent is and what commands it has (REQ-FN-308); <see langword="null"/> sends the role's stored wording alone.</param>
+    /// <param name="aCommands">Carries out a typed <c>*command</c> and answers a question about the commands from the agent's real list (BRD-249, REQ-FN-311); <see langword="null"/> sends every message to the model.</param>
     public AgentActions(
         IDbConnectionFactory aDb,
         AgentSessionRegistry aRegistry,
@@ -67,9 +117,13 @@ public sealed class AgentActions : IAgentActions
         IMeasurementActions aMeasurements,
         IClock aClock,
         IRoutingActions aRouting,
-        Routing.IAutoRouter? aAutoRouter = null)
+        Routing.IAutoRouter? aAutoRouter = null,
+        IAgentPersonaActions? aPersonas = null,
+        Commands.IAgentCommandRunner? aCommands = null)
     {
+        objCommands = aCommands;
         objAutoRouter = aAutoRouter;
+        objPersonas = aPersonas;
         objDb = aDb;
         objRegistry = aRegistry;
         objGuards = aGuards;
@@ -240,16 +294,37 @@ public sealed class AgentActions : IAgentActions
         var vSeq = await NextSeqAsync(aSessionId, vCt).ConfigureAwait(false);
         await AppendEventAsync(aSessionId, vSeq++, "user", aMessage, null, null, vCt).ConfigureAwait(false);
 
-        var vHistory = await BuildHistoryAsync(aSessionId, vRoleId, vCt).ConfigureAwait(false);
+        // BRD-249, BRD-241 (22 Nov 2026): a typed *command is Chatur's to carry out, and a question about the commands is
+        // answered from the agent's real list; neither is left to a model's guess. A guided command goes on to the model
+        // with its steps (BuildHistoryAsync adds them); every other command is answered here, with no model.
+        if (objCommands is not null)
+        {
+            var vOutcome = await objCommands.TryRunAsync(new Commands.AgentCommandContext(aSessionId, vSession.ProjectId, vRoleId, aMode), aMessage, vCt).ConfigureAwait(false);
+            if (vOutcome?.Reply is { } vChaturReply)
+            {
+                if (vOutcome.Mode is { } vNewMode)
+                {
+                    await SetModeAsync(aSessionId, vNewMode, vCt).ConfigureAwait(false);
+                }
+
+                await AppendEventAsync(aSessionId, vSeq, "assistant", vChaturReply, ChaturAnswered, null, vCt, vRoleId).ConfigureAwait(false);
+                yield return new AgentReplyChunk(vChaturReply, true, ChaturAnswered, null) { ModeNow = vOutcome.Mode, EndsConversation = vOutcome.EndsConversation };
+                yield break;
+            }
+        }
+
+        var vHistory = await BuildHistoryAsync(aSessionId, vSession.ProjectId, vRoleId, vCt).ConfigureAwait(false);
         vHistory.Add(ChatMessage.User(aMessage));
 
         // REQ-FN-071: with automatic routing on, the small model picks the model for this piece of
         // work — unless the owner picked one in the composer, which always wins. It answers null when
         // routing is off (REQ-FN-072) or the small model failed; the tiers and chains then decide.
-        var vRouted = aModelId is null && objAutoRouter is not null
-            ? await objAutoRouter.ChooseAsync(aMessage, aSessionId, vRoleId, vCt).ConfigureAwait(false)
+        // REQ-UI-111: the router's reason is kept here, at routing time, and stored with the reply.
+        var vDecision = aModelId is null && objAutoRouter is not null
+            ? await objAutoRouter.DecideAsync(aMessage, aSessionId, vRoleId, vCt).ConfigureAwait(false)
             : null;
-        var vModel = vRouted ?? await ResolveModelAsync(aModelId, vRoleId, vCt).ConfigureAwait(false);
+        var vRoutingReason = vDecision?.Reason;
+        var vModel = vDecision?.Model ?? await ResolveModelAsync(aModelId, vRoleId, vCt).ConfigureAwait(false);
         if (vModel is null)
         {
             const string vText = "No model provider is configured yet. Add one under Settings ▸ Providers.";
@@ -277,6 +352,7 @@ public sealed class AgentActions : IAgentActions
         var vFailed = false;
         var vFinished = false;
         var vStopped = false;
+        var vStallNudges = 0;
 
         for (var vIteration = 0; vIteration < MaxToolIterations && !vFailed && !vFinished && !vStopped; vIteration++)
         {
@@ -285,6 +361,7 @@ public sealed class AgentActions : IAgentActions
             var vSeparatorPending = vShown.Length > 0;
             TokenUsage? vUsage = null;
             string? vCompletedModelName = null;
+            string? vFinishReason = null;
             ILlmProvider? vLlm = null;
 
             // Step through the chain until one model completes this call (or the call must be given up).
@@ -294,6 +371,7 @@ public sealed class AgentActions : IAgentActions
                 vIterationText.Clear();
                 vUsage = null;
                 vCompletedModelName = null;
+                vFinishReason = null;
                 Exception? vFailure = null;
                 var vDeltaShown = false;
 
@@ -366,6 +444,7 @@ public sealed class AgentActions : IAgentActions
                             {
                                 vUsage = vEvent.Usage;
                                 vCompletedModelName = vEvent.ModelName;
+                                vFinishReason = vEvent.FinishReason;
                             }
                         }
                     }
@@ -444,16 +523,46 @@ public sealed class AgentActions : IAgentActions
 
             vModelName = string.IsNullOrEmpty(vCompletedModelName) ? vLlm?.ModelName : vCompletedModelName;
 
+            // REQ-UI-111: every reply names the model that answered, even when the service did not say.
+            if (string.IsNullOrEmpty(vModelName))
+            {
+                vModelName = vChain[vChainIndex].ModelIdentifier;
+            }
+
             var vTurn = new LlmResponse { Content = vIterationText.ToString(), Usage = new TokenUsage() };
             if (vToolCalls.Count > 0)
             {
                 vTurn.ToolCalls = vToolCalls;
             }
 
-            vHistory.Add(vTurn.ToChatMessage());
+            // An empty turn (no text, no call) is left out of the history: replayed, it taught the model to end empty again.
+            if (vToolCalls.Count > 0 || vIterationText.Length > 0)
+            {
+                vHistory.Add(vTurn.ToChatMessage());
+            }
 
             if (vToolCalls.Count == 0)
             {
+                // A guided command whose file is not written yet, and a turn that ends on nothing or on "I'll list the
+                // project first." with no call made: the model announced a step and stopped (owner's brief 22 Nov 2026,
+                // *devguide). It is told to make the call now, twice at most in one reply, instead of the reply ending there.
+                // A turn cut off at the output limit lost the call it was writing (a whole guide in one edit-file):
+                // asked again once with room for it (verify of 22 Nov 2026, *devguide ended "max_tokens" every time).
+                var vCutOff = IsCutOff(vFinishReason) && (vOptions.MaxTokens ?? 0) < CutOffMaxTokens;
+                if (vCutOff)
+                {
+                    vOptions.MaxTokens = CutOffMaxTokens;
+                }
+
+                if (vStallNudges < MaxStallNudges && (vCutOff || IsStall(vIterationText.ToString()))
+                    && (vCutOff || (objCommands is not null && await objCommands.ActiveGuideAsync(aSessionId, vCt).ConfigureAwait(false) is not null)))
+                {
+                    vStallNudges++;
+                    vHistory.Add(ChatMessage.User(vCutOff ? CutOffNudge : StallNudge));
+                    await AppendEventAsync(aSessionId, vSeq++, "tool", $"{StallStep} (The model ended its turn with \"{vFinishReason ?? "no reason"}\".)", null, null, vCt).ConfigureAwait(false);
+                    continue;
+                }
+
                 vFinished = true;
                 break;
             }
@@ -499,7 +608,7 @@ public sealed class AgentActions : IAgentActions
             if (vShown.Length > 0)
             {
                 var vStoppedSeq = await NextSeqAsync(aSessionId, CancellationToken.None).ConfigureAwait(false);
-                await AppendEventAsync(aSessionId, vStoppedSeq, "assistant", vShown.ToString(), vModelName, vTotalTokens, CancellationToken.None, vRoleId).ConfigureAwait(false);
+                await AppendEventAsync(aSessionId, vStoppedSeq, "assistant", vShown.ToString(), vModelName, vTotalTokens, CancellationToken.None, vRoleId, vRoutingReason).ConfigureAwait(false);
             }
 
             await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, vModelName, vInputTokens, vOutputTokens, vStartedUtc, CancellationToken.None).ConfigureAwait(false);
@@ -518,10 +627,19 @@ public sealed class AgentActions : IAgentActions
             yield return new AgentReplyChunk(vNote, false, null, null);
         }
 
+        // A guided command is over once its file is on disk; Chatur says so under the reply (BRD-249).
+        if (!vFailed && objCommands is not null && await objCommands.AfterReplyAsync(aSessionId, vCt).ConfigureAwait(false) is { } vDoneNote)
+        {
+            var vNoteText = (vShown.Length > 0 ? TurnSeparator : string.Empty) + vDoneNote;
+            vShown.Append(vNoteText);
+            yield return new AgentReplyChunk(vNoteText, false, null, null);
+        }
+
         var vReportedModelName = vFailed ? null : vModelName;
-        await AppendEventAsync(aSessionId, vSeq, "assistant", vShown.ToString(), vReportedModelName, vTotalTokens, vCt, vRoleId).ConfigureAwait(false);
+        var vReportedReason = vReportedModelName is null ? null : vRoutingReason;
+        await AppendEventAsync(aSessionId, vSeq, "assistant", vShown.ToString(), vReportedModelName, vTotalTokens, vCt, vRoleId, vReportedReason).ConfigureAwait(false);
         await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, vReportedModelName, vInputTokens, vOutputTokens, vStartedUtc, vCt).ConfigureAwait(false);
-        yield return new AgentReplyChunk(string.Empty, true, vReportedModelName, vTotalTokens);
+        yield return new AgentReplyChunk(string.Empty, true, vReportedModelName, vTotalTokens, vReportedReason);
     }
 
     /// <inheritdoc />
@@ -597,7 +715,7 @@ public sealed class AgentActions : IAgentActions
 
         var vEventRows = await vConnection.QueryAsync<FullSessionEventRow>(
             new CommandDefinition(
-                @"SELECT e.Seq AS Seq, e.Kind AS Kind, e.Payload AS Payload, e.Model AS Model, e.Tokens AS Tokens, r.Name AS RoleName
+                @"SELECT e.Seq AS Seq, e.Kind AS Kind, e.Payload AS Payload, e.Model AS Model, e.Tokens AS Tokens, r.Name AS RoleName, e.RoutingReason AS RoutingReason
                   FROM SessionEvent e
                   LEFT JOIN Role r ON r.RoleId = e.RoleId
                   WHERE e.SessionId = @aSessionId
@@ -614,13 +732,13 @@ public sealed class AgentActions : IAgentActions
             vSummaryRow.State);
 
         var vEvents = vEventRows
-            .Select(r => new SessionEventRecord((int)r.Seq, r.Kind, r.Payload, r.Model, r.Tokens is null ? null : (int)r.Tokens, r.RoleName))
+            .Select(r => new SessionEventRecord((int)r.Seq, r.Kind, r.Payload, r.Model, r.Tokens is null ? null : (int)r.Tokens, r.RoleName, r.RoutingReason))
             .ToList();
 
         return new SessionDetail(vSummary, vEvents);
     }
 
-    private sealed record FullSessionEventRow(long Seq, string Kind, string Payload, string? Model, long? Tokens, string? RoleName);
+    private sealed record FullSessionEventRow(long Seq, string Kind, string Payload, string? Model, long? Tokens, string? RoleName, string? RoutingReason);
 
     /// <inheritdoc />
     public async IAsyncEnumerable<ActivityEvent> ActivityAsync(int aSessionId, [EnumeratorCancellation] CancellationToken aCt = default)
@@ -728,30 +846,42 @@ public sealed class AgentActions : IAgentActions
     /// <summary>
     /// Records one step of a session. <paramref name="aRoleId"/> is given for a reply only: the agent that wrote
     /// it, kept on the reply itself so a later change of agent does not rename it (REQ-FN-024).
+    /// <paramref name="aRoutingReason"/> is given for a reply only, when Automatic routing chose its model (REQ-UI-111).
     /// </summary>
-    private async Task AppendEventAsync(int aSessionId, int aSeq, string aKind, string aPayload, string? aModel, int? aTokens, CancellationToken aCt, int? aRoleId = null)
+    private async Task AppendEventAsync(int aSessionId, int aSeq, string aKind, string aPayload, string? aModel, int? aTokens, CancellationToken aCt, int? aRoleId = null, string? aRoutingReason = null)
     {
         using var vConnection = objDb.OpenConnection();
         await vConnection.ExecuteAsync(
             new CommandDefinition(
-                @"INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, Model, Tokens, CreatedUtc, RoleId)
-                  VALUES (@aSessionId, @aSeq, @aKind, @aPayload, @aModel, @aTokens, @vCreatedUtc, @aRoleId);",
-                new { aSessionId, aSeq, aKind, aPayload, aModel, aTokens, vCreatedUtc = objClock.UtcNow.ToString("O"), aRoleId },
+                @"INSERT INTO SessionEvent (SessionId, Seq, Kind, Payload, Model, Tokens, CreatedUtc, RoleId, RoutingReason)
+                  VALUES (@aSessionId, @aSeq, @aKind, @aPayload, @aModel, @aTokens, @vCreatedUtc, @aRoleId, @aRoutingReason);",
+                new { aSessionId, aSeq, aKind, aPayload, aModel, aTokens, vCreatedUtc = objClock.UtcNow.ToString("O"), aRoleId, aRoutingReason },
                 cancellationToken: aCt)).ConfigureAwait(false);
     }
 
     /// <summary>
-    /// Builds the conversation TechieRag sees for this turn: the role's own wording as the system
-    /// prompt (REQ-FN-024's chosen role shapes every reply it gives), then every prior user and
+    /// Builds the conversation TechieRag sees for this turn: the agent's own definition as the system
+    /// prompt (REQ-FN-024's chosen role shapes every reply it gives; REQ-FN-308: its persona file and its
+    /// commands, not only the one line of wording the role stores), then every prior user and
     /// assistant message in order (REQ-FN-032).
     /// </summary>
-    private async Task<List<ChatMessage>> BuildHistoryAsync(int aSessionId, int aRoleId, CancellationToken aCt)
+    private async Task<List<ChatMessage>> BuildHistoryAsync(int aSessionId, int aProjectId, int aRoleId, CancellationToken aCt)
     {
+        string? vWording = objPersonas is null
+            ? null
+            : await objPersonas.SystemPromptAsync(aProjectId, aRoleId, aCt).ConfigureAwait(false);
+
         using var vConnection = objDb.OpenConnection();
 
-        var vWording = await vConnection.QuerySingleOrDefaultAsync<string?>(
+        vWording ??= await vConnection.QuerySingleOrDefaultAsync<string?>(
             new CommandDefinition("SELECT Wording FROM Role WHERE RoleId = @aRoleId;", new { aRoleId }, cancellationToken: aCt))
             .ConfigureAwait(false);
+
+        // A guided command in progress (BRD-249): its steps go with the agent's own instructions on every turn until its file is written.
+        if (objCommands is not null && await objCommands.ActiveGuideAsync(aSessionId, aCt).ConfigureAwait(false) is { } vGuide)
+        {
+            vWording = string.IsNullOrWhiteSpace(vWording) ? vGuide : vWording + "\n\n" + vGuide;
+        }
 
         var vHistory = new List<ChatMessage>();
         if (!string.IsNullOrWhiteSpace(vWording))
@@ -767,7 +897,9 @@ public sealed class AgentActions : IAgentActions
 
         foreach (var vEvent in vPastEvents)
         {
-            vHistory.Add(vEvent.Kind == "user" ? ChatMessage.User(vEvent.Payload) : ChatMessage.Assistant(vEvent.Payload));
+            // An empty reply on record is replayed as a short note, never as an empty turn the model then copies.
+            var vPayload = vEvent.Kind == "assistant" && string.IsNullOrWhiteSpace(vEvent.Payload) ? "(This turn ended without a reply.)" : vEvent.Payload;
+            vHistory.Add(vEvent.Kind == "user" ? ChatMessage.User(vPayload) : ChatMessage.Assistant(vPayload));
         }
 
         return vHistory;
@@ -950,7 +1082,7 @@ public sealed class AgentActions : IAgentActions
         new ToolDefinition
         {
             Name = AgentToolNames.ReadFile,
-            Description = "Reads a file's current text from the selected project, given its path relative to the project root.",
+            Description = "Reads a file's current text from the selected project, given its path relative to the project root. Given a folder (or \".\" for the whole project) it lists what is in it instead.",
             ParametersSchema = """{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}"""
         },
         new ToolDefinition
@@ -1073,7 +1205,23 @@ public sealed class AgentActions : IAgentActions
             case AgentToolNames.ReadFile:
                 try
                 {
-                    return await objFileActions.ReadAsync(aProjectId, aRequest.FilePath ?? string.Empty, aCt).ConfigureAwait(false);
+                    // A folder (or "." for the project itself) has no text to read: the agent is given what is in it instead, so
+                    // it can find the files a command such as *devguide or *day1-brownfield has to read (REQ-FN-318).
+                    var vPath = (aRequest.FilePath ?? string.Empty).Trim();
+                    if (vPath.Length == 0 || vPath is "." or "/" || vPath.EndsWith('/') || vPath.EndsWith('\\'))
+                    {
+                        return await ListFolderAsync(aProjectId, vPath.Trim('/', '\\'), aCt).ConfigureAwait(false);
+                    }
+
+                    try
+                    {
+                        return await objFileActions.ReadAsync(aProjectId, vPath, aCt).ConfigureAwait(false);
+                    }
+                    catch (Exception vNotAFile) when (vNotAFile is UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or IOException)
+                    {
+                        var vListing = await ListFolderAsync(aProjectId, vPath, aCt).ConfigureAwait(false);
+                        return vListing.StartsWith("Nothing", StringComparison.Ordinal) ? $"Could not read \"{vPath}\": {vNotAFile.Message}" : vListing;
+                    }
                 }
                 catch (Exception vException)
                 {
@@ -1095,6 +1243,38 @@ public sealed class AgentActions : IAgentActions
 
             default:
                 return "This tool is not recognised.";
+        }
+    }
+
+    /// <summary>The files and folders under one folder of the project, three levels deep and at most 300 lines, build output and package folders left out.</summary>
+    private async Task<string> ListFolderAsync(int aProjectId, string aFolder, CancellationToken aCt)
+    {
+        var vLines = new List<string>();
+        await AddLevelAsync(aProjectId, aFolder, 0, vLines, aCt).ConfigureAwait(false);
+        return vLines.Count == 0
+            ? $"Nothing is in \"{(aFolder.Length == 0 ? "." : aFolder)}\", or it is not a folder of this project."
+            : $"Contents of \"{(aFolder.Length == 0 ? "." : aFolder)}\" (folders end with /):\n" + string.Join('\n', vLines);
+    }
+
+    private async Task AddLevelAsync(int aProjectId, string aFolder, int aDepth, List<string> aLines, CancellationToken aCt)
+    {
+        foreach (var vNode in await objFileActions.ChildrenAsync(aProjectId, aFolder.Length == 0 ? "." : aFolder, aCt).ConfigureAwait(false))
+        {
+            if (aLines.Count >= 300)
+            {
+                return;
+            }
+
+            if (vNode.IsFolder && vNode.Name is "bin" or "obj" or "node_modules" or "packages")
+            {
+                continue;
+            }
+
+            aLines.Add(new string(' ', aDepth * 2) + vNode.RelativePath.Replace('\\', '/') + (vNode.IsFolder ? "/" : string.Empty));
+            if (vNode.IsFolder && vNode.IsReadable && aDepth < 2)
+            {
+                await AddLevelAsync(aProjectId, vNode.RelativePath, aDepth + 1, aLines, aCt).ConfigureAwait(false);
+            }
         }
     }
 
@@ -1137,7 +1317,8 @@ public sealed class AgentActions : IAgentActions
     }
 
     /// <summary>
-    /// Appends this turn's <c>sessions</c> record to the project's <c>docs/metrics</c> (REQ-FN-040).
+    /// Appends this turn's <c>sessions</c> record to the project's <c>docs/metrics</c> when the project has that
+    /// folder (REQ-FN-040; a folder the person only opened gets no file, owner's test of 23 Nov 2026).
     /// Only what Chatur actually knows is sent — session id, model, turn length and the tokens the
     /// model reported; everything else is left for <see cref="IMeasurementActions.AppendAsync"/> to
     /// write empty (REQ-FN-042). A measurement failure never reaches the turn (REQ-UI-035):
@@ -1157,7 +1338,7 @@ public sealed class AgentActions : IAgentActions
                 ["input_tokens"] = aInputTokens?.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 ["output_tokens"] = aOutputTokens?.ToString(System.Globalization.CultureInfo.InvariantCulture)
             };
-            await objMeasurements.AppendAsync(aProjectId, "sessions.jsonl", vFields, aCt).ConfigureAwait(false);
+            await objMeasurements.AppendWhenMeasuredAsync(aProjectId, "sessions.jsonl", vFields, aCt).ConfigureAwait(false);
         }
         catch (Exception)
         {
@@ -1183,7 +1364,7 @@ public sealed class AgentActions : IAgentActions
                 ["duration_s"] = Math.Max(0, (vEndedUtc - aStartedUtc).TotalSeconds).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
                 ["build_result"] = aPassed ? "pass" : "fail"
             };
-            await objMeasurements.AppendAsync(aProjectId, "runs.jsonl", vFields, aCt).ConfigureAwait(false);
+            await objMeasurements.AppendWhenMeasuredAsync(aProjectId, "runs.jsonl", vFields, aCt).ConfigureAwait(false);
         }
         catch (Exception)
         {

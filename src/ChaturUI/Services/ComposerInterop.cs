@@ -9,6 +9,9 @@ namespace ChaturUI.Services;
 /// </summary>
 public sealed class ComposerInterop : IAsyncDisposable
 {
+    /// <summary>The page's script runtime, so a clean-up for a page that has gone is skipped (REQ-NFR-011).</summary>
+    private readonly IJSRuntime objJs;
+
     private const string ModulePath = "./_content/ChaturUI/js/composer.js";
 
     private readonly Lazy<Task<IJSObjectReference>> objModuleTask;
@@ -17,6 +20,7 @@ public sealed class ComposerInterop : IAsyncDisposable
     /// <param name="aJs">The JS runtime to import <c>composer.js</c> from.</param>
     public ComposerInterop(IJSRuntime aJs)
     {
+        objJs = aJs;
         objModuleTask = new Lazy<Task<IJSObjectReference>>(
             () => aJs.InvokeAsync<IJSObjectReference>("import", ModulePath).AsTask());
     }
@@ -41,7 +45,7 @@ public sealed class ComposerInterop : IAsyncDisposable
         if (objModuleTask.IsValueCreated)
         {
             // Never waits on a page that has gone (JsCleanUp, REQ-FN-009).
-            await JsCleanUp.RunAsync(async () =>
+            await JsCleanUp.RunAsync(objJs, async () =>
             {
                 var vModule = await objModuleTask.Value.ConfigureAwait(false);
                 await vModule.DisposeAsync().ConfigureAwait(false);

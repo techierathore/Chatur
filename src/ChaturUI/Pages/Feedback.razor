@@ -1,73 +1,163 @@
 @page "/feedback"
 @layout Layouts.SecondaryLayout
-@inject ToastService Toast
+@using TrBlazeUI.Components.Table
+@implements IDisposable
 
-@* UI Design phase 4 "Screen: Feedback and issues" — mockups/feedback.html. Cluster P4-A wires
-   sending feedback through App Manager and listing the entries that came back (REQ-UI-062,
-   REQ-FN-073, REQ-UI-063, REQ-FN-074). *@
-<div class="flex flex-col gap-4" data-testid="page">
-    <div data-testid="page-heading">
-        <h1 class="text-lg font-semibold">Feedback and issues</h1>
-        <p class="text-sm text-muted-foreground">Say what is wrong, ask for a feature, or read what came back.</p>
+@* UI Design phase 4 "Screen: Feedback and issues" — mockups/feedback.html. Cluster P4-A: sending feedback through
+   App Manager (REQ-UI-062), carrying the library's name (REQ-FN-073), showing what came back (REQ-UI-063) and
+   keeping what could not be sent (REQ-FN-074). *@
+<div class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-center gap-3" data-testid="feedback-heading">
+        <div>
+            <div class="text-lg font-semibold">Tell them what is missing</div>
+            <div class="text-sm text-muted-foreground">Raise a gap without leaving Chatur. @CountText so far.</div>
+        </div>
+        <span class="flex-1"></span>
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="RefreshAsync" Disabled="@objIsBusy" data-testid="feedback-refresh">
+            <LucideIcon Name="refresh-cw" Size="14" />Refresh
+        </Button>
     </div>
 
-    <Card data-testid="feedback-form">
+    <Card data-testid="feedback-form-panel">
         <CardHeader>
-            <CardTitle>Send feedback</CardTitle>
+            <CardTitle Class="flex items-center gap-2"><LucideIcon Name="message-square" Size="15" />Raise something</CardTitle>
         </CardHeader>
-        <CardContent Class="flex flex-col gap-3">
-            <Field>
-                <FieldLabel For="feedback-kind">Kind</FieldLabel>
-                <FieldContent>
-                    <Select TValue="string" Value="objKind" ValueChanged="v => objKind = v" Class="w-64" data-testid="feedback-kind">
-                        <SelectTrigger Class="rounded-full">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem Value="@("issue")" Text="Issue" TValue="string">Issue</SelectItem>
-                            <SelectItem Value="@("idea")" Text="Idea" TValue="string">Idea</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </FieldContent>
-            </Field>
-            <Field>
-                <FieldLabel For="feedback-message">Message</FieldLabel>
-                <FieldContent>
-                    <Textarea Id="feedback-message" @bind-Value="objMessage" Placeholder="What happened?" data-testid="feedback-message" />
-                </FieldContent>
-            </Field>
-            <div class="flex items-center gap-2">
-                <Button Class="rounded-full" OnClick="SendAsync" Disabled="@(!CanSend)" data-testid="feedback-send">Send</Button>
-                <span class="text-xs text-muted-foreground" data-testid="feedback-offline-note">Feedback is kept and sent when the network returns.</span>
+        <CardContent>
+            <div class="flex flex-col gap-3" data-testid="feedback-form">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Field>
+                        <FieldLabel>What it is about</FieldLabel>
+                        <FieldContent>
+                            <Select TValue="string" Value="@objAbout" ValueChanged="OnAboutChanged" Class="w-full" data-testid="feedback-about">
+                                <SelectTrigger Class="h-[30px] rounded-[7px] bg-card" data-testid="feedback-about-button">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent data-testid="feedback-about-pop">
+                                    <SelectItem Value="@FeedbackAbout.Chatur" Text="Chatur itself" TValue="string" data-testid="about-chatur">Chatur itself</SelectItem>
+                                    <SelectItem Value="@FeedbackAbout.TrBlazeUI" Text="TrBlazeUI" TValue="string" data-testid="about-trblazeui">TrBlazeUI</SelectItem>
+                                    <SelectItem Value="@FeedbackAbout.TechieRag" Text="TechieRag" TValue="string" data-testid="about-techierag">TechieRag</SelectItem>
+                                    <SelectItem Value="@FeedbackAbout.AppManager" Text="App Manager" TValue="string" data-testid="about-appmanager">App Manager</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </FieldContent>
+                    </Field>
+                    <Field>
+                        <FieldLabel>How bad it is</FieldLabel>
+                        <FieldContent>
+                            <Select TValue="string" Value="@objSeverity" ValueChanged="OnSeverityChanged" Class="w-full" data-testid="feedback-severity">
+                                <SelectTrigger Class="h-[30px] rounded-[7px] bg-card" data-testid="feedback-severity-button">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent data-testid="feedback-severity-pop">
+                                    <SelectItem Value="@nameof(FeedbackSeverity.Blocker)" Text="Blocker — I cannot carry on" TValue="string" data-testid="severity-blocker">Blocker — I cannot carry on</SelectItem>
+                                    <SelectItem Value="@nameof(FeedbackSeverity.Major)" Text="Major — it costs me time" TValue="string" data-testid="severity-major">Major — it costs me time</SelectItem>
+                                    <SelectItem Value="@nameof(FeedbackSeverity.Minor)" Text="Minor — it is untidy" TValue="string" data-testid="severity-minor">Minor — it is untidy</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </FieldContent>
+                    </Field>
+                </div>
+                <Field>
+                    <FieldLabel For="feedback-title">Title <span class="font-normal text-muted-foreground">— one line, @FeedbackLimits.TitleMin to @FeedbackLimits.TitleMax characters</span></FieldLabel>
+                    <FieldContent>
+                        <Input Id="feedback-title" @bind-Value="objTitle" maxlength="@FeedbackLimits.TitleMax" Placeholder="The run queue forgets its order after a restart" data-testid="feedback-title" />
+                    </FieldContent>
+                </Field>
+                <Field>
+                    <FieldLabel For="feedback-detail">What happened <span class="font-normal text-muted-foreground">— at least @FeedbackLimits.DetailMin characters; what you did, what you expected, what you saw</span></FieldLabel>
+                    <FieldContent>
+                        <Textarea Id="feedback-detail" @bind-Value="objDetail" Class="min-h-[86px]" Placeholder="Queued three runs, restarted Chatur, and they came back in a different order" data-testid="feedback-detail" />
+                    </FieldContent>
+                </Field>
+                <div class="flex items-start gap-2" data-testid="feedback-attach-row">
+                    <Checkbox @bind-Checked="objAttach" Id="feedback-attach-session" Class="mt-0.5" data-testid="feedback-attach-session" />
+                    <Label For="feedback-attach-session" Class="text-sm font-normal">Attach machine details — Chatur's version and the operating system. No file contents.</Label>
+                </div>
+                @if (objError is not null)
+                {
+                    <Alert Variant="AlertVariant.Danger" data-testid="feedback-error">
+                        <AlertDescription>@objError</AlertDescription>
+                    </Alert>
+                }
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-muted-foreground" data-testid="feedback-destination">Goes to App Manager as @DestinationName</span>
+                    <span class="flex-1"></span>
+                    <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="Clear" data-testid="feedback-clear">Clear</Button>
+                    <Button Class="rounded-full" OnClick="SendAsync" Disabled="@(!CanSend)" data-testid="feedback-submit">
+                        <LucideIcon Name="send" Size="14" />Send it
+                    </Button>
+                </div>
             </div>
         </CardContent>
     </Card>
 
     <Card data-testid="feedback-list-panel">
         <CardHeader>
-            <CardTitle>What came back</CardTitle>
+            <CardTitle Class="flex items-center gap-2">What you have raised<span class="flex-1"></span><span class="text-xs font-normal text-muted-foreground" data-testid="feedback-count">@CountText</span></CardTitle>
         </CardHeader>
         <CardContent>
-            <Empty Title="No feedback yet" Description="Sent entries and their answers appear here." Size="EmptySize.Small" data-testid="feedback-empty" />
+            @if (objView is null)
+            {
+                <span class="text-xs text-muted-foreground" data-testid="feedback-loading">Reading the entries</span>
+            }
+            else if (objView.Entries.Count == 0)
+            {
+                <Empty Title="Nothing raised yet" Description="Entries you send, and their answers, appear here." Size="EmptySize.Small" data-testid="feedback-empty" />
+            }
+            else
+            {
+                <Table Class="text-sm" data-testid="feedback-table">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Id</TableHead><TableHead>About</TableHead><TableHead>Title</TableHead><TableHead>Raised</TableHead><TableHead>State</TableHead><TableHead>Answer</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var vEntry in objView.Entries)
+                        {
+                            <TableRow Class="border-t border-solid border-border" data-testid="@($"fb-row-{vEntry.FeedbackEntryId}")">
+                                <TableCell Class="whitespace-nowrap font-mono" data-testid="@($"fb-id-{vEntry.FeedbackEntryId}")">FB-@vEntry.FeedbackEntryId</TableCell>
+                                <TableCell Class="whitespace-nowrap" data-testid="@($"fb-about-{vEntry.FeedbackEntryId}")">@vEntry.About</TableCell>
+                                <TableCell data-testid="@($"fb-title-{vEntry.FeedbackEntryId}")">@vEntry.Title</TableCell>
+                                <TableCell Class="whitespace-nowrap text-muted-foreground">@vEntry.CreatedUtc.ToLocalTime().ToString("d MMM yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture)</TableCell>
+                                <TableCell>
+                                    <Badge Variant="@StateVariant(vEntry.State)" Class="whitespace-nowrap rounded-full border-transparent" data-testid="@($"fb-state-{vEntry.FeedbackEntryId}")">@StateWord(vEntry.State)</Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <span class="text-sm text-muted-foreground" data-testid="@($"fb-answer-{vEntry.FeedbackEntryId}")">@(vEntry.Answer ?? "—")</span>
+                                </TableCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+            }
+        </CardContent>
+    </Card>
+
+    @if (objView is { WaitingCount: > 0 })
+    {
+        <Alert data-testid="feedback-queued-note">
+            <LucideIcon Name="triangle-alert" Size="14" />
+            <AlertDescription>
+                <b>@(objView.WaitingCount == 1 ? "One entry is waiting to be sent." : $"{objView.WaitingCount} entries are waiting to be sent.")</b>
+                App Manager could not be reached, so @(objView.WaitingCount == 1 ? "it is" : "they are") held on this machine. @(objView.WaitingCount == 1 ? "It goes" : "They go") as soon as the network is back — you need do nothing.
+            </AlertDescription>
+        </Alert>
+    }
+
+    <Card data-testid="feedback-routing">
+        <CardHeader>
+            <CardTitle>Where it goes</CardTitle>
+        </CardHeader>
+        <CardContent Class="flex flex-col gap-2 text-sm">
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="send" Size="14" Class="mt-1 text-muted-foreground" />
+                <span>Feedback and issues are raised through App Manager — <span class="font-mono" data-testid="appmanager-address">@AppManagerAddress</span>. Nothing is sent anywhere else, and nothing leaves this machine until you press Send it.</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="git-branch" Size="14" Class="mt-1 text-muted-foreground" />
+                <span data-testid="library-routing">An entry about a library reaches that library's own team — TrBlazeUI to the TrBlazeUI team, TechieRag to the TechieRag team. You see their answer here; you never have to chase it.</span>
+            </div>
         </CardContent>
     </Card>
 </div>
-
-@code {
-    private string objKind = "issue";
-    private string objMessage = string.Empty;
-
-    private bool CanSend => !string.IsNullOrWhiteSpace(objMessage);
-
-    private Task SendAsync()
-    {
-        if (!CanSend)
-        {
-            return Task.CompletedTask;
-        }
-
-        Toast.Success("Feedback kept — it will be sent when the network returns.");
-        objMessage = string.Empty;
-        return Task.CompletedTask;
-    }
-}

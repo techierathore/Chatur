@@ -24,4 +24,13 @@ public interface IFolderPicker
     /// <param name="aCt">A token that cancels the wait.</param>
     /// <returns>The chosen file's absolute path, or <see langword="null"/> when cancelled or unavailable.</returns>
     Task<string?> PickFileAsync(string aTitle, CancellationToken aCt = default) => Task.FromResult<string?>(null);
+
+    /// <summary>
+    /// The machine's own file dialog showing only files with the given extensions, such as <c>.sln</c> and
+    /// <c>.slnx</c> for Open a solution (BRD-221). Returns <see langword="null"/> when the person cancels.
+    /// </summary>
+    /// <param name="aTitle">The dialog's title.</param>
+    /// <param name="aExtensions">The extensions to show, each with its dot.</param>
+    /// <param name="aCt">A token that cancels the wait.</param>
+    Task<string?> PickFileAsync(string aTitle, IReadOnlyList<string> aExtensions, CancellationToken aCt = default) => PickFileAsync(aTitle, aCt);
 }

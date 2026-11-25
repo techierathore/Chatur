@@ -1,0 +1,28 @@
+@using TrBlazeUI.Components.DatePicker
+
+@* The period of Measurements and Measurements across projects (mockups/measurements.html "metrics-period",
+   mockups/measurements-all.html "across-period"; REQ-UI-116). The two dates show only for "Between two dates".
+   Presentation only: the period is handed to the page, which asks the action. *@
+<div class="flex flex-wrap items-center gap-2" data-testid="@Region">
+    <Select TValue="string" Value="@objKind.ToString()" ValueChanged="OnKindChangedAsync" DisplayTextSelector="@(aValue => MetricsPeriodPicker.KindLabel(aValue))" Class="w-64" data-testid="@($"{Prefix}-select")">
+        <SelectTrigger Class="rounded-full" AriaLabel="Period" data-testid="@($"{Prefix}-button")"><span class="text-muted-foreground">Period</span><SelectValue /></SelectTrigger>
+        <SelectContent data-testid="@($"{Prefix}-pop")">
+            <SelectItem TValue="string" Value="@nameof(MetricsPeriodKind.All)" Text="All history" data-testid="@($"{Prefix}-all")">All history</SelectItem>
+            <SelectItem TValue="string" Value="@nameof(MetricsPeriodKind.Today)" Text="Today" data-testid="@($"{Prefix}-today")">Today</SelectItem>
+            <SelectItem TValue="string" Value="@nameof(MetricsPeriodKind.Last7Days)" Text="Last 7 days" data-testid="@($"{Prefix}-7")">Last 7 days</SelectItem>
+            <SelectItem TValue="string" Value="@nameof(MetricsPeriodKind.Last30Days)" Text="Last 30 days" data-testid="@($"{Prefix}-30")">Last 30 days</SelectItem>
+            <SelectItem TValue="string" Value="@nameof(MetricsPeriodKind.Between)" Text="Between two dates" data-testid="@($"{Prefix}-between")">Between two dates</SelectItem>
+        </SelectContent>
+    </Select>
+    @if (objKind == MetricsPeriodKind.Between)
+    {
+        <span class="text-xs text-muted-foreground">From</span>
+        <DatePicker Value="objFrom" ValueChanged="OnFromChangedAsync" Placeholder="From" Class="w-44 rounded-full" data-testid="@($"{Prefix}-from")" />
+        <span class="text-xs text-muted-foreground">To</span>
+        <DatePicker Value="objTo" ValueChanged="OnToChangedAsync" Placeholder="To" Class="w-44 rounded-full" data-testid="@($"{Prefix}-to")" />
+    }
+    @if (objError is not null)
+    {
+        <span class="text-xs text-alert-warning" role="alert" data-testid="@($"{Prefix}-error")">@objError</span>
+    }
+</div>

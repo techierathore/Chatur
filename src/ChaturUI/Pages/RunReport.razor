@@ -148,7 +148,10 @@
             <div class="flex flex-wrap items-center gap-2 border-t px-2 py-2">
                 <span class="text-xs text-muted-foreground" data-testid="verdict-counts">@VerdictCounts</span>
                 <span class="flex-1"></span>
-                <Button Variant="ButtonVariant.Link" Size="ButtonSize.Small" Class="h-auto p-0 text-xs" OnClick="OpenBoard" data-testid="see-board">See all @objRequirementRows.Count on the board</Button>
+                @if (LicenceState.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.Board))
+                {
+                    <Button Variant="ButtonVariant.Link" Size="ButtonSize.Small" Class="h-auto p-0 text-xs" OnClick="OpenBoard" data-testid="see-board">See all @objRequirementRows.Count on the board</Button>
+                }
             </div>
         </CardContent>
     </Card>

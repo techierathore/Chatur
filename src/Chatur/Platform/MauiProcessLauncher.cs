@@ -105,6 +105,25 @@ public sealed class MauiProcessLauncher : IProcessLauncher
     }
 
     /// <inheritdoc />
+    public Task OpenBrowserAsync(string aUrl, CancellationToken aCt = default)
+    {
+        try
+        {
+#if WINDOWS
+            Process.Start(new ProcessStartInfo(aUrl) { UseShellExecute = true });
+#elif MACCATALYST
+            Process.Start("open", aUrl);
+#endif
+        }
+        catch (Exception vException) when (vException is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            objLogger.LogWarning(vException, "Could not open {Url} in the browser", aUrl);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
     public async Task<int> RunAsync(
         string aCommand,
         string aArguments,

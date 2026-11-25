@@ -78,6 +78,7 @@ function toggleSwitch(b,ev){if(ev)ev.stopPropagation();var on=b.classList.toggle
    <a href="prerequisites.html" data-testid="nav-prerequisites"><svg><use href="#i-wrench"/></svg>Prerequisites</a>
    <a href="repository.html" data-testid="nav-repository"><svg><use href="#i-branch"/></svg>Repository</a>
    <a href="worktrees.html" data-testid="nav-worktrees" data-tf-state="later-phase"><svg><use href="#i-copy"/></svg>Working copies<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="measurements.html" data-testid="nav-project-measurements"><svg><use href="#i-chart"/></svg>Project measurements</a>
    <div class="g">Chatur</div>
    <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
    <a href="settings-routing.html" data-testid="nav-routing" class="on"><svg><use href="#i-route"/></svg>Routing</a>
@@ -91,6 +92,7 @@ function toggleSwitch(b,ev){if(ev)ev.stopPropagation();var on=b.classList.toggle
    <a href="feedback.html" data-testid="nav-feedback" data-tf-state="later-phase"><svg><use href="#i-alert"/></svg>Feedback<span class="pill" style="margin-left:auto">later</span></a>
    <a href="integrations.html" data-testid="nav-integrations" data-tf-state="later-phase"><svg><use href="#i-route"/></svg>Integrations<span class="pill" style="margin-left:auto">later</span></a>
    <a href="all-projects.html" data-testid="nav-all-projects" data-tf-state="later-phase"><svg><use href="#i-chart"/></svg>All projects<span class="pill" style="margin-left:auto">later</span></a>
+   <a href="measurements-all.html" data-testid="nav-measurements-all"><svg><use href="#i-chart"/></svg>Measurements across projects</a>
   </nav>
 
   <div class="subpage" data-testid="page">
@@ -309,6 +311,7 @@ function toggleSwitch(b,ev){if(ev)ev.stopPropagation();var on=b.classList.toggle
       <button class="sw" data-state="auto-routing-state" onclick="toggleSwitch(this,event)" title="Let Chatur choose the model" data-testid="auto-routing-switch"></button>
       <span class="sm">Let Chatur choose the model</span><span class="grow"></span><span class="xs faint" id="auto-routing-state">off</span></div>
      <div class="sm dim" data-testid="auto-routing-line-1">A small model inside TechieRag reads the request and chooses the tier, so a one-line question never reaches Claude Opus 5.</div>
+     <div class="sm" data-testid="auto-routing-explain">With Automatic on, the smallest connected model reads each message first and hands it to the cheapest model that can do it well; a model you pick yourself always wins, and if the small model cannot answer, the tier lists above decide. For example, “What does this file do?” goes to a small model, and “Rewrite the importer and add tests” to the strongest. Each reply says which model answered and why.</div>
      <div class="sm dim" data-testid="auto-routing-line-2">Turning it off restores these tiers exactly as they are above — nothing here is lost while it is on.</div>
     </div>
    </div>

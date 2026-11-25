@@ -14,6 +14,10 @@ namespace ChaturUI.Pages;
 /// </summary>
 public partial class RunReport : IDisposable
 {
+    /// <summary>The licence's switched-off features: a link to the board is not offered when the board is off (REQ-FN-075).</summary>
+    [Microsoft.AspNetCore.Components.Inject]
+    private Chatur.Core.AppState LicenceState { get; set; } = default!;
+
     private readonly CancellationTokenSource objCts = new();
 
     private IReadOnlyList<RunReportEntry> objRuns = [];

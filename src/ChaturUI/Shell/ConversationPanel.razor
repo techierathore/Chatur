@@ -30,7 +30,7 @@
                     {
                         @foreach (var vSession in objSessions)
                         {
-                            <DropdownMenuItem OnClick="() => SelectSession(vSession)" data-testid="@($"session-{vSession.SessionId}")" role="option">
+                            <DropdownMenuItem OnClick="() => SelectSession(vSession)" data-testid="@($"session-{vSession.SessionId}")" role="option" aria-selected="@(vSession.SessionId == objCurrentSession?.SessionId ? "true" : "false")">
                                 <span class="flex flex-1 flex-col">
                                     <span>@vSession.RoleName · @vSession.Mode</span>
                                     <span class="text-xs text-muted-foreground">@(AppStateService.SelectedProject?.Name) · @vSession.StartedUtc.ToLocalTime().ToString("d MMM, HH:mm") · @vSession.State</span>
@@ -67,6 +67,11 @@
                     <p class="text-sm text-muted-foreground" data-testid="conversation-empty">
                         Nothing said yet. Ask @(objCurrentSession.RoleName) about this project below.
                     </p>
+                }
+                @* The agent's greeting (REQ-FN-308) sits where the person chose the agent: before the first message, or after the last one said by then. *@
+                @if (objGreeting is not null && objGreetingAfter == 0)
+                {
+                    <AgentGreetingCard Greeting="objGreeting" />
                 }
                 @for (var vIndex = 0; vIndex < objMessages.Count; vIndex++)
                 {
@@ -107,24 +112,42 @@
                                 }
                                 else if (vIsHanded)
                                 {
-                                    <span class="model text-xs font-normal text-muted-foreground">@(vMessage.ModelName ?? objFollowed!.ModelName ?? "model not named") · @objFollowed!.StepLabel</span>
+                                    <span class="model text-xs font-normal text-muted-foreground"><span data-testid="msg-model">@(vMessage.ModelName ?? objFollowed!.ModelName ?? "model not named")</span> · @objFollowed!.StepLabel</span>
                                 }
-                                else if (vMessage.ModelName is not null)
+                                else if (!vIsMe)
                                 {
-                                    <span class="model text-xs font-normal text-muted-foreground">@vMessage.ModelName@(vMessage.Tokens is { } vMessageTokens ? $" · {vMessageTokens:N0} tokens" : "")</span>
+                                    @* REQ-UI-111: every agent reply names the model that answered, and on Automatic says in a few words why that one. *@
+                                    <span class="model text-xs font-normal text-muted-foreground"><span data-testid="msg-model">@(vMessage.ModelName ?? (vMessage.IsFinal ? "no model answered" : "choosing the model"))</span>@(vMessage.Tokens is { } vMessageTokens ? $" · {vMessageTokens:N0} tokens" : "")</span>
+                                    @if (vMessage.RoutingReason is { Length: > 0 } vWhy)
+                                    {
+                                        <span class="why text-xs font-normal text-muted-foreground" data-testid="msg-model-why">@vWhy</span>
+                                    }
                                 }
                                 @if (!vMessage.IsFinal)
                                 {
                                     <LucideIcon Name="loader-circle" Size="12" Class="animate-spin" />
                                 }
                             </span>
-                            <div class="said min-w-0 whitespace-pre-wrap leading-relaxed [overflow-wrap:anywhere] @(vIsMe && !vIsTask ? "inline-block self-start rounded-lg bg-muted px-3 py-2" : "")" data-testid="@(vIsTask ? "step-task" : null)">@vMessage.Text</div>
+                            @if (vIsMe || vIsTask)
+                            {
+                                <div class="said min-w-0 whitespace-pre-wrap leading-relaxed [overflow-wrap:anywhere] @(vIsMe && !vIsTask ? "inline-block self-start rounded-lg bg-muted px-3 py-2" : "")" data-testid="@(vIsTask ? "step-task" : null)">@vMessage.Text</div>
+                            }
+                            else
+                            {
+                                @* BRD-250, REQ-UI-114 (22 Nov 2026): an agent's reply is drawn as formatted text — bold, lists, code and
+                                   tables — never as raw ** and | marks. Raw HTML in a reply is shown as text, never run. *@
+                                <Prose ConstrainWidth="false" Class="said min-w-0 leading-relaxed [overflow-wrap:anywhere]" data-testid="msg-text">@((MarkupString)Chatur.Core.Documents.MarkdownHtml.Reply(vMessage.Text))</Prose>
+                            }
                             @if (vIsLastAgent || vPlaced.ByMessage.ContainsKey(vIndex))
                             {
                                 <ConversationActivity Events="@(vPlaced.ByMessage.TryGetValue(vIndex, out var vSteps) ? vSteps : [])" Changes="@(vIsLastAgent ? objProposedChanges : [])" OnOpen="OpenChangeAsync" OnApprove="ApproveAsync" OnReject="RejectAsync" />
                             }
                         </div>
                     </div>
+                    @if (objGreeting is not null && objGreetingAfter == vIndex + 1)
+                    {
+                        <AgentGreetingCard Greeting="objGreeting" />
+                    }
                 }
                 @if (vPlaced.Unplaced.Count > 0 || !objMessages.Any(m => m.Role != "user"))
                 {
@@ -172,7 +195,7 @@
                 </DropdownMenuTrigger>
                 @* A provider can list dozens of models (OpenCode Go lists 30): the list scrolls instead of running off the window. *@
                 <DropdownMenuContent Class="max-h-80 overflow-y-auto" data-testid="model-pop">
-                    <DropdownMenuItem OnClick="() => SelectModel(null)" data-testid="model-auto">
+                    <DropdownMenuItem OnClick="() => SelectModel(null)" role="menuitemradio" aria-checked="@(SelectedModel is null ? "true" : "false")" data-testid="model-auto">
                         @if (SelectedModel is null)
                         {
                             <LucideIcon Name="check" Size="14" />
@@ -185,7 +208,7 @@
                     }
                     @foreach (var vModel in objModels)
                     {
-                        <DropdownMenuItem OnClick="() => SelectModel(vModel.ModelId)" data-testid="@($"model-{vModel.ModelId}")">
+                        <DropdownMenuItem OnClick="() => SelectModel(vModel.ModelId)" role="menuitemradio" aria-checked="@(vModel.ModelId == objSelectedModelId ? "true" : "false")" data-testid="@($"model-{vModel.ModelId}")">
                             @if (vModel.ModelId == objSelectedModelId)
                             {
                                 <LucideIcon Name="check" Size="14" />
@@ -209,16 +232,17 @@
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent data-testid="agent-pop">
-                    <DropdownMenuItem OnClick="() => SelectRole(null)">No agent — the model itself</DropdownMenuItem>
+                    @* BRD-224: the agent the closed picker names carries the one tick here; nothing says "suggested". *@
+                    <DropdownMenuItem OnClick="() => SelectRoleAsync(null)" aria-checked="@(objSelectedRoleId is null ? "true" : "false")" data-testid="agent-none">
+                        <span class="inline-flex w-4 flex-none">@if (objSelectedRoleId is null) { <LucideIcon Name="check" Size="14" data-testid="agent-tick" /> }</span>
+                        No agent — the model itself
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     @foreach (var vRole in objRoles)
                     {
-                        <DropdownMenuItem OnClick="() => SelectRole(vRole.RoleId)" data-testid="@($"agent-{vRole.Code}")">
+                        <DropdownMenuItem OnClick="() => SelectRoleAsync(vRole.RoleId)" aria-checked="@(vRole.RoleId == objSelectedRoleId ? "true" : "false")" data-testid="@($"agent-{vRole.Code}")">
+                            <span class="inline-flex w-4 flex-none">@if (vRole.RoleId == objSelectedRoleId) { <LucideIcon Name="check" Size="14" data-testid="agent-tick" /> }</span>
                             @vRole.Name
-                            @if (vRole.RoleId == objSuggestion?.RoleId)
-                            {
-                                <span class="text-xs text-muted-foreground">suggested</span>
-                            }
                         </DropdownMenuItem>
                     }
                     <DropdownMenuSeparator />

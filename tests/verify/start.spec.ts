@@ -142,7 +142,7 @@ test('REQ-UI-006 a named folder with projects lists each with name, path and las
 
 /**
  * REQ-UI-008 (amended 2026-11-17, BRD-14): an account that has opened nothing gets the empty start — no
- * project, no file, no chat — with three plainly labelled ways on, and a quiet Project folders link. The
+ * project, no file, no chat — with four plainly labelled ways on (New project first, 22 Nov 2026), and a quiet Project folders link. The
  * state is made in the signed-in account's own database file (support/db.ts follows the account), checked
  * on the screen, and put back exactly as it was for the groups after it. accounts.spec.ts carries the
  * three ways themselves.
@@ -156,7 +156,7 @@ test('REQ-UI-008 an account that has opened nothing gets the empty start, and it
     run('DELETE FROM ProjectFolder');
     await page.goto('/start', { waitUntil: 'networkidle' });
     await expect(page.getByTestId('empty-start')).toBeVisible({ timeout: 30_000 });
-    for (const vWay of ['way-open-folder', 'way-open-solution', 'way-open-file']) await expect(page.getByTestId(vWay)).toBeVisible();
+    for (const vWay of ['way-new-project', 'way-open-folder', 'way-open-solution', 'way-open-file']) await expect(page.getByTestId(vWay)).toBeVisible();
     await expect(page.getByTestId('project-list')).toHaveCount(0);
     await openFoldersDialog(page, 'manage-folders');
     await page.screenshot({ path: resolve(FIXTURES, 'ui-008.png') });

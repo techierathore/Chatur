@@ -125,7 +125,7 @@ public partial class OutputStrip : IDisposable
 
                 if (vLine.IsError)
                 {
-                    var vError = ParseError(vLine.Text, AppStateService.SelectedProject?.Path);
+                    var vError = ParseError(vLine.Text, RootOf(AppStateService.SelectedProject?.Path));
 
                     // dotnet build prints each error at least twice (once as it happens, again in the
                     // "Build FAILED" summary) — list it once, not once per line it appeared on.
@@ -146,23 +146,36 @@ public partial class OutputStrip : IDisposable
 
     private void UpdateStatus(OutputLine aLine)
     {
-        if (aLine.Text.StartsWith("Build succeeded", StringComparison.Ordinal))
+        var vText = aLine.Text;
+        if (vText.StartsWith("Build succeeded in ", StringComparison.Ordinal))
         {
             objStatusText = "build passed";
         }
-        else if (aLine.Text.StartsWith("Build FAILED", StringComparison.Ordinal))
+        else if (vText.StartsWith("Build FAILED in ", StringComparison.Ordinal))
         {
             objStatusText = "build failed";
         }
-        else if (aLine.Text.Contains("Process exited", StringComparison.Ordinal)
-                 || aLine.Text.StartsWith("Run stopped", StringComparison.Ordinal)
-                 || aLine.Text.StartsWith("Build stopped", StringComparison.Ordinal))
+        else if (vText.StartsWith("> dotnet build", StringComparison.Ordinal))
         {
-            objStatusText = "stopped";
+            objStatusText = "building";
         }
-        else if (aLine.Text.StartsWith("> dotnet run", StringComparison.Ordinal))
+        else if (vText.StartsWith("> dotnet test", StringComparison.Ordinal))
+        {
+            objStatusText = "testing";
+        }
+        else if (vText.StartsWith("> dotnet run", StringComparison.Ordinal))
         {
             objStatusText = "running";
+        }
+        else if (ExitLine().Match(vText) is { Success: true } vExit)
+        {
+            // The program's own end, with its exit code (REQ-UI-108): red when it is not 0.
+            objStatusText = vExit.Groups[1].Value == "0" ? "ended, exit code 0" : $"failed, exit code {vExit.Groups[1].Value}";
+        }
+        else if (vText.StartsWith("Run stopped", StringComparison.Ordinal)
+                 || vText.StartsWith("Build stopped", StringComparison.Ordinal))
+        {
+            objStatusText = "stopped";
         }
     }
 
@@ -188,6 +201,10 @@ public partial class OutputStrip : IDisposable
             // The file named by the compiler no longer exists on disk — nothing to open.
         }
     }
+
+    /// <summary>The folder a project's files are under: a solution's path is its .sln or .slnx file, so its folder is the one around it.</summary>
+    private static string? RootOf(string? aProjectPath) =>
+        aProjectPath is not null && File.Exists(aProjectPath) ? Path.GetDirectoryName(aProjectPath) : aProjectPath;
 
     private static BuildError? ParseError(string aLine, string? aProjectPath)
     {
@@ -226,4 +243,7 @@ public partial class OutputStrip : IDisposable
         Workbench.Changed -= OnWorkbenchChanged;
         objStreamCts?.Cancel();
     }
+
+    [GeneratedRegex(@"^Process exited with code (-?\d+)\.")]
+    private static partial Regex ExitLine();
 }

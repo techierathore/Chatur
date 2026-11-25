@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join, resolve } from 'path';
 import { signIn } from './support/auth';
 import { query, run, snapshot, restore } from './support/db';
+import { removeProjectsUnder } from './support/cleanup';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -19,6 +20,9 @@ const OPUS = 'claude-opus-5-5';
 const SONNET = 'claude-sonnet-5-5';
 
 const stamp = (aDate: Date) => aDate.toISOString().replace(/\.\d+Z$/, 'Z');
+
+// Every project this file made goes when it ends, with its folder root and its rows (owner, 20 Nov 2026).
+test.afterAll(() => removeProjectsUnder(ROOT));
 
 /** One run record per call, three hours after the one before, as EstimateFixtures.Runs.Add writes them. */
 function runLines(aRuns: { reqs: string[]; tokens: number; seconds: number; model: string }[]): string {

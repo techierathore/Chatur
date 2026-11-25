@@ -35,6 +35,15 @@ public interface IBuildRunActions
     Task StopAsync(int aProjectId, CancellationToken aCt = default);
 
     /// <summary>
+    /// Makes a target the one to run for this project, chosen from the target picker, the Project menu
+    /// or a right-click in Files; it is offered first the next time this account opens the project (BRD-228).
+    /// </summary>
+    /// <param name="aProjectId">The project (a solution or a folder).</param>
+    /// <param name="aRunTargetId">The target chosen.</param>
+    /// <param name="aCt">A token that cancels the write.</param>
+    Task SetRunTargetAsync(int aProjectId, int aRunTargetId, CancellationToken aCt = default);
+
+    /// <summary>
     /// The build or run's output, one line at a time, while it is still going (REQ-UI-014).
     /// </summary>
     /// <param name="aProjectId">The project whose output to stream.</param>

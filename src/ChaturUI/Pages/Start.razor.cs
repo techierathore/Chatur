@@ -1,6 +1,7 @@
 using Chatur.Core.Actions;
 using ChaturUI.Shell;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace ChaturUI.Pages;
 
@@ -22,6 +23,12 @@ public partial class Start
     private bool objForgetMode;
     private bool objOpenProjectOpen;
     private ProjectOpenMode objOpenProjectMode;
+
+    /// <summary>Why the last project could not be reopened, shown as one line (BRD-218); null when nothing went wrong.</summary>
+    private string? objReopenProblem;
+
+    /// <summary>Whether this list was opened from the Workbench with a project still open, so it can close back to it (BRD-220).</summary>
+    private bool objCanGoBack;
 
     /// <summary>
     /// Set by the menu bar's "All projects" (<c>/start?all=1</c>): the owner deliberately came to
@@ -69,15 +76,46 @@ public partial class Start
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        var vSelectedProject = await Projects.SelectedProjectAsync();
-        if (vSelectedProject is not null && !ShowAll)
+        // BRD-218: the last project is checked before the Workbench reads it. One that cannot be opened
+        // (its folder gone or not readable) leaves Start showing why, instead of failing on every start.
+        var vReopen = await Projects.ReopenAsync();
+        if (vReopen.Project is not null && !ShowAll)
         {
             Nav.NavigateTo("/");
             return;
         }
 
+        objReopenProblem = vReopen.Problem;
+        objCanGoBack = ShowAll && vReopen.Project is not null;
         await ReloadAsync();
     }
+
+    /// <summary>Closes the project list back to the Workbench it was opened from (BRD-220).</summary>
+    private void GoBack() => Nav.NavigateTo("/");
+
+    /// <summary>Escape closes the project list when it was opened from the Workbench (BRD-220), unless a dialog is open.</summary>
+    private void OnKeyDown(KeyboardEventArgs aArgs)
+    {
+        if (aArgs.Key == "Escape" && objCanGoBack && !objDialogOpen && !objOpenProjectOpen)
+        {
+            GoBack();
+        }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Escape reaches the list only from inside it, so the heading takes the focus when the list can close back.</remarks>
+    protected override async Task OnAfterRenderAsync(bool aFirstRender)
+    {
+        if (objCanGoBack && !objFocused)
+        {
+            objFocused = true;
+            await objHeading.FocusAsync();
+        }
+    }
+
+    private bool objFocused;
+
+    private ElementReference objHeading;
 
     /// <summary>
     /// Re-reads the named folders and re-scans them for the projects they hold. Called on load, and

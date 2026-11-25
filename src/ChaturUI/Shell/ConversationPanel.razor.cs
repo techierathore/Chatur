@@ -16,6 +16,10 @@ namespace ChaturUI.Shell;
 /// <remarks>Owning cluster: G (REQ-FN-024 through REQ-FN-027, REQ-FN-031 through REQ-FN-036); H for the surrounding chrome.</remarks>
 public partial class ConversationPanel : IDisposable
 {
+    /// <summary>The page's script runtime, so a clean-up for a page that has gone is skipped (REQ-NFR-011).</summary>
+    [Inject]
+    private IJSRuntime PageJs { get; set; } = default!;
+
     /// <summary>One line of the conversation thread, growing in place while a reply streams in (REQ-FN-025, REQ-FN-026, REQ-FN-027).</summary>
     /// <param name="Role">Either <c>"user"</c> or <c>"assistant"</c>.</param>
     /// <param name="Text">The message's text so far.</param>
@@ -24,7 +28,9 @@ public partial class ConversationPanel : IDisposable
     /// <param name="IsFinal">Whether the reply is done streaming.</param>
     /// <param name="At">When the owner sent it in this view; <see langword="null"/> for a message loaded from history, which records no time.</param>
     /// <param name="Seq">The message's order within the session; <see langword="null"/> for one added in this view until the session is read again.</param>
-    private sealed record DisplayMessage(string Role, string Text, string? ModelName, int? Tokens, bool IsFinal, DateTime? At = null, int? Seq = null, string? RoleName = null);
+    /// <param name="RoleName">The agent that wrote the reply.</param>
+    /// <param name="RoutingReason">Why Automatic routing picked the model that wrote the reply (REQ-UI-111); <see langword="null"/> when it did not choose.</param>
+    private sealed record DisplayMessage(string Role, string Text, string? ModelName, int? Tokens, bool IsFinal, DateTime? At = null, int? Seq = null, string? RoleName = null, string? RoutingReason = null);
 
     private IReadOnlyList<SessionSummary> objSessions = [];
     private IReadOnlyList<ActivityEvent> objActivity = [];
@@ -55,6 +61,8 @@ public partial class ConversationPanel : IDisposable
     private DotNetObjectReference<ConversationPanel>? objSelfRef;
     private IReadOnlyList<FileSearchHit> objMentionHits = [];
     private int objMentionIndex;
+    private AgentGreeting? objGreeting;
+    private int objGreetingAfter;
 
     /// <summary>Opens Settings, Prerequisites or Repository in the secondary window (REQ-FN-106).</summary>
     [Inject]
@@ -68,6 +76,10 @@ public partial class ConversationPanel : IDisposable
 
     [Inject]
     private IRoleActions Roles { get; set; } = default!;
+
+    /// <summary>Builds the greeting an agent gives when it is chosen (REQ-FN-308).</summary>
+    [Inject]
+    private IAgentPersonaActions Personas { get; set; } = default!;
 
     [Inject]
     private IProviderActions Providers { get; set; } = default!;
@@ -210,7 +222,7 @@ public partial class ConversationPanel : IDisposable
         // Never waits on a page that has gone: its listeners went with it (JsCleanUp, REQ-FN-009).
         var vComposer = objComposer;
         objComposer = null;
-        await JsCleanUp.RunAsync(async () =>
+        await JsCleanUp.RunAsync(PageJs, async () =>
         {
             await vComposer.InvokeVoidAsync("dispose");
             await vComposer.DisposeAsync();
@@ -275,6 +287,7 @@ public partial class ConversationPanel : IDisposable
         {
             var vDetail = await Agent.ContinueSessionAsync(vHanded.SessionId);
             objFollowed = vHanded;
+            objGreeting = null;
             objCurrentSession = vDetail.Summary;
             objSelectedRoleId = objRoles.FirstOrDefault(r => r.Name == vDetail.Summary.RoleName)?.RoleId;
             objHistoryOpen = false;
@@ -378,6 +391,7 @@ public partial class ConversationPanel : IDisposable
 
         objCurrentSession = vSession;
         objHistoryOpen = false;
+        objGreeting = null;
         objSelectedRoleId = aStart.RoleId ?? objRoles.FirstOrDefault(r => r.Name == vSession.RoleName)?.RoleId;
         await LoadMessagesAsync(vSession.SessionId);
         await LoadProposedChangesAsync(vSession.SessionId);
@@ -425,6 +439,7 @@ public partial class ConversationPanel : IDisposable
         objCurrentSession = null;
         objSessions = [];
         objSuggestion = null;
+        objGreeting = null;
         objFollowed = null;
         objResumeAfterFollow = null;
         Workbench.SetPendingChanges([]);
@@ -465,6 +480,13 @@ public partial class ConversationPanel : IDisposable
         await LoadProposedChangesAsync(vCurrentSession.SessionId);
         await LoadTotalTokensAsync(vCurrentSession.SessionId);
         WatchActivity(vCurrentSession.SessionId);
+
+        // A conversation with nothing said yet opens with its agent greeting the person (REQ-FN-308).
+        objGreeting = null;
+        if (objMessages.Count == 0)
+        {
+            await ShowGreetingAsync(objSelectedRoleId);
+        }
     }
 
     /// <summary>Loads every past message of a session so a continued conversation shows exactly what was said (REQ-FN-031, REQ-FN-032).</summary>
@@ -473,7 +495,7 @@ public partial class ConversationPanel : IDisposable
         var vDetail = await Agent.ContinueSessionAsync(aSessionId);
         objMessages = vDetail.Events
             .Where(e => e.Kind is "user" or "assistant")
-            .Select(e => new DisplayMessage(e.Kind, e.Payload, e.Model, e.Tokens, true, null, e.Seq, e.RoleName))
+            .Select(e => new DisplayMessage(e.Kind, e.Payload, e.Model, e.Tokens, true, null, e.Seq, e.RoleName, e.RoutingReason))
             .ToList();
 
         // A handed step's agent is still writing while the run holds the step: its last line keeps the spinner.
@@ -685,6 +707,9 @@ public partial class ConversationPanel : IDisposable
         }
     }
 
+    /// <summary>Whether <c>*exit</c> closed the conversation, so the next message starts a new one (BRD-249).</summary>
+    private bool objFreshOnNextSend;
+
     /// <summary>
     /// Starts a new conversation with the role chosen in the composer; the one before stays in the
     /// history (mockups/main.html <c>new-chat</c>, REQ-UI-031).
@@ -715,6 +740,7 @@ public partial class ConversationPanel : IDisposable
     {
         objCurrentSession = aSession;
         objHistoryOpen = false;
+        objGreeting = null;
         objSelectedRoleId = objRoles.FirstOrDefault(r => r.Name == aSession.RoleName)?.RoleId;
         _ = LoadMessagesAsync(aSession.SessionId);
         _ = LoadProposedChangesAsync(aSession.SessionId);
@@ -722,11 +748,32 @@ public partial class ConversationPanel : IDisposable
         WatchActivity(aSession.SessionId);
     }
 
-    /// <summary>Picks a role to talk to instead of the one Chatur suggested (REQ-FN-024).</summary>
-    private void SelectRole(int? aRoleId)
+    /// <summary>
+    /// Picks a role to talk to instead of the one Chatur suggested (REQ-FN-024), and has that agent greet the
+    /// person in the conversation with what it is for and its commands (REQ-FN-308).
+    /// </summary>
+    private async Task SelectRoleAsync(int? aRoleId)
     {
         objSelectedRoleId = aRoleId;
         objAgentPickOpen = false;
+        await ShowGreetingAsync(aRoleId);
+    }
+
+    /// <summary>
+    /// Shows the greeting of the agent chosen, at the end of what has been said so far; no agent, or no project, shows none.
+    /// It is built from the agent's persona file, so no model is asked and it works without a provider (REQ-FN-308).
+    /// </summary>
+    private async Task ShowGreetingAsync(int? aRoleId)
+    {
+        if (aRoleId is not { } vRoleId || ProjectId is not { } vProjectId)
+        {
+            objGreeting = null;
+            return;
+        }
+
+        var vGreeting = await Personas.GreetingAsync(vProjectId, vRoleId);
+        objGreetingAfter = objMessages.Count;
+        objGreeting = vGreeting;
     }
 
     /// <summary>
@@ -744,6 +791,21 @@ public partial class ConversationPanel : IDisposable
 
         var vText = objMessageText.Trim();
         objMessageText = string.Empty;
+
+        // *exit closed the last conversation (BRD-249): the next message starts a new one, with the agent chosen now.
+        if (objFreshOnNextSend && ProjectId is { } vFreshProjectId)
+        {
+            objFreshOnNextSend = false;
+            await Agent.StartSessionAsync(vFreshProjectId, objSelectedRoleId);
+            await ReloadSessionsAsync(vFreshProjectId);
+            if (objCurrentSession is not { } vFresh)
+            {
+                return;
+            }
+
+            vSession = vFresh;
+        }
+
         objSending = true;
 
         objMessages.Add(new DisplayMessage("user", vText, null, null, true, DateTime.Now));
@@ -762,9 +824,22 @@ public partial class ConversationPanel : IDisposable
                 {
                     Text = vSoFar.Text + vChunk.TextDelta,
                     ModelName = vChunk.ModelName ?? vSoFar.ModelName,
+                    RoutingReason = vChunk.RoutingReason ?? vSoFar.RoutingReason,
                     Tokens = vChunk.TokensUsed ?? vSoFar.Tokens,
                     IsFinal = vChunk.IsFinal
                 };
+
+                // *yolo changed the conversation's mode, so the Ask first / Go ahead switch shows it (BRD-249).
+                if (vChunk.ModeNow is { } vModeNow && objCurrentSession is { } vModeSession)
+                {
+                    objCurrentSession = vModeSession with { Mode = vModeNow };
+                }
+
+                if (vChunk.EndsConversation)
+                {
+                    objFreshOnNextSend = true;
+                }
+
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -793,6 +868,10 @@ public partial class ConversationPanel : IDisposable
         await LoadProposedChangesAsync(vSession.SessionId);
         await LoadTotalTokensAsync(vSession.SessionId);
         await ResolveLiveSeqsAsync(vSession.SessionId);
+
+        // A reply may have written files (an agent in Go ahead, *log-miss, *generate-html): FILES reads the folder again,
+        // so what was written is there to open (owner's test of 22 Nov 2026, point 2.4).
+        Workbench.NotifyFilesViewChanged();
 
         // A role picked in the composer is now the session's role (AgentActions.SendAsync), so the
         // replies are labelled with it.

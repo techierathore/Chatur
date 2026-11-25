@@ -1,0 +1,300 @@
+@page "/measurements"
+@layout Layouts.SecondaryLayout
+@using ChaturUI.Components.Metrics
+@using TrBlazeUI.Components.CodeBlock
+@inject AppState State
+
+@* UI Design phase 4 "Screen: Measurements" — mockups/measurements.html (REQ-UI-115 to REQ-UI-120, REQ-FN-314).
+   Every figure is read from the open project's own docs/metrics files by IMetricsReportActions: no network call,
+   no sign-in, no upload. The words are TfLens's. *@
+<div class="flex flex-col gap-4" data-testid="page">
+    <div class="flex flex-wrap items-center gap-2.5" data-testid="metrics-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Measurements</h1>
+            @if (State.SelectedProject is { } vProject)
+            {
+                <p class="text-sm text-muted-foreground"><span data-testid="metrics-project">@vProject.Name</span> · <span class="font-mono text-xs" data-testid="metrics-folder">@FolderText</span></p>
+            }
+        </div>
+        <span class="flex-1"></span>
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="OpenZipDialog" Disabled="@(objReport is null)" data-testid="save-zip">
+            <LucideIcon Name="download" Size="14" />
+            Save as zip
+        </Button>
+        <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="LoadAsync" Disabled="objIsLoading" data-testid="recount">
+            <LucideIcon Name="refresh-cw" Size="14" />
+            Count again
+        </Button>
+    </div>
+
+    @if (!State.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.Measurements))
+    {
+        <Empty Title="Measurements are not part of this licence" Description="Nothing here is drawn while the licence has the feature off." Size="EmptySize.Small" data-testid="feature-off" />
+    }
+    else if (State.SelectedProject is null)
+    {
+        <Empty Title="No project selected" Description="Open a project to see what it has measured." Size="EmptySize.Small" data-testid="no-project" />
+    }
+    else
+    {
+        <MetricsPeriodPicker Region="metrics-period" Prefix="period" Initial="MetricsPeriodKind.All" OnChanged="OnPeriodChangedAsync" />
+
+        @if (objReport is not null)
+        {
+            <p class="text-sm text-muted-foreground" data-testid="metrics-period-note">@PeriodNote</p>
+        }
+        @if (EmptyLine is not null)
+        {
+            <p class="text-sm" data-testid="metrics-empty">@EmptyLine</p>
+        }
+
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7" data-testid="metrics-tiles">
+            @foreach (var vTile in Tiles)
+            {
+                <Card data-testid="@($"tile-{vTile.Key}")">
+                    <CardContent Class="flex flex-col gap-0.5 p-3">
+                        <span class="text-xs text-muted-foreground">@vTile.Label</span>
+                        @* "not measured" is a word, not a figure: drawn smaller, so a narrow tile never breaks it mid-word (mockup check, 23 Nov 2026). *@
+                        <b class="@(vTile.Value == MetricsFormat.NotMeasured ? "text-sm font-medium text-muted-foreground" : "text-xl")" data-testid="@($"tile-{vTile.Key}-value")">@vTile.Value</b>
+                        <span class="text-xs text-muted-foreground" data-testid="@($"tile-{vTile.Key}-note")">@(vTile.Note ?? " ")</span>
+                    </CardContent>
+                </Card>
+            }
+        </div>
+
+        @if (objReport is not null)
+        {
+            <Card data-testid="metrics-split">
+                <CardContent Class="p-0">
+                    @* Three pills, as mockups/measurements.html draws them (.pick / .pick.on), not tabs: the mockup check of
+                       23 Nov 2026 found square tabs where the design has pills. *@
+                    <div class="flex flex-wrap items-center gap-2 border-b px-3 py-2" role="group" aria-label="Split by">
+                        @foreach (var (vKey, vLabel) in SplitKinds)
+                        {
+                            var vOn = objSplit == vKey;
+                            <Button Class="@(vOn ? "rounded-full border-primary bg-primary/10 text-primary" : "rounded-full font-normal")" Variant="ButtonVariant.Outline" Size="ButtonSize.Small"
+                                    OnClick="@(() => objSplit = vKey)" aria-pressed="@(vOn ? "true" : "false")" data-testid="@($"split-tab-{vKey}")">@vLabel</Button>
+                        }
+                    </div>
+                    @switch (objSplit)
+                    {
+                        case "agent":
+                            <MetricsSplitTable Lines="objReport.ByAgent" Kind="agent" KeyHeader="Agent" />
+                            break;
+                        case "command":
+                            <MetricsSplitTable Lines="objReport.ByCommand" Kind="command" KeyHeader="Command phase" />
+                            break;
+                        default:
+                            <MetricsSplitTable Lines="objReport.ByModel" Kind="model" KeyHeader="Model" />
+                            break;
+                    }
+                </CardContent>
+            </Card>
+
+            <Card data-testid="metrics-misses">
+                <CardHeader>
+                    <div class="flex items-center gap-2">
+                        <CardTitle>Misses</CardTitle>
+                        <span class="flex-1"></span>
+                        <Badge Variant="BadgeVariant.Warning" Class="rounded-full border-transparent" data-testid="misses-count">@MissCountText</Badge>
+                    </div>
+                </CardHeader>
+                <CardContent Class="flex flex-col gap-3">
+                    <div class="flex flex-wrap items-center gap-1.5" data-testid="misses-foundby">
+                        <span class="text-xs text-muted-foreground">Found by</span>
+                        @if (objReport.Misses.ByFoundBy.Count == 0)
+                        {
+                            <span class="text-xs text-muted-foreground" data-testid="foundby-none">no misses in this period</span>
+                        }
+                        @foreach (var vFound in objReport.Misses.ByFoundBy)
+                        {
+                            <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="@($"foundby-{MetricsFormat.Slug(vFound.Key)}")">
+                                @vFound.Key&nbsp;<b class="font-medium" data-testid="@($"foundby-{MetricsFormat.Slug(vFound.Key)}-count")">@vFound.Value</b>@if (MetricsFormat.FoundByGloss(vFound.Key) is { } vGloss)
+                                {
+                                    <span class="text-muted-foreground">&nbsp;— @vGloss</span>
+                                }
+                            </Badge>
+                        }
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5" data-testid="misses-byrow">
+                        <span class="text-xs text-muted-foreground">Rows</span>
+                        @foreach (var vRow in objReport.Misses.ByRow)
+                        {
+                            <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent" data-testid="@($"byrow-{MetricsFormat.Slug(vRow.Key)}")">
+                                @vRow.Key&nbsp;<b class="font-medium" data-testid="@($"byrow-{MetricsFormat.Slug(vRow.Key)}-count")">@vRow.Value</b>
+                            </Badge>
+                        }
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2" data-testid="misses-firstpass">
+                        <span class="text-xs text-muted-foreground">First-pass rate</span>
+                        <b class="text-xl" data-testid="firstpass-rate">@(FirstPassRate ?? "not measured")</b>
+                        <span class="text-sm text-muted-foreground" data-testid="firstpass-text">@FirstPassText</span>
+                    </div>
+                    <DataTable TData="MissLine" Data="@objReport.Misses.Misses" ShowPagination="false" MinWidth="680px" Class="border-0"
+                               RowAttributes="@(aMiss => new Dictionary<string, object> { ["data-testid"] = $"miss-row-{MetricsFormat.Slug(aMiss.MissId)}", ["class"] = "border-t" })"
+                               data-testid="misses-table">
+                        <Columns>
+                            <DataTableColumn TData="MissLine" TValue="string" Property="@(aMiss => aMiss.ReqId ?? "—")" Header="REQ" CellClass="whitespace-nowrap font-mono text-xs">
+                                <CellTemplate Context="aMiss">
+                                    <div>@(aMiss.ReqId ?? "—")</div>
+                                    @if (aMiss.What is not null)
+                                    {
+                                        <div class="font-sans text-xs text-muted-foreground">@aMiss.What</div>
+                                    }
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="MissLine" TValue="string" Property="@(aMiss => aMiss.MissClass ?? "—")" Header="Class" />
+                            <DataTableColumn TData="MissLine" TValue="string" Property="@(aMiss => aMiss.Severity ?? "—")" Header="Severity" />
+                            <DataTableColumn TData="MissLine" TValue="string" Property="@(aMiss => aMiss.FoundBy ?? MetricsFormat.NotMeasured)" Header="Found by" CellClass="whitespace-nowrap" />
+                            <DataTableColumn TData="MissLine" TValue="string" Property="@(aMiss => aMiss.Status)" Header="Status">
+                                <CellTemplate Context="aMiss">
+                                    <Badge Variant="@StatusVariant(aMiss.Status)" Class="border-0">@aMiss.Status</Badge>
+                                </CellTemplate>
+                            </DataTableColumn>
+                        </Columns>
+                    </DataTable>
+                </CardContent>
+            </Card>
+        }
+
+        <div data-testid="metrics-estimate">
+            @if (objEstimate is not null)
+            {
+                <EstimateActualTable Actual="objEstimate" Title="Estimate and actual — this phase" TestId="metrics-estimate" />
+            }
+            else
+            {
+                <p class="rounded-md border px-3 py-2.5 text-sm text-muted-foreground" data-testid="metrics-estimate-empty">No estimate has been written for this phase yet, so there is nothing to set beside its actual.</p>
+            }
+        </div>
+
+        @if (objReport is not null)
+        {
+            <Card data-testid="metrics-runs">
+                <CardHeader>
+                    <div class="flex items-center gap-2">
+                        <CardTitle>Runs</CardTitle>
+                        <span class="flex-1"></span>
+                        <span class="text-xs text-muted-foreground">@objReport.Runs.Count run@(objReport.Runs.Count == 1 ? string.Empty : "s") · a line opens its detail</span>
+                    </div>
+                </CardHeader>
+                <CardContent Class="p-0">
+                    @if (objReport.Runs.Count == 0)
+                    {
+                        <p class="px-6 pb-4 text-sm text-muted-foreground" data-testid="runs-empty">No run in this period.</p>
+                    }
+                    else
+                    {
+                        <DataTable TData="RunLine" Data="@objReport.Runs" SelectionMode="DataTableSelectionMode.Single"
+                                   SelectedItems="objSelected" SelectedItemsChanged="OnRunPickedAsync"
+                                   InitialPageSize="10" MinWidth="820px" Class="border-0"
+                                   RowAttributes="@(aRun => new Dictionary<string, object> { ["data-testid"] = $"run-row-{aRun.Line}", ["class"] = "cursor-pointer border-t" })"
+                                   data-testid="runs-table">
+                            <Columns>
+                                <DataTableColumn TData="RunLine" TValue="string" Property="@(aRun => MetricsFormat.When(aRun.AtUtc))" Header="When" CellClass="whitespace-nowrap text-xs text-muted-foreground" />
+                                <DataTableColumn TData="RunLine" TValue="string" Property="@(aRun => aRun.Command)" Header="Command phase" CellClass="font-mono text-xs whitespace-nowrap" />
+                                <DataTableColumn TData="RunLine" TValue="string" Property="@(aRun => aRun.Agent)" Header="Agent" CellClass="whitespace-nowrap" />
+                                <DataTableColumn TData="RunLine" TValue="string" Property="@(aRun => aRun.Model)" Header="Model" CellClass="font-mono text-xs whitespace-nowrap" />
+                                @* Tokens in and out share a column, so the Rows column stays inside the window at 1280 wide. *@
+                                <DataTableColumn TData="RunLine" TValue="string" Property="@(aRun => MetricsFormat.Count(aRun.TokensOut))" Header="Tokens in / out" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                                    <CellTemplate Context="aRun">
+                                        <div>@MetricsFormat.Count(aRun.TokensIn)</div>
+                                        <div class="text-xs text-muted-foreground">@MetricsFormat.Count(aRun.TokensOut)</div>
+                                    </CellTemplate>
+                                </DataTableColumn>
+                                <DataTableColumn TData="RunLine" TValue="string" Property="@(aRun => MetricsFormat.Wall(aRun.WallClockS))" Header="Wall clock" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap" />
+                                <DataTableColumn TData="RunLine" TValue="string" Property="@(aRun => aRun.Result ?? "—")" Header="Result">
+                                    <CellTemplate Context="aRun">
+                                        <Badge Variant="@ResultVariant(aRun.Result)" Class="border-0">@(aRun.Result ?? "—")</Badge>
+                                    </CellTemplate>
+                                </DataTableColumn>
+                                <DataTableColumn TData="RunLine" TValue="string" Property="@(aRun => string.Join(" · ", aRun.RowsTouched))" Header="Rows" CellClass="text-xs text-muted-foreground">
+                                    <CellTemplate Context="aRun">
+                                        @* One row id a line, never broken inside: a narrow column wrapped "REQ-UI-001" one letter a line. *@
+                                        @if (aRun.RowsTouched.Count == 0)
+                                        {
+                                            <span>—</span>
+                                        }
+                                        @foreach (var vRow in aRun.RowsTouched)
+                                        {
+                                            <div class="whitespace-nowrap font-mono">@vRow</div>
+                                        }
+                                    </CellTemplate>
+                                </DataTableColumn>
+                            </Columns>
+                        </DataTable>
+                    }
+                </CardContent>
+            </Card>
+
+            <p class="flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm text-muted-foreground" data-testid="metrics-offline-note">
+                <LucideIcon Name="check" Size="16" Class="mt-0.5 flex-none" />
+                <span>Read from the files in docs/metrics on this machine; nothing is sent anywhere.<span data-testid="metrics-unreadable">@UnreadableText</span></span>
+            </p>
+        }
+    }
+</div>
+
+<Sheet Open="objDetailOpen" OpenChanged="OnDetailOpenChanged">
+    <SheetContent Class="w-[420px] max-w-full overflow-auto sm:w-[480px]" data-testid="run-detail">
+        <SheetHeader>
+            <SheetTitle>Run @(objDetail?.Line)</SheetTitle>
+            <SheetDescription>@(objDetail is null ? string.Empty : MetricsFormat.When(objDetail.AtUtc))</SheetDescription>
+        </SheetHeader>
+        @if (objDetail is not null)
+        {
+            <div class="flex flex-col gap-3 px-4 pb-4 text-sm">
+                <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+                    <dt class="text-muted-foreground">Command phase</dt><dd class="font-mono" data-testid="detail-command">@objDetail.Command</dd>
+                    <dt class="text-muted-foreground">Mode</dt><dd data-testid="detail-mode">@(objDetail.Mode ?? "—")</dd>
+                    <dt class="text-muted-foreground">Agent</dt><dd data-testid="detail-agent">@objDetail.Agent</dd>
+                    <dt class="text-muted-foreground">Model</dt><dd class="font-mono" data-testid="detail-model">@objDetail.Model</dd>
+                    <dt class="text-muted-foreground">Tokens in</dt><dd data-testid="detail-tokens-in">@MetricsFormat.Count(objDetail.TokensIn)</dd>
+                    <dt class="text-muted-foreground">Tokens out</dt><dd data-testid="detail-tokens-out">@MetricsFormat.Count(objDetail.TokensOut)</dd>
+                    <dt class="text-muted-foreground">Cache read</dt><dd data-testid="detail-cache-read">@MetricsFormat.Count(objDetail.CacheRead)</dd>
+                    <dt class="text-muted-foreground">Cache write</dt><dd data-testid="detail-cache-write">@MetricsFormat.Count(objDetail.CacheWrite)</dd>
+                    <dt class="text-muted-foreground">Measured USD</dt><dd data-testid="detail-usd">@MetricsFormat.Usd(objDetail.CostUsd)</dd>
+                    <dt class="text-muted-foreground">Wall clock</dt><dd data-testid="detail-wall">@MetricsFormat.Wall(objDetail.WallClockS)</dd>
+                    <dt class="text-muted-foreground">Result</dt><dd data-testid="detail-result">@(objDetail.Result ?? "—")</dd>
+                    <dt class="text-muted-foreground">Rows</dt><dd data-testid="detail-rows">@(objDetail.RowsTouched.Count == 0 ? "—" : string.Join(" · ", objDetail.RowsTouched))</dd>
+                </dl>
+                <div data-testid="detail-raw">
+                    <CodeBlock Language="json" Code="@objDetail.Raw" ShowCopyButton="false" Class="text-xs" />
+                </div>
+            </div>
+        }
+    </SheetContent>
+</Sheet>
+
+<Dialog Open="objZipOpen" OpenChanged="OnZipOpenChanged">
+    <DialogContent Class="max-w-lg" data-testid="zip-dialog">
+        <DialogHeader>
+            <DialogTitle>Save as zip</DialogTitle>
+            <DialogDescription>One zip of this project's measurement files, in the shape TfLens imports. Nothing is sent anywhere.</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-3">
+            <Field>
+                <FieldLabel>Save to</FieldLabel>
+                <FieldContent>
+                    <Input Value="@objZipFolder" ValueChanged="@(aValue => objZipFolder = aValue ?? string.Empty)" AriaLabel="Save to" Class="font-mono text-xs" data-testid="zip-folder" />
+                </FieldContent>
+            </Field>
+            @if (objZipError is not null)
+            {
+                <p class="text-sm text-alert-warning" role="alert" data-testid="zip-error">@objZipError</p>
+            }
+            @if (objZip is not null)
+            {
+                <div class="flex flex-col gap-1 text-sm" data-testid="zip-result">
+                    <span>Saved to</span>
+                    <code class="break-all font-mono text-xs" data-testid="zip-saved">@objZip.ZipPath</code>
+                    <span class="text-xs text-muted-foreground" data-testid="zip-entries">@string.Join(" · ", objZip.Entries)</span>
+                </div>
+            }
+        </DialogBody>
+        <DialogFooter>
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="CloseZipDialog" data-testid="zip-close">Close</Button>
+            <Button Class="rounded-full" OnClick="SaveZipAsync" Disabled="@(objIsSaving || string.IsNullOrWhiteSpace(objZipFolder))" data-testid="zip-save">Save</Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

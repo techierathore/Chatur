@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — UI Design</h1>
-    <div class="subtitle">Rendered 2026-11-18 &middot; source <code>Chatur-UIDesign.md</code></div>
+    <div class="subtitle">Rendered 2026-11-22 &middot; source <code>Chatur-UIDesign.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -136,7 +136,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </table>
 <h2 id="design-system">Design system<a class="anchor-link" href="#design-system">#</a></h2>
 <ul>
-<li><strong>Three windows.</strong> The <strong>start window</strong> opens first: recent projects on the left, the ways in on the right — clone, open a solution, open a folder, new project, new empty folder. No menu bar, no files, no conversation, because nothing is open. The <strong>main window</strong> is where work happens: a menu bar (File, Edit, View, Project, Tools, Help), a toolbar (Run, Stop, Build, the run target, the branch, Find), the files down the left with the branch beneath them, one content area of tabs, the conversation pinned right at half the width, and an output strip. The <strong>secondary window</strong> holds everything that is not the work — Prerequisites, Repository, Settings, Licence, Feedback, Integrations, All projects, Working copies — as a title bar, a left navigation list and one page. No file tree, no conversation: there is nothing to say to an agent while changing a setting.
+<li><strong>Three windows.</strong> The <strong>start window</strong> opens first: recent projects on the left, the ways in on the right — clone, open a solution, open a folder, new project, new empty folder. No menu bar, no files, no conversation, because nothing is open. The <strong>main window</strong> is where work happens: a menu bar (File, Edit, View, Project, Tools, Help), a toolbar (Run, Build, the project to run, Find; Stop only while something runs), the files down the left with the branch picker beneath them, one content area of tabs, the conversation pinned right at half the width, and an output strip. The <strong>secondary window</strong> holds everything that is not the work — Prerequisites, Repository, Settings, Licence, Feedback, Integrations, All projects, Working copies — as a title bar, a left navigation list and one page. No file tree, no conversation: there is nothing to say to an agent while changing a setting.
 </li>
 <li><strong>Menus and pickers really open</strong>, each dropping its list with a tick on the chosen one. Nothing looks like a drop-down and behaves like a label.
 </li>
@@ -205,7 +205,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td><code>recent-search</code></td><td>Button</td><td>filters the list by name or path</td></tr>
 <tr><td><code>forget</code></td><td>Button</td><td>drops a project from the list; the folder on disk is untouched</td></tr>
 <tr><td><code>clone-repo</code></td><td>Button</td><td>clones from GitHub, or any address pasted, and opens it</td></tr>
-<tr><td><code>open-solution</code> / <code>open-folder</code></td><td>Button ×2</td><td>a <code>.sln</code> with its projects read, or any folder as it is</td></tr>
+<tr><td><code>open-solution</code> / <code>open-folder</code></td><td>Button ×2</td><td>a <code>.sln</code> or <code>.slnx</code> with its projects read, or any folder as it is</td></tr>
 <tr><td><code>open-file</code></td><td>Button</td><td>any file, opened with the folder that holds it (BRD-215)</td></tr>
 <tr><td><code>new-project</code></td><td>Button</td><td>a solution from a template</td></tr>
 <tr><td><code>new-blank</code></td><td>Button</td><td>an empty folder and an agent, for thinking something through before there is code</td></tr>
@@ -218,8 +218,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Repository address</td><td>text</td><td>yes, when cloning</td><td>a git address this machine can reach; the folder it clones into must be empty</td></tr>
 </tbody>
 </table>
-<p><strong>Dialogs opened here:</strong> Clone a repository · Open a solution · Open a folder · New project — each the machine's own picker or a small form</p>
-<p><strong>States:</strong> empty, for an account that has opened nothing (<code>start-empty.html</code>): <code>empty-start</code> shows three ways on, <code>way-open-folder</code>, <code>way-open-solution</code>, <code>way-open-file</code>, and a quiet <code>manage-folders</code> · loading: a clone shows its progress in place of the list, and the buttons wait · error: a folder that has moved keeps its row, marked, and offers to forget it</p>
+<p><strong>Dialogs opened here:</strong> Clone a repository · Open a solution · Open a folder — each the machine's own picker or a small form · New project, from this machine's templates</p>
+<p><strong>States:</strong> empty, for an account that has opened nothing (<code>start-empty.html</code>): <code>empty-start</code>: <code>way-new-project</code>, <code>way-open-folder</code>, <code>way-open-solution</code>, <code>way-open-file</code>, quiet <code>manage-folders</code> (BRD-14, BRD-247) · loading: a clone shows its progress in place of the list, and the buttons wait · error: a folder that has moved keeps its row, marked, and offers to forget it</p>
 <h3 id="screen-workbench"><a id="screen-workbench-"></a>Screen: Workbench (<code>/</code>)<a class="anchor-link" href="#screen-workbench">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/main.html">mockups/main.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-16 to BRD-26, BRD-44 to BRD-51, BRD-61 to BRD-69, BRD-80 to BRD-85</p>
 <p>The window itself, and where the work happens.</p>
@@ -227,8 +227,8 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
 <tbody>
 <tr><td><code>menubar</code></td><td>Menubar</td><td>File, Edit, View, Project, Tools, Help; the signed-in user at the right</td></tr>
-<tr><td><code>toolbar</code></td><td>Button row</td><td><code>run</code>, <code>stop</code>, <code>build</code>, <code>target</code>, <code>repo</code>, <code>find</code></td></tr>
-<tr><td><code>files-panel</code></td><td>Card + tree</td><td>the project's files; <code>branch</code> beneath them opens the Repository</td></tr>
+<tr><td><code>toolbar</code></td><td>Button row</td><td><code>run</code>, <code>build</code>, <code>target</code>, <code>find</code>; <code>stop</code> only while something runs</td></tr>
+<tr><td><code>files-panel</code></td><td>Card + tree</td><td>the project's files; <code>branch</code> beneath them picks a local or remote branch</td></tr>
 <tr><td><code>tabs</code></td><td>Tabs</td><td>the open files and views; <code>close-file-view</code> gives the conversation the window</td></tr>
 <tr><td><code>editor</code></td><td>code pane</td><td>the open file with syntax colour; a change waiting on it is shown in place and the file is read-only until it is settled</td></tr>
 <tr><td><code>conversation</code></td><td>ScrollArea</td><td>the turns, each naming its model, tokens and seconds; the agent's steps as chips</td></tr>
@@ -245,11 +245,11 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Model</td><td>select</td><td>yes</td><td>one of the connected providers' models</td></tr>
 <tr><td>Agent</td><td>select</td><td>no</td><td>none means the model itself; Chatur pre-selects from the project's state</td></tr>
 <tr><td>Mode</td><td>two-way choice</td><td>yes</td><td>ask first, or go ahead</td></tr>
-<tr><td>Run target</td><td>select</td><td>yes</td><td>only a target this machine can build</td></tr>
+<tr><td>Project to run</td><td>select</td><td>yes</td><td>a runnable project of the solution</td></tr>
 <tr><td>File text</td><td>textarea</td><td>no</td><td>read-only while a change waits on that file</td></tr>
 </tbody>
 </table>
-<p><strong>Dialogs opened here:</strong> Unsaved changes — save, close without saving, cancel</p>
+<p><strong>Dialogs opened here:</strong> Unsaved changes — save, close without saving, cancel · Uncommitted changes (<code>branch-dirty</code>)</p>
 <p><strong>States:</strong> empty: a folder with no project — the conversation takes the whole window and no target can be chosen (<a href="mockups/folder-only.html">drawn here</a>) · loading: the reply shows as moving dots with its model named · error: a failed provider is shown in the conversation with the model that answered instead</p>
 <h3 id="screen-prerequisites-prerequisites">Screen: Prerequisites (<code>/prerequisites</code>)<a class="anchor-link" href="#screen-prerequisites-prerequisites">#</a></h3>
 <p><strong>Mockup:</strong> <a href="mockups/prerequisites.html">mockups/prerequisites.html</a> · <strong>Roles:</strong> Owner · <strong>BRD:</strong> BRD-27 to BRD-31</p>

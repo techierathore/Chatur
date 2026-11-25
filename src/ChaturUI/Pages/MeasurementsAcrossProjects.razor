@@ -1,0 +1,111 @@
+@page "/measurements/all"
+@layout Layouts.SecondaryLayout
+@using ChaturUI.Components.Metrics
+@inject AppState State
+
+@* UI Design phase 4 "Screen: Measurements across projects" — mockups/measurements-all.html (REQ-FN-313). *@
+<div class="flex flex-col gap-4" data-testid="page">
+    <div data-testid="across-heading">
+        <h1 class="text-lg font-semibold">Measurements across projects</h1>
+        <p class="text-sm text-muted-foreground">Every project on this account, from its own docs/metrics files. Nothing is sent anywhere.</p>
+    </div>
+
+    @if (!State.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.Measurements))
+    {
+        <Empty Title="Measurements are not part of this licence" Description="Nothing here is drawn while the licence has the feature off." Size="EmptySize.Small" data-testid="feature-off" />
+    }
+    else
+    {
+        <MetricsPeriodPicker Region="across-period" Prefix="across" Initial="MetricsPeriodKind.Last7Days" OnChanged="OnPeriodChangedAsync" />
+
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-5" data-testid="across-tiles">
+            @foreach (var vTile in Tiles)
+            {
+                <Card data-testid="@($"across-tile-{vTile.Key}")">
+                    <CardContent Class="flex flex-col gap-0.5 p-3">
+                        <span class="text-xs text-muted-foreground">@vTile.Label</span>
+                        <b class="text-xl" data-testid="@($"across-tile-{vTile.Key}-value")">@vTile.Value</b>
+                    </CardContent>
+                </Card>
+            }
+        </div>
+
+        <Card data-testid="across-panel">
+            <CardHeader>
+                <div class="flex items-center gap-2">
+                    <CardTitle>Every project</CardTitle>
+                    <span class="flex-1"></span>
+                    <span class="text-xs text-muted-foreground">most tokens out first</span>
+                </div>
+            </CardHeader>
+            <CardContent Class="p-0">
+                @if (objAcross is null)
+                {
+                    <div class="flex flex-col gap-2 px-6 pb-4" data-testid="across-loading">
+                        <Skeleton Class="h-8 w-full" />
+                        <Skeleton Class="h-8 w-full" />
+                    </div>
+                }
+                else if (objAcross.Projects.Count == 0)
+                {
+                    <p class="px-6 pb-4 text-sm text-muted-foreground" data-testid="across-empty">No projects yet. Open a folder and its measurements appear here.</p>
+                }
+                else
+                {
+                    <DataTable TData="ProjectMetricsLine" Data="@objAcross.Projects" ShowPagination="false" MinWidth="880px" Class="border-0"
+                               RowAttributes="@(aLine => new Dictionary<string, object> { ["data-testid"] = $"across-row-{MetricsFormat.Slug(aLine.ProjectName)}", ["class"] = aLine.FolderFound ? "border-t" : "border-t opacity-60" })"
+                               data-testid="across-table">
+                        <Columns>
+                            @* The project column is held to a width and its path wraps, so every figure stays inside the window at 1280 wide. *@
+                            <DataTableColumn TData="ProjectMetricsLine" TValue="string" Property="@(aLine => aLine.ProjectName)" Header="Project" Width="230px">
+                                <CellTemplate Context="aLine">
+                                    <div class="flex items-center gap-2 whitespace-nowrap">
+                                        @* The name opens the project's Measurements: a separate Open column was pushed past the window's edge. *@
+                                        <Button Variant="ButtonVariant.Link" Size="ButtonSize.Small" Class="h-auto p-0 font-medium" OnClick="@(() => OpenProjectAsync(aLine.ProjectId))" data-testid="@($"across-open-{MetricsFormat.Slug(aLine.ProjectName)}")">@aLine.ProjectName</Button>
+                                    </div>
+                                    <div class="break-all font-mono text-xs text-muted-foreground">@aLine.Path</div>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProjectMetricsLine" TValue="string" Property="@(aLine => Figure(aLine, aLine.Totals.Runs.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)))" Header="Runs" Align="DataTableColumnAlign.End">
+                                <CellTemplate Context="aLine">
+                                    <span data-testid="@($"across-{MetricsFormat.Slug(aLine.ProjectName)}-runs")">@Figure(aLine, aLine.Totals.Runs.ToString("N0", System.Globalization.CultureInfo.InvariantCulture))</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProjectMetricsLine" TValue="string" Property="@(aLine => Figure(aLine, MetricsFormat.Sum(aLine.Totals.TokensIn)))" Header="Tokens in" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="aLine">
+                                    <span data-testid="@($"across-{MetricsFormat.Slug(aLine.ProjectName)}-tokens-in")">@Figure(aLine, MetricsFormat.Sum(aLine.Totals.TokensIn))</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProjectMetricsLine" TValue="string" Property="@(aLine => Figure(aLine, MetricsFormat.Sum(aLine.Totals.TokensOut)))" Header="Tokens out" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="aLine">
+                                    <span data-testid="@($"across-{MetricsFormat.Slug(aLine.ProjectName)}-tokens-out")">@Figure(aLine, MetricsFormat.Sum(aLine.Totals.TokensOut))</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProjectMetricsLine" TValue="string" Property="@(aLine => Figure(aLine, MetricsFormat.Sum(aLine.Totals.CacheRead)))" Header="Cache read / write" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="aLine">
+                                    <div data-testid="@($"across-{MetricsFormat.Slug(aLine.ProjectName)}-cache-read")">@Figure(aLine, MetricsFormat.Sum(aLine.Totals.CacheRead))</div>
+                                    <div class="text-xs text-muted-foreground" data-testid="@($"across-{MetricsFormat.Slug(aLine.ProjectName)}-cache-write")">@Figure(aLine, MetricsFormat.Sum(aLine.Totals.CacheWrite))</div>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProjectMetricsLine" TValue="string" Property="@(aLine => Figure(aLine, MetricsFormat.Usd(aLine.Totals.Cost)))" Header="Measured USD" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="aLine">
+                                    <span data-testid="@($"across-{MetricsFormat.Slug(aLine.ProjectName)}-usd")">@Figure(aLine, MetricsFormat.Usd(aLine.Totals.Cost))</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProjectMetricsLine" TValue="string" Property="@(aLine => Figure(aLine, MetricsFormat.Wall(aLine.Totals.WallClockS)))" Header="Wall clock" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                                <CellTemplate Context="aLine">
+                                    <span data-testid="@($"across-{MetricsFormat.Slug(aLine.ProjectName)}-wall")">@Figure(aLine, MetricsFormat.Wall(aLine.Totals.WallClockS))</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                            <DataTableColumn TData="ProjectMetricsLine" TValue="string" Property="@(aLine => Figure(aLine, aLine.Misses.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)))" Header="Misses" Align="DataTableColumnAlign.End">
+                                <CellTemplate Context="aLine">
+                                    <span data-testid="@($"across-{MetricsFormat.Slug(aLine.ProjectName)}-misses")">@Figure(aLine, aLine.Misses.ToString("N0", System.Globalization.CultureInfo.InvariantCulture))</span>
+                                </CellTemplate>
+                            </DataTableColumn>
+                        </Columns>
+                    </DataTable>
+                }
+            </CardContent>
+        </Card>
+    }
+</div>

@@ -42,20 +42,20 @@ public sealed class ProjectOpenActions : IProjectOpenActions
     {
         var vPath = CleanPath(aPath);
         string? vSolution = null;
-        if (File.Exists(vPath) && string.Equals(Path.GetExtension(vPath), ".sln", StringComparison.OrdinalIgnoreCase))
+        if (File.Exists(vPath) && IsSolutionFile(vPath))
         {
             vSolution = vPath;
         }
         else if (Directory.Exists(vPath))
         {
-            vSolution = Directory.GetFiles(vPath, "*.sln").OrderBy(f => f, StringComparer.OrdinalIgnoreCase).FirstOrDefault();
+            vSolution = SolutionsIn(vPath).FirstOrDefault();
         }
 
         if (vSolution is null)
         {
             throw new InvalidOperationException(Directory.Exists(vPath)
-                ? "That folder holds no solution (.sln) file."
-                : "Nothing was found at that path. Give the path of a .sln file, or of the folder that holds one.");
+                ? "That folder holds no solution (.sln or .slnx) file."
+                : "Nothing was found at that path. Give the path of a .sln or .slnx file, or of the folder that holds one.");
         }
 
         return await RegisterAndSelectAsync(Path.GetFileNameWithoutExtension(vSolution), vSolution, "Solution", aCt).ConfigureAwait(false);
@@ -97,7 +97,7 @@ public sealed class ProjectOpenActions : IProjectOpenActions
             string[] vSolutions;
             try
             {
-                vSolutions = Directory.GetFiles(vFolder.FullName, "*.sln");
+                vSolutions = SolutionsIn(vFolder.FullName).ToArray();
             }
             catch (Exception aException) when (aException is UnauthorizedAccessException or IOException)
             {
@@ -106,7 +106,7 @@ public sealed class ProjectOpenActions : IProjectOpenActions
 
             if (vSolutions.Length > 0)
             {
-                vSolution = vSolutions.OrderBy(f => f, StringComparer.OrdinalIgnoreCase).First();
+                vSolution = vSolutions[0];
                 break;
             }
 
@@ -212,6 +212,16 @@ public sealed class ProjectOpenActions : IProjectOpenActions
 
         objAppState.SetSelectedProject(null);
     }
+
+    /// <summary>Whether a file is a solution: a <c>.sln</c>, or the newer XML <c>.slnx</c> (BRD-221).</summary>
+    /// <param name="aPath">The file's path.</param>
+    public static bool IsSolutionFile(string aPath) =>
+        string.Equals(Path.GetExtension(aPath), ".sln", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(Path.GetExtension(aPath), ".slnx", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The solution files directly in a folder, in name order.</summary>
+    private static IEnumerable<string> SolutionsIn(string aFolder) =>
+        Directory.EnumerateFiles(aFolder).Where(IsSolutionFile).OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>The repository's folder name: the last part of the address without <c>.git</c>.</summary>
     /// <param name="aAddress">The address as the owner gave it.</param>

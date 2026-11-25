@@ -4,7 +4,7 @@
 |---|---|
 | App | Chatur |
 | Kind | app |
-| Size | Small |
+| Size | Medium |
 | Phase | 4 of 4 |
 
 ## Screens
@@ -116,6 +116,52 @@ Each of these opens as a tab in the one window, with the conversation still pinn
 **Dialogs opened here:** Make a token — shown once and never again
 
 **States:** empty: no token yet — the example panel says to make one to see a call that works · loading: a switch shows a half state while App Manager is told, and goes back if it refuses · error: App Manager unreachable — a row saying the actions are still served but their state has not reached App Manager, with the switches left alone
+
+### Screen: Measurements (`/measurements`)
+
+**Mockup:** [mockups/measurements.html](mockups/measurements.html) · **Roles:** Owner, Licensed developer · **BRD:** BRD-253 to BRD-258, BRD-260, BRD-261
+
+Opened from Project ▸ Measurements, in the secondary window. Every figure comes from the open project's `docs/metrics` files; no network call. The words are TfLens's.
+
+| Region | Control | Shows or binds |
+|---|---|---|
+| `metrics-heading` | text + Button ×2 | "Measurements", the project's name and its docs/metrics folder; Save as zip; Count again |
+| `metrics-period` | Select + DatePicker ×2 | All history, Today, Last 7 days, Last 30 days, Between two dates (two dates appear only then) |
+| `metrics-tiles` | Card ×7 | Runs recorded, Tokens in, Tokens out, Cache read, Cache write, Measured USD (or "no price"), Total wall clock; unmeasured reads "not measured" |
+| `metrics-split` | Tabs + DataTable | By model, By agent, By command, each line with the tiles' figures |
+| `metrics-misses` | Card + DataTable | Misses, Found by (raw value with a plain gloss: gate — a check, agent-review — a reviewing agent, owner — you, production — in use after release), the rows, First-pass rate; every miss with REQ, Class, Severity, Found by, Status |
+| `metrics-estimate` | EstimateActualTable | the phase's estimate beside its actual, the shared table |
+| `metrics-runs` | DataTable | one line per run: When, Command phase, Agent, Model, Tokens in, Tokens out, Wall clock, Result, Rows; opens its detail |
+| `run-detail` | Sheet | command, mode, model, the four token kinds, Measured USD, wall clock, result, rows touched, the raw record |
+| `metrics-offline-note` | Panel | read from docs/metrics; nothing is sent |
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| Period | select | yes | All history to begin with |
+| From, To | date | for Between | To on or after From; else the figures stay as they were and the fields say why |
+| Save to | folder | for Save as zip | the project's folder to begin with; an unwritable folder says so |
+
+**Dialogs opened here:** Save as zip — the folder, then Save; the zip's path is shown after
+
+**States:** empty: no docs/metrics or no run in the period — "not measured" or 0 runs, and one line says which · loading: dashes · error: a line that is not JSON is counted as unreadable in the note
+
+### Screen: Measurements across projects (`/measurements/all`)
+
+**Mockup:** [mockups/measurements-all.html](mockups/measurements-all.html) · **Roles:** Owner, Licensed developer · **BRD:** BRD-259
+
+| Region | Control | Shows or binds |
+|---|---|---|
+| `across-period` | Select + DatePicker ×2 | the same periods as Measurements; Last 7 days to begin with |
+| `across-tiles` | Card ×5 | Projects, Runs recorded, Tokens out, Measured USD, Misses, for every project together |
+| `across-table` | DataTable | one line per project: Project, Runs, Tokens in, Tokens out, Cache read, Cache write, Measured USD, Wall clock, Misses, and Open (its Measurements); a project with no docs/metrics reads "not measured" |
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| Period | select | yes | Last 7 days to begin with |
+
+**Dialogs opened here:** none
+
+**States:** empty: no projects — one line saying so · loading: the tiles read as dashes · error: a project whose folder cannot be read is greyed and says so rather than dropped
 
 ## Where the rest lives
 

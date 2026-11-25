@@ -38,6 +38,14 @@ public sealed class HarnessProcessLauncher : IProcessLauncher
     }
 
     /// <inheritdoc />
+    public Task OpenBrowserAsync(string aUrl, CancellationToken aCt = default)
+    {
+        // The harness has no screen of its own: the Output line Chatur writes names the address, and a test reads it.
+        objLogger.LogInformation("Would open {Url} in the browser.", aUrl);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
     public async Task<int> RunAsync(
         string aCommand,
         string aArguments,

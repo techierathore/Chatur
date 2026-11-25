@@ -12,8 +12,8 @@ namespace Chatur.Tests.Guards;
 /// </summary>
 public sealed class DocumentRightsTests : IDisposable
 {
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-{Guid.NewGuid():N}.db");
-    private readonly string objProjectPath = Path.Combine(Path.GetTempPath(), $"chatur-docs-{Guid.NewGuid():N}");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-{Guid.NewGuid():N}.db");
+    private readonly string objProjectPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-docs-{Guid.NewGuid():N}");
     private readonly string objConnectionString;
 
     /// <summary>Migrates a fresh database and lays out a project folder with docs/ and src/.</summary>

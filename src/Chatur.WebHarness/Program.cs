@@ -67,6 +67,40 @@ try
     vBuilder.Services.AddScoped<ISecondaryWindow, HarnessSecondaryWindow>();
     vBuilder.Services.AddScoped<IAppShell, HarnessAppShell>();
 
+    // The test licence: when tests/verify/test-settings.json has an enabled testLicence block, the licence is held
+    // in memory here and never asked of the shared App Manager account. Without the block the real App Manager
+    // source stays in place, exactly as in the app.
+    var vTestLicence = HarnessTestLicence.Load(vBuilder.Configuration, new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() });
+    if (vTestLicence is not null)
+    {
+        vBuilder.Services.AddSingleton(aProvider => new Chatur.Core.Licences.InMemoryLicenceSource(vTestLicence, aProvider.GetRequiredService<IClock>()));
+        vBuilder.Services.AddScoped<Chatur.Core.Licences.ILicenceSource>(aProvider => aProvider.GetRequiredService<Chatur.Core.Licences.InMemoryLicenceSource>());
+    }
+
+    // Feedback and issues (REQ-UI-062..063, REQ-FN-073..074): this test-only host can swap App Manager for an in-memory
+    // double, switched on by Feedback:Source in its own appsettings.json — never by an environment variable. The
+    // real app has no such key and keeps App Manager.
+    var vFeedbackDouble = string.Equals(vBuilder.Configuration["Feedback:Source"], "TestDouble", StringComparison.OrdinalIgnoreCase)
+        ? new FeedbackTestDouble()
+        : null;
+    if (vFeedbackDouble is not null)
+    {
+        vBuilder.Services.AddSingleton(vFeedbackDouble);
+        vBuilder.Services.AddSingleton<Chatur.Core.Feedback.IFeedbackSource>(vFeedbackDouble);
+    }
+
+    // Roles sync (REQ-FN-078): this test-only host can stand a file in for App Manager's store, named by
+    // RoleSync:StoreFile in its own appsettings.json (relative to the harness data folder) — never by an
+    // environment variable. The real app has no such key and keeps the store that says App Manager has none yet.
+    var vRoleSyncFile = vBuilder.Configuration["RoleSync:StoreFile"];
+    HarnessRoleSyncStore? vRoleSyncStore = null;
+    if (!string.IsNullOrWhiteSpace(vRoleSyncFile))
+    {
+        vRoleSyncStore = new HarnessRoleSyncStore(Path.Combine(new HarnessAppPaths().AppDataFolder, vRoleSyncFile));
+        vBuilder.Services.AddSingleton(vRoleSyncStore);
+        vBuilder.Services.AddSingleton<IRoleSyncStore>(vRoleSyncStore);
+    }
+
     vBuilder.Services.AddHealthChecks();
 
     var vApp = vBuilder.Build();
@@ -98,6 +132,7 @@ try
     AttachAccountSeeding(vApp.Services, vPaths, vOwnerEmail, vTestProvider, vTestProviderReason);
 
     vApp.MapHealthChecks("/healthz");
+    vApp.MapIntegrationEndpoints();
 
     if (vApp.Environment.IsDevelopment())
     {
@@ -120,6 +155,57 @@ try
                 new Dictionary<string, string?> { ["kind"] = "run", ["not_in_the_schema"] = "x" }).ConfigureAwait(false);
             return Results.Ok(vProject.Name);
         });
+    }
+
+    if (vApp.Environment.IsDevelopment() && vFeedbackDouble is not null)
+    {
+        // Test only (REQ-FN-074, REQ-UI-063): the pretend App Manager's network, its answers and what it holds.
+        vApp.MapPost("/test/feedback/network", (bool down) =>
+        {
+            vFeedbackDouble.NetworkDown = down;
+            return Results.Ok(down);
+        });
+        vApp.MapPost("/test/feedback/answer", (string title, string answer, bool finished) =>
+            vFeedbackDouble.Answer(title, answer, finished) ? Results.Ok() : Results.NotFound());
+        vApp.MapGet("/test/feedback/issues", () => Results.Ok(vFeedbackDouble.Issues()));
+        vApp.MapPost("/test/feedback/reset", () =>
+        {
+            vFeedbackDouble.Reset();
+            return Results.Ok();
+        });
+    }
+
+    if (vApp.Environment.IsDevelopment() && vRoleSyncStore is not null)
+    {
+        // Test only (REQ-FN-078): the pretend App Manager's store, and a second machine under the same account.
+        vApp.MapGet("/test/role-sync", () => Results.Ok(vRoleSyncStore.Snapshot()));
+        vApp.MapPost("/test/role-sync/peer", (string? addRule, string? removeRule) =>
+            vRoleSyncStore.PeerChange("TR-WIN-DESK", addRule, removeRule) ? Results.Ok() : Results.Conflict("Nothing has synced yet."));
+        vApp.MapDelete("/test/role-sync", () =>
+        {
+            vRoleSyncStore.Clear();
+            return Results.Ok();
+        });
+    }
+
+    if (vApp.Environment.IsDevelopment() && vTestLicence is not null)
+    {
+        // Test only, Development only, and only with a test licence (REQ-UI-066): puts the test licence back as
+        // configured, and says whether a machine could still sign in, so a browser check can see that a forgotten
+        // machine's sign-in no longer works. The MAUI head has no such route.
+        vApp.MapPost("/test/licence/reset", (Chatur.Core.Licences.InMemoryLicenceSource aSource, AppState aState) =>
+        {
+            aSource.Reset();
+            // The shared state held the switches the test left; it is put back with the licence.
+            if (aState.CurrentUser is { } vUser)
+            {
+                aState.SetOffFeatures(vUser.UserId, vTestLicence.FeaturesOff);
+            }
+
+            return Results.Ok();
+        });
+        vApp.MapGet("/test/licence/sign-in/{aDeviceId}", (string aDeviceId, Chatur.Core.Licences.InMemoryLicenceSource aSource) =>
+            aSource.CanSignIn(aDeviceId) ? Results.Ok() : Results.Unauthorized());
     }
 
     if (!vApp.Environment.IsDevelopment())

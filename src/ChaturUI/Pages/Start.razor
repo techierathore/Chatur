@@ -10,15 +10,33 @@
 @if (IsEmptyStart)
 {
     @* BRD-14, BRD-210: an account that has opened nothing gets an empty start — no project, no file, no
-       chat — with exactly three plainly labelled ways on (mockups/start-empty.html). *@
+       chat — with four plainly labelled ways on, New project first (mockups/start-empty.html). *@
     <div class="flex flex-1 justify-center overflow-auto p-6" data-testid="empty-start-side">
         <div class="mt-12 flex w-full max-w-md flex-col gap-3" data-testid="empty-start">
             <div>
                 <h1 class="text-lg font-semibold outline-none" tabindex="-1" data-testid="empty-start-title">Nothing is open yet</h1>
                 <p class="text-sm text-muted-foreground">Choose what to work on. Chatur opens it and you are straight into the work.</p>
             </div>
+            @if (objReopenProblem is not null)
+            {
+                @* BRD-218: the last project could not open; one plain line, never a crash. *@
+                <p class="flex items-start gap-2 text-sm text-destructive" role="status" data-testid="reopen-failed">
+                    <LucideIcon Name="triangle-alert" Size="16" Class="mt-0.5 flex-none" />
+                    <span>@objReopenProblem</span>
+                </p>
+            }
+            @* BRD-14, BRD-247 (22 Nov 2026): New project first, so a person starting from nothing can make one. *@
+            <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.NewProject))" data-testid="way-new-project">
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="plus">
+                    <LucideIcon Name="plus" Size="18" />
+                </span>
+                <span class="flex flex-col items-start">
+                    <span class="font-medium">New project</span>
+                    <span class="text-xs text-muted-foreground">A solution and its first project, from a template</span>
+                </span>
+            </Button>
             <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="way-open-folder">
-                <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="folder">
                     <LucideIcon Name="folder" Size="18" />
                 </span>
                 <span class="flex flex-col items-start">
@@ -27,8 +45,8 @@
                 </span>
             </Button>
             <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Solution))" data-testid="way-open-solution">
-                <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
-                    <LucideIcon Name="folder-open" Size="18" />
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="layers">
+                    <LucideIcon Name="layers" Size="18" />
                 </span>
                 <span class="flex flex-col items-start">
                     <span class="font-medium">Open a solution</span>
@@ -36,7 +54,7 @@
                 </span>
             </Button>
             <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.File))" data-testid="way-open-file">
-                <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="file">
                     <LucideIcon Name="file" Size="18" />
                 </span>
                 <span class="flex flex-col items-start">
@@ -54,10 +72,10 @@
 }
 else
 {
-<div class="flex flex-none flex-col gap-4 p-6 sm:min-h-0 sm:min-w-0 sm:flex-1" data-testid="recent-side">
+<div class="flex flex-none flex-col gap-4 p-6 sm:min-h-0 sm:min-w-0 sm:flex-1" @onkeydown="OnKeyDown" data-testid="recent-side">
     <div class="flex flex-wrap items-center gap-3">
         <div class="min-w-40 flex-1">
-            <h1 class="text-base font-semibold outline-none" tabindex="-1">Open recent</h1>
+            <h1 class="text-base font-semibold outline-none" tabindex="-1" @ref="objHeading">Open recent</h1>
             <p class="text-sm text-muted-foreground" data-testid="recent-subtitle">
                 @(objFolders.Count == 0
                     ? "No folders have been named yet."
@@ -73,7 +91,23 @@ else
             <LucideIcon Name="settings" Size="14" />
             Project folders
         </Button>
+        @if (objCanGoBack)
+        {
+            @* BRD-220: opened from the project switcher, the list closes back to the Workbench; Escape does the same. *@
+            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" OnClick="GoBack" AriaLabel="Close the project list" title="Back to the project you had open (Esc)" data-testid="start-close">
+                <LucideIcon Name="x" Size="16" />
+            </Button>
+        }
     </div>
+
+    @if (objReopenProblem is not null)
+    {
+        @* BRD-218: the last project could not open; one plain line, never a crash. *@
+        <p class="flex items-start gap-2 text-sm text-destructive" role="status" data-testid="reopen-failed">
+            <LucideIcon Name="triangle-alert" Size="16" Class="mt-0.5 flex-none" />
+            <span>@objReopenProblem</span>
+        </p>
+    }
 
     @if (objSearchOpen)
     {
@@ -152,14 +186,14 @@ else
     </div>
 </div>
 
-<div class="flex w-full flex-none flex-col gap-3 overflow-auto border-l bg-card p-6 sm:w-96" data-testid="get-started">
+<div class="flex w-full flex-none flex-col gap-3 overflow-auto border-l bg-card p-6 sm:w-96" @onkeydown="OnKeyDown" data-testid="get-started">
     <div>
         <h2 class="text-base font-semibold">Get started</h2>
         <p class="text-sm text-muted-foreground">Open something that exists, or make something new.</p>
     </div>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Clone))" data-testid="clone-repo">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
-            <LucideIcon Name="github" Size="18" />
+        <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="git-branch">
+            <LucideIcon Name="git-branch" Size="18" />
         </span>
         <span class="flex flex-col items-start">
             <span class="font-medium">Clone a repository</span>
@@ -167,8 +201,8 @@ else
         </span>
     </Button>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Solution))" data-testid="open-solution">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
-            <LucideIcon Name="folder-open" Size="18" />
+        <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="layers">
+            <LucideIcon Name="layers" Size="18" />
         </span>
         <span class="flex flex-col items-start">
             <span class="font-medium">Open a solution</span>
@@ -176,7 +210,7 @@ else
         </span>
     </Button>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.Folder))" data-testid="open-folder">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+        <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="folder">
             <LucideIcon Name="folder" Size="18" />
         </span>
         <span class="flex flex-col items-start">
@@ -185,7 +219,7 @@ else
         </span>
     </Button>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.File))" data-testid="open-file">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+        <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="file">
             <LucideIcon Name="file" Size="18" />
         </span>
         <span class="flex flex-col items-start">
@@ -194,7 +228,7 @@ else
         </span>
     </Button>
     <Button Variant="ButtonVariant.Outline" Class="h-auto justify-start gap-3 p-3" OnClick="@(() => OpenProjectDialog(ProjectOpenMode.NewProject))" data-testid="new-project">
-        <span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-accent text-accent-foreground">
+        <span class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" data-icon="plus">
             <LucideIcon Name="plus" Size="18" />
         </span>
         <span class="flex flex-col items-start">

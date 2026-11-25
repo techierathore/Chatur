@@ -1,3 +1,4 @@
+using Chatur.Core;
 using Chatur.Core.Actions;
 using Chatur.Core.Platform;
 using Microsoft.AspNetCore.Components;
@@ -31,11 +32,19 @@ public enum ProjectOpenMode
 public partial class OpenProjectDialog
 {
     private string objPath = string.Empty;
-    private string objName = string.Empty;
     private string objAddress = string.Empty;
     private string? objErrorMessage;
     private bool objIsBusy;
     private bool objWasOpen;
+
+    /// <summary>Whether this opening is New project inside the solution open on the Workbench (BRD-244, REQ-UI-112).</summary>
+    private bool objInSolution;
+
+    /// <summary>The folder open on the Workbench when New project is chosen, its suggested location when empty (BRD-247).</summary>
+    private string? objOpenFolder;
+
+    [Inject]
+    private AppState AppStateService { get; set; } = default!;
 
     [Inject]
     private IProjectOpenActions Opener { get; set; } = default!;
@@ -63,7 +72,6 @@ public partial class OpenProjectDialog
 
     private string Title => Mode switch
     {
-        ProjectOpenMode.NewProject => "New project",
         ProjectOpenMode.Solution => "Open a solution",
         ProjectOpenMode.Folder => "Open a folder",
         ProjectOpenMode.File => "Open a file",
@@ -72,8 +80,7 @@ public partial class OpenProjectDialog
 
     private string Description => Mode switch
     {
-        ProjectOpenMode.NewProject => "Makes a folder with a new, empty solution in it, and opens it.",
-        ProjectOpenMode.Solution => "A .sln file, or the folder that holds one. Its projects are read.",
+        ProjectOpenMode.Solution => "A .sln or .slnx file, or the folder that holds one. Its projects are read.",
         ProjectOpenMode.Folder => "Anything on disk, project or not.",
         ProjectOpenMode.File => "Any file. The folder that holds it opens, with the file open in a tab.",
         _ => "Copies a repository from GitHub, or any address you paste, and opens it."
@@ -81,7 +88,6 @@ public partial class OpenProjectDialog
 
     private string PathLabel => Mode switch
     {
-        ProjectOpenMode.NewProject => "Make it in this folder",
         ProjectOpenMode.Solution => "The solution file or its folder",
         ProjectOpenMode.Folder => "The folder",
         ProjectOpenMode.File => "The file",
@@ -90,21 +96,19 @@ public partial class OpenProjectDialog
 
     private string PathPlaceholder => Mode switch
     {
-        ProjectOpenMode.Solution => "The full path of a .sln file or its folder",
+        ProjectOpenMode.Solution => "The full path of a .sln or .slnx file, or its folder",
         ProjectOpenMode.File => "The file's full path",
         _ => "The folder's full path"
     };
 
     private string ActionLabel => Mode switch
     {
-        ProjectOpenMode.NewProject => "Create project",
         ProjectOpenMode.Clone => "Clone",
         _ => "Open"
     };
 
     private bool CanSubmit =>
         !string.IsNullOrWhiteSpace(objPath)
-        && (Mode != ProjectOpenMode.NewProject || !string.IsNullOrWhiteSpace(objName))
         && (Mode != ProjectOpenMode.Clone || !string.IsNullOrWhiteSpace(objAddress));
 
     /// <inheritdoc />
@@ -113,20 +117,39 @@ public partial class OpenProjectDialog
         if (Open && !objWasOpen)
         {
             objPath = string.Empty;
-            objName = string.Empty;
             objAddress = string.Empty;
             objErrorMessage = null;
+            var vOnWorkbench = IsOnWorkbench();
+            objInSolution = Mode == ProjectOpenMode.NewProject
+                && AppStateService.SelectedProject is { Kind: "Solution" }
+                && vOnWorkbench;
+            objOpenFolder = vOnWorkbench && AppStateService.SelectedProject is { Kind: "Folder" } vFolder ? vFolder.Path : null;
         }
 
         objWasOpen = Open;
     }
 
-    /// <summary>Opens the machine's own folder picker and fills the path with what it returns.</summary>
+    /// <summary>Whether the window is showing the Workbench (the root page), not Start or another page.</summary>
+    private bool IsOnWorkbench()
+    {
+        var vRelative = Nav.ToBaseRelativePath(Nav.Uri);
+        var vEnd = vRelative.IndexOfAny(['?', '#']);
+        return (vEnd < 0 ? vRelative : vRelative[..vEnd]).Length == 0;
+    }
+
+    /// <summary>The files Open a solution's Browse shows (BRD-221).</summary>
+    private static readonly string[] SolutionExtensions = [".sln", ".slnx"];
+
+    /// <summary>Opens the machine's own file or folder picker, as the way in needs, and fills the path with what it returns.</summary>
     private async Task BrowseAsync()
     {
-        var vPicked = Mode == ProjectOpenMode.File
-            ? await Picker.PickFileAsync(Title)
-            : await Picker.PickFolderAsync(Title);
+        // BRD-221: Open a solution browses for a solution file, not a folder; Open a file for any file.
+        var vPicked = Mode switch
+        {
+            ProjectOpenMode.Solution => await Picker.PickFileAsync(Title, SolutionExtensions),
+            ProjectOpenMode.File => await Picker.PickFileAsync(Title),
+            _ => await Picker.PickFolderAsync(Title)
+        };
         if (vPicked is not null)
         {
             objPath = vPicked;
@@ -143,9 +166,6 @@ public partial class OpenProjectDialog
             string? vFileToOpen = null;
             switch (Mode)
             {
-                case ProjectOpenMode.NewProject:
-                    await Opener.CreateSolutionAsync(objPath, objName);
-                    break;
                 case ProjectOpenMode.Solution:
                     await Opener.OpenSolutionAsync(objPath);
                     break;

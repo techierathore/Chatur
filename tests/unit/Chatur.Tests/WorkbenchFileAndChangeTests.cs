@@ -16,7 +16,7 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class WorkbenchFileAndChangeTests : MigratedDatabaseFixture
 {
-    private readonly string objProjectPath = Path.Combine(Path.GetTempPath(), $"chatur-tests-wb-{Guid.NewGuid():N}");
+    private readonly string objProjectPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-wb-{Guid.NewGuid():N}");
     private readonly FakeLauncher objLauncher = new();
     private readonly int objProjectId;
 

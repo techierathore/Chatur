@@ -13,8 +13,8 @@ namespace Chatur.Tests;
 /// </summary>
 public sealed class SourceControlChangesTests : IDisposable
 {
-    private readonly string objRepositoryPath = Path.Combine(Path.GetTempPath(), $"chatur-tests-changes-{Guid.NewGuid():N}");
-    private readonly string objDatabasePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-changes-{Guid.NewGuid():N}.db");
+    private readonly string objRepositoryPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-changes-{Guid.NewGuid():N}");
+    private readonly string objDatabasePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-changes-{Guid.NewGuid():N}.db");
     private readonly SourceControlActions objActions;
     private readonly int objProjectId;
 
@@ -177,8 +177,8 @@ public sealed class SourceControlChangesTests : IDisposable
     [Fact]
     public async Task PushAndPullUpdateHowFarAheadOrBehindTheBranchIs()
     {
-        var vRemotePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-remote-{Guid.NewGuid():N}.git");
-        RunGit(Path.GetTempPath(), "init", "--bare", "-b", "main", vRemotePath);
+        var vRemotePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-remote-{Guid.NewGuid():N}.git");
+        RunGit(Chatur.Tests.Support.TestScratch.Root, "init", "--bare", "-b", "main", vRemotePath);
         RunGit(objRepositoryPath, "remote", "add", "origin", vRemotePath);
         RunGit(objRepositoryPath, "push", "--set-upstream", "origin", "main");
 
@@ -194,8 +194,8 @@ public sealed class SourceControlChangesTests : IDisposable
         Assert.Equal(0, vAfterPush.Behind);
 
         // Someone else pushes to the same remote from a second clone.
-        var vOtherClonePath = Path.Combine(Path.GetTempPath(), $"chatur-tests-clone-{Guid.NewGuid():N}");
-        RunGit(Path.GetTempPath(), "clone", vRemotePath, vOtherClonePath);
+        var vOtherClonePath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-tests-clone-{Guid.NewGuid():N}");
+        RunGit(Chatur.Tests.Support.TestScratch.Root, "clone", vRemotePath, vOtherClonePath);
         RunGit(vOtherClonePath, "config", "user.email", "chatur-tests@techierathore.com");
         RunGit(vOtherClonePath, "config", "user.name", "Chatur Tests");
         File.WriteAllText(Path.Combine(vOtherClonePath, "from-elsewhere.txt"), "written on another machine\n");

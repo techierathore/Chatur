@@ -208,6 +208,8 @@
                 <span class="text-xs text-muted-foreground" data-testid="auto-routing-state">@(objAutoRouting ? "on" : "off")</span>
             </div>
             <p class="text-sm text-muted-foreground" data-testid="auto-routing-line-1">A small model inside TechieRag reads the request and chooses the tier, so a one-line question never reaches Claude Opus 5.</p>
+            @* REQ-UI-113: in plain words, what AutoRouter does (the candidates, the small model, the guidance, the owner's pick, the fallback). *@
+            <p class="text-xs leading-5" data-testid="auto-routing-explain">With Automatic on, the smallest connected model reads each message first and hands it to the cheapest model that can do it well; a model you pick yourself always wins, and if the small model cannot answer, the tier lists above decide. For example, “What does this file do?” goes to a small model, and “Rewrite the importer and add tests” to the strongest. Each reply says which model answered and why.</p>
             <p class="text-sm text-muted-foreground" data-testid="auto-routing-line-2">Turning it off restores these tiers exactly as they are above — nothing here is lost while it is on.</p>
         </CardContent>
     </Card>

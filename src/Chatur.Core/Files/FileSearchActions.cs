@@ -33,7 +33,7 @@ public sealed class FileSearchActions : IFileSearchActions
     public async Task<IReadOnlyList<FileSearchHit>> FindFilesAsync(int aProjectId, string aName, int aMax = 50, CancellationToken aCt = default)
     {
         var vName = (aName ?? string.Empty).Trim();
-        var vAll = Flatten(await objFiles.TreeAsync(aProjectId, aCt).ConfigureAwait(false)).ToList();
+        var vAll = Flatten(await objFiles.WholeTreeAsync(aProjectId, aCt).ConfigureAwait(false)).ToList();
 
         // A name that starts the file's name first, then one inside it, then one only in its folder path.
         var vMatches = vName.Length == 0
@@ -58,7 +58,7 @@ public sealed class FileSearchActions : IFileSearchActions
             return vHits;
         }
 
-        var vFiles = Flatten(await objFiles.TreeAsync(aProjectId, aCt).ConfigureAwait(false))
+        var vFiles = Flatten(await objFiles.WholeTreeAsync(aProjectId, aCt).ConfigureAwait(false))
             .Where(aFile => !BinaryExtensions.Contains(Path.GetExtension(aFile.Name)))
             .Take(MaxFilesRead);
 

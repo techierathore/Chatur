@@ -102,4 +102,25 @@ public interface ISourceControlActions
     /// <param name="aMessage">The check-in message, carrying the requirement ids.</param>
     /// <param name="aCt">A token that cancels the check-in.</param>
     Task RunBranchCheckInAsync(int aProjectId, string aBranchName, IReadOnlyList<string> aFilePaths, string aMessage, CancellationToken aCt = default);
+
+    /// <summary>The checked-out branch with every local and remote branch, for the picker at the foot of Files (BRD-222).</summary>
+    /// <param name="aProjectId">The project whose repository is read.</param>
+    /// <param name="aCt">A token that cancels the read.</param>
+    Task<BranchList> BranchListAsync(int aProjectId, CancellationToken aCt = default);
+
+    /// <summary>Whether the working copy has changes not checked in, asked before a branch switch (BRD-223).</summary>
+    /// <param name="aProjectId">The project whose repository is read.</param>
+    /// <param name="aCt">A token that cancels the read.</param>
+    async Task<bool> HasUncommittedChangesAsync(int aProjectId, CancellationToken aCt = default) =>
+        (await ChangesAsync(aProjectId, aCt).ConfigureAwait(false)).Count > 0;
+
+    /// <summary>
+    /// Switches to a local branch, or to a remote one (making the local branch that tracks it), doing what
+    /// the person chose with uncommitted changes (BRD-222, BRD-223).
+    /// </summary>
+    /// <param name="aProjectId">The project whose repository switches.</param>
+    /// <param name="aBranchName">A local branch name, or a remote one such as <c>origin/feature</c>.</param>
+    /// <param name="aChanges">Bring uncommitted changes along, or put them aside first.</param>
+    /// <param name="aCt">A token that cancels the switch.</param>
+    Task SwitchBranchAsync(int aProjectId, string aBranchName, BranchSwitchChanges aChanges, CancellationToken aCt = default);
 }

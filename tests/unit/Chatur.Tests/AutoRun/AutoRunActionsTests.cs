@@ -23,7 +23,7 @@ public sealed class AutoRunActionsTests : MigratedDatabaseFixture
         + "| REQ-FN-004 | Four | Verified | 100% | — | [view](#d-req-fn-004) |\n\n"
         + "## Page: P (`/p`)\n";
 
-    private readonly string objFolder = Path.Combine(Path.GetTempPath(), $"chatur-auto-{Guid.NewGuid():N}");
+    private readonly string objFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-auto-{Guid.NewGuid():N}");
 
     /// <summary>Creates the project folder with a checklist that has open requirements.</summary>
     public AutoRunActionsTests()

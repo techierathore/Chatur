@@ -33,14 +33,21 @@ case "$DB" in
   *) echo "refusing to write to $DB: the seed only writes under tests/.artifacts/"; exit 1 ;;
 esac
 
-python3 - "$DB" "$ROOT" <<'PY'
+python3 - "$DB" "$ROOT" "$(dirname "${BASH_SOURCE[0]}")" <<'PY'
 import datetime, os, sqlite3, sys
+sys.path.insert(0, sys.argv[3])
 db, root = sys.argv[1], sys.argv[2]
 c = sqlite3.connect(db, timeout=20)
 row = c.execute("SELECT p.ProjectId, p.Path FROM Setting s JOIN Project p ON p.ProjectId = CAST(s.Value AS INTEGER) "
                 "WHERE s.Key = 'SelectedProjectId'").fetchone()
 if row is None or not row[1] or not os.path.isdir(row[1]):
-    print("the app has no project open"); sys.exit(1)
+    # Nothing open (the Workbench's menu walk ends on File > Close folder, 20 Nov 2026): open the screens' shared
+    # seed project, as the other seeds do, rather than failing.
+    import _seedlib
+    _seedlib.open_project(c, root)
+    c.commit()
+    row = c.execute("SELECT p.ProjectId, p.Path FROM Setting s JOIN Project p ON p.ProjectId = CAST(s.Value AS INTEGER) "
+                    "WHERE s.Key = 'SelectedProjectId'").fetchone()
 project_id, path = row
 real = os.path.realpath(path)
 if not (real + "/").startswith(os.path.realpath(os.path.join(root, "tests", ".artifacts")) + "/"):

@@ -7,7 +7,7 @@
 //    create the state (a Correction row, a RefusedWrite row). Every verdict is read back through the UI.
 //  - Shared state other writers also use (the selected project, the Appearance settings) is put back at the end.
 import { test, expect, Page, Locator } from '@playwright/test';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import * as path from 'path';
 import { signIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
@@ -623,19 +623,26 @@ let driven: Promise<void> | null = null;
 function driveMetricsApp(aPage: Page): Promise<void> {
   driven ??= (async () => {
     freshProject('MetricsApp');
+    // A measured project: it has docs/metrics. A chat turn is recorded only there (BRD-74 as changed 23 Nov 2026).
+    mkdirSync(metricsDir('MetricsApp'), { recursive: true });
     await startProject(aPage, 'MetricsApp');
     await sendOneMessage(aPage, 'Hello, what is in this project?');
   })();
   return driven;
 }
 
-test('REQ-FN-040 an agent session run in a project leaves runs, gates, misses, sessions and commits files in its docs/metrics folder', async ({ page }) => {
+test('REQ-FN-040 an agent session in a measured project is recorded in its docs/metrics folder, with no empty file made, and a folder only opened gets no file', async ({ page }) => {
   await driveMetricsApp(page);
-  expect(existsSync(metricsDir('MetricsApp')), 'docs/metrics exists in the project').toBe(true);
-  for (const vStream of STREAMS) {
-    expect(existsSync(`${metricsDir('MetricsApp')}/${vStream}.jsonl`), `${vStream}.jsonl exists`).toBe(true);
-  }
   expect(lines(`${metricsDir('MetricsApp')}/sessions.jsonl`).length, 'the turn was recorded as a session record').toBeGreaterThan(0);
+  // Only the stream that was written exists: Chatur makes no empty file (owner's test of 23 Nov 2026).
+  expect(readdirSync(metricsDir('MetricsApp')).sort(), 'the files in docs/metrics').toEqual(['sessions.jsonl']);
+
+  // The owner's case: a folder that was only opened and chatted in holds exactly what it held before.
+  freshProject('OpenedOnlyApp');
+  await startProject(page, 'OpenedOnlyApp');
+  await sendOneMessage(page, 'Hello, what is in this folder?');
+  expect(readdirSync(`${ROOT}/OpenedOnlyApp`).sort(), 'the folder after a chat turn').toEqual(['readme.txt']);
+  await startProject(page, 'MetricsApp');
 });
 
 test('REQ-FN-041 a record Chatur writes names the tool chatur', async ({ page }) => {

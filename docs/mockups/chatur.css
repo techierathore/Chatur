@@ -156,7 +156,9 @@ svg{width:15px;height:15px;flex:none}
 .startright{width:400px;flex:none;border-left:1px solid var(--line);background:var(--card);padding:26px 26px;display:flex;flex-direction:column;gap:10px;overflow:auto}
 .bigaction{display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid var(--line);border-radius:var(--r2);background:var(--bg);text-align:left}
 .bigaction:hover{border-color:var(--accent);background:var(--accent-soft)}
-.bigaction .ic{width:34px;height:34px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.bigaction .ic{width:36px;height:36px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+/* the icon sits centred in its square, never in a corner (BRD-219) */
+.bigaction .ic svg{width:18px;height:18px;margin:0;display:block}
 .bigaction b{display:block;font-size:13.5px}
 .bigaction span{display:block;font-size:12px;color:var(--dim);margin-top:1px}
 .recent{flex:1;overflow:auto;border:1px solid var(--line);border-radius:var(--r2);background:var(--card)}
@@ -342,3 +344,34 @@ select.fld{cursor:pointer}
  .find{min-width:0;width:34px;padding:0;justify-content:center;overflow:hidden}
  .find span{display:none}
 }
+
+/* ---------- 2026-11-18: the owner's run on his own solution (BRD-217 to BRD-229) ---------- */
+/* a group heading inside a picker, drawn as the menu bar draws it */
+.pop .grouplbl{padding:6px 10px 3px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+/* a picker at the foot of a panel opens upward */
+.pop.up{top:auto;bottom:calc(100% + 5px)}
+/* the branch at the foot of Files is a picker, not a link (BRD-222) */
+.files:has(.branchwrap){overflow:visible}
+.branchwrap{display:flex;flex:none}
+.branchwrap>.branch{width:100%;text-align:left}
+/* a folder Chatur cannot read keeps its row (BRD-217) */
+.tree a.locked{color:var(--faint)}
+.tree a.locked .nr{margin-left:auto;font-size:11px;font-style:italic;color:var(--faint)}
+/* names starting with a dot, and .vs, show only with View ▸ Show hidden files (BRD-225) */
+.tree .hid{display:none;opacity:.75}
+.tree.show-hidden .hid{display:flex}
+/* a right-click menu on a tree row (BRD-228) */
+.tree .popwrap{display:flex}
+.tree .popwrap>a{flex:1;min-width:0}
+/* a modal dialog over the window (BRD-221, BRD-223) */
+.scrim{display:none;position:fixed;inset:0;z-index:80;background:color-mix(in oklch,var(--bg) 60%,transparent);place-items:center;padding:16px}
+.scrim.open{display:grid}
+.dlg{width:100%;max-width:460px;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:12px}
+.dlg h2{font-size:15px;font-weight:600}
+.choice{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);text-align:left}
+.choice:hover{border-color:var(--accent);background:var(--accent-soft)}
+.choice b{font-size:13px}
+.choice span{font-size:12px;color:var(--dim)}
+/* one quiet warning line (BRD-218) */
+.warnline{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:var(--r);background:color-mix(in oklch,var(--warn) 12%,transparent);color:var(--warn);font-size:12.5px}
+.warnline svg{margin-top:2px}

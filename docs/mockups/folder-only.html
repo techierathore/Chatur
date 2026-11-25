@@ -45,6 +45,9 @@ function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.se
  document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
  var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
 document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+// BRD-225: View ▸ Show hidden files, off by default.
+function toggleHidden(b,ev){ev.stopPropagation();var on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',on?'true':'false');
+ b.querySelector('.tick').innerHTML=on?'✓':'';document.querySelector('[data-testid="file-tree"]').classList.toggle('show-hidden',on);closeAll();}
 </script>
 
 <div class="win" data-testid="window">
@@ -89,6 +92,9 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <button onclick="say('Hides or shows the files panel.')"><span class="tick">✓</span>Files</button>
     <button onclick="say('Hides or shows the conversation. Here it has the whole window, because no file is open.')"><span class="tick">✓</span>Chat</button>
     <button onclick="say('The output strip appears the first time something runs. Nothing has run here.')"><span class="tick"></span>Output</button>
+    <hr>
+    <!-- BRD-225: a check item, off by default; the choice is kept for the account. -->
+    <button role="menuitemcheckbox" aria-checked="false" onclick="toggleHidden(this,event)" data-testid="menu-view-hidden"><span class="tick"></span>Show hidden files</button>
     <hr>
     <a href="prerequisites.html"><span class="tick"></span>Prerequisites</a>
     <a href="repository.html"><span class="tick"></span>Repository</a>
@@ -150,7 +156,8 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
 
  <div class="toolbar" data-testid="toolbar">
   <button class="tb" disabled onclick="say('There is nothing to build yet — this folder has no code in it.')" title="There is nothing to build yet" data-testid="run"><svg><use href="#i-play"/></svg>Run</button>
-  <button class="tb" disabled onclick="say('There is nothing to build yet — this folder has no code in it.')" title="There is nothing to build yet" data-testid="stop"><svg><use href="#i-stop"/></svg>Stop</button>
+  <!-- BRD-226: idle, so Stop is not shown; it appears only while a build or run goes. -->
+  <button class="tb" style="display:none" disabled onclick="say('There is nothing to build yet — this folder has no code in it.')" title="There is nothing to build yet" data-testid="stop" data-tf-state="running"><svg><use href="#i-stop"/></svg>Stop</button>
   <button class="tb" disabled onclick="say('There is nothing to build yet — this folder has no code in it.')" title="There is nothing to build yet" data-testid="build"><svg><use href="#i-hammer"/></svg>Build</button>
   <span class="sep"></span>
   <button class="tb bordered" disabled onclick="say('There is nothing to build yet — this folder has no code in it.')" title="There is nothing to build yet" data-testid="target"><span data-value>No run target</span><svg><use href="#i-chevron"/></svg></button>
@@ -253,11 +260,11 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
        <div class="pop" data-testid="agent-pop">
         <button onclick="choose(this,'No agent',event)"><span class="tick"></span>No agent — the model itself</button>
         <hr>
-        <button onclick="choose(this,'Analyst',event)"><span class="tick">✓</span>Analyst<span class="sub">suggested</span></button>
+        <button onclick="choose(this,'Analyst',event)"><span class="tick">✓</span>Analyst</button>
         <button onclick="choose(this,'Architect',event)"><span class="tick"></span>Architect</button>
         <button onclick="choose(this,'Flow master',event)"><span class="tick"></span>Flow master</button>
         <button onclick="choose(this,'Verifier',event)"><span class="tick"></span>Verifier</button>
-        <div class="note">Chatur suggested the Analyst because this folder has no code in it yet.</div>
+        <div class="note">Chatur chose the Analyst because this folder has no code in it yet.</div>
         <hr>
         <a href="settings-agents.html">Agents…</a>
        </div>

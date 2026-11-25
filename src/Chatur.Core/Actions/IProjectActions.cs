@@ -31,6 +31,13 @@ public interface IProjectActions
     Task<IReadOnlyList<ProjectSummary>> ScanAsync(CancellationToken aCt = default);
 
     /// <summary>
+    /// The projects already known, most recently opened first, read from the database alone: no folder on disk is
+    /// searched. For lists that must never wait on the disk, such as the menu bar's (owner, 20 Nov 2026).
+    /// </summary>
+    /// <param name="aCt">A token that cancels the read.</param>
+    Task<IReadOnlyList<ProjectSummary>> KnownAsync(CancellationToken aCt = default) => ScanAsync(aCt);
+
+    /// <summary>
     /// The project every screen is currently showing (REQ-FN-006, REQ-FN-007).
     /// </summary>
     /// <param name="aCt">A token that cancels the read.</param>
@@ -51,4 +58,12 @@ public interface IProjectActions
     /// <param name="aProjectId">The project to drop from the list.</param>
     /// <param name="aCt">A token that cancels the removal.</param>
     Task ForgetProjectAsync(int aProjectId, CancellationToken aCt = default);
+
+    /// <summary>
+    /// Start's reopening of the last project (REQ-FN-006, BRD-218): the selected project when its folder
+    /// is there and can be read; otherwise nothing is opened and the reason comes back, so Start
+    /// shows it in one line instead of the Workbench failing on it.
+    /// </summary>
+    /// <param name="aCt">A token that cancels the check.</param>
+    async Task<ProjectReopen> ReopenAsync(CancellationToken aCt = default) => new(await SelectedProjectAsync(aCt).ConfigureAwait(false), null);
 }

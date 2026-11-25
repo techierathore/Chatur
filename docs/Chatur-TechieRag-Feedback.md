@@ -8,7 +8,7 @@
 
 ## Summary
 
-Nothing is blocked. 9 entries: 0 open, 3 fixed upstream and not yet re-checked here (TR-RAG-006; TR-RAG-008 and TR-RAG-009, fixed 2026-10-29 for the next TechieRag release after 1.1.7), 6 closed (TR-RAG-007 closed 2026-10-24).
+Nothing is blocked. 10 entries: 1 open and not blocking (TR-RAG-010, 23 Nov 2026: a tool call cut off at the output limit is dropped without a word; Chatur asks again with a larger limit), 3 fixed upstream and not yet re-checked here (TR-RAG-006; TR-RAG-008 and TR-RAG-009, fixed 2026-10-29 for the next TechieRag release after 1.1.7), 6 closed (TR-RAG-007 closed 2026-10-24).
 
 Chatur is on 1.1.7 since 2026-10-24 (1.1.5 from 2026-10-11). REQ-FN-071 and REQ-FN-072 are built on `ModelChooser` and Verified (2026-10-11).
 
@@ -162,6 +162,18 @@ unreachable through TechieRag. Everything else about Chatur's provider/routing/m
 - **Suggested fix:** A `ChatStreamAsync` (or `AskStreamAsync`) overload that yields a small
   discriminated event per piece — a text delta, or a decided tool call — the way OpenAI's own
   streaming chat-completions API reports `tool_calls` deltas alongside content deltas.
+
+### TR-RAG-010 — A tool call cut off at the output limit is dropped without a word
+
+- **Status:** open
+- **Severity:** major
+- **Blocks:** no — Chatur works round it (below); REQ-FN-318 (`*devguide`) is Verified with the workaround in place.
+- **Repro:** TechieRag 1.1.7, Anthropic connector, `claude-sonnet-5-5`, `LlmCompletionOptions` with tools and no `MaxTokens`. Ask for a long file to be written through one tool call (Chatur's `*devguide` on a small Razor Pages project: the guide goes into one `edit-file` call). Stream with `ChatStreamEventsAsync`.
+- **Expected:** a call that was cut off is reported: the `ToolCall` event marked incomplete, or an error, or at least the reason on `Completed` together with a note that a call was being written.
+- **Actual:** the stream ends with `Completed` whose `FinishReason` is `max_tokens`, no `TextDelta` and no `ToolCall` event. The half-written call is silently discarded, so the caller sees an empty turn. In Chatur's verify of 22 to 23 Nov 2026 the agent "finished" four times running with nothing written. The default output limit when `MaxTokens` is not set is not documented in the AI reference either.
+- **Encountered in:** REQ-FN-318, `*build-phase Chatur` of 22 Nov 2026 (about 50 minutes to find).
+- **Workaround:** `AgentActions` reads `FinishReason`; on `max_tokens` or `length` with no call, it asks again once with `MaxTokens = 32000` and tells the model its last call was cut off (`AgentActions.IsCutOff`, `CutOffMaxTokens`).
+- **Suggested fix:** emit the partial tool call as a `ToolCall` event flagged incomplete (or throw a typed exception), and document the default `MaxTokens` per connector.
 
 ## Replies from TechieRag
 

@@ -9,7 +9,7 @@ public sealed class TempProject : IDisposable
     /// <summary>Creates an empty project folder.</summary>
     public TempProject()
     {
-        Root = Path.Combine(Path.GetTempPath(), $"chatur-check-{Guid.NewGuid():N}");
+        Root = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-check-{Guid.NewGuid():N}");
         Directory.CreateDirectory(Root);
     }
 

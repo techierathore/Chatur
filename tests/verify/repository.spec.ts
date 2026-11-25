@@ -5,7 +5,7 @@ import { test, expect as baseExpect, Page } from '@playwright/test';
 import { execFileSync } from 'child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync, unlinkSync, readFileSync } from 'fs';
 import * as path from 'path';
-import { tmpdir } from 'os';
+import { SCRATCH, outsideAnyRepository, removeProjectsUnder } from './support/cleanup';
 import { signIn } from './support/auth';
 import { openFoldersDialog } from './support/start';
 
@@ -292,12 +292,20 @@ test('REQ-FN-048 an automatic check-in goes to its own branch', async () => {
   );
 });
 
-// A folder outside every repository (the fixtures above sit inside Chatur's own checkout, which git would find).
-const NO_REPO_ROOT = path.join(tmpdir(), 'chatur-repository-spec-norepo');
+// A folder outside every repository. It sits in this test project's own bin folder (owner, 20 Nov 2026: nothing
+// outside the repository), so a `.git` file leading nowhere stops the search walking up into Chatur's own checkout.
+const NO_REPO_ROOT = path.join(SCRATCH, 'chatur-repository-spec-norepo');
 const NO_REPO = path.join(NO_REPO_ROOT, 'norepo-proj');
 
+// Every project this file made goes, with its folders and every row recorded against it (owner, 20 Nov 2026).
+test.afterAll(() => {
+  removeProjectsUnder(NO_REPO_ROOT);
+  removeProjectsUnder(path.join(FIXTURES, 'repository-spec'));
+});
+
 test('REQ-UI-042 a project folder that is not a git repository says so on Repository, with no error', async ({ page }) => {
-  rmSync(NO_REPO_ROOT, { recursive: true, force: true });
+  removeProjectsUnder(NO_REPO_ROOT);
+  outsideAnyRepository(NO_REPO);
   mkdirSync(path.join(NO_REPO, 'docs'), { recursive: true });
   writeFileSync(path.join(NO_REPO, 'docs', 'brief.md'), '# Brief\n');
   await page.goto('/start?all=1', { waitUntil: 'networkidle' });
@@ -318,6 +326,7 @@ test('REQ-UI-042 a project folder that is not a git repository says so on Reposi
   await expect(page.getByText(/Could not read the repository|not a git repository/i)).toHaveCount(0);
   await expect(page.getByTestId('push')).toHaveCount(0);
   await page.screenshot({ path: `${SHOTS}/repository-norepo.png` });
+  removeProjectsUnder(NO_REPO_ROOT); // the project this test made goes with its folder (owner, 20 Nov 2026)
 });
 
 test("REQ-FN-045 Open in the editor on Repository opens the changed file in the owner's editor", async ({ page }) => {

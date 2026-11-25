@@ -435,6 +435,24 @@ public sealed class ProcessRunActions : IProcessRunActions, IUnattendedProcessRu
                 "UPDATE ProcessRun SET State = @State, EndedUtc = @vEnded WHERE RunId = @RunId",
                 new { State = aState.ToString().ToLowerInvariant(), vEnded = Stamp(vEnded), aRun.RunId },
                 cancellationToken: aCt)).ConfigureAwait(false);
+
+            // BRD-249 (22 Nov 2026): *triage-and-fix starts a triage run and names the fix run that follows it. A
+            // finished run starts the run it names, on the same project; a stopped one does not.
+            var vFollowUpKey = FollowUpSettingKey(aRun.RunId);
+            var vFollowUp = await vConnection.QuerySingleOrDefaultAsync<string?>(new CommandDefinition(
+                "SELECT Value FROM Setting WHERE Key = @vFollowUpKey", new { vFollowUpKey }, cancellationToken: aCt)).ConfigureAwait(false);
+            if (vFollowUp is not null)
+            {
+                await vConnection.ExecuteAsync(new CommandDefinition(
+                    "DELETE FROM Setting WHERE Key = @vFollowUpKey", new { vFollowUpKey }, cancellationToken: aCt)).ConfigureAwait(false);
+                if (aState == ProcessRunState.Finished && Processes.ProcessCatalogue.Find(vFollowUp) is { } vNext)
+                {
+                    await vConnection.ExecuteAsync(new CommandDefinition(
+                        "INSERT INTO ProcessRun (ProjectId, ProcessCode, State, CurrentStep, StartedUtc) VALUES (@ProjectId, @Code, 'running', 1, @Started)",
+                        new { aRun.ProjectId, vNext.Code, Started = Stamp(objClock.UtcNow) },
+                        cancellationToken: aCt)).ConfigureAwait(false);
+                }
+            }
         }
 
         var vFields = new Dictionary<string, string?>
@@ -453,6 +471,10 @@ public sealed class ProcessRunActions : IProcessRunActions, IUnattendedProcessRu
 
     private static ProcessRunState ParseState(string aState) =>
         Enum.TryParse<ProcessRunState>(aState, true, out var vState) ? vState : ProcessRunState.Running;
+
+    /// <summary>The <c>Setting</c> key that names the process to start when a run finishes (<c>*triage-and-fix</c>).</summary>
+    /// <param name="aRunId">The run.</param>
+    public static string FollowUpSettingKey(int aRunId) => $"ProcessRun.FollowedBy.{aRunId}";
 
     private static string Stamp(DateTime aUtc) => aUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
 

@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         aServices.AddScoped<ShortcutInterop>();
         aServices.AddScoped<ComposerInterop>();
         aServices.AddScoped<WorkbenchState>();
+        aServices.AddScoped<WindowLifetime>();
         return aServices;
     }
 }

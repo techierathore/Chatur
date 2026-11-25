@@ -10,7 +10,7 @@ namespace Chatur.Tests.Measurements;
 /// <summary>Tests for cluster K's <see cref="MeasurementActions.AppendAsync"/> and cluster L's <see cref="MeasurementActions.StreamsAsync"/>, against a real, migrated, temporary database and a real temp folder.</summary>
 public sealed class MeasurementActionsTests : MigratedDatabaseFixture
 {
-    private readonly string objProjectPath = Path.Combine(Path.GetTempPath(), $"chatur-project-{Guid.NewGuid():N}");
+    private readonly string objProjectPath = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-project-{Guid.NewGuid():N}");
 
     /// <summary>
     /// When Measurements opens for a project with no streams written yet, then all five are listed at
@@ -83,12 +83,13 @@ public sealed class MeasurementActionsTests : MigratedDatabaseFixture
     }
 
     /// <summary>
-    /// When a run record is appended, then the five stream files all exist (REQ-FN-040), the record
-    /// is signed <c>tool: "chatur"</c> (REQ-FN-041), and a field the caller did not supply is written
-    /// empty rather than guessed (REQ-FN-042).
+    /// When a run record a command needs is appended, then <c>docs/metrics</c> holds that one stream's file and no
+    /// other, never an empty one (REQ-FN-040; BRD-74 as changed 23 Nov 2026), the record is signed
+    /// <c>tool: "chatur"</c> (REQ-FN-041), and a field the caller did not supply is written empty rather than guessed
+    /// (REQ-FN-042).
     /// </summary>
-    [Fact]
-    public async Task AppendAsyncCreatesAllFiveStreamsAndSignsTheRecord()
+    [Fact(DisplayName = "REQ-FN-040 a record a command needs makes its own stream file and no other")]
+    public async Task AppendAsyncMakesOnlyItsOwnStreamAndSignsTheRecord()
     {
         var vProjectId = CreateProject("Sample", objProjectPath);
         var vActions = new MeasurementActions(CreateFactory(), NullLogger<MeasurementActions>.Instance);
@@ -96,16 +97,36 @@ public sealed class MeasurementActionsTests : MigratedDatabaseFixture
         await vActions.AppendAsync(vProjectId, "runs", new Dictionary<string, string?> { ["cmd"] = "build-phase" });
 
         var vMetricsFolder = Path.Combine(objProjectPath, "docs", "metrics");
-        foreach (var vStream in new[] { "runs.jsonl", "gates.jsonl", "sessions.jsonl", "commits.jsonl", "misses.jsonl" })
-        {
-            Assert.True(File.Exists(Path.Combine(vMetricsFolder, vStream)), $"{vStream} should exist.");
-        }
+        Assert.Equal(["runs.jsonl"], new DirectoryInfo(vMetricsFolder).GetFiles().Select(f => f.Name).ToArray());
 
         var vLine = (await File.ReadAllLinesAsync(Path.Combine(vMetricsFolder, "runs.jsonl"))).Single(aLine => !string.IsNullOrWhiteSpace(aLine));
         Assert.Contains("\"tool\":\"chatur\"", vLine);
         Assert.Contains("\"kind\":\"run\"", vLine);
         Assert.Contains("\"cmd\":\"build-phase\"", vLine);
         Assert.Contains("\"mode\":\"\"", vLine);
+    }
+
+    /// <summary>
+    /// When Chatur notes something nobody asked for (a chat turn), then a project with no <c>docs/metrics</c> gets
+    /// no folder and no file and no refusal is recorded; a project that has the folder gets the record
+    /// (owner's test of 23 Nov 2026).
+    /// </summary>
+    [Fact(DisplayName = "REQ-FN-040 a record nobody asked for is written only where docs/metrics already is")]
+    public async Task AppendWhenMeasuredWritesOnlyIntoAMeasuredProject()
+    {
+        Directory.CreateDirectory(objProjectPath);
+        var vProjectId = CreateProject("Opened", objProjectPath);
+        var vActions = new MeasurementActions(CreateFactory(), NullLogger<MeasurementActions>.Instance);
+
+        await vActions.AppendWhenMeasuredAsync(vProjectId, "sessions", new Dictionary<string, string?> { ["kind"] = "session" });
+
+        Assert.Empty(Directory.GetFileSystemEntries(objProjectPath));
+        Assert.All(await vActions.StreamsAsync(vProjectId), s => Assert.Equal(0, s.Refused));
+
+        var vMetricsFolder = Directory.CreateDirectory(Path.Combine(objProjectPath, "docs", "metrics")).FullName;
+        await vActions.AppendWhenMeasuredAsync(vProjectId, "sessions", new Dictionary<string, string?> { ["kind"] = "session" });
+
+        Assert.Equal(["sessions.jsonl"], new DirectoryInfo(vMetricsFolder).GetFiles().Select(f => f.Name).ToArray());
     }
 
     /// <summary>
@@ -120,8 +141,8 @@ public sealed class MeasurementActionsTests : MigratedDatabaseFixture
 
         await vActions.AppendAsync(vProjectId, "runs", new Dictionary<string, string?> { ["not_a_real_field"] = "x" });
 
-        var vLines = await File.ReadAllLinesAsync(Path.Combine(objProjectPath, "docs", "metrics", "runs.jsonl"));
-        Assert.All(vLines, aLine => Assert.True(string.IsNullOrWhiteSpace(aLine)));
+        // Nothing is appended, and a refused write makes no file and no folder either.
+        Assert.False(Directory.Exists(Path.Combine(objProjectPath, "docs")));
         Assert.Equal(1, CountRefusedWrites());
     }
 
@@ -149,8 +170,8 @@ public sealed class MeasurementActionsTests : MigratedDatabaseFixture
 
         await vActions.AppendAsync(vProjectId, "runs", new Dictionary<string, string?> { ["cmd"] = "build-phase", ["mystery"] = "x" });
 
-        var vLines = await File.ReadAllLinesAsync(Path.Combine(objProjectPath, "docs", "metrics", "runs.jsonl"));
-        Assert.All(vLines, aLine => Assert.True(string.IsNullOrWhiteSpace(aLine)));
+        // Nothing is appended, and a refused write makes no file and no folder either.
+        Assert.False(Directory.Exists(Path.Combine(objProjectPath, "docs")));
         Assert.Contains("mystery", ReadLastRefusalReason());
     }
 

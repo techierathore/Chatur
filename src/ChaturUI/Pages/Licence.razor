@@ -1,34 +1,195 @@
 @page "/licence"
 @layout Layouts.SecondaryLayout
+@using TrBlazeUI.Components.Table
+@inject ILicenceActions Actions
+@inject ToastService Toast
 
-@* UI Design phase 4 "Screen: Licence" — mockups/licence.html. Cluster P4-B shows the licence in
-   force, the machines it is on, and which features are switched off (REQ-UI-064, REQ-UI-065,
-   REQ-UI-066, REQ-FN-075). *@
-<div class="flex flex-col gap-4" data-testid="page">
-    <div data-testid="page-heading">
-        <h1 class="text-lg font-semibold">Licence</h1>
-        <p class="text-sm text-muted-foreground">The licence in force on this account and the machines using it.</p>
+@* UI Design phase 4 "Screen: Licence" — mockups/licence.html. Shows the licence in force, the warning the
+   server sent for too many machines, the machines with Forget and Block, and the features the licence
+   switches (REQ-UI-064, REQ-UI-065, REQ-UI-066, REQ-FN-075). The title bar, palette and left list are the
+   secondary window's own (SecondaryLayout). *@
+<div class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-center gap-3" data-testid="licence-heading">
+        <div>
+            <h1 class="text-lg font-semibold">This account and its machines</h1>
+            <p class="text-sm text-muted-foreground">@Subtitle</p>
+        </div>
+        <span class="flex-1"></span>
+        <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7 rounded-full px-3" Disabled="objIsLoading" OnClick="RecheckAsync" data-testid="licence-recheck">
+            <LucideIcon Name="refresh-cw" Size="14" />
+            Check again
+        </Button>
     </div>
 
-    <Card data-testid="licence-panel">
-        <CardHeader>
-            <CardTitle>Chatur Individual</CardTitle>
-        </CardHeader>
-        <CardContent Class="flex flex-col gap-3">
-            <div class="flex items-center gap-2" data-testid="licence-state">
-                <Badge Variant="BadgeVariant.Success">active</Badge>
-                <span class="text-sm">365 days remaining</span>
-            </div>
-            <p class="text-sm text-muted-foreground" data-testid="licence-note">A feature switched off for this licence is not offered anywhere in Chatur.</p>
-        </CardContent>
-    </Card>
+    @if (objView is null)
+    {
+        <Card data-testid="licence-panel">
+            <CardContent>
+                <Empty Title="Reading the licence" Description="Asking App Manager for the newest state." Size="EmptySize.Small" data-testid="licence-loading" />
+            </CardContent>
+        </Card>
+    }
+    else if (!objView.Available)
+    {
+        <Alert Variant="AlertVariant.Danger" data-testid="licence-error">
+            <AlertTitle>The licence is not shown</AlertTitle>
+            <AlertDescription>@objView.Message</AlertDescription>
+        </Alert>
+    }
+    else
+    {
+        <Card data-testid="licence-panel">
+            <CardHeader>
+                <CardTitle As="h2" Class="flex items-center gap-2 text-sm"><LucideIcon Name="key" Size="14" />This licence</CardTitle>
+            </CardHeader>
+            <CardContent Class="flex flex-col gap-3">
+                @if (objView.Licence is null)
+                {
+                    <Empty Title="No licence on this account" Description="App Manager holds no licence for Chatur on this account." Size="EmptySize.Small" data-testid="licence-none" />
+                }
+                else
+                {
+                    var vLicence = objView.Licence;
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="w-28 text-sm text-muted-foreground">Plan</span>
+                        <b data-testid="licence-name">@vLicence.Name</b>
+                        <Badge Variant="@StateVariant(vLicence.State)" Class="border-0" data-testid="licence-state"><LucideIcon Name="check" Size="11" />@vLicence.State</Badge>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="w-28 text-sm text-muted-foreground">Runs out</span>
+                        <span data-testid="licence-expiry">@(vLicence.ExpiresOn is { } vExpiry ? vExpiry.ToString("d MMMM yyyy", objCulture) : "Never")</span>
+                        @if (vLicence.DaysRemaining is { } vDays)
+                        {
+                            <span class="text-sm text-muted-foreground" data-testid="licence-days">@vDays @(vDays == 1 ? "day" : "days") left</span>
+                        }
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="w-28 text-sm text-muted-foreground">Machines</span>
+                        <span data-testid="licence-seats">@(vLicence.MaxDevices is { } vCap ? $"{vCap} at a time" : "No limit stated")</span>
+                        <span class="@(objView.Warning is null ? "text-sm text-muted-foreground" : "text-sm text-alert-warning-foreground")" data-testid="licence-seats-used">@SignedIn signed in</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(vLicence.Key))
+                    {
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="w-28 text-sm text-muted-foreground">Key</span>
+                            <span class="font-mono text-sm" data-testid="licence-key">@vLicence.Key</span>
+                            <Button Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Copy the licence key" OnClick="CopyKeyAsync" data-testid="copy-licence-key">
+                                <LucideIcon Name="copy" Size="14" />
+                            </Button>
+                        </div>
+                    }
+                    @if (TermDays is { } vTerm && vLicence.DaysRemaining is { } vLeft)
+                    {
+                        var vUsed = Math.Max(0, vTerm - vLeft);
+                        var vPercent = vTerm == 0 ? 100 : (int)Math.Round(100.0 * vUsed / vTerm);
+                        <div class="flex flex-col gap-1.5 pt-1" data-testid="licence-progress">
+                            <div class="flex items-center">
+                                <span class="flex-1 text-xs text-muted-foreground">@vUsed of @vTerm days used</span>
+                                <span class="text-xs text-muted-foreground" data-testid="licence-progress-pct">@vPercent%</span>
+                            </div>
+                            <Progress Value="@vPercent" Class="h-2" data-testid="licence-days-bar" />
+                            @if (vLicence.StartedOn is { } vStarted)
+                            {
+                                <span class="text-xs text-muted-foreground">Started @vStarted.ToString("d MMMM yyyy", objCulture).</span>
+                            }
+                        </div>
+                    }
+                }
+            </CardContent>
+        </Card>
 
-    <Card data-testid="devices-panel">
-        <CardHeader>
-            <CardTitle>Machines</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <Empty Title="No devices to show" Description="The machines signed in to this licence appear here." Size="EmptySize.Small" data-testid="devices-empty" />
-        </CardContent>
-    </Card>
+        @if (objView.Warning is { } vWarning)
+        {
+            <Alert Variant="AlertVariant.Warning" Class="border-0 text-alert-warning-foreground" data-testid="licence-warning">
+                <LucideIcon Name="triangle-alert" Size="16" />
+                <AlertTitle Class="text-alert-warning-foreground"><span class="text-alert-warning-foreground" data-testid="licence-warning-title">@vWarning.Title</span></AlertTitle>
+                <AlertDescription Class="text-alert-warning-foreground">
+                    <p class="text-alert-warning-foreground" data-testid="licence-warning-message">@vWarning.Message</p>
+                    <Button Size="ButtonSize.Small" Class="mt-2 h-7 rounded-full px-4" OnClick="AddSeat" data-testid="licence-add-seat">Add a machine</Button>
+                </AlertDescription>
+            </Alert>
+        }
+
+        <Card data-testid="devices-panel">
+            <CardHeader>
+                <CardTitle As="h2" Class="flex items-center gap-2 text-sm">
+                    <LucideIcon Name="monitor" Size="14" />
+                    Machines signed in
+                    <span class="flex-1"></span>
+                    <span class="text-xs font-normal text-muted-foreground" data-testid="devices-count">@objView.Devices.Count known</span>
+                </CardTitle>
+            </CardHeader>
+            <CardContent Class="p-0">
+                @if (objView.Devices.Count == 0)
+                {
+                    <Empty Title="No devices to show" Description="The machines signed in to this licence appear here." Size="EmptySize.Small" data-testid="devices-empty" />
+                }
+                else
+                {
+                    <Table data-testid="devices-table">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Machine</TableHead>
+                                <TableHead>Platform</TableHead>
+                                <TableHead>Chatur</TableHead>
+                                <TableHead>Last seen</TableHead>
+                                <TableHead>Sign-ins</TableHead>
+                                <TableHead>State</TableHead>
+                                <TableHead></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @foreach (var vDevice in objView.Devices)
+                            {
+                                <TableRow Class="border-t" data-testid="@($"dev-row-{vDevice.DeviceId}")">
+                                    <TableCell>@vDevice.Name</TableCell>
+                                    <TableCell Class="text-muted-foreground">@vDevice.Platform</TableCell>
+                                    <TableCell Class="whitespace-nowrap font-mono">@vDevice.AppVersion</TableCell>
+                                    <TableCell Class="whitespace-nowrap text-muted-foreground">@(vDevice.LastSeenUtc is { } vSeen ? vSeen.ToLocalTime().ToString("d MMM yyyy HH:mm", objCulture) : "—")</TableCell>
+                                    <TableCell>@vDevice.SignInCount</TableCell>
+                                    <TableCell>
+                                        <Badge Variant="@DeviceVariant(vDevice)" Class="@(vDevice.IsBlocked ? "border-0 text-destructive" : "border-0")" data-testid="@($"dev-state-{vDevice.DeviceId}")">@DeviceState(vDevice)</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div class="flex gap-2">
+                                            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7 rounded-full px-3" OnClick="() => ForgetAsync(vDevice)" data-testid="@($"forget-{vDevice.DeviceId}")">Forget</Button>
+                                            <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7 rounded-full px-3" OnClick="() => BlockAsync(vDevice)" data-testid="@($"block-{vDevice.DeviceId}")">@(vDevice.IsBlocked ? "Unblock" : "Block")</Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                }
+            </CardContent>
+        </Card>
+
+        <Card data-testid="features-panel">
+            <CardHeader>
+                <CardTitle As="h2" Class="text-sm">What @(objView.Licence?.Name ?? "this licence") includes</CardTitle>
+            </CardHeader>
+            <CardContent Class="flex flex-col">
+                @foreach (var vFeature in objView.Features)
+                {
+                    <div class="flex items-center gap-3 border-t py-2.5" data-testid="@($"feature-{vFeature.Code}")">
+                        <div class="flex-1">
+                            <div class="@(vFeature.IsOn ? "text-sm font-medium" : "text-sm font-medium text-muted-foreground")">@vFeature.Name</div>
+                            <div class="text-xs text-muted-foreground">@vFeature.Description</div>
+                        </div>
+                        <Badge Variant="@(vFeature.IsOn ? BadgeVariant.Success : BadgeVariant.Secondary)" Class="border-0" data-testid="@($"feature-{vFeature.Code}-state")">@(vFeature.IsOn ? "on" : "off")</Badge>
+                        <Switch Size="SwitchSize.Small"
+                                Checked="vFeature.IsOn"
+                                CheckedChanged="aOn => SetFeatureAsync(vFeature, aOn)"
+                                Disabled="!objView.CanChangeFeatures"
+                                AriaLabel="@($"{vFeature.Name} — {(vFeature.IsOn ? "on" : "off")}")"
+                                data-testid="@($"feature-{vFeature.Code}-switch")" />
+                    </div>
+                }
+                <div class="flex items-start gap-2 border-t pt-3 text-muted-foreground" data-testid="features-note">
+                    <LucideIcon Name="triangle-alert" Size="14" Class="mt-0.5 flex-none" />
+                    <span class="text-sm">A feature that is off is drawn nowhere in Chatur — no menu entry, no tab, no button, no keyboard shortcut. You never meet a control that then tells you it is not yours.@(objView.CanChangeFeatures ? string.Empty : " This licence's features are switched in App Manager, so the switches here only show them.")</span>
+                </div>
+            </CardContent>
+        </Card>
+    }
 </div>

@@ -50,6 +50,8 @@ row = c.execute("SELECT p.Path FROM Setting s JOIN Project p ON p.ProjectId = CA
 print(row[0] if row else "")
 PY
 )"
+# A solution's project path is its .sln (or .slnx) file; its repository is the folder around it (BRD-227, 18 Nov).
+[[ -f "$REPO" ]] && REPO="$(dirname "$REPO")"
 [[ -n "$REPO" && -d "$REPO" ]] || { echo "the app at $BASE_URL has no project open"; exit 1; }
 case "$(cd "$REPO" && pwd)/" in
   "$ROOT/tests/.artifacts/"*) ;;

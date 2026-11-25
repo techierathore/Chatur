@@ -24,7 +24,7 @@ public sealed class AccountDataTests : IDisposable
     private const string FirstAccount = "1001";
     private const string SecondAccount = "1002";
 
-    private readonly string objRoot = Path.Combine(Path.GetTempPath(), $"chatur-accounts-{Guid.NewGuid():N}");
+    private readonly string objRoot = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-accounts-{Guid.NewGuid():N}");
 
     /// <summary>Creates the test's own folder for the install's files and the projects on disk.</summary>
     public AccountDataTests()
@@ -230,7 +230,11 @@ public sealed class AccountDataTests : IDisposable
         Assert.Equal("Folder", vInRepository.Project.Kind);
         Assert.Equal("docs/notes.md", vInRepository.RelativePath);
 
+        // A file with neither a solution nor a repository above it opens its own folder. Since 21 Nov 2026 a unit
+        // test's scratch space is under this test project's bin folder, inside Chatur's own repository, so every
+        // folder there has Chatur.sln above it: a ".git" marker stops the walk at the loose file's own folder.
         var vPlain = Directory.CreateDirectory(Path.Combine(objRoot, "Loose")).FullName;
+        Directory.CreateDirectory(Path.Combine(vPlain, ".git"));
         var vLoose = Path.Combine(vPlain, "todo.txt");
         File.WriteAllText(vLoose, "todo");
         var vAlone = await vOpen.OpenFileAsync(vLoose);

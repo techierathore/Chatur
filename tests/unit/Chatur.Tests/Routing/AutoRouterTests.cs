@@ -38,6 +38,70 @@ public sealed class AutoRouterTests : MigratedDatabaseFixture
         Assert.Equal(("deep-model", "SmallModel", "A hard question.", 7L), (vLog.ModelIdentifier, vLog.Source, vLog.Reason, vLog.SessionId));
     }
 
+    /// <summary>
+    /// REQ-UI-111: when automatic routing is on, then the decision carries the model and, in a few words, why — what the
+    /// small model said, cut to its first sentence and led by "Automatic:" — so the reason can be stored with the reply.
+    /// </summary>
+    [Fact]
+    public async Task DecisionCarriesTheModelAndAShortReason()
+    {
+        AddModel(1, "deep-model");
+        AddModel(3, "fast-model");
+        var vChooser = new FakeChooser(aCandidates => new ModelChoice(aCandidates.Single(aC => aC.ModelId == "fast-model"), "A short question needs the smallest model. Nothing more is needed.", ModelChoiceSource.SmallModel, null));
+        var vRouting = NewRouting();
+        await vRouting.SetAutoRoutingAsync(true);
+        var vSut = NewSut(vRouting, vChooser);
+
+        var vDecision = await vSut.DecideAsync("What is this?", 5, 1);
+
+        Assert.NotNull(vDecision);
+        Assert.Equal("fast-model", vDecision.Model!.ModelIdentifier);
+        Assert.Equal("Automatic: A short question needs the smallest model", vDecision.Reason);
+    }
+
+    /// <summary>REQ-UI-111: when automatic routing is off, then there is no decision and so no reason to show.</summary>
+    [Fact]
+    public async Task NoDecisionWhenRoutingIsOff()
+    {
+        AddModel(1, "deep-model");
+        AddModel(3, "fast-model");
+        var vSut = NewSut(NewRouting(), new FakeChooser(aCandidates => OnlyChoice(aCandidates[0])));
+
+        Assert.Null(await vSut.DecideAsync("Hello", 1, 1));
+    }
+
+    /// <summary>
+    /// REQ-UI-111: when the small model fails, then the decision has no model and says the tiers decided, so a reply
+    /// routed that way still says why.
+    /// </summary>
+    [Fact]
+    public async Task DecisionSaysTheTiersDecidedWhenTheSmallModelFails()
+    {
+        AddModel(1, "deep-model");
+        AddModel(3, "fast-model");
+        var vRouting = NewRouting();
+        await vRouting.SetAutoRoutingAsync(true);
+        var vSut = NewSut(vRouting, new FakeChooser(_ => throw new HttpRequestException("down")));
+
+        var vDecision = await vSut.DecideAsync("Hello", 1, 1);
+
+        Assert.NotNull(vDecision);
+        Assert.Null(vDecision.Model);
+        Assert.Equal(AutoRouter.TiersDecidedReason, vDecision.Reason);
+    }
+
+    /// <summary>REQ-UI-111: the reason is plain words for each way a choice is reached, and long answers are cut short.</summary>
+    [Fact]
+    public void ReasonForReadsInPlainWords()
+    {
+        Assert.Equal("Automatic: only one model is connected", AutoRouter.ReasonFor(ModelChoiceSource.OnlyCandidate, "Only one.", 1));
+        Assert.Equal("Automatic: the small model gave no clear answer, so the first model was used", AutoRouter.ReasonFor(ModelChoiceSource.Fallback, "?", 3));
+        Assert.Equal("Automatic: chosen by the small model", AutoRouter.ReasonFor(ModelChoiceSource.SmallModel, "  ", 3));
+        var vLong = AutoRouter.ReasonFor(ModelChoiceSource.SmallModel, new string('x', 400), 3);
+        Assert.True(vLong.Length <= "Automatic: ".Length + 90);
+        Assert.EndsWith("…", vLong);
+    }
+
     /// <summary>The small model that does the choosing is a model in the lowest tier, not the strongest one.</summary>
     [Fact]
     public async Task TheSmallModelIsTheFirstModelOfTheLowestTier()
