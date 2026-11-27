@@ -22,7 +22,7 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 | REQ-UI-065 | Too many machines is reported | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-065 Licence shows the over-cap warning the server sen`; Licence renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-065) |
 | REQ-UI-066 | Forget a machine | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-066 Forgetting a device removes it from the list and `; Licence renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-066) |
 | REQ-FN-075 | A feature switched off is not offered | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-075 A feature switched off for the licence is not off`; Licence renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-075) |
-| REQ-FN-076 | Everything at once | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-076 every project Chatur knows is listed with its pha`; All projects renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-076) |
+| REQ-FN-076 | Everything at once | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-FN-076 every project Chatur knows is listed with its pha`; All projects renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-076) |
 | REQ-UI-067 | Where each one stands | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-067 a project row shows how many requirements are ope`; All projects renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-067) |
 | REQ-FN-077 | Go straight in | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-077 opening a project from the view selects it and op`; All projects renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-077) |
 | REQ-FN-078 | The roles follow the developer | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-078 roles and rules changed on one machine are on the`; All projects renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-078) |
@@ -33,7 +33,7 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 | REQ-FN-082 | Something outside can start one | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-082 no token, a wrong token or an action that is off `; Integrations renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-082) |
 | REQ-FN-083 | The verifier drives real windows | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-083 a window check is listed with its screenshots and`; Integrations renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-083) |
 | REQ-UI-069 | Signed downloads | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-069 the newest release lists signed Mac and Windows d`; Integrations renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-069) |
-| REQ-UI-107 | Run shows the build and the program's output live, in an Output panel that opens by itself | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-107 a run that cannot start says why in Output and en`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-107) |
+| REQ-UI-107 | Run shows the build and the program's output live, in an Output panel that opens by itself | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-UI-107 the https port warning is a warning, not an error`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-107) |
 | REQ-FN-306 | A web project opens in the browser once it is up | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-306 the listening line and the profile give the brows`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-306) |
 | REQ-UI-108 | A build that fails says so with its errors; a program that ends shows its exit code | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-108 a run whose build fails says so with its errors a`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-108) |
 | REQ-FN-307 | Picking a project in the switcher switches to it | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-307 picking the other project of the same name in the`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-307) |
@@ -42,22 +42,22 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 | REQ-FN-308 | An agent greets the person with what it is for and its commands, taken from its real command list | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-308 asked whether it has a brainstorm command, the an`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-308) |
 | REQ-UI-111 | Every reply shows which model answered, and on Automatic why | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-111 a reply names its model, and on Automatic says wh`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-111) |
 | REQ-UI-113 | Routing says in plain words how Automatic chooses | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-113 the Routing page says in plain words how Automati`; Settings / routing renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 4 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-113) |
-| REQ-UI-112 | New project is one dialog in every state and always comes from this machine's templates | Implemented | 75% | 2026-11-23 [REQ-UI-112] fixed: with a folder or solution open the dialog shows "Will be created in" and the two full paths, with "Change location"; with nothing open, one Location field (`NewProjectDialog`). | [view](#d-req-ui-112) |
+| REQ-UI-112 | New project is one dialog in every state and always comes from this machine's templates | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-018 REQ-FN-310 REQ-FN-309 REQ-UI-112 REQ-UI-127 with`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-112) |
 | REQ-NFR-011 | A closed window leaves no errors behind | Verified | 100% | 2026-11-23 verify: not observable — NFR row with no perf-budget and no unit test carrying its id; Verified on 2026-11-22 stands, not re-measured | [view](#d-req-nfr-011) |
 | REQ-NFR-012 | Chatur installs for the user on Windows | Verified | 100% | 2026-11-23 verify: not observable — NFR row with no perf-budget and no unit test carrying its id; Verified on 2026-11-22 stands, not re-measured | [view](#d-req-nfr-012) |
-| REQ-FN-309 | After New project, Run has a target | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-310 REQ-FN-309 REQ-UI-112 with nothing open, New proj`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [d](#d-req-fn-309) |
-| REQ-FN-310 | New project with no solution open makes the solution and its first project from a template, and opens it | Implemented | 75% | 2026-11-23 [REQ-FN-310] fixed: the folder that is open, or the one picked, is the solution's folder; the solution file is made in it and the project one folder under it, never a folder named after the solution (`ProjectTemplateActions.Plan`, `CreateAsync`). Cause: the folder held Chatur's own docs/metrics, so it was not empty. | [d](#d-req-fn-310) |
+| REQ-FN-309 | After New project, Run has a target | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-FN-309 a project just added becomes the project that run`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [d](#d-req-fn-309) |
+| REQ-FN-310 | New project with no solution open makes the solution and its first project from a template, and opens it | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-FN-310 a project folder that already holds files is refu`; Start renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 6 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [d](#d-req-fn-310) |
 | REQ-FN-311 | Every agent carries every command its TechieFlow agent has, done in Chatur | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-311 an unknown command is answered from the list`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [d](#d-req-fn-311) |
 | REQ-UI-114 | A reply is drawn as formatted text | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-114 a reply's markdown is drawn as formatted text and`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [d](#d-req-ui-114) |
 | REQ-FN-312 | In an empty folder the Analyst brainstorms with the person and writes the brief | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-312 *create-project-brief guides the agent until docs`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [d](#d-req-fn-312) |
-| REQ-NFR-013 | The owner's test and its tests start from the two states a person really meets | Implemented | 75% | 2026-11-23 [REQ-NFR-013] fixed: the tests compare the whole file list on disk, and one starts from a folder that is open and not empty; the earlier one read a field of the dialog in a truly empty folder. | [d](#d-req-nfr-013) |
-| REQ-UI-115 | Measurements, in the main menu, for the open project, read from its own docs/metrics files and nothing else | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-115 the report is read from the project's own files a`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-115) |
+| REQ-NFR-013 | The owner's test and its tests start from the two states a person really meets | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-013 the New project tests and the installed app's te` | [d](#d-req-nfr-013) |
+| REQ-UI-115 | Measurements, in the main menu, for the open project, read from its own docs/metrics files and nothing else | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-UI-115 the report is read from the project's own files a`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-115) |
 | REQ-UI-116 | Pick the period | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-116 each period counts only the records dated inside `; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-116) |
 | REQ-UI-117 | Runs, tokens, cost and time, split by model, by agent and by command | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-117 splits by model, agent and command, with the agen`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-117) |
 | REQ-UI-118 | Mistakes: how many, who found each, the rows, and first-time passes | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-118 misses fold amends and voids, take status from th`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-118) |
 | REQ-UI-119 | Estimate beside actual for each phase, with the estimate table that exists | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-119 the estimate region shows the shared estimate tab`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-119) |
 | REQ-UI-120 | One line per run, which opens | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-120 run lines carry rows touched, the raw record and `; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-120) |
-| REQ-FN-313 | The same totals across every project | Needs re-verify | 0% | 2026-11-23 verify: ⚠ mockup-parity — icon on window > div[1] @390: mockup carries an icon here; the app does not (tests/.artifacts/verify/parity.json); mockup-parity: 4 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-313) |
+| REQ-FN-313 | The same totals across every project | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-FN-313 across projects gives one line per project and ad`; Measurements across projects renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 2 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-313) |
 | REQ-FN-314 | Save the open project's measurements as one zip TfLens imports | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-314 export writes a zip of docs/metrics/<file> entrie`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-314) |
 | REQ-UI-121 | Settings ▸ Measurements stays the state of the files and links to the new screen | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-UI-121 Settings Measurements keeps the stream tiles and `; Settings / measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-121) |
 | REQ-FN-315 | *day1-brownfield runs to its end from the chat | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-FN-315 *day1-brownfield in a project with code writes th`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-315) |
@@ -73,13 +73,30 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 | REQ-NFR-014 | Every number on the measurements screens is computed by code and equals the total added up again from the files | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-NFR-014 every figure equals an independent re-addition o`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-nfr-014) |
 | REQ-NFR-015 | The UsageGuide has "The agents and their commands", one table per agent, from the one command list in the code | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-NFR-015 the generated guide and README text name every c` | [view](#d-req-nfr-015) |
 | REQ-NFR-016 | The README names the four agents and their commands in short and links to the guide's section | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-NFR-016 the README lists each agent's commands and links` | [view](#d-req-nfr-016) |
-| REQ-NFR-017 | The owner's test has a part for the measurements screens and one for typing a command of each agent | Verified | 100% | 2026-11-23 verify: PASS — test `REQ-NFR-017 the owner's test keeps its eight parts and adds ` | [view](#d-req-nfr-017) |
-| REQ-UI-124 | A folder with projects and no solution gets a solution that takes them in | Implemented | 75% | 2026-11-23 [REQ-UI-124] built: a folder with projects and no solution is told so in the dialog; Create makes the solution there and adds them and the new project. | [view](#d-req-ui-124) |
-| REQ-FN-323 | A folder that has a solution gets the new project added to that solution | Implemented | 75% | 2026-11-23 [REQ-FN-323] built: a folder open that holds a solution gets the project one folder under it, added to that solution; no second solution. | [view](#d-req-fn-323) |
-| REQ-UI-125 | After Create, FILES keeps the folder that was open as its root | Implemented | 75% | 2026-11-23 [REQ-UI-125] fixed: the solution is made in the folder that was open, so FILES keeps that folder as its root with the solution file and project folders in it. | [view](#d-req-ui-125) |
-| REQ-UI-126 | New project shows where things will be made before it makes them | Implemented | 75% | 2026-11-23 [REQ-UI-126] built: the dialog names the folder, the solution file and the project folder before Create, following the names as typed. | [view](#d-req-ui-126) |
-| REQ-NFR-018 | New project's tests compare the exact paths on disk for each starting point | Implemented | 75% | 2026-11-23 [REQ-NFR-018] built: unit and browser tests compare the exact files for nothing open, an empty folder, a folder not empty, projects without a solution, and a folder with a solution. | [view](#d-req-nfr-018) |
-| REQ-NFR-019 | The owner's test makes its folders under this repository's bin folder and starts with the empty-folder case | Implemented | 75% | 2026-11-23 [REQ-NFR-019] built: the owner's test has eleven parts, part 1 the empty-folder case, every folder under this repository's bin folder; the install script readies that folder. | [view](#d-req-nfr-019) |
+| REQ-NFR-017 | The owner's test has a part for the measurements screens and one for typing a command of each agent | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-017 the owner's test keeps its eight parts and adds ` | [view](#d-req-nfr-017) |
+| REQ-UI-124 | A folder with projects and no solution gets a solution that takes them in | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-018 REQ-UI-124 a folder with projects and no solutio`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-124) |
+| REQ-FN-323 | A folder that has a solution gets the new project added to that solution | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-018 REQ-FN-323 a folder with a solution gets the pro`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-323) |
+| REQ-UI-125 | After Create, FILES keeps the folder that was open as its root | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-018 REQ-FN-310 REQ-UI-126 REQ-UI-125 REQ-FN-309 with`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-125) |
+| REQ-UI-126 | New project shows where things will be made before it makes them | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-UI-126 the plan names the solution file and the project `; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-126) |
+| REQ-NFR-018 | New project's tests compare the exact paths on disk for each starting point | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-018 the New project tests compare the exact files on` | [view](#d-req-nfr-018) |
+| REQ-NFR-019 | The owner's test makes its folders under this repository's bin folder and starts with the empty-folder case | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-019 the owner's test starts with the empty-folder ca` | [view](#d-req-nfr-019) |
+| REQ-UI-127 | Search the project types in New project | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-018 REQ-FN-310 REQ-FN-309 REQ-UI-112 REQ-UI-127 with`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-127) |
+| REQ-FN-324 | Several projects start together, a saved choice per solution | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-FN-324 several startup projects are chosen once, kept fo`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-324) |
+| REQ-FN-325 | A folder with projects and no solution is said so and asked about before it opens | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-FN-325 opening a folder that has a project and no soluti`; Start renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 6 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-325) |
+| REQ-UI-128 | The chat moves to the newest message after a long reply or a command such as *yolo | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-UI-128 after a long reply the conversation is at its new`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-128) |
+| REQ-NFR-020 | The owner's test names no path in the measurements part, and a real model call proves what Measurements shows | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-NFR-020 the owner's test picks the project in the app fo` | [view](#d-req-nfr-020) |
+| REQ-UI-129 | What is left on each key, on both Measurements screens | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-UI-129 a local model has no key to count`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 2 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-129) |
+| REQ-UI-130 | Ask the provider, where it has an address that tells its balance or its limit | Implemented | 75% | 2026-11-27 verify: not measured — 3 unit test(s) named REQ-UI-130 passed but do not count while its on-app test was skipped: skipped: test-settings.json has no balanceProvider (a real OpenRouter or DeepSeek key), so no provider can be asked; screen Measurements renders and looks right; mockup-parity: 2 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts… | [view](#d-req-ui-130) |
+| REQ-UI-131 | A limit typed for a key, counted against what Chatur used | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-UI-131 a typed limit is counted against Chatur's own pri`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 2 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-131) |
+| REQ-FN-326 | No number reads "not known", never a guess | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-FN-326 an OpenRouter key with no limit leaves what is le`; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 2 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-326) |
+| REQ-FN-327 | Pick two to four connected models and give them one task on the open project | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-FN-327 Run starts each picked model on the task`; Compare models renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-327) |
+| REQ-FN-328 | A read-only question needs no copy and changes nothing | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-FN-328 a question reads the open project and changes not`; Compare models renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-328) |
+| REQ-FN-329 | A task that changes files gives each model its own copy under the project's bin folder, removed afterwards | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-FN-329 docs/metrics written during the run is not a chan`; Compare models renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-329) |
+| REQ-UI-132 | Time, tokens, cost and the answer or changed files, side by side | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-UI-132 each model has its time, tokens and cost or no pr`; Compare models renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-132) |
+| REQ-UI-133 | Mark each model's result right or wrong | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-UI-133 a mark is kept and shows again when the compariso`; Compare models renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-ui-133) |
+| REQ-FN-330 | Comparisons and marks are kept in docs/metrics in TfLens's shape and open again | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-FN-330 runs and marks are kept in docs/metrics in TfLens`; Compare models renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-330) |
+| REQ-NFR-021 | Compare models is proven with a real read-only question on two models | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-NFR-021 REQ-FN-328 REQ-UI-132 REQ-FN-330 two real models`; Compare models renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-nfr-021) |
+| REQ-NFR-022 | The owner's test has parts for the keys and for Compare models, and runs in one order | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-NFR-022 the owner's test is one order and has parts for `; Measurements renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 2 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-nfr-022) |
 
 **Status values:** `Not Started` · `In Progress` · `Implemented` · `Verified` · `Done (pre-existing)` · `Needs re-verify` · `PARTIAL` · `FAIL` · `Blocked` · `Owner-UAT` · `N/A`.
 
@@ -224,11 +241,11 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 
 <a id="d-req-fn-309"></a>
 - **REQ-FN-309** — After New project, Run has a target. *BRD:* BRD-248 · *Mockup:* mockups/main.html
-  - *Acceptance:* When the person creates a project with New project on Workbench, then Run's target list names the new project without anything more, and "No target found" does not stay.
+  - *Acceptance:* When the person adds a project that can run with New project on Workbench, then it is the project that runs; a library added later leaves that choice.
 
 <a id="d-req-fn-310"></a>
 - **REQ-FN-310** — New project with no solution open makes the solution and its first project from a template, and opens it. *BRD:* BRD-247 · *Mockup:* mockups/start-empty.html
-  - *Acceptance:* When the person creates a project with no solution open on Start, then the solution file is made in that folder, the project one folder under, and it opens.
+  - *Acceptance:* When the person creates a project with no solution on Start, then the solution gets a folder of its own in the chosen location and each project one inside that.
 
 <a id="d-req-fn-311"></a>
 - **REQ-FN-311** — Every agent carries every command its TechieFlow agent has, done in Chatur. *BRD:* BRD-249 · *Mockup:* mockups/main.html
@@ -250,7 +267,7 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 
 <a id="d-req-ui-115"></a>
 - **REQ-UI-115** — Measurements, in the main menu, for the open project, read from its own docs/metrics files and nothing else. *BRD:* BRD-253 · *Mockup:* mockups/measurements.html
-  - *Acceptance:* When the person chooses Project ▸ Measurements on Measurements, then the open project's figures show, read only from its docs/metrics files, with no network call.
+  - *Acceptance:* When the person picks a project and chooses Project ▸ Measurements on Measurements, then its figures show, chat sessions included, read only from its docs/metrics files.
 
 <a id="d-req-ui-116"></a>
 - **REQ-UI-116** — Pick the period. *BRD:* BRD-254 · *Mockup:* mockups/measurements.html
@@ -275,6 +292,22 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 <a id="d-req-fn-314"></a>
 - **REQ-FN-314** — Save the open project's measurements as one zip TfLens imports. *BRD:* BRD-260 · *Mockup:* mockups/measurements.html
   - *Acceptance:* When the person presses Save as zip on Measurements, then one zip of the project's docs/metrics files is saved, in the shape TfLens imports.
+
+<a id="d-req-ui-129"></a>
+- **REQ-UI-129** — What is left on each key, on both Measurements screens. *BRD:* BRD-287 · *Mockup:* mockups/measurements.html
+  - *Acceptance:* When the person opens Measurements or Measurements across projects, then each connected provider has one line saying what is left on its key and how that is known.
+
+<a id="d-req-ui-130"></a>
+- **REQ-UI-130** — Ask the provider, where it has an address that tells its balance or its limit. *BRD:* BRD-288 · *Mockup:* mockups/measurements.html
+  - *Acceptance:* When a connected provider has an address for its balance or limit on Measurements, then Chatur asks it and the line shows the amount left and when it was asked.
+
+<a id="d-req-ui-131"></a>
+- **REQ-UI-131** — A limit typed for a key, counted against what Chatur used. *BRD:* BRD-289 · *Mockup:* mockups/measurements.html
+  - *Acceptance:* When the person types a limit and start date for a key on Measurements, then its line shows the limit, Chatur's own cost since that date, and what is left.
+
+<a id="d-req-fn-326"></a>
+- **REQ-FN-326** — No number reads "not known", never a guess. *BRD:* BRD-290 · *Mockup:* mockups/measurements.html
+  - *Acceptance:* When a key has no address and no limit typed, or its address does not answer, on Measurements, then its line reads "not known" and says why.
 
 ## Page: Measurements across projects (`/measurements/all`)
 
@@ -332,19 +365,35 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 
 <a id="d-req-ui-124"></a>
 - **REQ-UI-124** — A folder with projects and no solution gets a solution that takes them in. *BRD:* BRD-276 · *Mockup:* mockups/main.html
-  - *Acceptance:* When the person creates a project on Workbench in a folder with projects and no solution, then the dialog says so, and the new solution there holds them all.
+  - *Acceptance:* When the person creates a project in the open folder that holds projects and no solution, then the dialog says so and the new solution holds them all.
 
 <a id="d-req-fn-323"></a>
 - **REQ-FN-323** — A folder that has a solution gets the new project added to that solution. *BRD:* BRD-277 · *Mockup:* mockups/main.html
   - *Acceptance:* When the person creates a project on Workbench with a folder open that holds a solution, then the project is added to that solution and no second solution is made.
 
 <a id="d-req-ui-125"></a>
-- **REQ-UI-125** — After Create, FILES keeps the folder that was open as its root. *BRD:* BRD-278 · *Mockup:* mockups/main.html
-  - *Acceptance:* When the person creates a project on Workbench with a folder open, then FILES lists that folder's solution file and project folders, with no folder wrapped around them.
+- **REQ-UI-125** — FILES shows the solution as its root, with its projects below it. *BRD:* BRD-278 · *Mockup:* mockups/main.html
+  - *Acceptance:* When a project with a solution is open on Workbench, then FILES shows the solution as its one root with the projects below it and no solution file beside them.
 
 <a id="d-req-ui-126"></a>
 - **REQ-UI-126** — New project shows where things will be made before it makes them. *BRD:* BRD-279 · *Mockup:* mockups/main.html
-  - *Acceptance:* When the person types the names in New project on Workbench, then the dialog shows the folder and the full paths of the solution file and the project folder.
+  - *Acceptance:* When the person types the names in New project, then the dialog shows the solution's folder, the solution file and the project folder as full paths.
+
+<a id="d-req-ui-127"></a>
+- **REQ-UI-127** — Search the project types in New project. *BRD:* BRD-282 · *Mockup:* mockups/main.html
+  - *Acceptance:* When the person types in the search box above the project types in New project, then the list narrows to the types that hold every word typed.
+
+<a id="d-req-fn-324"></a>
+- **REQ-FN-324** — Several projects start together, a saved choice per solution. *BRD:* BRD-283 · *Mockup:* mockups/main.html
+  - *Acceptance:* When the person ticks two or more projects in Multiple startup projects and presses Run, then each is built and started together and Stop ends them all.
+
+<a id="d-req-fn-325"></a>
+- **REQ-FN-325** — A folder with projects and no solution is said so and asked about before it opens. *BRD:* BRD-284 · *Mockup:* mockups/start.html
+  - *Acceptance:* When the person opens a folder that holds a project and no solution on Start, then Chatur says so and asks whether to open it, before opening.
+
+<a id="d-req-ui-128"></a>
+- **REQ-UI-128** — The chat moves to the newest message after a long reply or a command such as *yolo. *BRD:* BRD-285 · *Mockup:* mockups/main.html
+  - *Acceptance:* When a long reply or a command such as *yolo makes the conversation longer than its window on Workbench, then the conversation shows its newest message.
 
 ## Non-functional
 
@@ -362,7 +411,7 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 
 <a id="d-req-nfr-017"></a>
 - **REQ-NFR-017** — The owner's test has a part for the measurements screens and one for typing a command of each agent. *BRD:* BRD-275
-  - *Acceptance:* When the owner follows the Owner's test on Workbench, then one part walks the measurements screens, one types a command to each agent, and the eight parts stay.
+  - *Acceptance:* When the owner follows the Owner's test, then one part walks the measurements screens, picking the project in the app, and one types a command to each agent.
 
 <a id="d-req-nfr-018"></a>
 - **REQ-NFR-018** — New project's tests compare the exact paths on disk for each starting point. *BRD:* BRD-280
@@ -371,4 +420,42 @@ Phase 4, more users: feedback, issues, licences and feature control through App 
 <a id="d-req-nfr-019"></a>
 - **REQ-NFR-019** — The owner's test makes its folders under this repository's bin folder and starts with the empty-folder case. *BRD:* BRD-281
   - *Acceptance:* When the owner follows the Owner's test, then every folder it makes is under this repository's bin folder, and part 1 is the empty-folder case.
+
+<a id="d-req-nfr-020"></a>
+- **REQ-NFR-020** — The owner's test names no path in the measurements part, and a real model call proves what Measurements shows. *BRD:* BRD-286
+  - *Acceptance:* When the owner follows the Owner's test, then the measurements part picks the project in the app, and its docs/metrics holds the chat's sessions.
+
+<a id="d-req-nfr-021"></a>
+- **REQ-NFR-021** — Compare models is proven with a real read-only question on two models. *BRD:* BRD-297
+  - *Acceptance:* When the tests ask two connected models a real read-only question on Compare models, then both answers show with time, tokens and cost, and runs.jsonl holds both records.
+
+<a id="d-req-nfr-022"></a>
+- **REQ-NFR-022** — The owner's test has parts for the keys and for Compare models, and runs in one order. *BRD:* BRD-298
+  - *Acceptance:* When the owner follows the Owner's test on Measurements and Compare models, then one part reads each key, one compares two named models, and all parts run in one order.
+
+## Page: Compare models (`/compare-models`)
+
+<a id="d-req-fn-327"></a>
+- **REQ-FN-327** — Pick two to four connected models and give them one task on the open project. *BRD:* BRD-291 · *Mockup:* mockups/compare-models.html
+  - *Acceptance:* When the person ticks two to four models and types a task on Compare models, then Run starts each; one or five models are refused with the reason.
+
+<a id="d-req-fn-328"></a>
+- **REQ-FN-328** — A read-only question needs no copy and changes nothing. *BRD:* BRD-292 · *Mockup:* mockups/compare-models.html
+  - *Acceptance:* When the kind is "Question, changes nothing" on Compare models, then each model answers from the open project and no file of the project changes.
+
+<a id="d-req-fn-329"></a>
+- **REQ-FN-329** — A task that changes files gives each model its own copy under the project's bin folder, removed afterwards. *BRD:* BRD-293 · *Mockup:* mockups/compare-models.html
+  - *Acceptance:* When the kind is "Task that changes files" on Compare models, then each model works in its own copy under the project's bin folder, removed when the run ends.
+
+<a id="d-req-ui-132"></a>
+- **REQ-UI-132** — Time, tokens, cost and the answer or changed files, side by side. *BRD:* BRD-294 · *Mockup:* mockups/compare-models.html
+  - *Acceptance:* When a comparison ends on Compare models, then one column per model shows its time, tokens in and out, cost or "no price", and its answer or its changed files.
+
+<a id="d-req-ui-133"></a>
+- **REQ-UI-133** — Mark each model's result right or wrong. *BRD:* BRD-295 · *Mockup:* mockups/compare-models.html
+  - *Acceptance:* When the person marks a model's result right or wrong on Compare models, then the mark is kept and shows again when that comparison is opened again.
+
+<a id="d-req-fn-330"></a>
+- **REQ-FN-330** — Comparisons and marks are kept in docs/metrics in TfLens's shape and open again. *BRD:* BRD-296 · *Mockup:* mockups/compare-models.html
+  - *Acceptance:* When a comparison ends or a mark changes on Compare models, then runs.jsonl holds one compare-models record per model with the mark, and the comparison opens again.
 

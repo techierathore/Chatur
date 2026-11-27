@@ -1,10 +1,13 @@
-// The owner's test, run on the INSTALLED Chatur the way the owner runs it (owner's tests of 22 and 23 Nov 2026;
+// The owner's test, run on the INSTALLED Chatur the way the owner runs it (owner's tests of 22, 23 and 25 Nov 2026;
 // REQ-NFR-013, REQ-NFR-019): started from its Start menu entry, signed in, and worked from the states a person really
-// meets. Part 1 is the owner's own case of 23 Nov: open an empty folder, New project, and look at the disk: the
-// solution file is in that folder itself and the project in one folder under it. Then New project from nothing,
-// projects from this machine's templates, Run, a folder with a project and no solution, the Analyst's brainstorm and
-// brief in another empty folder, the measurements screens and one command to each agent. Never from a solution made
-// by hand.
+// meets. Part 1 is the owner's own case: open an empty folder, New project, and look at the disk: the solution has a
+// folder of its own, the solution file in it and the project in a folder of its own inside that, and FILES shows the
+// solution as its root. Then New project from nothing, projects from this machine's templates (the newest runnable one
+// is the one that runs), several projects started together, Run, the file window, a folder with a project and no
+// solution, the Analyst's brainstorm and brief in another empty folder with its sessions and tokens written to docs/metrics,
+// the measurements screens chosen inside the app, and one command to each agent. Never from a solution made by hand.
+// Every Chatur head here is started on DevTools port 29243 behind relay port 9243 (the owner's setting of 26 Nov 2026,
+// because another tool is being checked on this machine at 9223); the first test shows that the pages driven are Chatur's.
 //
 // The start keeps its data in a test data folder under this test project's own bin folder (CHATUR_TEST_DATA, the guard
 // of REQ-NFR-010; the web view's DevTools port is set for that one start only), so the owner's own data, his
@@ -25,9 +28,11 @@ import { testProvider, connectorItem } from './support/provider';
 const ON_WINDOWS_HOST = existsSync('/mnt/c/Windows') || process.platform === 'win32';
 test.skip(!ON_WINDOWS_HOST, 'the installed app is a Windows install');
 test.describe.configure({ mode: 'serial', timeout: 900_000 });
+// A click that cannot land fails in a minute, not at the end of a test's quarter of an hour.
+test.use({ actionTimeout: 60_000 });
 
-const DEVTOOLS_PORT = 29298;
-const RELAY_PORT = 9298;
+const DEVTOOLS_PORT = 29243;
+const RELAY_PORT = 9243;
 const STAMP = Date.now();
 const SHOTS = 'tests/.artifacts/verify/shots';
 
@@ -76,7 +81,10 @@ async function choose(aMain: Page, aMenu: string, aItem: string): Promise<void> 
 /** Waits for the templates in the open New project dialog and picks one. */
 async function pickTemplate(aPage: Page, aShortName: string): Promise<void> {
   await expect(aPage.getByTestId('template-loading')).toHaveCount(0, { timeout: 180_000 });
-  await aPage.getByTestId(`template-${aShortName}`).click();
+  // The search box narrows the long list to the one wanted (REQ-UI-127).
+  await aPage.getByTestId('template-search').fill(aShortName);
+  // A click event, not a mouse move: the dialog scrolls inside a short window, and pointer hit-testing over two scroll areas is what failed.
+  await aPage.getByTestId(`template-${aShortName}`).dispatchEvent('click');
   await expect(aPage.getByTestId('new-project-framework-button')).toContainText('net10.0', { timeout: 90_000 });
 }
 
@@ -125,9 +133,17 @@ async function openEmptyFolder(aMain: Page, aFolder: string): Promise<Page> {
   }).toPass({ timeout: 60_000 });
   await vStart.getByTestId('open-project-path').fill(windowsPath(aFolder));
   await vStart.getByTestId('open-project-go').click();
+  await goOnIfAsked(vStart);
   const vMain = await mainWindow();
   await expect(vMain.getByTestId('project-switch-name')).toHaveText(path.basename(aFolder), { timeout: 60_000 });
   return vMain;
+}
+
+/** A folder with a project and no solution is asked about first (REQ-FN-325); a step that only needs it open goes on. */
+async function goOnIfAsked(aPage: Page): Promise<void> {
+  const vAsk = aPage.getByTestId('open-project-no-solution');
+  await vAsk.waitFor({ state: 'visible', timeout: 6_000 }).catch(() => undefined);
+  if (await vAsk.isVisible().catch(() => false)) await aPage.getByTestId('open-project-no-solution-go').click();
 }
 
 /** Sends one message in the chat and waits for the whole reply; returns its text box. */
@@ -141,6 +157,15 @@ async function say(aMain: Page, aText: string) {
   await expect(aMain.getByTestId('stop-agent')).toHaveCount(0, { timeout: 400_000 });
   await expect(vInput).toBeEnabled({ timeout: 60_000 });
   return aMain.getByTestId('msg-text').last();
+}
+
+/** How far the conversation's view is from its end, in pixels: 0 is the newest message; -1 means it does not scroll at all. */
+async function chatGap(aMain: Page): Promise<number> {
+  return aMain.getByTestId('conversation').evaluate((aRoot) => {
+    const vEls = [aRoot, ...Array.from(aRoot.querySelectorAll('*'))] as HTMLElement[];
+    const vViewport = vEls.find((e) => e.scrollHeight > e.clientHeight + 5 && getComputedStyle(e).overflowY !== 'visible');
+    return vViewport ? vViewport.scrollHeight - vViewport.clientHeight - vViewport.scrollTop : -1;
+  });
 }
 
 /** Keeps answering until the file is on disk, at most a few turns: a real model may ask once more before writing. */
@@ -170,12 +195,18 @@ function disk(aFolder: string): string[] {
   return vFound.sort();
 }
 
-/** The names at the top of FILES: what sits directly in the folder that is its root. */
-async function filesRoot(aMain: Page): Promise<string[]> {
-  const vIds = await aMain.getByTestId('file-tree').locator('[data-testid^="tree-"]').evaluateAll((aRows) => aRows.map((r) => r.getAttribute('data-testid') ?? ''));
-  const vNames = vIds.map((i) => i.slice('tree-'.length)).filter((n) => n.length > 0 && !/[\\/]/.test(n));
-  // A row carries ids of its own parts too (its right-click menu, its run label): only the rows themselves count.
-  return vNames.filter((n) => !/-(menu|run)$/.test(n) || !vNames.includes(n.replace(/-(menu|run)$/, ''))).sort();
+/**
+ * What FILES shows (REQ-UI-125): the root rows that stand for a solution, and the names directly under them. A row
+ * carries ids of its own parts too (its right-click menu, its run label): only the rows themselves count.
+ */
+async function filesTree(aMain: Page): Promise<{ roots: string[]; projects: string[]; others: string[] }> {
+  const vRows = await aMain.getByTestId('file-tree').locator('[data-testid^="tree-"]').evaluateAll((aEls) => aEls.map((e) => ({ id: e.getAttribute('data-testid') ?? '', kind: e.getAttribute('data-kind') ?? '' })));
+  const vOwn = vRows.map((r) => ({ name: r.id.slice('tree-'.length), kind: r.kind })).filter((r) => r.name.length > 0 && !/[\\/]/.test(r.name) && !/-(menu|run|unreadable)$/.test(r.name));
+  return {
+    roots: vOwn.filter((r) => r.kind === 'solution').map((r) => r.name).sort(),
+    projects: vOwn.filter((r) => r.kind === 'project').map((r) => r.name).sort(),
+    others: vOwn.filter((r) => r.kind === '').map((r) => r.name).sort(),
+  };
 }
 
 /**
@@ -258,7 +289,23 @@ test.afterAll(async () => {
   if (objRoot) rmSync(objRoot, { recursive: true, force: true, maxRetries: 10, retryDelay: 1_000 });
 });
 
-test('REQ-NFR-019 REQ-NFR-013 REQ-FN-310 REQ-UI-126 REQ-UI-125 REQ-UI-008 owner\'s test 1: the installed Chatur starts on Nothing is open yet; with an empty folder open, New project makes the solution file in that folder and the project one folder under it', async () => {
+test('the pages driven here are Chatur\'s: the DevTools port is 9243, its pages are Chatur\'s windows, and the process is the installed Chatur.exe', async () => {
+  // Shown once, so a check on this laptop never drives another tool's pages (another tool is checked on port 9223).
+  const vList = (await (await fetch(`http://localhost:${RELAY_PORT}/json/list`)).json()) as { title: string; url: string; type: string }[];
+  const vPages = vList.filter((p) => p.type === 'page');
+  expect(vPages.length, 'pages on the relay').toBeGreaterThan(0);
+  for (const vPage of vPages) expect(vPage.url, 'a page of the app\'s own web view').toMatch(/^https:\/\/0\.0\.0\.1\//);  // the origin a MAUI Blazor Hybrid window serves its own pages from
+  const vVersion = (await (await fetch(`http://localhost:${RELAY_PORT}/json/version`)).json()) as { Browser: string };
+  const vOwner = ps(`(Get-Process -Id ${objMine[0]}).Path`);
+  const vTitles = vPages.map((p) => `${p.title || '(no title)'} ${new URL(p.url).pathname}`).join(' | ');
+  console.log(`Chatur proof: relay port ${RELAY_PORT} -> web view DevTools port ${DEVTOOLS_PORT}; ${vVersion.Browser}; process ${vOwner}; pages: ${vTitles}`);
+  expect(vOwner.toLowerCase()).toMatch(/\\programs\\chatur\\chatur\.exe$/);
+  const vBrand = await viewOn(/^\/(sign-in|start|)$/, 120_000);
+  await expect(vBrand.getByTestId('brand-mark').or(vBrand.locator('text=Chatur').first()).first()).toBeVisible({ timeout: 60_000 });
+  await expect(vBrand).toHaveTitle(/Chatur/i, { timeout: 30_000 }).catch(() => undefined);
+});
+
+test('REQ-NFR-019 REQ-NFR-013 REQ-FN-310 REQ-UI-126 REQ-UI-125 REQ-UI-008 owner\'s test 1: the installed Chatur starts on Nothing is open yet; with an empty folder open, New project makes the solution its own folder and the project one inside it, and FILES shows the solution as its root', async () => {
   // Sign in as a test user on the test data folder's own first start. A test start may remember its own earlier
   // sign-in (kept under "test." names, never the owner's); then it opens on Start straight away.
   const vFirst = await viewOn(/^\/(sign-in|start)/, 120_000);
@@ -294,29 +341,31 @@ test('REQ-NFR-019 REQ-NFR-013 REQ-FN-310 REQ-UI-126 REQ-UI-125 REQ-UI-008 owner\
   await newProject(vMain);
   await pickTemplate(vMain, 'blazor');
   const vWin = windowsPath(vFolder);
+  const vSolutionFolder = `${vWin}\\Checking-Chatur`;
   await expect(vMain.getByTestId('new-project-folder')).toHaveText(vWin);
   await expect(vMain.getByTestId('new-project-location')).toHaveCount(0);
   await expect(vMain.getByTestId('new-project-change-location')).toBeVisible();
   await vMain.getByTestId('new-project-solution').fill('Checking-Chatur');
-  await expect(vMain.getByTestId('new-project-solution-path')).toHaveText(`${vWin}\\Checking-Chatur.slnx`);
-  await expect(vMain.getByTestId('new-project-project-path')).toHaveText(`${vWin}\\Checking-Chatur`);
+  await expect(vMain.getByTestId('new-project-solution-folder')).toHaveText(vSolutionFolder);
+  await expect(vMain.getByTestId('new-project-solution-path')).toHaveText(`${vSolutionFolder}\\Checking-Chatur.slnx`);
+  await expect(vMain.getByTestId('new-project-project-path')).toHaveText(`${vSolutionFolder}\\Checking-Chatur`);
   await vMain.screenshot({ path: `${SHOTS}/owner-test-1-new-project.png` });
   await create(vMain);
 
-  // The disk: the solution file in the folder that was open, the project in one folder under it, nothing else.
+  // The disk: nothing directly in the folder that was open; the solution's own folder, the solution file in it, the project in its own folder inside.
   const vAfter = await mainWindow();
   await expect(vAfter.getByTestId('project-switch-name')).toHaveText('Checking-Chatur', { timeout: 60_000 });
-  expect(readdirSync(vFolder).sort(), 'what the folder that was open holds').toEqual(['Checking-Chatur', 'Checking-Chatur.slnx']);
-  expect(existsSync(path.join(vFolder, 'Checking-Chatur', 'Checking-Chatur.csproj')), 'the project file, one folder under').toBe(true);
-  expect(existsSync(path.join(vFolder, 'Checking-Chatur', 'Checking-Chatur')), 'no folder of the same name inside itself').toBe(false);
-  expect(readFileSync(path.join(vFolder, 'Checking-Chatur.slnx'), 'utf8')).toContain('Checking-Chatur/Checking-Chatur.csproj');
-  // FILES: the folder that was open is the root, holding the solution file and the project folder.
-  await expect.poll(() => filesRoot(vAfter), { timeout: 60_000 }).toEqual(['Checking-Chatur', 'Checking-Chatur.slnx']);
+  expect(readdirSync(vFolder), 'what the folder that was open holds').toEqual(['Checking-Chatur']);
+  expect(readdirSync(path.join(vFolder, 'Checking-Chatur')).sort(), 'what the solution\'s folder holds').toEqual(['Checking-Chatur', 'Checking-Chatur.slnx']);
+  expect(existsSync(path.join(vFolder, 'Checking-Chatur', 'Checking-Chatur', 'Checking-Chatur.csproj')), 'the project file, in the project\'s own folder').toBe(true);
+  expect(readFileSync(path.join(vFolder, 'Checking-Chatur', 'Checking-Chatur.slnx'), 'utf8')).toContain('Checking-Chatur/Checking-Chatur.csproj');
+  // FILES: the solution is the root and its project is below it, not beside it (the owner's Solution-Tree-Issue).
+  await expect.poll(async () => { const t = await filesTree(vAfter); return { roots: t.roots, projects: t.projects }; }, { timeout: 60_000 }).toEqual({ roots: ['Checking-Chatur.slnx'], projects: ['Checking-Chatur'] });
   await expect(vAfter.getByTestId('target').locator('button')).toContainText('Checking-Chatur', { timeout: 60_000 });
   await vAfter.screenshot({ path: `${SHOTS}/owner-test-1-workbench.png` });
 });
 
-test('REQ-NFR-013 REQ-FN-310 REQ-FN-309 owner\'s test 2: with nothing open, New project has one Location field and makes the solution file in the picked folder and the project one folder under it', async () => {
+test('REQ-NFR-013 REQ-FN-310 REQ-FN-309 owner\'s test 3: with nothing open, New project has one Location field and makes the solution\'s own folder in the picked folder, the project one inside it', async () => {
   await signedInStart();
   const vOpen = views().find((p) => new URL(p.url()).pathname === '/');
   if (vOpen) await choose(vOpen, 'file', 'close');
@@ -329,25 +378,26 @@ test('REQ-NFR-013 REQ-FN-310 REQ-FN-309 owner\'s test 2: with nothing open, New 
   }).toPass({ timeout: 60_000 });
   await pickTemplate(vStart, 'console');
   const vFolder = path.join(objWork, 'FromNothing');
-  const vWin = windowsPath(vFolder);
+  const vWin = windowsPath(objWork);
   await expect(vStart.getByTestId('new-project-folder')).toHaveCount(0);
   await expect(vStart.getByTestId('new-project-location')).toHaveValue('');
   await vStart.getByTestId('new-project-solution').fill('FromNothing');
   await vStart.getByTestId('new-project-name').fill('TryConsole');
   await vStart.getByTestId('new-project-location').fill(vWin);
-  await expect(vStart.getByTestId('new-project-solution-path')).toHaveText(`${vWin}\\FromNothing.slnx`);
-  await expect(vStart.getByTestId('new-project-project-path')).toHaveText(`${vWin}\\TryConsole`);
+  await expect(vStart.getByTestId('new-project-solution-folder')).toHaveText(`${vWin}\\FromNothing`);
+  await expect(vStart.getByTestId('new-project-solution-path')).toHaveText(`${vWin}\\FromNothing\\FromNothing.slnx`);
+  await expect(vStart.getByTestId('new-project-project-path')).toHaveText(`${vWin}\\FromNothing\\TryConsole`);
   await vStart.screenshot({ path: `${SHOTS}/owner-test-2-new-project.png` });
   await create(vStart);
 
   const vMain = await mainWindow();
   await expect(vMain.getByTestId('project-switch-name')).toHaveText('FromNothing', { timeout: 60_000 });
   await expect(vMain.getByTestId('target').locator('button')).toContainText('TryConsole', { timeout: 60_000 });
-  expect(disk(vFolder), 'the files in the picked folder').toEqual(['FromNothing.slnx', 'TryConsole/Program.cs', 'TryConsole/TryConsole.csproj'].sort());
+  expect(disk(vFolder), 'the files in the solution\'s folder').toEqual(['FromNothing.slnx', 'TryConsole/Program.cs', 'TryConsole/TryConsole.csproj'].sort());
   await vMain.screenshot({ path: `${SHOTS}/owner-test-2-workbench.png` });
 });
 
-test('REQ-UI-112 owner\'s test 3: File New project adds projects to the solution from this machine\'s templates', async () => {
+test('REQ-UI-112 owner\'s test 4: File New project adds projects to the solution from this machine\'s templates', async () => {
   const vMain = await mainWindow();
   const vWin = windowsPath(path.join(objWork, 'FromNothing'));
   for (const [vShort, vName] of [['blazor', 'TryWeb'], ['classlib', 'TryLib'], ['xunit', 'TryLib.Tests']]) {
@@ -359,10 +409,18 @@ test('REQ-UI-112 owner\'s test 3: File New project adds projects to the solution
     await expect(vMain.getByTestId('new-project-project-path')).toHaveText(`${vWin}\\${vName}`);
     await create(vMain);
     expect(existsSync(path.join(objWork, 'FromNothing', vName, `${vName}.csproj`)), vName).toBe(true);
+    // The project just added is the one that runs, when it can run: the web app is; a library and a test project are not (the owner's Step-3-Issues).
+    await expect(vMain.getByTestId('target').locator('button')).toContainText('TryWeb', { timeout: 60_000 });
   }
+  await expect.poll(async () => (await filesTree(vMain)).roots, { timeout: 30_000 }).toEqual(['FromNothing.slnx']);
+  await expect(vMain.getByTestId('tree-TryWeb-run')).toBeVisible();
+  await expect(vMain.getByTestId('tree-TryConsole-run')).toHaveCount(0);
 
   expect(readdirSync(path.join(objWork, 'FromNothing')).sort(), 'the solution folder').toEqual(['FromNothing.slnx', 'TryConsole', 'TryLib', 'TryLib.Tests', 'TryWeb']);
-  await chooseTarget(vMain, 'TryWeb');
+  await expect(vMain.getByTestId('target').locator('button')).toContainText('TryWeb');
+  await vMain.getByTestId('target').locator('button').click();
+  await expect(vMain.getByTestId('target-multiple')).toBeVisible();
+  await vMain.keyboard.press('Escape');
   await expect(vMain.getByTestId('target-pop')).toHaveCount(0);
   await vMain.getByTestId('target').locator('button').click();
   await expect(vMain.getByTestId('target-pop')).toContainText('TryLib.Tests');
@@ -370,7 +428,7 @@ test('REQ-UI-112 owner\'s test 3: File New project adds projects to the solution
   await vMain.screenshot({ path: `${SHOTS}/owner-test-3-projects.png` });
 });
 
-test('REQ-UI-107 REQ-FN-306 owner\'s test 4: running the web app opens Output and the browser, and Stop ends it', async () => {
+test('REQ-UI-107 REQ-FN-306 owner\'s test 6: running the web app opens Output and the browser, and Stop ends it', async () => {
   const vMain = await mainWindow();
   await chooseTarget(vMain, 'TryWeb');
   await vMain.getByTestId('run').click();
@@ -384,7 +442,7 @@ test('REQ-UI-107 REQ-FN-306 owner\'s test 4: running the web app opens Output an
   await expect(vOutput).toContainText('Run stopped.', { timeout: 60_000 });
 });
 
-test('REQ-UI-107 REQ-UI-108 owner\'s test 5: the console app runs to its exit code, and a broken build says so', async () => {
+test('REQ-UI-107 REQ-UI-108 owner\'s test 7: the console app runs to its exit code, and a broken build says so', async () => {
   const vMain = await mainWindow();
   await chooseTarget(vMain, 'TryConsole');
   await vMain.getByTestId('run').click();
@@ -406,7 +464,7 @@ test('REQ-UI-107 REQ-UI-108 owner\'s test 5: the console app runs to its exit co
   await vMain.screenshot({ path: `${SHOTS}/owner-test-5-console.png` });
 });
 
-test('REQ-UI-107 owner\'s test 6: the test project runs its tests', async () => {
+test('REQ-UI-107 owner\'s test 8: the test project runs its tests', async () => {
   const vMain = await mainWindow();
   await chooseTarget(vMain, 'TryLib.Tests');
   await vMain.getByTestId('run').click();
@@ -416,7 +474,75 @@ test('REQ-UI-107 owner\'s test 6: the test project runs its tests', async () => 
   await expect(vOutput).toContainText('Process exited with code 0.', { timeout: 60_000 });
 });
 
-test('REQ-UI-124 REQ-FN-309 owner\'s test 7: in a folder with a project and no solution, New project says so first, makes the solution there and puts both projects in it', async () => {
+test('REQ-FN-324 owner\'s test 9: several projects start together from a choice kept for the solution, each line named, and Stop ends them all', async () => {
+  const vMain = await mainWindow();
+  await expect(vMain.getByTestId('project-switch-name')).toHaveText('FromNothing', { timeout: 60_000 });
+  const vPicker = vMain.getByTestId('target').locator('button');
+  await expect(vPicker).toBeEnabled({ timeout: 60_000 });
+  await vPicker.click();
+  await vMain.getByTestId('target-multiple').click();
+  const vDialog = vMain.getByTestId('startup-dialog');
+  await expect(vDialog).toBeVisible({ timeout: 15_000 });
+  // The projects that can run, each once: the console app and the web app; never the library or the test project.
+  await expect(vDialog.locator('[data-testid^="startup-row-"]')).toHaveCount(2);
+  await expect(vDialog).not.toContainText('TryLib');
+  await vDialog.getByTestId('startup-tick-tryconsole-tryconsole-csproj').click();
+  await vDialog.getByTestId('startup-tick-tryweb-tryweb-csproj').click();
+  await expect(vMain.getByTestId('startup-hint')).toContainText('2 ticked');
+  await vMain.screenshot({ path: `${SHOTS}/owner-test-6b-startup-dialog.png` });
+  await vMain.getByTestId('startup-save').click();
+  await expect(vDialog).toBeHidden({ timeout: 15_000 });
+  await expect(vPicker).toContainText('2 startup projects');
+  await expect(vMain.getByTestId('tree-TryConsole-run')).toBeVisible();
+  await expect(vMain.getByTestId('tree-TryWeb-run')).toBeVisible();
+
+  await vMain.getByTestId('run').click();
+  const vOutput = vMain.getByTestId('output');
+  await expect(vOutput).toContainText('[TryConsole] Hello, World!', { timeout: 400_000 });
+  await expect(vOutput).toContainText('[TryWeb] ', { timeout: 60_000 });
+  await expect(vOutput).toContainText('Now listening on:', { timeout: 120_000 });
+  await vMain.screenshot({ path: `${SHOTS}/owner-test-6b-run-together.png` });
+  await vMain.getByTestId('stop').click();
+  await expect(vOutput).toContainText('All 2 projects ended.', { timeout: 90_000 });
+
+  // The choice is kept for the solution; picking one project ends it.
+  await chooseTarget(vMain, 'TryWeb');
+  await expect(vPicker).toContainText('TryWeb');
+  await expect(vPicker).not.toContainText('startup projects');
+});
+
+test('REQ-FN-045 REQ-FN-046 REQ-UI-041 owner\'s test 11: the file window has Save and no button that hands the file to another program, and closing the whole view asks about an unsaved file', async () => {
+  const vMain = await mainWindow();
+  const vProgram = path.join(objWork, 'FromNothing', 'TryConsole', 'Program.cs');
+  const vText = readFileSync(vProgram, 'utf8');
+  try {
+    await vMain.getByTestId('tree-TryConsole').locator('[data-slot=tree-item-row]').first().click();
+    await vMain.getByTestId('tree-TryConsole/Program.cs').locator('[data-slot=tree-item-row]').first().click();
+    await expect(vMain.getByTestId('tabs').getByText('Program.cs', { exact: true })).toBeVisible({ timeout: 30_000 });
+    await expect(vMain.getByTestId('save-file')).toBeVisible();
+    await expect(vMain.getByTestId('open-in-editor')).toHaveCount(0);
+    await expect(vMain.getByTestId('open-with-default')).toHaveCount(0);
+    await vMain.screenshot({ path: `${SHOTS}/owner-test-6c-file-window.png` });
+    await vMain.getByTestId('editor').locator('textarea').first().fill('// changed and not saved\n' + vText);
+    await expect(vMain.getByTestId('tabs').locator('[data-dirty="true"]').first()).toBeAttached({ timeout: 20_000 });
+    await vMain.getByTestId('close-file-view').click();
+    const vAsk = vMain.getByTestId('close-unsaved-dialog');
+    await expect(vAsk).toBeVisible({ timeout: 20_000 });
+    await vMain.screenshot({ path: `${SHOTS}/owner-test-6c-close-view.png` });
+    await vMain.getByTestId('close-unsaved-cancel').click();
+    await expect(vAsk).toBeHidden();
+    await expect(vMain.getByTestId('files-area')).toBeVisible();
+    expect(readFileSync(vProgram, 'utf8'), 'nothing was saved by asking').toBe(vText);
+    await vMain.getByTestId('close-file-view').click();
+    await vMain.getByTestId('close-unsaved-discard').click();
+    await expect(vMain.getByTestId('files-area')).toHaveCount(0, { timeout: 20_000 });
+    expect(readFileSync(vProgram, 'utf8'), 'discarding left the file as it was').toBe(vText);
+  } finally {
+    writeFileSync(vProgram, vText);
+  }
+});
+
+test('REQ-UI-124 REQ-FN-325 REQ-FN-309 REQ-UI-125 owner\'s test 12: a folder with a project and no solution is said so and asked about; New project then makes the solution there, and it is the root of FILES with the new project the one that runs', async () => {
   // The starting point, made as a person makes it: dotnet new in a terminal, and no solution.
   const vFolder = path.join(objWork, 'LooseOne');
   mkdirSync(vFolder, { recursive: true });
@@ -424,10 +550,35 @@ test('REQ-UI-124 REQ-FN-309 owner\'s test 7: in a folder with a project and no s
   execFileSync('powershell.exe', ['-NoProfile', '-Command', `Set-Location -LiteralPath '${vWin.replace(/'/g, "''")}'; dotnet new console -n Loose -o '${vWin.replace(/'/g, "''")}\\Loose' | Out-Null`], { timeout: 180_000 });
   expect(disk(vFolder)).toEqual(['Loose/Loose.csproj', 'Loose/Program.cs'].sort());
   await signedInStart();
-  const vMain = await openFolderFromAnywhere(vFolder);
+  await expect.poll(() => views().some((p) => /^\/(start|)$/.test(new URL(p.url()).pathname)), { timeout: 120_000 }).toBe(true);
+  const vOpenMain = views().find((p) => new URL(p.url()).pathname === '/');
+  if (vOpenMain) await choose(vOpenMain, 'file', 'close');
+  const vStart = await viewOn(/^\/start/);
+  const vWayFolder = vStart.getByTestId('open-folder').or(vStart.getByTestId('way-open-folder')).first();
+  const vDialog = vStart.getByTestId('open-project-dialog');
+  await expect(async () => {
+    if (!(await vDialog.isVisible())) await vWayFolder.click();
+    await expect(vDialog).toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 60_000 });
+  await vStart.getByTestId('open-project-path').fill(vWin);
+  await vStart.getByTestId('open-project-go').click();
+  // Said so, and asked, before it opens.
+  const vAsk = vStart.getByTestId('open-project-no-solution');
+  await expect(vAsk).toBeVisible({ timeout: 30_000 });
+  await expect(vAsk).toContainText('This folder has no solution');
+  await expect(vAsk).toContainText('Loose\\Loose.csproj');
+  await vStart.screenshot({ path: `${SHOTS}/owner-test-7-no-solution.png` });
+  await vStart.getByTestId('open-project-no-solution-back').click();
+  await expect(vAsk).toHaveCount(0);
+  await expect(vStart.getByTestId('open-project-path')).toHaveValue(vWin);
+  await vStart.getByTestId('open-project-go').click();
+  await expect(vAsk).toBeVisible({ timeout: 30_000 });
+  await vStart.getByTestId('open-project-no-solution-go').click();
+  const vMain = await mainWindow();
+  await expect(vMain.getByTestId('project-switch-name')).toHaveText('LooseOne', { timeout: 60_000 });
 
   await newProject(vMain);
-  await pickTemplate(vMain, 'classlib');
+  await pickTemplate(vMain, 'console');
   await expect(vMain.getByTestId('new-project-found')).toContainText('has a project and no solution');
   await expect(vMain.getByTestId('new-project-found')).toContainText('Loose\\Loose.csproj');
   await vMain.getByTestId('new-project-solution').fill('Gathered');
@@ -439,14 +590,19 @@ test('REQ-UI-124 REQ-FN-309 owner\'s test 7: in a folder with a project and no s
 
   const vAfter = await mainWindow();
   await expect(vAfter.getByTestId('project-switch-name')).toHaveText('Gathered', { timeout: 60_000 });
-  expect(disk(vFolder), 'the files in the folder that was open').toEqual(['Gathered.slnx', 'Loose/Loose.csproj', 'Loose/Program.cs', 'Second/Class1.cs', 'Second/Second.csproj'].sort());
-  const vText = readFileSync(path.join(vFolder, 'Gathered.slnx'), 'utf8');
-  expect(vText).toContain('Loose/Loose.csproj');
-  expect(vText).toContain('Second/Second.csproj');
-  await expect(vAfter.getByTestId('target').locator('button')).toContainText('Loose', { timeout: 60_000 });
+  expect(disk(vFolder), 'the files in the folder that was open').toEqual(['Gathered.slnx', 'Loose/Loose.csproj', 'Loose/Program.cs', 'Second/Program.cs', 'Second/Second.csproj'].sort());
+  const vSlnText = readFileSync(path.join(vFolder, 'Gathered.slnx'), 'utf8');
+  expect(vSlnText).toContain('Loose/Loose.csproj');
+  expect(vSlnText).toContain('Second/Second.csproj');
+  // The solution is the root and both projects are below it; the project just added is the one that runs.
+  await expect.poll(async () => { const t = await filesTree(vAfter); return { roots: t.roots, projects: t.projects }; }, { timeout: 60_000 }).toEqual({ roots: ['Gathered.slnx'], projects: ['Loose', 'Second'] });
+  await expect(vAfter.getByTestId('target').locator('button')).toContainText('Second', { timeout: 60_000 });
+  await expect(vAfter.getByTestId('tree-Second-run')).toBeVisible();
+  await expect(vAfter.getByTestId('tree-Loose-run')).toHaveCount(0);
+  await vAfter.screenshot({ path: `${SHOTS}/owner-test-7-workbench.png` });
 });
 
-test('REQ-FN-308 REQ-FN-311 REQ-UI-114 REQ-FN-312 REQ-FN-040 owner\'s test 8: in an empty folder the Analyst has its commands and chatting leaves no file there, then it brainstorms with the person and writes the brief', async () => {
+test('REQ-FN-308 REQ-FN-311 REQ-UI-114 REQ-FN-312 REQ-FN-040 owner\'s test 15: in an empty folder the Analyst has its commands and chatting leaves no file there, then it brainstorms with the person and writes the brief', async () => {
   const vFolder = path.join(objWork, 'BrainTest');
   mkdirSync(vFolder, { recursive: true });
   await signedInStart();
@@ -469,6 +625,9 @@ test('REQ-FN-308 REQ-FN-311 REQ-UI-114 REQ-FN-312 REQ-FN-040 owner\'s test 8: in
   expect(await vHelp.innerText()).not.toContain('**');
   const vYolo = await say(vMain, '*yolo');
   await expect(vYolo.locator('strong')).toHaveText('Go ahead');
+  // After *yolo, as after a long reply, the conversation is at the newest message (the owner's step 8, REQ-UI-128).
+  await expect.poll(() => chatGap(vMain), { timeout: 20_000 }).toBeLessThanOrEqual(4);
+  await vMain.screenshot({ path: `${SHOTS}/owner-test-8-newest.png` });
   // Three turns of chat, and nothing asked for a file yet: the folder holds no file from Chatur (owner, 23 Nov 2026).
   expect(readdirSync(vFolder), 'the folder after three chat turns').toEqual([]);
 
@@ -489,6 +648,20 @@ test('REQ-FN-308 REQ-FN-311 REQ-UI-114 REQ-FN-312 REQ-FN-040 owner\'s test 8: in
     'Write the brief file now, please.',
   ]);
   expect(readFileSync(vBrief, 'utf8')).toContain('## Must do');
+  // The sessions and their tokens are written under the opened project's docs/metrics, in TechieFlow's shape (owner's step 10).
+  const vSessions = path.join(vFolder, 'docs', 'metrics', 'sessions.jsonl');
+  expect(existsSync(vSessions), 'docs/metrics/sessions.jsonl was written by the real chat').toBe(true);
+  const vRecords = readFileSync(vSessions, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l));
+  expect(vRecords.length).toBeGreaterThan(0);
+  const vLast = vRecords[vRecords.length - 1];
+  expect(vLast.v).toBe(1);
+  expect(vLast.ts).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  expect(vLast.harness).toBe('chatur');
+  expect(vLast.app).toBe('BrainTest');
+  expect(typeof vLast.input_tokens).toBe('number');
+  expect(typeof vLast.output_tokens).toBe('number');
+  expect(vLast.output_tokens).toBeGreaterThan(0);
+  console.log(`BrainTest sessions.jsonl: ${vRecords.length} record(s); the last session used ${vLast.input_tokens} in, ${vLast.output_tokens} out on ${vLast.model}`);
   await expect(vMain.getByTestId('conversation')).toContainText('docs/BrainTest-Brief.md is written');
   await expect(vMain.getByTestId('tree-docs')).toBeVisible({ timeout: 30_000 });
   await vMain.screenshot({ path: `${SHOTS}/owner-test-9-brief.png` });
@@ -520,6 +693,7 @@ async function openFolderFromAnywhere(aFolder: string): Promise<Page> {
   }).toPass({ timeout: 60_000 });
   await vStart.getByTestId('open-project-path').fill(windowsPath(aFolder));
   await vStart.getByTestId('open-project-go').click();
+  await goOnIfAsked(vStart);
   const vOpened = await mainWindow();
   await expect(vOpened.getByTestId('project-switch-name')).toHaveText(path.basename(aFolder), { timeout: 60_000 });
   return vOpened;
@@ -542,25 +716,38 @@ async function talkTo(aMain: Page, aAgent: string): Promise<void> {
   if (aAgent !== 'verifier') await expect(await say(aMain, '*yolo')).toContainText('Go ahead');
 }
 
-const METRICS_FOLDER = () => path.join(objWork, 'MetricsTest');
+const BRAIN_FOLDER = () => path.join(objWork, 'BrainTest');
 
-test('REQ-NFR-017 REQ-UI-115 REQ-UI-120 REQ-FN-313 REQ-FN-314 REQ-UI-121 owner\'s test 10: Project Measurements shows the project\'s own figures, a run opens, the zip is saved, and every project is listed', async () => {
-  // The project is a folder holding a COPY of Chatur's own measurement files and its phase-4 checklist: real records,
-  // read only from the copy, so Chatur's own repository is never opened by the test.
+/** Picks a project in the project switcher of the main window, as the person does: no path is typed. */
+async function switchProject(aMain: Page, aName: string): Promise<void> {
+  if ((await aMain.getByTestId('project-switch-name').innerText()).trim() === aName) return;
+  const vPop = aMain.getByTestId('project-switch-pop');
+  await expect(async () => {
+    if (!(await vPop.isVisible())) await aMain.getByTestId('project-switch').click();
+    await expect(vPop).toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 30_000 });
+  await vPop.getByTestId('project-switch-item-name').filter({ hasText: new RegExp(`^${aName}$`) }).first().click();
+  await expect(aMain.getByTestId('project-switch-name')).toHaveText(aName, { timeout: 30_000 });
+}
+
+test('REQ-NFR-017 REQ-UI-115 REQ-FN-040 REQ-UI-120 REQ-FN-313 REQ-FN-314 REQ-UI-121 owner\'s test 19: pick the project in the app, then Project Measurements shows the chat sessions and their tokens, a line opens, the zip is saved, and every project is listed', async () => {
+  // The project is BrainTest, the one chatted in at test 8 and 9: chosen in the app, nothing typed. What it shows is read
+  // only from the docs/metrics that chat wrote.
   await signedInStart();
-  const vFolder = METRICS_FOLDER();
-  const vMetrics = path.join(vFolder, 'docs', 'metrics');
-  mkdirSync(vMetrics, { recursive: true });
-  for (const vName of readdirSync('docs/metrics').filter((f) => f.endsWith('.jsonl'))) copyFileSync(path.join('docs/metrics', vName), path.join(vMetrics, vName));
-  copyFileSync('docs/Chatur-P4-Checklist.md', path.join(vFolder, 'docs', 'MetricsTest-Checklist.md'));
-  const vMain = await openFolderFromAnywhere(vFolder);
+  const vFolder = BRAIN_FOLDER();
+  const vMain = await mainWindow();
+  await switchProject(vMain, 'BrainTest');
 
   await choose(vMain, 'project', 'measurements');
   const vPage = await viewOn(/^\/measurements$/);
-  await expect(vPage.getByTestId('metrics-project')).toHaveText('MetricsTest', { timeout: 60_000 });
+  await expect(vPage.getByTestId('metrics-project')).toHaveText('BrainTest', { timeout: 60_000 });
   await expect(vPage.getByTestId('tile-runs-value')).not.toHaveText('—', { timeout: 60_000 });
   const vAll = Number((await vPage.getByTestId('tile-runs-value').innerText()).replace(/,/g, ''));
-  expect(vAll, 'runs recorded in all history').toBeGreaterThan(0);
+  expect(vAll, 'chat sessions recorded in all history').toBeGreaterThan(0);
+  // The tokens the real chat used are on the screen, not "not measured".
+  await expect(vPage.getByTestId('tile-tokens-out-value')).not.toHaveText('not measured');
+  expect(Number((await vPage.getByTestId('tile-tokens-out-value').innerText()).replace(/,/g, '')), 'tokens out').toBeGreaterThan(0);
+  expect(Number((await vPage.getByTestId('tile-tokens-in-value').innerText()).replace(/,/g, '')), 'tokens in').toBeGreaterThan(0);
   for (const vTile of ['tokens-in', 'tokens-out', 'cache-read', 'cache-write', 'usd', 'wall']) await expect(vPage.getByTestId(`tile-${vTile}`)).toBeVisible();
   await expect(vPage.getByTestId('metrics-misses')).toBeVisible();
   await expect(vPage.getByTestId('firstpass-rate')).not.toHaveText('');
@@ -591,7 +778,7 @@ test('REQ-NFR-017 REQ-UI-115 REQ-UI-120 REQ-FN-313 REQ-FN-314 REQ-UI-121 owner\'
 
   await vPage.getByTestId('nav-measurements-all').click();
   await expect(vPage.getByTestId('across-heading')).toBeVisible({ timeout: 30_000 });
-  await expect(vPage.getByTestId('across-row-metricstest')).toBeVisible({ timeout: 60_000 });
+  await expect(vPage.getByTestId('across-row-braintest')).toBeVisible({ timeout: 60_000 });
   await vPage.screenshot({ path: `${SHOTS}/owner-test-10-across.png` });
 
   await vPage.getByTestId('nav-measurements').click();
@@ -599,18 +786,152 @@ test('REQ-NFR-017 REQ-UI-115 REQ-UI-120 REQ-FN-313 REQ-FN-314 REQ-UI-121 owner\'
   await expect(vPage.getByTestId('metrics-heading')).toBeVisible({ timeout: 30_000 });
 });
 
-test('REQ-NFR-017 REQ-FN-317 REQ-FN-322 REQ-FN-320 owner\'s test 11: one command typed to each agent runs to its end', async () => {
-  const vFolder = METRICS_FOLDER();
+/** The keys panel's line for the test provider, found by its name. */
+async function keyRowOf(aPage: Page, aName: string) {
+  const vRow = aPage.locator('[data-testid^="key-row-"]').filter({ has: aPage.getByText(aName, { exact: true }) }).first();
+  await expect(vRow).toBeVisible({ timeout: 60_000 });
+  const vId = (await vRow.getAttribute('data-testid'))!.replace('key-row-', '');
+  return { row: vRow, n: vId };
+}
+
+test('REQ-UI-129 REQ-UI-131 REQ-FN-326 REQ-NFR-022 owner\'s test 21: what is left on each key reads not known, then counts against a typed limit, on both measurements screens', async () => {
+  await signedInStart();
   const vMain = await mainWindow();
-  await expect(vMain.getByTestId('project-switch-name')).toHaveText('MetricsTest', { timeout: 60_000 });
-  const vPrompt = path.join(vFolder, 'docs', 'MetricsTest-Research-Prompt.md');
+  await switchProject(vMain, 'BrainTest');
+  const vProvider = await connectProvider(vMain);
+  await choose(vMain, 'project', 'measurements');
+  const vPage = await viewOn(/^\/measurements$/);
+  await expect(vPage.getByTestId('keys-panel')).toBeVisible({ timeout: 60_000 });
+  const { n } = await keyRowOf(vPage, vProvider.name);
+
+  // 2) An Anthropic key gives no balance and no limit is typed yet: "not known", never a number.
+  await expect(vPage.getByTestId(`key-source-${n}`)).toHaveText('not known');
+  await expect(vPage.getByTestId(`key-left-${n}`)).toHaveText('not known');
+
+  // 3) A limit of $5.00 from the first of this month: Chatur's own count of the priced calls made since.
+  await vPage.getByTestId(`key-set-limit-${n}`).click();
+  await expect(vPage.getByTestId('limit-dialog')).toBeVisible();
+  const vAmount = vPage.locator('input[data-testid=limit-amount], [data-testid=limit-amount] input').first();
+  await vAmount.fill('5.00');
+  await vPage.getByTestId('limit-save').click();
+  await expect(vPage.getByTestId(`key-source-${n}`)).toHaveText("Chatur's own count", { timeout: 30_000 });
+  await expect(vPage.getByTestId(`key-limit-${n}`)).toHaveText('$5.00');
+  await expect(vPage.getByTestId(`key-used-${n}`)).toHaveText(/^\$\d+\.\d{2,4}$/);
+  const vUsed = Number((await vPage.getByTestId(`key-used-${n}`).innerText()).replace('$', ''));
+  expect(vUsed, 'the chats of the parts above were priced and counted').toBeGreaterThan(0);
+  const vLeft = Number((await vPage.getByTestId(`key-left-${n}`).innerText()).replace('$', ''));
+  expect(Math.abs(vLeft - (5 - vUsed)), 'Left is the limit less what was used').toBeLessThan(0.0101);
+  await vPage.screenshot({ path: `${SHOTS}/owner-test-21-keys.png`, fullPage: true });
+
+  // 4) The same line under every project.
+  await vPage.getByTestId('nav-measurements-all').click();
+  await expect(vPage.getByTestId('across-heading')).toBeVisible({ timeout: 30_000 });
+  const vAcross = await keyRowOf(vPage, vProvider.name);
+  await expect(vPage.getByTestId(`key-limit-${vAcross.n}`)).toHaveText('$5.00');
+
+  // 5) Remove the limit: "not known" again.
+  await vPage.getByTestId('nav-project-measurements').click();
+  const vBack = await keyRowOf(vPage, vProvider.name);
+  await vPage.getByTestId(`key-set-limit-${vBack.n}`).click();
+  await vPage.getByTestId('limit-clear').click();
+  await expect(vPage.getByTestId(`key-source-${vBack.n}`)).toHaveText('not known', { timeout: 30_000 });
+});
+
+/** On Compare models, ticks exactly the named models. */
+async function pickModels(aPage: Page, aModels: string[]): Promise<void> {
+  for (const vBox of await aPage.locator('[data-testid^="model-check-"]').all()) {
+    const vId = (await vBox.getAttribute('data-testid'))!.replace('model-check-', '');
+    const vOn = (await vBox.getAttribute('aria-checked')) === 'true' || (await vBox.getAttribute('data-state')) === 'checked';
+    if (vOn !== aModels.includes(vId)) await vBox.click();
+  }
+}
+
+test('REQ-FN-327 REQ-FN-328 REQ-UI-132 REQ-UI-133 REQ-FN-330 REQ-NFR-021 REQ-NFR-022 owner\'s test 22: one question to two models, side by side with time, tokens and cost, marked and opened again', async () => {
+  const vFolder = BRAIN_FOLDER();
+  await signedInStart();
+  const vMain = await mainWindow();
+  await switchProject(vMain, 'BrainTest');
+  await connectProvider(vMain);
+  await choose(vMain, 'project', 'measurements');
+  const vPage = await viewOn(/^\/measurements$/);
+  await vPage.getByTestId('nav-compare-models').click();
+  await expect(vPage.getByTestId('compare-project')).toHaveText('BrainTest', { timeout: 30_000 });
+
+  // 2) One model is refused.
+  await pickModels(vPage, ['claude-haiku-5-5']);
+  await vPage.getByTestId('compare-run').click();
+  await expect(vPage.getByTestId('compare-pick-count')).toContainText('One model is not a comparison');
+
+  // 3)–6) Two models, a read-only question.
+  await pickModels(vPage, ['claude-haiku-5-5', 'claude-sonnet-5-5']);
+  await vPage.getByTestId('compare-kind-button').click();
+  await vPage.getByTestId('kind-question').click();
+  await vPage.getByTestId('compare-task').fill('Which files are in the docs folder of this project? Answer in one sentence.');
+  const vRunsBefore = existsSync(path.join(vFolder, 'docs', 'metrics', 'runs.jsonl'))
+    ? readFileSync(path.join(vFolder, 'docs', 'metrics', 'runs.jsonl'), 'utf8').split('\n').filter((l) => l.includes('"compare-models"')).length
+    : 0;
+  await vPage.getByTestId('compare-run').click();
+  await expect(vPage.getByTestId('compare-state')).toHaveText('done', { timeout: 300_000 });
+  await expect(vPage.getByTestId('compare-status')).toContainText('nothing in the project changed');
+  for (const vN of [1, 2]) {
+    await expect(vPage.getByTestId(`result-answer-${vN}`)).not.toHaveText(/^\s*$/);
+    await expect(vPage.getByTestId(`result-time-${vN}`)).toHaveText(/\d/);
+    await expect(vPage.getByTestId(`result-tokens-${vN}`)).toHaveText(/^[\d,]+ \/ [\d,]+$/);
+    await expect(vPage.getByTestId(`result-cost-${vN}`)).toHaveText(/^\$\d+\.\d{2,4}$/);
+  }
+
+  // 7) Marks.
+  await vPage.getByTestId('mark-right-1').click();
+  await vPage.getByTestId('mark-wrong-2').click();
+  await expect(vPage.getByTestId('result-mark-1')).toHaveText('right');
+  await expect(vPage.getByTestId('result-mark-2')).toHaveText('wrong');
+  await vPage.screenshot({ path: `${SHOTS}/owner-test-22-compare.png`, fullPage: true });
+  const vRuns = readFileSync(path.join(vFolder, 'docs', 'metrics', 'runs.jsonl'), 'utf8').split('\n').filter((l) => l.includes('"compare-models"'));
+  expect(vRuns.length - vRunsBefore, 'two new compare-models lines in runs.jsonl').toBe(2);
+  expect(readFileSync(path.join(vFolder, 'docs', 'metrics', 'gates.jsonl'), 'utf8')).toContain('owner-mark');
+
+  // 8) Opened again from Past comparisons.
+  await vPage.getByTestId('nav-project-measurements').click();
+  await vPage.getByTestId('nav-compare-models').click();
+  await vPage.getByTestId('history-row-1').click();
+  await expect(vPage.getByTestId('result-mark-1')).toHaveText('right', { timeout: 30_000 });
+  await expect(vPage.getByTestId('result-mark-2')).toHaveText('wrong');
+});
+
+test('REQ-FN-329 REQ-UI-132 REQ-NFR-022 owner\'s test 23: a task that changes files works in each model\'s own copy under the project\'s bin folder, and the copies are gone', async () => {
+  const vFolder = BRAIN_FOLDER();
+  await signedInStart();
+  const vMain = await mainWindow();
+  await switchProject(vMain, 'BrainTest');
+  await choose(vMain, 'project', 'measurements');
+  const vPage = await viewOn(/^\/measurements$/);
+  await vPage.getByTestId('nav-compare-models').click();
+  await expect(vPage.getByTestId('compare-project')).toHaveText('BrainTest', { timeout: 30_000 });
+  await pickModels(vPage, ['claude-haiku-5-5', 'claude-sonnet-5-5']);
+  await vPage.getByTestId('compare-kind-button').click();
+  await vPage.getByTestId('kind-change').click();
+  await vPage.getByTestId('compare-task').fill('Add a file docs/notes.md with the one line: Made in Compare models.');
+  await vPage.getByTestId('compare-run').click();
+  await expect(vPage.getByTestId('compare-state')).toHaveText('done', { timeout: 600_000 });
+  for (const vN of [1, 2]) await expect(vPage.getByTestId(`result-files-${vN}`)).toContainText('docs/notes.md');
+  await vPage.screenshot({ path: `${SHOTS}/owner-test-23-compare-change.png`, fullPage: true });
+  expect(existsSync(path.join(vFolder, 'docs', 'notes.md')), 'each model worked in its own copy').toBe(false);
+  expect(existsSync(path.join(vFolder, 'bin', 'chatur-compare')), 'the copies are gone').toBe(false);
+});
+
+test('REQ-NFR-017 REQ-FN-317 REQ-FN-322 REQ-FN-320 owner\'s test 24: one command typed to each agent runs to its end', async () => {
+  const vFolder = BRAIN_FOLDER();
+  await signedInStart();
+  const vMain = await mainWindow();
+  await switchProject(vMain, 'BrainTest');
+  const vPrompt = path.join(vFolder, 'docs', 'BrainTest-Research-Prompt.md');
 
   await connectProvider(vMain);
   await talkTo(vMain, 'analyst');
   await say(vMain, '*research-prompt note-taking apps for one person that work offline');
   await untilWritten(vMain, vPrompt, [
     'Focus 4, competitors. It should inform whether to build it at all; constraints: one developer, no budget; known: Notion, Obsidian and Apple Notes exist. Write the prompt file now.',
-    'Write docs/MetricsTest-Research-Prompt.md now, no more questions.',
+    'Write docs/BrainTest-Research-Prompt.md now, no more questions.',
     'Please write the file now.',
   ]);
   const vFirst = statSync(vPrompt).mtimeMs;
@@ -620,7 +941,7 @@ test('REQ-NFR-017 REQ-FN-317 REQ-FN-322 REQ-FN-320 owner\'s test 11: one command
   const vRewritten = () => existsSync(vPrompt) && statSync(vPrompt).mtimeMs > vFirst;
   for (const vNudge of [
     'Focus 5, technology. It should inform the choice of data store; constraints: .NET, works offline, no server; known: SQLite and LiteDB exist. Write the prompt file now.',
-    'Write docs/MetricsTest-Research-Prompt.md now, no more questions.',
+    'Write docs/BrainTest-Research-Prompt.md now, no more questions.',
     'Please write the file now.',
   ]) {
     if (vRewritten()) break;
@@ -629,11 +950,11 @@ test('REQ-NFR-017 REQ-FN-317 REQ-FN-322 REQ-FN-320 owner\'s test 11: one command
   expect(vRewritten(), 'the Architect wrote the research prompt again').toBe(true);
 
   await talkTo(vMain, 'flow-master');
-  await expect(await say(vMain, '*develop-status MetricsTest')).toContainText('No end-to-end run');
+  await expect(await say(vMain, '*develop-status BrainTest')).toContainText('No end-to-end run');
 
   await talkTo(vMain, 'verifier');
-  const vReport = await say(vMain, '*report all MetricsTest');
-  await expect(vReport).toContainText('row(s) in scope');
-  await expect(vReport.locator('table')).toBeVisible();
+  // BrainTest has no checklist, and the Verifier says so plainly instead of an empty table.
+  const vReport = await say(vMain, '*report all BrainTest');
+  await expect(vReport).toContainText('no checklist yet');
   await vMain.screenshot({ path: `${SHOTS}/owner-test-11-verifier.png` });
 });

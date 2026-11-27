@@ -68,72 +68,75 @@ public sealed class ProjectTemplateActionsTests : IDisposable
     }
 
     /// <summary>
-    /// Starting point 1, nothing open: the person picks a location that is not there yet. Create makes that folder, the
-    /// solution file in it and the project in one folder under it, and nothing else; the solution is opened.
+    /// Starting point 1, nothing open (owner's test of 25 Nov 2026): the person picks a location, and the solution's folder
+    /// is not there. Create makes that folder named after the solution, the solution file in it and the project in a
+    /// folder of its own inside it, also when the two names are the same; nothing lands directly in the location.
     /// </summary>
-    [Fact(DisplayName = "REQ-NFR-018 REQ-FN-310 with nothing open the picked folder holds the solution file and the project one folder under it")]
-    public async Task NothingOpenPickedFolderHoldsSolutionAndProject()
+    [Fact(DisplayName = "REQ-NFR-018 REQ-FN-310 the solution gets a folder of its own in the picked location and each project one inside it")]
+    public async Task NothingOpenSolutionGetsItsOwnFolder()
     {
         var vPicked = Path.Combine(objRoot, "Picked");
+        var vSolutionFolder = Path.Combine(vPicked, "Todo");
 
         var vMade = await objSut.CreateAsync(new NewProjectRequest(vPicked, null, "Todo", string.Empty, "console", "net10.0"));
 
-        Assert.Equal(["Todo.slnx", "Todo/Todo.csproj"], Disk(vPicked));
-        Assert.Equal(Path.Combine(vPicked, "Todo.slnx"), vMade.SolutionFile);
-        Assert.Equal(Path.Combine(vPicked, "Todo", "Todo.csproj"), vMade.ProjectFile);
+        Assert.Equal(["Todo/Todo.slnx", "Todo/Todo/Todo.csproj"], Disk(vPicked));
+        Assert.Equal(Path.Combine(vSolutionFolder, "Todo.slnx"), vMade.SolutionFile);
+        Assert.Equal(Path.Combine(vSolutionFolder, "Todo", "Todo.csproj"), vMade.ProjectFile);
         Assert.True(vMade.OpenedNow);
-        Assert.Equal(Path.Combine(vPicked, "Todo.slnx"), objOpener.Opened);
+        Assert.Equal(Path.Combine(vSolutionFolder, "Todo.slnx"), objOpener.Opened);
         Assert.Equal(
             [
-                $"new sln --name \"Todo\" -o \"{vPicked}\"",
-                $"new console -n \"Todo\" -o \"{Path.Combine(vPicked, "Todo")}\" -f net10.0",
-                $"sln \"{Path.Combine(vPicked, "Todo.slnx")}\" add \"{Path.Combine(vPicked, "Todo", "Todo.csproj")}\""
+                $"new sln --name \"Todo\" -o \"{vSolutionFolder}\"",
+                $"new console -n \"Todo\" -o \"{Path.Combine(vSolutionFolder, "Todo")}\" -f net10.0",
+                $"sln \"{Path.Combine(vSolutionFolder, "Todo.slnx")}\" add \"{Path.Combine(vSolutionFolder, "Todo", "Todo.csproj")}\""
             ],
             objLauncher.Commands);
-        Assert.All(objLauncher.Runs.Where(r => r.Arguments != "--version"), r => Assert.Equal(vPicked, r.Directory));
+        Assert.All(objLauncher.Runs.Where(r => r.Arguments != "--version"), r => Assert.Equal(vSolutionFolder, r.Directory));
     }
 
     /// <summary>
-    /// Starting point 2, an empty folder open: the solution file is in that folder itself and the project in one
-    /// folder under it; the folder's own entry in the project list gives way to the solution.
+    /// Starting point 2, an empty folder open: the solution gets its own folder inside it (the owner's step 1 of 25 Nov
+    /// 2026, where the solution used to land beside the project) and the open folder stays in the project list.
     /// </summary>
-    [Fact(DisplayName = "REQ-NFR-018 REQ-FN-310 with an empty folder open the solution file is in that folder and the project one folder under it")]
-    public async Task EmptyFolderHoldsSolutionAndProject()
+    [Fact(DisplayName = "REQ-NFR-018 REQ-FN-310 with an empty folder open the solution gets its own folder inside it")]
+    public async Task EmptyFolderGetsTheSolutionInItsOwnFolder()
     {
         var vFolder = Directory.CreateDirectory(Path.Combine(objRoot, "Empty")).FullName;
         AddFolderProject(vFolder);
 
-        var vMade = await objSut.CreateAsync(new NewProjectRequest(vFolder, null, "Todo", "Todo.App", "console", "net10.0"));
+        var vMade = await objSut.CreateAsync(new NewProjectRequest(vFolder, null, "Todo", "Todo.App", "console", "net10.0", true));
 
-        Assert.Equal(["Todo.App/Todo.App.csproj", "Todo.slnx"], Disk(vFolder));
-        Assert.Equal(Path.Combine(vFolder, "Todo.slnx"), objOpener.Opened);
+        Assert.Equal(["Todo/Todo.App/Todo.App.csproj", "Todo/Todo.slnx"], Disk(vFolder));
+        Assert.Equal(Path.Combine(vFolder, "Todo", "Todo.slnx"), objOpener.Opened);
         Assert.Empty(vMade.ProjectsAdded);
         using var vCheck = objConnections.OpenConnection();
-        Assert.NotNull(vCheck.ExecuteScalar<string?>("SELECT RemovedUtc FROM Project WHERE Path = @Path AND Kind = 'Folder';", new { Path = vFolder }));
+        Assert.Null(vCheck.ExecuteScalar<string?>("SELECT RemovedUtc FROM Project WHERE Path = @Path AND Kind = 'Folder';", new { Path = vFolder }));
     }
 
     /// <summary>
-    /// The owner's own case of 23 Nov 2026: the folder ChaturOwnerTest held only <c>docs/metrics</c>, and New project
-    /// named Checking-Chatur made ChaturOwnerTest/Checking-Chatur/Checking-Chatur.slnx. A folder that is not empty
-    /// is still the solution's folder: never a folder named after the solution inside it.
+    /// The owner's case of 25 Nov 2026 (which replaces that of 23 Nov): the solution and the project have the same
+    /// name, and the open folder holds other things. The solution's folder is made inside it, and the project goes in
+    /// a folder of the same name inside that; what was in the folder is not touched.
     /// </summary>
-    [Fact(DisplayName = "REQ-NFR-018 REQ-FN-310 a folder that is open and not empty gets no folder named after the solution inside it")]
-    public async Task FolderThatIsNotEmptyIsStillTheSolutionFolder()
+    [Fact(DisplayName = "REQ-NFR-018 REQ-FN-310 a solution and a project of the same name each get their own folder, one inside the other")]
+    public async Task SameNamesGetNestedFolders()
     {
         var vFolder = Directory.CreateDirectory(Path.Combine(objRoot, "ChaturOwnerTest")).FullName;
         Directory.CreateDirectory(Path.Combine(vFolder, "docs", "metrics"));
         File.WriteAllText(Path.Combine(vFolder, "docs", "metrics", "sessions.jsonl"), "{}\n");
         AddFolderProject(vFolder);
 
-        var vPlan = objSut.Plan(new NewProjectRequest(vFolder, null, "Checking-Chatur", string.Empty, "blazor", null), ".slnx");
-        Assert.Equal(Path.Combine(vFolder, "Checking-Chatur.slnx"), vPlan.SolutionFile);
-        Assert.Equal(Path.Combine(vFolder, "Checking-Chatur"), vPlan.ProjectFolder);
+        var vInner = Path.Combine(vFolder, "Checking-Chatur");
+        var vPlan = objSut.Plan(new NewProjectRequest(vFolder, null, "Checking-Chatur", string.Empty, "blazor", null, true), ".slnx");
+        Assert.Equal(vInner, vPlan.Folder);
+        Assert.Equal(Path.Combine(vInner, "Checking-Chatur.slnx"), vPlan.SolutionFile);
+        Assert.Equal(Path.Combine(vInner, "Checking-Chatur"), vPlan.ProjectFolder);
         Assert.Null(vPlan.Problem);
 
-        await objSut.CreateAsync(new NewProjectRequest(vFolder, null, "Checking-Chatur", string.Empty, "blazor", null));
+        await objSut.CreateAsync(new NewProjectRequest(vFolder, null, "Checking-Chatur", string.Empty, "blazor", null, true));
 
-        Assert.Equal(["Checking-Chatur.slnx", "Checking-Chatur/Checking-Chatur.csproj", "docs/metrics/sessions.jsonl"], Disk(vFolder));
-        Assert.False(Directory.Exists(Path.Combine(vFolder, "Checking-Chatur", "Checking-Chatur")));
+        Assert.Equal(["Checking-Chatur/Checking-Chatur.slnx", "Checking-Chatur/Checking-Chatur/Checking-Chatur.csproj", "docs/metrics/sessions.jsonl"], Disk(vFolder));
     }
 
     /// <summary>
@@ -148,11 +151,17 @@ public sealed class ProjectTemplateActionsTests : IDisposable
         File.WriteAllText(Path.Combine(vFolder, "OwnerTest", "OwnerTest.csproj"), "<Project />");
         File.WriteAllText(Path.Combine(vFolder, "OwnerTest", "bin", "Debug", "Left.csproj"), "<Project />");
         AddFolderProject(vFolder);
-        var vRequest = new NewProjectRequest(vFolder, null, "Work", "Second", "console", null);
+        var vRequest = new NewProjectRequest(vFolder, null, "Work", "Second", "console", null, true);
 
         var vPlan = objSut.Plan(vRequest, ".slnx");
         Assert.Equal([Path.Combine("OwnerTest", "OwnerTest.csproj")], vPlan.ProjectsToAdd);
         Assert.False(vPlan.SolutionExists);
+        Assert.Equal(vFolder, vPlan.Folder);
+
+        // A location that is not the open folder gathers nothing, however many projects lie below it (the owner's bin of 25 Nov).
+        var vElsewhere = objSut.Plan(vRequest with { InOpenFolder = false }, ".slnx");
+        Assert.Empty(vElsewhere.ProjectsToAdd);
+        Assert.Equal(Path.Combine(vFolder, "Work"), vElsewhere.Folder);
 
         var vMade = await objSut.CreateAsync(vRequest);
 
@@ -188,10 +197,10 @@ public sealed class ProjectTemplateActionsTests : IDisposable
 
     /// <summary>
     /// With the solution itself open: dotnet new runs in the solution's folder with the name, location and framework,
-    /// dotnet sln add follows with the new .csproj, the solution's stored run targets are forgotten, and the
+    /// dotnet sln add follows with the new .csproj, the solution's stored run targets are kept (reading them again finds the new project, and the project that ran stays chosen), and the
     /// solution, already open, is not opened again.
     /// </summary>
-    [Fact(DisplayName = "REQ-UI-112 with a solution open the project is made one folder under it, added, and the run targets forgotten")]
+    [Fact(DisplayName = "REQ-UI-112 with a solution open the project is made one folder under it, added, and the run targets kept")]
     public async Task ProjectIsMadeThenAddedAndTargetsForgotten()
     {
         var vLocation = Path.Combine(objRoot, "Tools");
@@ -207,7 +216,7 @@ public sealed class ProjectTemplateActionsTests : IDisposable
             objLauncher.Commands);
         Assert.Equal(["Sln.sln", "Tools/Tools.csproj"], Disk(objRoot));
         using var vConnection = objConnections.OpenConnection();
-        Assert.Equal(0, vConnection.ExecuteScalar<int>("SELECT COUNT(*) FROM RunTarget WHERE ProjectId = @ProjectId;", new { ProjectId = objProjectId }));
+        Assert.Equal(1, vConnection.ExecuteScalar<int>("SELECT COUNT(*) FROM RunTarget WHERE ProjectId = @ProjectId;", new { ProjectId = objProjectId }));
     }
 
     /// <summary>
@@ -224,14 +233,14 @@ public sealed class ProjectTemplateActionsTests : IDisposable
         Assert.Null(vNoName.ProjectFolder);
 
         var vSolutionOnly = objSut.Plan(new NewProjectRequest(vFolder, null, "Todo", string.Empty, "console", null), ".sln");
-        Assert.Equal(Path.Combine(vFolder, "Todo.sln"), vSolutionOnly.SolutionFile);
-        Assert.Equal(Path.Combine(vFolder, "Todo"), vSolutionOnly.ProjectFolder);
+        Assert.Equal(Path.Combine(vFolder, "Todo", "Todo.sln"), vSolutionOnly.SolutionFile);
+        Assert.Equal(Path.Combine(vFolder, "Todo", "Todo"), vSolutionOnly.ProjectFolder);
 
         var vBoth = objSut.Plan(new NewProjectRequest(vFolder, null, "Todo", "Todo.App", "console", null), ".slnx");
-        Assert.Equal(Path.Combine(vFolder, "Todo.slnx"), vBoth.SolutionFile);
-        Assert.Equal(Path.Combine(vFolder, "Todo.App"), vBoth.ProjectFolder);
-        Assert.Equal(Path.Combine(vFolder, "Todo.App", "Todo.App.csproj"), vBoth.ProjectFile);
-        Assert.Equal(vFolder, vBoth.Folder);
+        Assert.Equal(Path.Combine(vFolder, "Todo", "Todo.slnx"), vBoth.SolutionFile);
+        Assert.Equal(Path.Combine(vFolder, "Todo", "Todo.App"), vBoth.ProjectFolder);
+        Assert.Equal(Path.Combine(vFolder, "Todo", "Todo.App", "Todo.App.csproj"), vBoth.ProjectFile);
+        Assert.Equal(Path.Combine(vFolder, "Todo"), vBoth.Folder);
 
         var vNowhere = objSut.Plan(new NewProjectRequest(string.Empty, null, "Todo", string.Empty, "console", null), ".slnx");
         Assert.NotNull(vNowhere.Problem);
@@ -364,8 +373,6 @@ public sealed class ProjectTemplateActionsTests : IDisposable
         public string? FailOn { get; set; }
 
         public string Output { get; set; } = string.Empty;
-
-        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 
         public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 

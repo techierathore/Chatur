@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — UI Design — Phase 4: More users</h1>
-    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>Chatur-P4-UIDesign.md</code></div>
+    <div class="subtitle">Rendered 2026-11-27 &middot; source <code>Chatur-P4-UIDesign.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -119,6 +119,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#screen-integrations-integrations">Screen: Integrations (/integrations)</a></li>
         <li class="h3"><a href="#screen-measurements-measurements">Screen: Measurements (/measurements)</a></li>
         <li class="h3"><a href="#screen-measurements-across-projects-measurements-all">Screen: Measurements across projects (/measurements/all)</a></li>
+        <li class="h3"><a href="#screen-compare-models-compare-models">Screen: Compare models (/compare-models)</a></li>
         <li><a href="#where-the-rest-lives">Where the rest lives</a></li>
       </ol>
     </div>
@@ -240,13 +241,13 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <p><strong>Dialogs opened here:</strong> Make a token — shown once and never again</p>
 <p><strong>States:</strong> empty: no token yet — the example panel says to make one to see a call that works · loading: a switch shows a half state while App Manager is told, and goes back if it refuses · error: App Manager unreachable — a row saying the actions are still served but their state has not reached App Manager, with the switches left alone</p>
 <h3 id="screen-measurements-measurements">Screen: Measurements (<code>/measurements</code>)<a class="anchor-link" href="#screen-measurements-measurements">#</a></h3>
-<p><strong>Mockup:</strong> <a href="mockups/measurements.html">mockups/measurements.html</a> · <strong>Roles:</strong> Owner, Licensed developer · <strong>BRD:</strong> BRD-253 to BRD-258, BRD-260, BRD-261</p>
-<p>Opened from Project ▸ Measurements, in the secondary window. Every figure comes from the open project's <code>docs/metrics</code> files; no network call. The words are TfLens's.</p>
+<p><strong>Mockup:</strong> <a href="mockups/measurements.html">mockups/measurements.html</a> · <strong>Roles:</strong> Owner, Licensed developer · <strong>BRD:</strong> BRD-253 to BRD-258, BRD-260, BRD-261, BRD-287 to BRD-290</p>
+<p>Opened from Project ▸ Measurements, in the secondary window. Figures come from the project's <code>docs/metrics</code> files, in TfLens's words.</p>
 <table>
 <thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
 <tbody>
 <tr><td><code>metrics-heading</code></td><td>text + Button ×2</td><td>"Measurements", the project's name and its docs/metrics folder; Save as zip; Count again</td></tr>
-<tr><td><code>metrics-period</code></td><td>Select + DatePicker ×2</td><td>All history, Today, Last 7 days, Last 30 days, Between two dates (two dates appear only then)</td></tr>
+<tr><td><code>metrics-period</code></td><td>Select + DatePicker ×2</td><td>All history, Today, Last 7 days, Last 30 days, Between two dates</td></tr>
 <tr><td><code>metrics-tiles</code></td><td>Card ×7</td><td>Runs recorded, Tokens in, Tokens out, Cache read, Cache write, Measured USD (or "no price"), Total wall clock; unmeasured reads "not measured"</td></tr>
 <tr><td><code>metrics-split</code></td><td>Tabs + DataTable</td><td>By model, By agent, By command, each line with the tiles' figures</td></tr>
 <tr><td><code>metrics-misses</code></td><td>Card + DataTable</td><td>Misses, Found by (raw value with a plain gloss: gate — a check, agent-review — a reviewing agent, owner — you, production — in use after release), the rows, First-pass rate; every miss with REQ, Class, Severity, Found by, Status</td></tr>
@@ -254,26 +255,28 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td><code>metrics-runs</code></td><td>DataTable</td><td>one line per run: When, Command phase, Agent, Model, Tokens in, Tokens out, Wall clock, Result, Rows; opens its detail</td></tr>
 <tr><td><code>run-detail</code></td><td>Sheet</td><td>command, mode, model, the four token kinds, Measured USD, wall clock, result, rows touched, the raw record</td></tr>
 <tr><td><code>metrics-offline-note</code></td><td>Panel</td><td>read from docs/metrics; nothing is sent</td></tr>
+<tr><td><code>keys-panel</code></td><td>DataTable</td><td>each key: how known, Limit, Used, Left</td></tr>
 </tbody>
 </table>
 <table>
 <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
 <tbody>
 <tr><td>Period</td><td>select</td><td>yes</td><td>All history to begin with</td></tr>
-<tr><td>From, To</td><td>date</td><td>for Between</td><td>To on or after From; else the figures stay as they were and the fields say why</td></tr>
+<tr><td>From, To</td><td>date</td><td>for Between</td><td>To on or after From, else the fields say why</td></tr>
 <tr><td>Save to</td><td>folder</td><td>for Save as zip</td><td>the project's folder to begin with; an unwritable folder says so</td></tr>
 </tbody>
 </table>
 <p><strong>Dialogs opened here:</strong> Save as zip — the folder, then Save; the zip's path is shown after</p>
 <p><strong>States:</strong> empty: no docs/metrics or no run in the period — "not measured" or 0 runs, and one line says which · loading: dashes · error: a line that is not JSON is counted as unreadable in the note</p>
 <h3 id="screen-measurements-across-projects-measurements-all"><a id="screen-measurements-across-projects-measurementsall"></a>Screen: Measurements across projects (<code>/measurements/all</code>)<a class="anchor-link" href="#screen-measurements-across-projects-measurements-all">#</a></h3>
-<p><strong>Mockup:</strong> <a href="mockups/measurements-all.html">mockups/measurements-all.html</a> · <strong>Roles:</strong> Owner, Licensed developer · <strong>BRD:</strong> BRD-259</p>
+<p><strong>Mockup:</strong> <a href="mockups/measurements-all.html">mockups/measurements-all.html</a> · <strong>Roles:</strong> Owner, Licensed developer · <strong>BRD:</strong> BRD-259, BRD-287 to BRD-290</p>
 <table>
 <thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
 <tbody>
 <tr><td><code>across-period</code></td><td>Select + DatePicker ×2</td><td>the same periods as Measurements; Last 7 days to begin with</td></tr>
 <tr><td><code>across-tiles</code></td><td>Card ×5</td><td>Projects, Runs recorded, Tokens out, Measured USD, Misses, for every project together</td></tr>
 <tr><td><code>across-table</code></td><td>DataTable</td><td>one line per project: Project, Runs, Tokens in, Tokens out, Cache read, Cache write, Measured USD, Wall clock, Misses, and Open (its Measurements); a project with no docs/metrics reads "not measured"</td></tr>
+<tr><td><code>keys-panel</code></td><td>Card + DataTable</td><td>per connected provider: how it is known, Limit, Used, Left; Ask again; Change limit</td></tr>
 </tbody>
 </table>
 <table>
@@ -282,8 +285,31 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Period</td><td>select</td><td>yes</td><td>Last 7 days to begin with</td></tr>
 </tbody>
 </table>
-<p><strong>Dialogs opened here:</strong> none</p>
+<p><strong>Dialogs opened here:</strong> Limit for a key, as on Measurements</p>
 <p><strong>States:</strong> empty: no projects — one line saying so · loading: the tiles read as dashes · error: a project whose folder cannot be read is greyed and says so rather than dropped</p>
+<h3 id="screen-compare-models-compare-models">Screen: Compare models (<code>/compare-models</code>)<a class="anchor-link" href="#screen-compare-models-compare-models">#</a></h3>
+<p><strong>Mockup:</strong> <a href="mockups/compare-models.html">mockups/compare-models.html</a> · <strong>Roles:</strong> Owner, Licensed developer · <strong>BRD:</strong> BRD-291 to BRD-298</p>
+<p>Opened from the secondary window's nav, under This project. Works on the open project; with none open it says so and Run stays inert.</p>
+<table>
+<thead><tr><th>Region</th><th>Control</th><th>Shows or binds</th></tr></thead>
+<tbody>
+<tr><td><code>compare-heading</code></td><td>text</td><td>"Compare models" and the open project's name</td></tr>
+<tr><td><code>compare-form</code></td><td>Checkbox per model + Select + Textarea + Button</td><td>every model of every connected provider, with its provider; the kind (Question, changes nothing · Task that changes files) with a line on copies; the task; how many are picked; Run</td></tr>
+<tr><td><code>compare-status</code></td><td>Badge + text</td><td>running, done or failed; the kind, when, and for a question that nothing in the project changed</td></tr>
+<tr><td><code>compare-results</code></td><td>Card per model</td><td>the model and its provider, Time, Tokens in / out, Cost (or "no price"), the answer, or for a task that changes files its changed files with lines added and removed; Right and Wrong, and the mark</td></tr>
+<tr><td><code>compare-history</code></td><td>DataTable</td><td>past comparisons from docs/metrics: When, Kind, Task, Models, Marks; a line opens it again</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Validation</th></tr></thead>
+<tbody>
+<tr><td>Models</td><td>checkbox</td><td>yes</td><td>two to four; one or a fifth is refused and the line says why</td></tr>
+<tr><td>Kind</td><td>select</td><td>yes</td><td>Question, changes nothing, to begin with</td></tr>
+<tr><td>Task</td><td>textarea</td><td>yes</td><td>not blank</td></tr>
+</tbody>
+</table>
+<p><strong>Dialogs opened here:</strong> none</p>
+<p><strong>States:</strong> empty: no comparison yet — the history says so · loading: each card reads "running" with the time so far · error: a model that fails shows its error in its card; the others still finish</p>
 <h2 id="where-the-rest-lives">Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>
 <table>
 <thead><tr><th>What</th><th>Where</th></tr></thead>

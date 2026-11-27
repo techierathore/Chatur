@@ -1097,11 +1097,12 @@ public sealed class AgentActionsTests : IDisposable
     }
 
     /// <summary>
-    /// When a session turn runs in a project that has a <c>docs/metrics</c> folder, then <c>sessions.jsonl</c> carries
-    /// one line signed <c>"tool":"chatur"</c> with the session id, model and tokens, and everything unmeasured empty;
-    /// no other file is made, and never an empty one (REQ-FN-040, REQ-FN-041, REQ-FN-042; BRD-74 as changed 23 Nov 2026).
+    /// When a session turn reaches a model in a project, then <c>sessions.jsonl</c> carries one line in TechieFlow's shape
+    /// (numbers as numbers, <c>ts</c>, <c>harness</c> naming Chatur) with the session id, the model and what the session
+    /// has used in all, and a figure not measured is null; no other file is made, and never an empty one
+    /// (REQ-FN-040, REQ-FN-041, REQ-FN-042; owner's test of 25 Nov 2026).
     /// </summary>
-    [Fact(DisplayName = "REQ-FN-040 a session turn in a measured project writes its record and no other file")]
+    [Fact(DisplayName = "REQ-FN-040 a session turn writes its record in TechieFlow's shape and no other file")]
     public async Task SendAsyncWritesASessionRecordIntoTheProjectMetrics()
     {
         var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-metrics-{Guid.NewGuid():N}");
@@ -1122,13 +1123,18 @@ public sealed class AgentActionsTests : IDisposable
             Assert.Equal(["sessions.jsonl"], new DirectoryInfo(vMetrics).GetFiles().Select(f => f.Name).ToArray());
 
             var vLine = Assert.Single(File.ReadAllLines(Path.Combine(vMetrics, "sessions.jsonl")));
-            Assert.Contains("\"tool\":\"chatur\"", vLine);
-            Assert.Contains("\"kind\":\"session\"", vLine);
-            Assert.Contains($"\"session_id\":\"{vSessionId}\"", vLine);
-            Assert.Contains("\"model\":\"fake-model\"", vLine);
-            Assert.Contains("\"input_tokens\":\"10\"", vLine);
-            Assert.Contains("\"output_tokens\":\"5\"", vLine);
-            Assert.Contains("\"cost_usd\":\"\"", vLine);
+            using var vDoc = System.Text.Json.JsonDocument.Parse(vLine);
+            var vRoot = vDoc.RootElement;
+            Assert.Equal(1, vRoot.GetProperty("v").GetInt32());
+            Assert.Matches(@"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$", vRoot.GetProperty("ts").GetString());
+            Assert.Equal("chatur", vRoot.GetProperty("harness").GetString());
+            Assert.Equal("session", vRoot.GetProperty("kind").GetString());
+            Assert.EndsWith($"-{vSessionId}", vRoot.GetProperty("session_id").GetString());
+            Assert.Equal("fake-model", vRoot.GetProperty("model").GetString());
+            Assert.Equal(System.Text.Json.JsonValueKind.Number, vRoot.GetProperty("input_tokens").ValueKind);
+            Assert.Equal(10, vRoot.GetProperty("input_tokens").GetInt64());
+            Assert.Equal(5, vRoot.GetProperty("output_tokens").GetInt64());
+            Assert.Equal(System.Text.Json.JsonValueKind.Null, vRoot.GetProperty("cost_usd").ValueKind);
         }
         finally
         {
@@ -1137,13 +1143,14 @@ public sealed class AgentActionsTests : IDisposable
     }
 
     /// <summary>
-    /// The owner's case of 23 Nov 2026: a chat turn in a folder that was only opened. The folder holds nothing
-    /// afterwards: no <c>docs</c>, no <c>docs/metrics</c>, no file of Chatur's (BRD-74 as changed that day).
+    /// The owner's case of 25 Nov 2026: a real chat with a model in a folder that has no <c>docs/metrics</c> yet. The
+    /// folder is made and the session and its tokens are written, and a second turn updates the session's record to what
+    /// the two turns used in all (TfLens keeps the record with the most output tokens).
     /// </summary>
-    [Fact(DisplayName = "REQ-FN-040 a session turn in a folder that was only opened leaves no file in it")]
-    public async Task SendAsyncLeavesAnOpenedFolderUntouched()
+    [Fact(DisplayName = "REQ-FN-040 a session turn in a folder with no docs/metrics makes it and records the session")]
+    public async Task SendAsyncMakesTheMetricsFolderForARealModelCall()
     {
-        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-untouched-{Guid.NewGuid():N}");
+        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-fresh-{Guid.NewGuid():N}");
         Directory.CreateDirectory(vFolder);
         try
         {
@@ -1151,13 +1158,23 @@ public sealed class AgentActionsTests : IDisposable
             InsertConnectedModel(1);
             var vSessionId = InsertSession(vProjectId, GetRoleId("flow-master"), SessionMode.GoAhead);
             var vProvider = new FakeLlmProvider(
-                new LlmResponse { Content = "Hello.", Usage = new TokenUsage { InputTokens = 10, OutputTokens = 5 } });
+                new LlmResponse { Content = "Hello.", Usage = new TokenUsage { InputTokens = 10, OutputTokens = 5 } },
+                new LlmResponse { Content = "Again.", Usage = new TokenUsage { InputTokens = 20, OutputTokens = 7 } });
+            var vSut = CreateSut(vProvider);
 
-            await foreach (var _ in CreateSut(vProvider).SendAsync(vSessionId, "Hi", null, null, SessionMode.GoAhead))
+            await foreach (var _ in vSut.SendAsync(vSessionId, "Hi", null, null, SessionMode.GoAhead))
             {
             }
 
-            Assert.Empty(Directory.GetFileSystemEntries(vFolder));
+            await foreach (var _ in vSut.SendAsync(vSessionId, "And?", null, null, SessionMode.GoAhead))
+            {
+            }
+
+            var vLines = File.ReadAllLines(Path.Combine(vFolder, "docs", "metrics", "sessions.jsonl"));
+            Assert.Equal(2, vLines.Length);
+            using var vLast = System.Text.Json.JsonDocument.Parse(vLines[^1]);
+            Assert.Equal(30, vLast.RootElement.GetProperty("input_tokens").GetInt64());
+            Assert.Equal(12, vLast.RootElement.GetProperty("output_tokens").GetInt64());
         }
         finally
         {
@@ -1166,14 +1183,14 @@ public sealed class AgentActionsTests : IDisposable
     }
 
     /// <summary>
-    /// When no model provider is configured, then the turn still counts as a session that ran: in a measured project
-    /// the sessions line is written with an empty model, and no other file is made (REQ-FN-040, REQ-FN-042).
+    /// When no model provider is configured, then no model was called and nothing is recorded: the folder that was only
+    /// opened holds nothing afterwards, not even <c>docs</c> (BRD-74: a folder only opened gets no file).
     /// </summary>
-    [Fact(DisplayName = "REQ-FN-041 REQ-FN-042 a no-provider turn writes a chatur-signed record with unmeasured fields empty")]
-    public async Task SendAsyncWritesASessionRecordWhenNoProviderIsConfigured()
+    [Fact(DisplayName = "REQ-FN-042 a turn that never reached a model leaves the opened folder untouched")]
+    public async Task SendAsyncWithoutAModelWritesNothing()
     {
-        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-metrics-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(Path.Combine(vFolder, "docs", "metrics"));
+        var vFolder = Path.Combine(Chatur.Tests.Support.TestScratch.Root, $"chatur-untouched-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(vFolder);
         try
         {
             var vProjectId = InsertProject(vFolder);
@@ -1183,10 +1200,7 @@ public sealed class AgentActionsTests : IDisposable
             {
             }
 
-            var vLine = Assert.Single(File.ReadAllLines(Path.Combine(vFolder, "docs", "metrics", "sessions.jsonl")));
-            Assert.Contains("\"tool\":\"chatur\"", vLine);
-            Assert.Contains("\"model\":\"\"", vLine);
-            Assert.False(File.Exists(Path.Combine(vFolder, "docs", "metrics", "runs.jsonl")));
+            Assert.Empty(Directory.GetFileSystemEntries(vFolder));
         }
         finally
         {
@@ -1220,7 +1234,7 @@ public sealed class AgentActionsTests : IDisposable
             var vRun = Assert.Single(File.ReadAllLines(Path.Combine(vFolder, "docs", "metrics", "runs.jsonl")));
             Assert.Contains("\"cmd\":\"dotnet build\"", vRun);
             Assert.Contains("\"build_result\":\"pass\"", vRun);
-            Assert.Contains("\"mode\":\"\"", vRun);
+            Assert.Contains("\"mode\":null", vRun);
         }
         finally
         {
@@ -1377,19 +1391,12 @@ public sealed class AgentActionsTests : IDisposable
             return Task.CompletedTask;
         }
 
-        public Task OpenInEditorAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default) =>
-            throw new NotSupportedException("Not used by AgentActions.");
-
-        public Task OpenWithDefaultAppAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default) =>
-            throw new NotSupportedException("Not used by AgentActions.");
     }
 
     private sealed class FakeProcessLauncher : IProcessLauncher
     {
         /// <summary>The exit code the next <see cref="RunAsync"/> reports — 0 (success) unless a test needs a failing build (REQ-FN-022).</summary>
         public int ExitCode { get; set; }
-
-        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 
         public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 

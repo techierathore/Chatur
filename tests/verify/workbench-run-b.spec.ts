@@ -59,7 +59,7 @@ test('REQ-UI-105 the target picker lists the solution\'s runnable projects, and 
     await openByDialog(page, 'open-solution', vFix.sln, SLN_NAME);
     await openTargets(page);
     const vPop = page.getByTestId('target-pop');
-    const vItems = vPop.getByRole('menuitem');
+    const vItems = vPop.getByRole('menuitemradio');
     await expect(vItems.filter({ hasText: APP_ONE })).toHaveCount(1);
     await expect(vItems.filter({ hasText: APP_TWO })).toHaveCount(1);
     await expect(vItems.filter({ hasText: LIB })).toHaveCount(0);
@@ -78,7 +78,7 @@ test('REQ-UI-105 the target picker lists the solution\'s runnable projects, and 
 
     // and choose the first app: now its line shows
     await openTargets(page);
-    await vPop.getByRole('menuitem').filter({ hasText: APP_ONE }).click();
+    await vPop.getByRole('menuitemradio').filter({ hasText: APP_ONE }).click();
     await expect(targetButton()).toContainText(APP_ONE);
     await page.getByTestId('run').click();
     await expect(outputText(page)).toContainText(LINE_ONE, { timeout: 120_000 });
@@ -101,7 +101,7 @@ test('REQ-UI-106 setting the project to run from the picker, the Project menu or
   const expectOffered = async (aName: string) => {
     await expect(targetButton()).toContainText(aName, { timeout: 30_000 });
     await openTargets(page);
-    const vFirst = page.getByTestId('target-pop').getByRole('menuitem').first();
+    const vFirst = page.getByTestId('target-pop').getByRole('menuitemradio').first();
     await expect(vFirst).toContainText(aName);
     await expect(vFirst.locator('svg')).toHaveCount(1);
     await page.keyboard.press('Escape');
@@ -113,7 +113,7 @@ test('REQ-UI-106 setting the project to run from the picker, the Project menu or
 
     // 1. the picker in the toolbar
     await openTargets(page);
-    await page.getByTestId('target-pop').getByRole('menuitem').filter({ hasText: APP_TWO }).click();
+    await page.getByTestId('target-pop').getByRole('menuitemradio').filter({ hasText: APP_TWO }).click();
     await expect(targetButton()).toContainText(APP_TWO);
     await reopen();
     await expectOffered(APP_TWO);

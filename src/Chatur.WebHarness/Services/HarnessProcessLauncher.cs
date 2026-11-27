@@ -24,13 +24,6 @@ public sealed class HarnessProcessLauncher : IProcessLauncher
     }
 
     /// <inheritdoc />
-    public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default)
-    {
-        objLogger.LogInformation("Would open {FilePath} in the owner's editor.", aFilePath);
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
     public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default)
     {
         objLogger.LogInformation("Would open {FilePath} with the machine's default application.", aFilePath);

@@ -90,8 +90,5 @@ public sealed class FileSearchActionsTests
 
         public Task SaveAsync(int aProjectId, string aRelativePath, string aContent, CancellationToken aCt = default) => throw new NotSupportedException();
 
-        public Task OpenInEditorAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default) => throw new NotSupportedException();
-
-        public Task OpenWithDefaultAppAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default) => throw new NotSupportedException();
     }
 }

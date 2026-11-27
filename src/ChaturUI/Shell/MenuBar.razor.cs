@@ -100,6 +100,7 @@ public partial class MenuBar : IAsyncDisposable
         }
 
         Workbench.SetRunTargets(await BuildRun.TargetsAsync(vProjectId));
+        Workbench.SetStartupTargets(await BuildRun.StartupAsync(vProjectId));
     }
 
     /// <summary>Project ▸ Project to run: chooses it now and remembers it for this solution and account (BRD-228).</summary>

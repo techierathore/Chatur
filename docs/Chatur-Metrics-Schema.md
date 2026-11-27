@@ -4,44 +4,58 @@
 |---|---|
 | App | Chatur |
 | Copied from | `.tfcore/telemetry/SCHEMA.md` (TechieFlow's own telemetry schema) |
-| Date | 2026-09-22 |
+| Date | 2026-11-26 |
 
 Architecture §5 "Measurements": *"Chatur's own schema lives in this repository and starts as a copy
 of TechieFlow's; it must keep matching in every field TfLens reads."* This document is that copy,
-trimmed to the fields Chatur itself can measure in phase 1, plus one field TechieFlow's own schema
-has no need for: **`tool`**, always `"chatur"` — the field that tells a reader these records came
-from Chatur rather than from Claude Code or OpenCode running the framework directly.
+trimmed to the fields Chatur itself can measure. Since 2026-11-26 a record is written in
+**TechieFlow's own shape**, so TfLens reads Chatur's files unchanged (owner's test of 25 Nov 2026):
+the field that tells a reader the record came from Chatur rather than from Claude Code or OpenCode
+is TechieFlow's own `harness`, always `"chatur"`.
 
 ## Where the files live
 
 `docs/metrics/` inside **the project Chatur is working in** — not inside Chatur's own repository.
 Five files, one per stream: `runs.jsonl`, `gates.jsonl`, `sessions.jsonl`, `commits.jsonl`,
 `misses.jsonl`, and since 2026-11-10 a sixth, `estimates.jsonl` (below). JSONL — one JSON object per line, append-only. Never rewritten, never compacted,
-never sorted in place (REQ-FN-040). The moment any measurement activity starts for a project, all
-five files exist, even ones that stay empty of records for a while — an agent session working in a
-project the owner just opened should not have to hunt for which of the five files Chatur has
-"gotten around to" creating yet.
+never sorted in place (REQ-FN-040). A record is made for something that happened — a model call, a
+command, a build — and the folder and the one stream's file are made for it if they are not there
+(since 2026-11-26; the rule of 23 Nov wrote a chat turn only where the folder already was, and a
+real chat in a new folder left nothing). A folder that is only opened, and a chat that never reaches
+a model (Chatur's own `*help`), write nothing, and no file is ever made empty.
 
-## One deliberate difference from TechieFlow's schema: every field is a string
+A chat session is written once per turn with **what the session has used in all**, as TfLens reads
+it: of the records with one `session_id`, the one with the most `output_tokens` stands. The
+`session_id` is `chatur-<start time>-<session number>`, the same for the same session whoever reads
+the project's files.
 
-TechieFlow's `tf-emit.sh` writes native JSON types — `duration_s` is a number, `routed` is a
-boolean. Chatur's `IMeasurementActions.AppendAsync` takes `IReadOnlyDictionary<string, string?>`
-(a day-1 decision on the action-layer signature, not a limitation of this schema), so every value
-written to a stream is a JSON **string**, including one that looks numeric. A reader that wants
-`duration_s` as a number parses the string. This is what keeps REQ-FN-042 honest: turning a
-caller-supplied string into a number, a boolean or an array would be a guess about its shape, and
-this schema exists to keep Chatur from guessing. An empty string means "not measured" — never `0`,
-never `false`, never an invented value.
+## Types: the same as TechieFlow's
+
+`IMeasurementActions.AppendAsync` still takes text for every field (the action-layer signature),
+and the writer types it as TechieFlow's `SCHEMA.md` does (this replaces the earlier "every field is
+a string", which TfLens could not read: it takes a count only from a JSON number and a date only
+from `ts`):
+
+| Kind of field | Written as |
+|---|---|
+| Counts: `duration_s`, `reqs_count`, `files_written`, `tokens_in`, `tokens_out`, `tokens_cache_read`, `tokens_cache_write`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_creation_tokens`, `attempt`, `files`, `insertions`, `deletions`, `fix_attempt` | a JSON number, whole (`12.4` is written `12`); text that is not a number refuses the write |
+| `cost_usd` | a JSON number, or `null` |
+| `reqs_touched`, `subagents` | an array of strings, from a comma-joined text; `[]` when empty |
+| `reopened` | `true` or `false` |
+| Everything else | a string |
+
+A field not measured is `null` (REQ-FN-042), never `0` and never an invented value.
 
 ## Fields on every record
 
 | Field | Notes |
 |---|---|
-| `v` | Schema version. Always `"1"`. Injected by `AppendAsync`; a caller-supplied value is ignored. |
-| `at` | ISO-8601 UTC, e.g. `2026-09-22T10:41:02.0000000Z`. Injected by `AppendAsync`. Named `at` rather than TechieFlow's `ts` — the name `StreamsAsync` (cluster L) reads back for each stream's "newest record" column. |
+| `v` | Schema version, the number `1`. Injected by `AppendAsync`; a caller-supplied value is ignored. |
+| `ts` | ISO-8601 UTC to the second with a `Z`, e.g. `2026-11-26T10:41:02Z`. Injected by `AppendAsync`. Records written before 2026-11-26 carry `at` instead, and still read. |
 | `kind` | The record's kind. Runs, gates, sessions and commits each accept exactly one value (below); misses accepts three. When a stream has exactly one valid kind, `AppendAsync` fills it in for a caller who leaves it out. |
 | `app` | The project's own name — read from the `Project` row `AppendAsync` was called for, never supplied by the caller. |
-| `tool` | Always `"chatur"` (REQ-FN-041). Injected; a caller-supplied value is ignored. |
+| `project_type` | `"app"`, with `project_type_inferred: true`: Chatur does not know the project's type and says it guessed. |
+| `harness` | Always `"chatur"` (REQ-FN-041). Injected; a caller-supplied value is ignored. Before 2026-11-26 the field was `tool`. |
 
 ## Refusal (REQ-FN-043)
 
@@ -65,10 +79,24 @@ is logged and never stops the work").
 | `run_id`, `req_id`, `attempt` | — |
 | `req_class` | `UI` \| `FN` \| `RAG` \| `NFR` |
 | `verdict`, `prior_verdict` | `Verified` \| `Needs re-verify` \| `FAIL` \| `Blocked` \| `Implemented` \| `Done (pre-existing)` |
-| `gate` | `build` \| `acceptance` \| `render` \| `assets` \| `visual` \| `mockup-parity` \| `perf` \| `standards` \| `escaped` (empty = nothing failed) |
-| `gates_run` | — (a caller-joined list of the gate names above) |
+| `gate` | `build` \| `acceptance` \| `render` \| `assets` \| `visual` \| `mockup-parity` \| `perf` \| `standards` \| `escaped` \| `owner-mark` (empty = nothing failed) |
+| `gates_run` | — (a caller-joined list of the gate names above; written as a JSON array, as TechieFlow types it) |
 | `failure_class` | `blank-data` \| `zero-rows` \| `overlap` \| `clipped` \| `offscreen` \| `slow-ttfb` \| `slow-load` \| `timeout` \| `exception` \| `assert-fail` \| `naming` \| `build-error` \| `missing-asset` \| `mockup-drift` \| `other` |
 | `proof` | `executed` \| `code-audit` |
+
+`owner-mark` is Chatur's own value (added 2026-11-27, REQ-UI-133): TechieFlow's list has no gate for a person's own
+judgement. TfLens has been told (docs/Chatur-TechieFlow-Feedback.md TF-054).
+
+### Compare models (added 2026-11-27, REQ-FN-330)
+
+Each model of a comparison writes one `runs.jsonl` record when it ends: `cmd` `compare-models`, `mode` `question` or
+`change`, `started` and `ended` to the millisecond (so two models started together still have a `started` each),
+`duration_s`, `model`, `tokens_in`, `tokens_out`, `cost_usd` (TechieRag's own price, `null` when it gave none) and, for
+`change`, `files_written` (how many files the model changed in its copy). A person's mark on that model is a
+`gates.jsonl` record: `run_id` is the model's run `started`, `verdict` `Verified` for right and `FAIL` for wrong,
+`gate` `owner-mark` on wrong and empty on right (TechieFlow: a pass has no failing gate), `gates_run` `["owner-mark"]`.
+A changed mark is a new record; the latest one for a `run_id` stands. A mark carries no `req_id`, so it never counts in
+the first-pass figure.
 
 ## `sessions.jsonl` — `kind: "session"`
 
@@ -99,7 +127,7 @@ is logged and never stops the work").
 
 ## `estimates.jsonl` — `kind: "estimate"` (added 2026-11-10, BRD-205)
 
-The one stream that does **not** follow the all-string rule above, `at` or `tool`. It is written in exactly the shape of TechieFlow's schema §2.8, so TfLens reads Chatur's estimates and TechieFlow's on one page: native JSON numbers and objects, `ts`, and `harness: "chatur"`. Written only by the Estimator, one batch per confirmed start or queue entry, every record of a batch carrying the same `ts`.
+The estimates stream was already written in TechieFlow's shape before 2026-11-26, and every other stream now is too. It is written in exactly the shape of TechieFlow's schema §2.8, so TfLens reads Chatur's estimates and TechieFlow's on one page: native JSON numbers and objects, `ts`, and `harness: "chatur"`. Written only by the Estimator, one batch per confirmed start or queue entry, every record of a batch carrying the same `ts`.
 
 ```json
 {"v":1,"ts":"2026-11-10T11:16:00Z","kind":"estimate","app":"Fixture","phase":2,"req_id":"REQ-FN-301","cmd":"build-phase",

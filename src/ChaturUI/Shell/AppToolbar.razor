@@ -32,7 +32,7 @@
         <DropdownMenu>
             <DropdownMenuTrigger AsChild>
                 <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="h-7" Disabled="@(ProjectId is null || objTargets.Count == 0)">
-                    @(objSelectedTarget?.Name ?? (ProjectId is null ? "No project open" : "No target found"))
+                    @TargetLabel
                     <LucideIcon Name="chevron-down" Size="14" />
                 </Button>
             </DropdownMenuTrigger>
@@ -41,13 +41,22 @@
                 {
                     @* The chosen target says so to assistive tools as well as with its tick (menuitemradio, aria-checked): choosing
                        it again changes nothing, and the screen check of 23 Nov 2026 read that as a dead item. *@
-                    <DropdownMenuItem OnClick="() => SelectTarget(vTarget)" Disabled="@(!vTarget.IsAvailableOnThisMachine)" role="menuitemradio" aria-checked="@(vTarget == objSelectedTarget ? "true" : "false")" data-testid="@($"target-{vTarget.RunTargetId}")">
-                        <span class="inline-flex w-4 flex-none">@if (vTarget == objSelectedTarget) { <LucideIcon Name="check" Size="14" /> }</span>
+                    <DropdownMenuItem OnClick="() => SelectTarget(vTarget)" Disabled="@(!vTarget.IsAvailableOnThisMachine)" role="menuitemradio" aria-checked="@(IsChosen(vTarget) ? "true" : "false")" data-testid="@($"target-{vTarget.RunTargetId}")">
+                        <span class="inline-flex w-4 flex-none">@if (IsChosen(vTarget)) { <LucideIcon Name="check" Size="14" /> }</span>
                         <span>@vTarget.Name</span>
                         @if (!vTarget.IsAvailableOnThisMachine)
                         {
                             <span class="ml-2 text-xs text-muted-foreground">needs another machine</span>
                         }
+                    </DropdownMenuItem>
+                }
+                @* REQ-FN-324: like Visual Studio's Multiple startup projects; the choice is kept for this solution. *@
+                @if (Workbench.CanChooseStartup)
+                {
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem OnClick="OpenStartupProjects" data-testid="target-multiple">
+                        <span class="inline-flex w-4 flex-none">@if (Workbench.HasMultipleStartup) { <LucideIcon Name="check" Size="14" /> }</span>
+                        <span>Multiple startup projects…</span>
                     </DropdownMenuItem>
                 }
             </DropdownMenuContent>
@@ -65,3 +74,5 @@
 </div>
 
 <FileSearchDialog @bind-Open="objFindOpen" Mode="FileSearchMode.FindInFiles" />
+
+<StartupProjectsDialog @bind-Open="objStartupOpen" />

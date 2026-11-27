@@ -41,7 +41,7 @@ public sealed class FileTreeAndTargetTests : MigratedDatabaseFixture
         Lock(vLocked);
         var vProjectId = CreateProject("Tree", objRoot);
 
-        var vTree = await new FileActions(CreateFactory(), new NoLauncher()).TreeAsync(vProjectId);
+        var vTree = await new FileActions(CreateFactory()).TreeAsync(vProjectId);
 
         var vNames = vTree.Select(aNode => aNode.Name).ToList();
         Assert.Contains("locked", vNames);
@@ -60,7 +60,7 @@ public sealed class FileTreeAndTargetTests : MigratedDatabaseFixture
         File.WriteAllText(Path.Combine(objRoot, "outer", "inner", "deep.txt"), "d");
         var vProjectId = CreateProject("Tree", objRoot);
 
-        var vTree = await new FileActions(CreateFactory(), new NoLauncher()).TreeAsync(vProjectId);
+        var vTree = await new FileActions(CreateFactory()).TreeAsync(vProjectId);
 
         var vOuter = Assert.Single(vTree, aNode => aNode.Name == "outer");
         Assert.True(vOuter.IsFolder);
@@ -99,7 +99,7 @@ public sealed class FileTreeAndTargetTests : MigratedDatabaseFixture
         Directory.CreateDirectory(Path.Combine(objRoot, "open"));
         Lock(vLocked);
         var vProjectId = CreateProject("Tree", objRoot);
-        var vFiles = new FileActions(CreateFactory(), new NoLauncher());
+        var vFiles = new FileActions(CreateFactory());
 
         var vTree = await vFiles.TreeAsync(vProjectId);
 
@@ -117,7 +117,7 @@ public sealed class FileTreeAndTargetTests : MigratedDatabaseFixture
         File.WriteAllText(Path.Combine(objRoot, "outer", "near.txt"), "n");
         var vProjectId = CreateProject("Tree", objRoot);
 
-        var vChildren = await new FileActions(CreateFactory(), new NoLauncher()).ChildrenAsync(vProjectId, "outer");
+        var vChildren = await new FileActions(CreateFactory()).ChildrenAsync(vProjectId, "outer");
 
         Assert.Equal(["inner", "near.txt"], vChildren.Select(aNode => aNode.Name));
         Assert.Equal("outer/inner", vChildren[0].RelativePath);
@@ -137,13 +137,13 @@ public sealed class FileTreeAndTargetTests : MigratedDatabaseFixture
         File.WriteAllText(Path.Combine(objRoot, ".editorconfig"), "x");
         File.WriteAllText(Path.Combine(objRoot, "readme.md"), "x");
         var vProjectId = CreateProject("Tree", objRoot);
-        var vFiles = new FileActions(CreateFactory(), new NoLauncher());
+        var vFiles = new FileActions(CreateFactory());
 
         Assert.Equal(["src", "readme.md"], (await vFiles.TreeAsync(vProjectId)).Select(aNode => aNode.Name));
 
         await vFiles.SetShowHiddenAsync(true);
 
-        Assert.True(await new FileActions(CreateFactory(), new NoLauncher()).ShowHiddenAsync());
+        Assert.True(await new FileActions(CreateFactory()).ShowHiddenAsync());
         Assert.Equal([".github", ".vs", "src", ".editorconfig", "readme.md"], (await vFiles.TreeAsync(vProjectId)).Select(aNode => aNode.Name));
     }
 
@@ -343,8 +343,6 @@ public sealed class FileTreeAndTargetTests : MigratedDatabaseFixture
         public string? WorkingDirectory { get; private set; }
 
         public string Arguments { get; private set; } = string.Empty;
-
-        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 
         public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 

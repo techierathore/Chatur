@@ -16,14 +16,28 @@ public sealed class TechieRagLlmProviderFactory : IAgentLlmProviderFactory
 {
     private readonly ISecretStore objSecretStore;
     private readonly ISubscriptionSessionStore objSessionStore;
+    private readonly Measurements.IKeyUsageRecorder? objUsageRecorder;
 
     /// <summary>Creates the factory.</summary>
     /// <param name="aSecretStore">Where a connected provider's key or token is filed.</param>
     /// <param name="aSessionStore">Where a subscription provider's signed-in session is kept (REQ-FN-016).</param>
     public TechieRagLlmProviderFactory(ISecretStore aSecretStore, ISubscriptionSessionStore aSessionStore)
+        : this(aSecretStore, aSessionStore, null)
+    {
+    }
+
+    /// <summary>
+    /// Creates the factory that also counts every call each provider it builds completes, against that provider's key
+    /// (REQ-UI-131): the one place every model call Chatur makes is built, so a new caller is counted without a change.
+    /// </summary>
+    /// <param name="aSecretStore">Where a connected provider's key or token is filed.</param>
+    /// <param name="aSessionStore">Where a subscription provider's signed-in session is kept (REQ-FN-016).</param>
+    /// <param name="aUsageRecorder">Writes one <c>KeyUsage</c> row per completed call; <see langword="null"/> counts nothing.</param>
+    public TechieRagLlmProviderFactory(ISecretStore aSecretStore, ISubscriptionSessionStore aSessionStore, Measurements.IKeyUsageRecorder? aUsageRecorder)
     {
         objSecretStore = aSecretStore;
         objSessionStore = aSessionStore;
+        objUsageRecorder = aUsageRecorder;
     }
 
     /// <inheritdoc />
@@ -80,6 +94,8 @@ public sealed class TechieRagLlmProviderFactory : IAgentLlmProviderFactory
             throw new InvalidOperationException($"TechieRag returned no LLM provider for \"{aModel.ProviderName}\".");
         }
 
+        // [REQ-UI-131] Every call this provider completes, streamed or not, is counted against its key.
+        objUsageRecorder?.Watch(vProvider, aModel.ProviderId, aModel.ModelIdentifier);
         return vProvider;
     }
 

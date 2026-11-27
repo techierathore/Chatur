@@ -38,6 +38,20 @@ else
                     </div>
                 </FieldContent>
             </Field>
+            @if (objNoSolution is not null)
+            {
+                @* REQ-FN-325: a folder with projects and no solution is said so, and asked about, before it opens. *@
+                <div data-testid="open-project-no-solution">
+                    <Alert>
+                        <AlertTitle>This folder has no solution</AlertTitle>
+                        <AlertDescription>
+                            It holds @(objNoSolution.Count == 1 ? "a project" : $"{objNoSolution.Count} projects") but no .sln or .slnx file:
+                            <span class="break-all font-mono text-xs">@string.Join(", ", objNoSolution)</span>.
+                            Open it as it is, or go back. A solution can be made later with File ▸ New project.
+                        </AlertDescription>
+                    </Alert>
+                </div>
+            }
             @if (objErrorMessage is not null)
             {
                 <Alert Variant="AlertVariant.Danger" data-testid="open-project-error">
@@ -46,12 +60,20 @@ else
             }
         </DialogBody>
         <DialogFooter>
-            <DialogClose AsChild>
-                <Button Variant="ButtonVariant.Outline" data-testid="open-project-cancel">Cancel</Button>
-            </DialogClose>
-            <Button Disabled="@(objIsBusy || !CanSubmit)" OnClick="SubmitAsync" data-testid="open-project-go">
-                @(objIsBusy ? "Working" : ActionLabel)
-            </Button>
+            @if (objNoSolution is not null)
+            {
+                <Button Variant="ButtonVariant.Outline" Disabled="objIsBusy" OnClick="GoBack" data-testid="open-project-no-solution-back">Go back</Button>
+                <Button Disabled="objIsBusy" OnClick="OpenAnywayAsync" data-testid="open-project-no-solution-go">@(objIsBusy ? "Working" : "Open as it is")</Button>
+            }
+            else
+            {
+                <DialogClose AsChild>
+                    <Button Variant="ButtonVariant.Outline" data-testid="open-project-cancel">Cancel</Button>
+                </DialogClose>
+                <Button Disabled="@(objIsBusy || !CanSubmit)" OnClick="SubmitAsync" data-testid="open-project-go">
+                    @(objIsBusy ? "Working" : ActionLabel)
+                </Button>
+            }
         </DialogFooter>
     </DialogContent>
 </Dialog>

@@ -133,35 +133,63 @@ public sealed class ProjectTemplateActions : IProjectTemplateActions
             return new NewProjectPlan(vFolder, null, false, null, null, [], $"{vFolder} is a file. Choose a folder.");
         }
 
-        // The solution: the one that is open, else the one the folder already has, else a new one in the folder itself.
+        // The solution: the one that is open, else the one the location already has, else a new one in a folder of
+        // its own under the location, named after it (owner's test of 25 Nov 2026).
         string? vProblem = null;
         var vSolution = vOpenSolution;
         var vExists = vOpenSolution is not null;
+        var vSolutionFolder = vFolder;
         IReadOnlyList<string> vToAdd = [];
         var vSolutionName = (aRequest.SolutionName ?? string.Empty).Trim();
         if (vSolution is null)
         {
             try
             {
-                vSolution = Directory.Exists(vFolder)
-                    ? Directory.EnumerateFiles(vFolder).Where(ProjectOpenActions.IsSolutionFile).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).FirstOrDefault()
-                    : null;
+                vSolution = SolutionIn(vFolder);
                 vExists = vSolution is not null;
-                if (!vExists)
+                var vLoose = !vExists && aRequest.InOpenFolder ? ProjectsIn(vFolder) : [];
+                if (vLoose.Count > 0)
                 {
-                    vToAdd = ProjectsIn(vFolder);
+                    // The open folder holds projects and no solution: its solution is made there and takes them in (BRD-276).
+                    // That is said as soon as the folder is open, before any name is typed.
+                    vToAdd = vLoose;
+                    if (vSolutionName.Length > 0 && (vProblem = NameProblem(vSolutionName, "solution")) is null)
+                    {
+                        vSolution = Path.Combine(vFolder, vSolutionName + aSolutionExtension);
+                    }
+                }
+                else if (!vExists && vSolutionName.Length > 0)
+                {
+                    vProblem = NameProblem(vSolutionName, "solution");
+                    if (vProblem is null)
+                    {
+                        vSolutionFolder = Path.Combine(vFolder, vSolutionName);
+                        if (File.Exists(vSolutionFolder))
+                        {
+                            vProblem = $"{vSolutionFolder} is a file. Give the solution another name.";
+                        }
+                        else
+                        {
+                            vSolution = SolutionIn(vSolutionFolder);
+                            vExists = vSolution is not null;
+                            if (!vExists)
+                            {
+                                vSolution = Path.Combine(vSolutionFolder, vSolutionName + aSolutionExtension);
+                                vToAdd = ProjectsIn(vSolutionFolder);
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception aException) when (aException is IOException or UnauthorizedAccessException)
             {
                 vProblem = $"{vFolder} could not be read: {aException.Message}";
             }
+        }
 
-            if (!vExists && vSolutionName.Length > 0)
-            {
-                vProblem ??= NameProblem(vSolutionName, "solution");
-                vSolution = vProblem is null ? Path.Combine(vFolder, vSolutionName + aSolutionExtension) : null;
-            }
+        if (vExists && vSolution is not null)
+        {
+            vSolutionFolder = Path.GetDirectoryName(vSolution) ?? vFolder;
         }
 
         // The project: one folder directly under the solution's folder, named after the project.
@@ -175,7 +203,7 @@ public sealed class ProjectTemplateActions : IProjectTemplateActions
         string? vProjectFile = null;
         if (vProjectName.Length > 0 && (vProblem ??= NameProblem(vProjectName, "project")) is null)
         {
-            vProjectFolder = Path.Combine(vFolder, vProjectName);
+            vProjectFolder = Path.Combine(vSolutionFolder, vProjectName);
             vProjectFile = Path.Combine(vProjectFolder, vProjectName + ".csproj");
             if (File.Exists(vProjectFolder) || (Directory.Exists(vProjectFolder) && Directory.EnumerateFileSystemEntries(vProjectFolder).Any()))
             {
@@ -183,7 +211,7 @@ public sealed class ProjectTemplateActions : IProjectTemplateActions
             }
         }
 
-        return new NewProjectPlan(vFolder, vSolution, vExists, vProjectFolder, vProjectFile, vToAdd, vProblem);
+        return new NewProjectPlan(vSolutionFolder, vSolution, vExists, vProjectFolder, vProjectFile, vToAdd, vProblem);
     }
 
     /// <inheritdoc />
@@ -273,10 +301,8 @@ public sealed class ProjectTemplateActions : IProjectTemplateActions
 
         using (var vConnection = objConnections.OpenConnection())
         {
-            // The stored run targets are the old project list's; forgetting them makes the next read find the new project.
-            await vConnection.ExecuteAsync(
-                new CommandDefinition("DELETE FROM RunTarget WHERE ProjectId = @ProjectId;", new { ProjectId = vProjectId }, cancellationToken: aCt)).ConfigureAwait(false);
-
+            // The stored run targets are kept, with the one that runs: reading them again finds the new project by itself
+            // (BuildRunActions.TargetsAsync), and forgetting them here lost which project ran when a library was added (owner's test of 25 Nov 2026).
             // The folder that was open now holds the solution: the solution stands for it in the project list.
             await vConnection.ExecuteAsync(new CommandDefinition(
                 "UPDATE Project SET RemovedUtc = @Now WHERE Kind = 'Folder' AND Path = @Path AND RemovedUtc IS NULL;",
@@ -286,6 +312,12 @@ public sealed class ProjectTemplateActions : IProjectTemplateActions
 
         return new NewProjectResult(vProjectId, vSolution, vProject, vFound, vOpenedNow);
     }
+
+    /// <summary>The first solution file directly in a folder, or <see langword="null"/> when it holds none or is not there.</summary>
+    private static string? SolutionIn(string aFolder) =>
+        Directory.Exists(aFolder)
+            ? Directory.EnumerateFiles(aFolder).Where(ProjectOpenActions.IsSolutionFile).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).FirstOrDefault()
+            : null;
 
     /// <summary>Whether a folder already holds a solution file, so no new one will be named.</summary>
     private static bool SolutionIsIn(string? aFolder)
@@ -305,7 +337,7 @@ public sealed class ProjectTemplateActions : IProjectTemplateActions
     /// The project files a folder holds, relative to it and in name order: its own and those up to four folders down,
     /// leaving out build output, packages and hidden folders. Empty when the folder is not there.
     /// </summary>
-    private static IReadOnlyList<string> ProjectsIn(string aFolder)
+    internal static IReadOnlyList<string> ProjectsIn(string aFolder)
     {
         var vFound = new List<string>();
         if (!Directory.Exists(aFolder))

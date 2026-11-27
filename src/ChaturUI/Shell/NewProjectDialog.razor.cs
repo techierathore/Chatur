@@ -27,6 +27,7 @@ public partial class NewProjectDialog
     private string objName = string.Empty;
     private string objSolutionName = string.Empty;
     private string objLocation = string.Empty;
+    private string objSearch = string.Empty;
     private bool objChangeLocation;
     private string objSolutionExtension = ".slnx";
     private NewProjectPlan objPlan = NoPlan;
@@ -115,7 +116,25 @@ public partial class NewProjectDialog
         objSolutionName,
         objName,
         objSelected?.ShortName ?? string.Empty,
-        objFramework);
+        objFramework,
+        LocationIsFixed && !InSolution);
+
+    /// <summary>The project types the search box leaves in the list: every word typed is in the name, short name or tags (REQ-UI-127).</summary>
+    private IReadOnlyList<ProjectTemplate> ShownTemplates
+    {
+        get
+        {
+            var vWords = objSearch.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return vWords.Length == 0
+                ? objTemplates
+                : objTemplates.Where(t => vWords.All(w =>
+                    t.Name.Contains(w, StringComparison.OrdinalIgnoreCase)
+                    || t.ShortName.Contains(w, StringComparison.OrdinalIgnoreCase)
+                    || t.Tags.Contains(w, StringComparison.OrdinalIgnoreCase))).ToList();
+        }
+    }
+
+    private void OnSearchChanged(string? aValue) => objSearch = aValue ?? string.Empty;
 
     /// <summary>Reads again what Create would make, from the names and the folder as they are now.</summary>
     private void Replan()
@@ -151,6 +170,7 @@ public partial class NewProjectDialog
         objName = string.Empty;
         objSolutionName = string.Empty;
         objLocation = string.Empty;
+        objSearch = string.Empty;
         objChangeLocation = false;
         objErrorMessage = null;
         objSelected = null;
@@ -263,11 +283,15 @@ public partial class NewProjectDialog
         try
         {
             var vMade = await Templates.CreateAsync(Request);
+
+            // The project just added is the one that runs, when it can run (REQ-FN-309, owner's test of 25 Nov 2026).
+            await BuildRun.SetRunTargetForProjectFileAsync(vMade.ProjectId, vMade.ProjectFile);
             Workbench.SetRunTargets(await BuildRun.TargetsAsync(vMade.ProjectId));
+            Workbench.SetStartupTargets(await BuildRun.StartupAsync(vMade.ProjectId));
             Workbench.NotifyFilesViewChanged();
             if (vMade.ProjectsAdded.Count > 0)
             {
-                Toast.Success($"{Path.GetFileName(vMade.SolutionFile)} was made in this folder and now holds the {(vMade.ProjectsAdded.Count == 1 ? "project" : $"{vMade.ProjectsAdded.Count} projects")} that had no solution.", "New project");
+                Toast.Success($"{Path.GetFileName(vMade.SolutionFile)} was made in {Path.GetDirectoryName(vMade.SolutionFile)} and now holds the {(vMade.ProjectsAdded.Count == 1 ? "project" : $"{vMade.ProjectsAdded.Count} projects")} that had no solution.", "New project");
             }
 
             await OpenChanged.InvokeAsync(false);

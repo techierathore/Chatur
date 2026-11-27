@@ -44,7 +44,7 @@ public sealed class OwnerTestStatesTests
     {
         var vStates = File.ReadAllText(Path.Combine(Root(), "tests", "verify", "new-project-states.spec.ts"));
         Assert.Contains("with nothing open, New project on Nothing is open yet", vStates, StringComparison.Ordinal);
-        Assert.Contains("with an empty folder open, New project shows the folder", vStates, StringComparison.Ordinal);
+        Assert.Contains("with an empty folder open, New project shows the paths", vStates, StringComparison.Ordinal);
         Assert.DoesNotContain("Microsoft Visual Studio Solution File", vStates, StringComparison.Ordinal);
 
         var vInstalled = File.ReadAllText(Path.Combine(Root(), "tests", "verify", "installed-owner-test.spec.ts"));
@@ -56,32 +56,34 @@ public sealed class OwnerTestStatesTests
     /// <summary>
     /// REQ-NFR-017 (BRD-275, owner's brief of 22 Nov 2026 evening): the owner's test keeps its parts and gains one that
     /// walks the measurements screens and one that types a command to each of the four agents; the installed app's test
-    /// runs both. Since 23 Nov 2026 (BRD-281) the test has eleven parts, and these two are parts 10 and 11.
+    /// runs both. Since 27 Nov 2026 (BRD-298) the test is one order of 24 parts, and these two are parts 19 and 24.
     /// </summary>
     [Fact(DisplayName = "REQ-NFR-017 the owner's test keeps its eight parts and adds the measurements screens and a command to each agent")]
     public void OwnerTestHasTheMeasurementsAndAgentParts()
     {
         var vGuide = File.ReadAllText(Path.Combine(Root(), "docs", "Chatur-UsageGuide.md"));
-        for (var vPart = 1; vPart <= 11; vPart++)
+        for (var vPart = 1; vPart <= 24; vPart++)
         {
             Assert.Contains($"### Owner's test {vPart}:", vGuide, StringComparison.Ordinal);
         }
 
-        var vNine = Section(vGuide, "### Owner's test 10:");
-        foreach (var vWord in new[] { "Project ▸ Measurements", "Save as zip", "Measurements across projects", "not measured", "no price" })
+        var vNine = Section(vGuide, "### Owner's test 19:");
+        foreach (var vWord in new[] { "Project ▸ Measurements", "Save as zip", "not measured", "no price", "project switcher" })
         {
             Assert.Contains(vWord, vNine, StringComparison.Ordinal);
         }
 
-        var vTen = Section(vGuide, "### Owner's test 11:");
+        Assert.Contains("Measurements across projects", Section(vGuide, "### Owner's test 20:"), StringComparison.Ordinal);
+
+        var vTen = Section(vGuide, "### Owner's test 24:");
         foreach (var vWord in new[] { "Analyst: `*", "Architect: `*", "Flow master: `*", "Verifier: `*" })
         {
             Assert.Contains(vWord, vTen, StringComparison.Ordinal);
         }
 
         var vInstalled = File.ReadAllText(Path.Combine(Root(), "tests", "verify", "installed-owner-test.spec.ts"));
-        Assert.Contains("owner\\'s test 10:", vInstalled, StringComparison.Ordinal);
-        Assert.Contains("owner\\'s test 11:", vInstalled, StringComparison.Ordinal);
+        Assert.Contains("owner\\'s test 19:", vInstalled, StringComparison.Ordinal);
+        Assert.Contains("owner\\'s test 24:", vInstalled, StringComparison.Ordinal);
         foreach (var vAgent in new[] { "'analyst'", "'architect'", "'flow-master'", "'verifier'" })
         {
             Assert.Contains($"talkTo(vMain, {vAgent})", vInstalled, StringComparison.Ordinal);
@@ -98,7 +100,7 @@ public sealed class OwnerTestStatesTests
     {
         var vGuide = File.ReadAllText(Path.Combine(Root(), "docs", "Chatur-UsageGuide.md"));
         var vOne = Section(vGuide, "### Owner's test 1:");
-        foreach (var vWord in new[] { "Open a folder", "File ▸ New project", "Will be created in", @"Checking-Chatur.slnx", @"Checking-Chatur\Checking-Chatur.csproj" })
+        foreach (var vWord in new[] { "Open a folder", "File ▸ New project", "Will be created in", "Solution folder", @"Checking-Chatur\Checking-Chatur.slnx", "directly in OwnerTest" })
         {
             Assert.Contains(vWord, vOne, StringComparison.Ordinal);
         }
@@ -113,14 +115,14 @@ public sealed class OwnerTestStatesTests
         Assert.All(
             vPaths.Select(p => p.TrimEnd('.')).Where(p => !string.Equals(p, @"C:\1MyCode\Chatur", StringComparison.OrdinalIgnoreCase)),
             p => Assert.StartsWith(@"C:\1MyCode\Chatur\bin\", p + @"\", StringComparison.OrdinalIgnoreCase));
-        for (var vPart = 1; vPart <= 9; vPart++)
+        foreach (var vPart in new[] { 1, 3, 4, 6, 7, 8, 12, 15, 17, 23 })
         {
             Assert.Contains(@"C:\1MyCode\Chatur\bin", Section(vGuide, $"### Owner's test {vPart}:"), StringComparison.OrdinalIgnoreCase);
         }
 
         var vInstalled = File.ReadAllText(Path.Combine(Root(), "tests", "verify", "installed-owner-test.spec.ts"));
         Assert.Contains("owner\\'s test 1: the installed Chatur starts on Nothing is open yet; with an empty folder open", vInstalled, StringComparison.Ordinal);
-        Assert.Contains("no folder of the same name inside itself", vInstalled, StringComparison.Ordinal);
+        Assert.Contains("what the folder that was open holds", vInstalled, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -136,7 +138,7 @@ public sealed class OwnerTestStatesTests
                  {
                      "with nothing open, New project",
                      "with an empty folder open, New project",
-                     "a folder that is open and holds only a docs folder",
+                     "in a folder that holds only a docs folder",
                      "with a folder open that has a project and no solution",
                      "with a folder open that has a solution"
                  })
@@ -149,6 +151,59 @@ public sealed class OwnerTestStatesTests
 
         var vUnit = File.ReadAllText(Path.Combine(Root(), "tests", "unit", "Chatur.Tests", "Projects", "ProjectTemplateActionsTests.cs"));
         Assert.True(System.Text.RegularExpressions.Regex.Matches(vUnit, @"DisplayName = ""REQ-NFR-018 ").Count >= 5, "five unit tests carry the row");
+    }
+
+    /// <summary>
+    /// REQ-NFR-020 (BRD-286, owner's test of 25 Nov 2026, step 10): the measurements part names no path to open: the project
+    /// is picked in the app's project switcher, then Project ▸ Measurements; the installed app's test does the same and
+    /// reads the sessions the real chat wrote.
+    /// </summary>
+    [Fact(DisplayName = "REQ-NFR-020 the owner's test picks the project in the app for Measurements and the installed test reads what the chat wrote")]
+    public void MeasurementsPartPicksTheProjectInTheApp()
+    {
+        var vGuide = File.ReadAllText(Path.Combine(Root(), "docs", "Chatur-UsageGuide.md"));
+        var vTen = Section(vGuide, "### Owner's test 19:");
+        Assert.Contains("project switcher", vTen, StringComparison.Ordinal);
+        Assert.Contains("Project ▸ Measurements", vTen, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"C:\", vTen, StringComparison.Ordinal);
+        Assert.Contains("sessions.jsonl", Section(vGuide, "### Owner's test 18:"), StringComparison.Ordinal);
+
+        var vInstalled = File.ReadAllText(Path.Combine(Root(), "tests", "verify", "installed-owner-test.spec.ts"));
+        Assert.Contains("switchProject(vMain, 'BrainTest')", vInstalled, StringComparison.Ordinal);
+        Assert.Contains("sessions.jsonl was written by the real chat", vInstalled, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// REQ-NFR-022 (BRD-298, owner's request of 27 Nov 2026): the owner's test runs in one order from start to end — parts
+    /// numbered 1, 2, 3 … with no lettered part and none out of order — and has a part that reads what is left on each key
+    /// and parts that give one question and one task that changes files to two named models on Compare models, with every
+    /// model to pick and every text to type given.
+    /// </summary>
+    [Fact(DisplayName = "REQ-NFR-022 the owner's test is one order and has parts for the keys and for Compare models")]
+    public void OwnerTestIsOneOrderWithKeysAndCompareParts()
+    {
+        var vGuide = File.ReadAllText(Path.Combine(Root(), "docs", "Chatur-UsageGuide.md"));
+        var vNumbers = System.Text.RegularExpressions.Regex.Matches(vGuide, @"^### Owner's test (\S+):", System.Text.RegularExpressions.RegexOptions.Multiline)
+            .Select(m => m.Groups[1].Value).ToArray();
+        Assert.Equal(Enumerable.Range(1, vNumbers.Length).Select(n => n.ToString(System.Globalization.CultureInfo.InvariantCulture)), vNumbers);
+
+        var vKeys = Section(vGuide, "### Owner's test 21:");
+        foreach (var vWord in new[] { "What is left on each key", "not known", "Type a limit", "`5.00`", "Chatur's own count", "Measurements across projects" })
+        {
+            Assert.Contains(vWord, vKeys, StringComparison.Ordinal);
+        }
+
+        var vQuestion = Section(vGuide, "### Owner's test 22:");
+        foreach (var vWord in new[] { "Compare models", "`claude-haiku-5-5`", "`claude-sonnet-5-5`", "Question, changes nothing", "Task: `", "Right", "Wrong", "compare-models" })
+        {
+            Assert.Contains(vWord, vQuestion, StringComparison.Ordinal);
+        }
+
+        var vChange = Section(vGuide, "### Owner's test 23:");
+        foreach (var vWord in new[] { "Task that changes files", "Task: `", "chatur-compare", @"C:\1MyCode\Chatur\bin\BrainTest" })
+        {
+            Assert.Contains(vWord, vChange, StringComparison.Ordinal);
+        }
     }
 
     private static string Section(string aText, string aHeading)

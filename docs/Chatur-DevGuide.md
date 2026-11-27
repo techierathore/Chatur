@@ -155,16 +155,16 @@ This is the Workbench. `Pages/Workbench.razor` holds only `FilesPanel`, `EditorA
 
 What each part does:
 
-- `MenuBar`: menus, the project switcher (a `Popover`: "Project:" and the name, every project with its path, a filter from eight on, rows drawn as they scroll in), account menu, Ctrl+, shortcut.
-- `NewProjectDialog`: New project in every state. In a solution `CreateProjectAsync` adds; otherwise `ProjectTemplateActions.CreateSolutionAsync` (`:124`) makes the solution and first project. `AppToolbar.StartLookingForTargets` (`:81`) re-reads empty targets.
+- `MenuBar`: menus, the project switcher (a `Popover` listing every project with its path), account menu, Ctrl+, shortcut.
+- `NewProjectDialog`: New project in every state, with a search box over the project types (`ShownTemplates`). `ProjectTemplateActions.CreateAsync` adds to a solution or makes one in its own folder.
 - Commands: `AgentActions.SendAsync` (`:259`) hands a `*command` to `AgentCommandRunner.TryRunAsync` (`:78`) first. Replies: `MarkdownHtml.Reply` in `Prose`.
-- `AppToolbar`: branch name and switch, run target, Build, Run, Stop.
-- `FilesPanel`: file tree from `FileActions.TreeAsync`; a click reads the file and opens a tab.
-- `EditorArea`: tabs and the editor; save writes through `FileActions.SaveAsync`.
+- `AppToolbar`: run target, Build, Run, Stop. "Multiple startup projects…" opens `StartupProjectsDialog`, which saves `IBuildRunActions.SetStartupAsync`; Run then goes through `BuildRunActions.RunStartupAsync` (each line named `[project]`).
+- `FilesPanel`: file tree from `FileActions.TreeAsync`, rooted in the solution (`FileTreeNode.IsSolution`, projects `IsProject`); a click opens a tab.
+- `EditorArea`: tabs and the editor; save writes through `FileActions.SaveAsync`; the view's × asks like a tab does when a file is unsaved (`RequestCloseFileView`).
 - `ConversationPanel`: sessions, messages, agent and model pick, proposed changes.
-- `OutputStrip`: build and run lines, with a list of compiler errors that open the file.
+- `OutputStrip`: build and run lines and compiler errors.
 
-`Workbench.razor.cs:45` listens to `AppState.Changed` and calls `WorkbenchTabs.Reset()` when the project id changes, so tabs from the old project close. The agent loop and the output stream are described under Cross-cutting flows.
+`Workbench.razor.cs:45` listens to `AppState.Changed` and calls `WorkbenchTabs.Reset()` when the project id changes, so its tabs close. The agent loop and the output stream are described under Cross-cutting flows.
 
 | File and line | Function | Watch | Expected value |
 |---|---|---|---|
@@ -177,7 +177,7 @@ What each part does:
 | `src/ChaturUI/Shell/NewProjectDialog.razor.cs:191` | `CreateAsync` | `InSolution` | `false` with no solution open |
 | `src/ChaturUI/Shell/OutputStrip.razor.cs:147` | `UpdateStatus` | `objStatusText` | "building", "running", "testing", "build passed", "build failed", "ended, exit code 0", "failed, exit code N" or "stopped" |
 
-**Calculations on this screen:** `OutputStrip.ParseError` (`OutputStrip.razor.cs:184`) turns a compiler error line into file, line number and message. `ConversationPanel.LoadTotalTokensAsync` (`:494`) sums the tokens of every recorded event in the session. `MenuBar.LoadRecentAsync` (`MenuBar.razor.cs:196`) picks the five most recently opened projects.
+**Calculations on this screen:** `OutputStrip.ParseError` (`OutputStrip.razor.cs:184`) turns a compiler error line into file, line and message. `ConversationPanel.LoadTotalTokensAsync` (`:494`) sums the session's tokens. `MenuBar.LoadRecentAsync` (`MenuBar.razor.cs:196`) picks the five latest projects.
 
 ### Prerequisites (`/prerequisites`)
 

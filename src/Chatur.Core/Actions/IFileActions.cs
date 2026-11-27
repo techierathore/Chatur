@@ -56,20 +56,4 @@ public interface IFileActions
     /// <param name="aContent">The text to write.</param>
     /// <param name="aCt">A token that cancels the save.</param>
     Task SaveAsync(int aProjectId, string aRelativePath, string aContent, CancellationToken aCt = default);
-
-    /// <summary>
-    /// Opens a file in the owner's chosen editor (REQ-FN-045).
-    /// </summary>
-    /// <param name="aProjectId">The project the file belongs to.</param>
-    /// <param name="aRelativePath">The file's path relative to the project root.</param>
-    /// <param name="aCt">A token that cancels the launch.</param>
-    Task OpenInEditorAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default);
-
-    /// <summary>
-    /// Opens a file with whatever program the machine associates with it (REQ-FN-046).
-    /// </summary>
-    /// <param name="aProjectId">The project the file belongs to.</param>
-    /// <param name="aRelativePath">The file's path relative to the project root.</param>
-    /// <param name="aCt">A token that cancels the launch.</param>
-    Task OpenWithDefaultAppAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default);
 }

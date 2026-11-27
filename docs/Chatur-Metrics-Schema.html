@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Metrics Schema</title>
+<script>
+/* Resolve the theme BEFORE first paint (no flash). Saved choice wins; otherwise
+   pick by time of day — light 07:00–19:00 local, softened dark at night. */
+(function(){
+  try{
+    var t = localStorage.getItem('tf-theme');
+    if(t!=='light' && t!=='dark'){ var h = new Date().getHours(); t = (h>=7 && h<19) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+})();
+</script>
+<style>
+/* LIGHT is the default theme — a warm off-white, easy on the eyes (never bright white). */
+:root{
+  --bg:#f4f1e9; --panel:#efe9db; --panel2:#e7e0cd; --line:#d8cfb6;
+  --ink:#2e2a22; --muted:#6f6857; --accent:#2f6f9f; --accent2:#3f7d54;
+  --warn:#9a6b15; --danger:#b03a52; --ok:#3f7d54;
+  --code-bg:#ece5d3; --code-ink:#332f26; --row-alt:#eae2cf;
+  --h3:#3a352b; --h4:#2f6f9f; --quote:#4a4537; --cta-bg:#e6eef5;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* DARK — softened near-black (warmer / less harsh than pure #0f1115). */
+html[data-theme="dark"]{
+  --bg:#11141a; --panel:#171b23; --panel2:#1e2430; --line:#2b3240;
+  --ink:#dfe3ea; --muted:#99a2b1; --accent:#7cc4ff; --accent2:#a6e3a1;
+  --warn:#f9c74f; --danger:#f38ba8; --ok:#a6e3a1;
+  --code-bg:#0c1016; --code-ink:#d8dde8; --row-alt:#141821;
+  --h3:#cfd5e3; --h4:#7cc4ff; --quote:#cfd5e3; --cta-bg:#0d2030;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;color:var(--code-ink);position:relative}
+pre code{background:none;border:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;font-family:var(--sans);cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+/* floating light/dark toggle (top-right) */
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:10000;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.layout.no-toc{grid-template-columns:1fr}
+nav.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:18px 14px}
+nav.side h1{font-size:14px;margin:0 0 4px;letter-spacing:.5px;color:var(--ink)}
+nav.side .sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+nav.side ol,nav.side ul{list-style:none;padding:0;margin:0}
+nav.side li{font-size:13px;margin:2px 0}
+nav.side li a{display:block;padding:5px 8px;color:var(--ink);border-radius:6px}
+nav.side li a:hover{background:var(--panel2);text-decoration:none}
+nav.side li.h3 a{padding-left:22px;font-size:12.5px;color:var(--h3)}
+nav.side .group{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 8px 4px}
+
+main{padding:28px 40px 80px;max-width:1100px}
+.layout.no-toc main{margin:0 auto}
+
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:17px;margin:22px 0 6px;color:var(--h3);scroll-margin-top:16px}
+h4{font-size:14px;margin:14px 0 4px;color:var(--h4);scroll-margin-top:16px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:-4px;margin-bottom:18px}
+p{margin:6px 0 10px}
+blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:8px 0;padding:8px 14px;color:var(--quote)}
+ul,ol{padding-left:22px}
+li{margin:2px 0}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--h3);font-weight:600}
+tr:nth-child(even) td{background:var(--row-alt)}
+
+hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+.anchor-link{color:var(--muted);font-weight:400;font-size:0.85em;margin-left:8px;opacity:0;transition:opacity .15s;text-decoration:none}
+h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
+
+/* inline TOC at top of main content */
+.toc-inline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0 24px}
+.toc-inline > div{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.toc-inline ol,.toc-inline ul{margin:4px 0;padding-left:18px}
+.toc-inline li{font-size:13px;margin:1px 0}
+.toc-inline a{color:var(--h3)}
+
+/* mermaid diagram wrapper + toolbar */
+.diagram{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);margin:14px 0;overflow:hidden}
+.diagram .mermaid{padding:14px;margin:0;background:transparent;border:none;overflow:auto}
+.diagram .dt{display:flex;gap:6px;justify-content:flex-end;padding:6px 8px;background:var(--row-alt);border-bottom:1px solid var(--line)}
+.diagram .dt button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--sans);cursor:pointer;min-width:30px}
+.diagram .dt button:hover{color:var(--accent);border-color:var(--accent)}
+.diagram .dt .zlabel{padding:3px 6px;font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center}
+.diagram.fs{position:fixed;inset:0;z-index:9999;border-radius:0;border:none}
+.diagram.fs .mermaid{height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle light / dark">&#9790; Dark</button>
+<div class="layout">
+  <nav class="side">
+    <h1>Chatur — Metrics Schema</h1>
+    <div class="sub">Last rendered: 2026-11-27</div>
+    <div class="group">Contents</div>
+    <ol>
+        <li><a href="#where-the-files-live">Where the files live</a></li>
+        <li><a href="#types-the-same-as-techieflow-s">Types: the same as TechieFlow&#x27;s</a></li>
+        <li><a href="#fields-on-every-record">Fields on every record</a></li>
+        <li><a href="#refusal-req-fn-043">Refusal (REQ-FN-043)</a></li>
+        <li><a href="#runs-jsonl-kind-run">runs.jsonl — kind: &quot;run&quot;</a></li>
+        <li><a href="#gates-jsonl-kind-gate">gates.jsonl — kind: &quot;gate&quot;</a></li>
+        <li class="h3"><a href="#compare-models-added-2026-11-27-req-fn-330">Compare models (added 2026-11-27, REQ-FN-330)</a></li>
+        <li><a href="#sessions-jsonl-kind-session">sessions.jsonl — kind: &quot;session&quot;</a></li>
+        <li><a href="#commits-jsonl-kind-commit">commits.jsonl — kind: &quot;commit&quot;</a></li>
+        <li><a href="#misses-jsonl-kind-miss-miss-fix-miss-amend">misses.jsonl — kind: &quot;miss&quot; \| &quot;miss-fix&quot; \| &quot;miss-amend&quot;</a></li>
+        <li><a href="#estimates-jsonl-kind-estimate-added-2026-11-10-brd-205">estimates.jsonl — kind: &quot;estimate&quot; (added 2026-11-10, BRD-205)</a></li>
+        <li><a href="#what-is-not-carried-over-from-techieflow-s-schema">What is not carried over from TechieFlow&#x27;s schema</a></li>
+    </ol>
+  </nav>
+  <main>
+    <h1>Chatur — Metrics Schema</h1>
+    <div class="subtitle">Rendered 2026-11-27 &middot; source <code>Chatur-Metrics-Schema.md</code></div>
+
+    <div class="toc-inline">
+      <div>Contents</div>
+      <ol>
+        <li><a href="#where-the-files-live">Where the files live</a></li>
+        <li><a href="#types-the-same-as-techieflow-s">Types: the same as TechieFlow&#x27;s</a></li>
+        <li><a href="#fields-on-every-record">Fields on every record</a></li>
+        <li><a href="#refusal-req-fn-043">Refusal (REQ-FN-043)</a></li>
+        <li><a href="#runs-jsonl-kind-run">runs.jsonl — kind: &quot;run&quot;</a></li>
+        <li><a href="#gates-jsonl-kind-gate">gates.jsonl — kind: &quot;gate&quot;</a></li>
+        <li class="h3"><a href="#compare-models-added-2026-11-27-req-fn-330">Compare models (added 2026-11-27, REQ-FN-330)</a></li>
+        <li><a href="#sessions-jsonl-kind-session">sessions.jsonl — kind: &quot;session&quot;</a></li>
+        <li><a href="#commits-jsonl-kind-commit">commits.jsonl — kind: &quot;commit&quot;</a></li>
+        <li><a href="#misses-jsonl-kind-miss-miss-fix-miss-amend">misses.jsonl — kind: &quot;miss&quot; \| &quot;miss-fix&quot; \| &quot;miss-amend&quot;</a></li>
+        <li><a href="#estimates-jsonl-kind-estimate-added-2026-11-10-brd-205">estimates.jsonl — kind: &quot;estimate&quot; (added 2026-11-10, BRD-205)</a></li>
+        <li><a href="#what-is-not-carried-over-from-techieflow-s-schema">What is not carried over from TechieFlow&#x27;s schema</a></li>
+      </ol>
+    </div>
+<table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>App</td><td>Chatur</td></tr>
+<tr><td>Copied from</td><td><code>.tfcore/telemetry/SCHEMA.md</code> (TechieFlow's own telemetry schema)</td></tr>
+<tr><td>Date</td><td>2026-11-26</td></tr>
+</tbody>
+</table>
+<p>Architecture §5 "Measurements": <em>"Chatur's own schema lives in this repository and starts as a copy
+of TechieFlow's; it must keep matching in every field TfLens reads."</em> This document is that copy,
+trimmed to the fields Chatur itself can measure. Since 2026-11-26 a record is written in
+<strong>TechieFlow's own shape</strong>, so TfLens reads Chatur's files unchanged (owner's test of 25 Nov 2026):
+the field that tells a reader the record came from Chatur rather than from Claude Code or OpenCode
+is TechieFlow's own <code>harness</code>, always <code>"chatur"</code>.</p>
+<h2 id="where-the-files-live">Where the files live<a class="anchor-link" href="#where-the-files-live">#</a></h2>
+<p><code>docs/metrics/</code> inside <strong>the project Chatur is working in</strong> — not inside Chatur's own repository.
+Five files, one per stream: <code>runs.jsonl</code>, <code>gates.jsonl</code>, <code>sessions.jsonl</code>, <code>commits.jsonl</code>,
+<code>misses.jsonl</code>, and since 2026-11-10 a sixth, <code>estimates.jsonl</code> (below). JSONL — one JSON object per line, append-only. Never rewritten, never compacted,
+never sorted in place (REQ-FN-040). A record is made for something that happened — a model call, a
+command, a build — and the folder and the one stream's file are made for it if they are not there
+(since 2026-11-26; the rule of 23 Nov wrote a chat turn only where the folder already was, and a
+real chat in a new folder left nothing). A folder that is only opened, and a chat that never reaches
+a model (Chatur's own <code>*help</code>), write nothing, and no file is ever made empty.</p>
+<p>A chat session is written once per turn with <strong>what the session has used in all</strong>, as TfLens reads
+it: of the records with one <code>session_id</code>, the one with the most <code>output_tokens</code> stands. The
+<code>session_id</code> is <code>chatur-&lt;start time&gt;-&lt;session number&gt;</code>, the same for the same session whoever reads
+the project's files.</p>
+<h2 id="types-the-same-as-techieflow-s"><a id="types-the-same-as-techieflows"></a>Types: the same as TechieFlow's<a class="anchor-link" href="#types-the-same-as-techieflow-s">#</a></h2>
+<p><code>IMeasurementActions.AppendAsync</code> still takes text for every field (the action-layer signature),
+and the writer types it as TechieFlow's <code>SCHEMA.md</code> does (this replaces the earlier "every field is
+a string", which TfLens could not read: it takes a count only from a JSON number and a date only
+from <code>ts</code>):</p>
+<table>
+<thead><tr><th>Kind of field</th><th>Written as</th></tr></thead>
+<tbody>
+<tr><td>Counts: <code>duration_s</code>, <code>reqs_count</code>, <code>files_written</code>, <code>tokens_in</code>, <code>tokens_out</code>, <code>tokens_cache_read</code>, <code>tokens_cache_write</code>, <code>input_tokens</code>, <code>output_tokens</code>, <code>cache_read_tokens</code>, <code>cache_creation_tokens</code>, <code>attempt</code>, <code>files</code>, <code>insertions</code>, <code>deletions</code>, <code>fix_attempt</code></td><td>a JSON number, whole (<code>12.4</code> is written <code>12</code>); text that is not a number refuses the write</td></tr>
+<tr><td><code>cost_usd</code></td><td>a JSON number, or <code>null</code></td></tr>
+<tr><td><code>reqs_touched</code>, <code>subagents</code></td><td>an array of strings, from a comma-joined text; <code>[]</code> when empty</td></tr>
+<tr><td><code>reopened</code></td><td><code>true</code> or <code>false</code></td></tr>
+<tr><td>Everything else</td><td>a string</td></tr>
+</tbody>
+</table>
+<p>A field not measured is <code>null</code> (REQ-FN-042), never <code>0</code> and never an invented value.</p>
+<h2 id="fields-on-every-record">Fields on every record<a class="anchor-link" href="#fields-on-every-record">#</a></h2>
+<table>
+<thead><tr><th>Field</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>v</code></td><td>Schema version, the number <code>1</code>. Injected by <code>AppendAsync</code>; a caller-supplied value is ignored.</td></tr>
+<tr><td><code>ts</code></td><td>ISO-8601 UTC to the second with a <code>Z</code>, e.g. <code>2026-11-26T10:41:02Z</code>. Injected by <code>AppendAsync</code>. Records written before 2026-11-26 carry <code>at</code> instead, and still read.</td></tr>
+<tr><td><code>kind</code></td><td>The record's kind. Runs, gates, sessions and commits each accept exactly one value (below); misses accepts three. When a stream has exactly one valid kind, <code>AppendAsync</code> fills it in for a caller who leaves it out.</td></tr>
+<tr><td><code>app</code></td><td>The project's own name — read from the <code>Project</code> row <code>AppendAsync</code> was called for, never supplied by the caller.</td></tr>
+<tr><td><code>project_type</code></td><td><code>"app"</code>, with <code>project_type_inferred: true</code>: Chatur does not know the project's type and says it guessed.</td></tr>
+<tr><td><code>harness</code></td><td>Always <code>"chatur"</code> (REQ-FN-041). Injected; a caller-supplied value is ignored. Before 2026-11-26 the field was <code>tool</code>.</td></tr>
+</tbody>
+</table>
+<h2 id="refusal-req-fn-043">Refusal (REQ-FN-043)<a class="anchor-link" href="#refusal-req-fn-043">#</a></h2>
+<p>A field name this document does not list, or a value outside a field's closed list below, refuses
+the <strong>whole</strong> write — nothing is appended to the stream. The refusal is logged (Serilog) and a row
+is written to the <code>RefusedWrite</code> table with the reason, so Settings ▸ Measurements can show it
+(REQ-UI-035); the session itself carries on (Architecture §5 "Errors" — "a failed measurement write
+is logged and never stops the work").</p>
+<h2 id="runs-jsonl-kind-run"><a id="runsjsonl--kind-run"></a><code>runs.jsonl</code> — <code>kind: "run"</code><a class="anchor-link" href="#runs-jsonl-kind-run">#</a></h2>
+<table>
+<thead><tr><th>Field</th><th>Closed list</th></tr></thead>
+<tbody>
+<tr><td><code>cmd</code>, <code>mode</code>, <code>started</code>, <code>ended</code>, <code>duration_s</code>, <code>reqs_touched</code>, <code>reqs_count</code>, <code>subagents</code>, <code>files_written</code>, <code>model</code>, <code>tokens_in</code>, <code>tokens_out</code>, <code>tokens_cache_read</code>, <code>tokens_cache_write</code>, <code>cost_usd</code></td><td>— (free text; <code>reqs_touched</code>/<code>subagents</code> are a caller-joined list, e.g. <code>"REQ-UI-004,REQ-FN-011"</code>)</td></tr>
+<tr><td><code>build_result</code></td><td><code>pass</code> | <code>fail</code> | <code>not-run</code></td></tr>
+</tbody>
+</table>
+<h2 id="gates-jsonl-kind-gate"><a id="gatesjsonl--kind-gate"></a><code>gates.jsonl</code> — <code>kind: "gate"</code><a class="anchor-link" href="#gates-jsonl-kind-gate">#</a></h2>
+<table>
+<thead><tr><th>Field</th><th>Closed list</th></tr></thead>
+<tbody>
+<tr><td><code>run_id</code>, <code>req_id</code>, <code>attempt</code></td><td>—</td></tr>
+<tr><td><code>req_class</code></td><td><code>UI</code> | <code>FN</code> | <code>RAG</code> | <code>NFR</code></td></tr>
+<tr><td><code>verdict</code>, <code>prior_verdict</code></td><td><code>Verified</code> | <code>Needs re-verify</code> | <code>FAIL</code> | <code>Blocked</code> | <code>Implemented</code> | <code>Done (pre-existing)</code></td></tr>
+<tr><td><code>gate</code></td><td><code>build</code> | <code>acceptance</code> | <code>render</code> | <code>assets</code> | <code>visual</code> | <code>mockup-parity</code> | <code>perf</code> | <code>standards</code> | <code>escaped</code> | <code>owner-mark</code> (empty = nothing failed)</td></tr>
+<tr><td><code>gates_run</code></td><td>— (a caller-joined list of the gate names above; written as a JSON array, as TechieFlow types it)</td></tr>
+<tr><td><code>failure_class</code></td><td><code>blank-data</code> | <code>zero-rows</code> | <code>overlap</code> | <code>clipped</code> | <code>offscreen</code> | <code>slow-ttfb</code> | <code>slow-load</code> | <code>timeout</code> | <code>exception</code> | <code>assert-fail</code> | <code>naming</code> | <code>build-error</code> | <code>missing-asset</code> | <code>mockup-drift</code> | <code>other</code></td></tr>
+<tr><td><code>proof</code></td><td><code>executed</code> | <code>code-audit</code></td></tr>
+</tbody>
+</table>
+<p><code>owner-mark</code> is Chatur's own value (added 2026-11-27, REQ-UI-133): TechieFlow's list has no gate for a person's own
+judgement. TfLens has been told (docs/Chatur-TechieFlow-Feedback.md TF-054).</p>
+<h3 id="compare-models-added-2026-11-27-req-fn-330">Compare models (added 2026-11-27, REQ-FN-330)<a class="anchor-link" href="#compare-models-added-2026-11-27-req-fn-330">#</a></h3>
+<p>Each model of a comparison writes one <code>runs.jsonl</code> record when it ends: <code>cmd</code> <code>compare-models</code>, <code>mode</code> <code>question</code> or
+<code>change</code>, <code>started</code> and <code>ended</code> to the millisecond (so two models started together still have a <code>started</code> each),
+<code>duration_s</code>, <code>model</code>, <code>tokens_in</code>, <code>tokens_out</code>, <code>cost_usd</code> (TechieRag's own price, <code>null</code> when it gave none) and, for
+<code>change</code>, <code>files_written</code> (how many files the model changed in its copy). A person's mark on that model is a
+<code>gates.jsonl</code> record: <code>run_id</code> is the model's run <code>started</code>, <code>verdict</code> <code>Verified</code> for right and <code>FAIL</code> for wrong,
+<code>gate</code> <code>owner-mark</code> on wrong and empty on right (TechieFlow: a pass has no failing gate), <code>gates_run</code> <code>["owner-mark"]</code>.
+A changed mark is a new record; the latest one for a <code>run_id</code> stands. A mark carries no <code>req_id</code>, so it never counts in
+the first-pass figure.</p>
+<h2 id="sessions-jsonl-kind-session"><a id="sessionsjsonl--kind-session"></a><code>sessions.jsonl</code> — <code>kind: "session"</code><a class="anchor-link" href="#sessions-jsonl-kind-session">#</a></h2>
+<table>
+<thead><tr><th>Field</th></tr></thead>
+<tbody>
+<tr><td><code>session_id</code>, <code>model</code>, <code>duration_s</code>, <code>input_tokens</code>, <code>output_tokens</code>, <code>cache_read_tokens</code>, <code>cache_creation_tokens</code>, <code>cost_usd</code></td></tr>
+</tbody>
+</table>
+<h2 id="commits-jsonl-kind-commit"><a id="commitsjsonl--kind-commit"></a><code>commits.jsonl</code> — <code>kind: "commit"</code><a class="anchor-link" href="#commits-jsonl-kind-commit">#</a></h2>
+<table>
+<thead><tr><th>Field</th><th>Closed list</th></tr></thead>
+<tbody>
+<tr><td><code>sha</code>, <code>files</code>, <code>insertions</code>, <code>deletions</code>, <code>branch</code></td><td>—</td></tr>
+<tr><td><code>subject_prefix</code></td><td><code>feat</code> | <code>fix</code> | <code>docs</code> | <code>chore</code> | <code>refactor</code> | <code>test</code> | <code>build</code> (empty otherwise — never the full subject; a subject leaks project detail)</td></tr>
+</tbody>
+</table>
+<h2 id="misses-jsonl-kind-miss-miss-fix-miss-amend"><a id="missesjsonl--kind-miss--miss-fix--miss-amend"></a><code>misses.jsonl</code> — <code>kind: "miss"</code> \| <code>"miss-fix"</code> \| <code>"miss-amend"</code><a class="anchor-link" href="#misses-jsonl-kind-miss-miss-fix-miss-amend">#</a></h2>
+<table>
+<thead><tr><th>Field</th><th>Closed list</th></tr></thead>
+<tbody>
+<tr><td><code>miss_id</code>, <code>req_id</code>, <code>origin_phase</code>, <code>origin_agent</code>, <code>origin_run_id</code>, <code>found_phase</code>, <code>found_run_id</code>, <code>what</code>, <code>fix_run_id</code>, <code>fix_cmd</code>, <code>fix_attempt</code>, <code>reopened</code>, <code>cost_attribution</code></td><td>—</td></tr>
+<tr><td><code>req_class</code></td><td><code>UI</code> | <code>FN</code> | <code>RAG</code> | <code>NFR</code></td></tr>
+<tr><td><code>miss_class</code></td><td><code>missed-requirement</code> | <code>partial-implementation</code> | <code>wrong-behaviour</code> | <code>regression</code> | <code>unspecified-gap</code> | <code>spec-contradiction</code> | <code>scope-creep</code> | <code>hallucinated-api</code> | <code>standards-violation</code> | <code>other</code></td></tr>
+<tr><td><code>artifact</code></td><td><code>brd</code> | <code>architecture</code> | <code>uidesign</code> | <code>checklist</code> | <code>devguide</code> | <code>src</code> | <code>tests</code> | <code>config</code> | <code>other</code></td></tr>
+<tr><td><code>severity</code></td><td><code>blocker</code> | <code>major</code> | <code>minor</code></td></tr>
+<tr><td><code>found_by</code></td><td><code>gate</code> | <code>self-smoke</code> | <code>owner</code> | <code>production</code> | <code>agent-review</code> | <code>library-feedback</code></td></tr>
+<tr><td><code>found_gate</code>, <code>failure_class</code></td><td>Same closed lists as <code>gates.jsonl</code> <code>gate</code> / <code>failure_class</code></td></tr>
+<tr><td><code>sort</code></td><td><code>spec</code> | <code>unsaid</code> | <code>weak-check</code> | <code>ignored</code></td></tr>
+<tr><td><code>verdict_after</code></td><td><code>Verified</code> | <code>Needs re-verify</code> | <code>FAIL</code> | <code>deferred</code> | <code>wont-fix</code></td></tr>
+</tbody>
+</table>
+<h2 id="estimates-jsonl-kind-estimate-added-2026-11-10-brd-205"><a id="estimatesjsonl--kind-estimate-added-2026-11-10-brd-205"></a><code>estimates.jsonl</code> — <code>kind: "estimate"</code> (added 2026-11-10, BRD-205)<a class="anchor-link" href="#estimates-jsonl-kind-estimate-added-2026-11-10-brd-205">#</a></h2>
+<p>The estimates stream was already written in TechieFlow's shape before 2026-11-26, and every other stream now is too. It is written in exactly the shape of TechieFlow's schema §2.8, so TfLens reads Chatur's estimates and TechieFlow's on one page: native JSON numbers and objects, <code>ts</code>, and <code>harness: "chatur"</code>. Written only by the Estimator, one batch per confirmed start or queue entry, every record of a batch carrying the same <code>ts</code>.</p>
+<pre><code class="language-json">{"v":1,"ts":"2026-11-10T11:16:00Z","kind":"estimate","app":"Fixture","phase":2,"req_id":"REQ-FN-301","cmd":"build-phase",
+ "tokens_out":{"low":2000,"mid":3000,"high":4000},"duration_s":{"low":240,"mid":300,"high":360},
+ "basis":"repo","basis_runs":5,"model":"claude-opus-5-5","tier":1,"harness":"chatur"}</code></pre>
+<table>
+<thead><tr><th>Field</th><th>Values</th></tr></thead>
+<tbody>
+<tr><td><code>kind</code></td><td><code>estimate</code></td></tr>
+<tr><td><code>app</code>, <code>phase</code></td><td>the project's name; the phase whose checklist was estimated</td></tr>
+<tr><td><code>req_id</code></td><td>the row, or <code>null</code> on a phase total</td></tr>
+<tr><td><code>cmd</code></td><td><code>build-phase</code> | <code>verify-phase</code> | <code>fix-issues</code> | <code>triage</code>; machine QA is shown as verify plus fix and never stored added</td></tr>
+<tr><td><code>tokens_out</code>, <code>duration_s</code></td><td><code>{"low","mid","high"}</code> per row (on a total, the sum of the rows that had one), or <code>null</code> with <code>basis</code> <code>none</code></td></tr>
+<tr><td><code>basis</code>, <code>basis_runs</code></td><td><code>repo</code> | <code>family</code> | <code>none</code>, and how many runs it rests on</td></tr>
+<tr><td><code>model</code></td><td>the model that will run the step: the first model of the tier routing gives it, also when automatic routing is on (owner, 10 Nov 2026). In the framework's records this field is the estimating model; Chatur's estimate is made by no model</td></tr>
+<tr><td><code>tier</code></td><td>optional, a JSON number 1 to 3: the routing tier the step is set to. Chatur's one field beyond the framework's §2.8 (owner, 10 Nov 2026); absent when the step's tier is not known</td></tr>
+<tr><td><code>harness</code></td><td>always <code>chatur</code></td></tr>
+<tr><td><code>rows_n</code>, <code>rows_no_precedent_n</code></td><td>phase totals only</td></tr>
+<tr><td><code>basis_note</code></td><td><code>retro</code> only, when runs on the phase's own rows already existed</td></tr>
+</tbody>
+</table>
+<p>Refused, as in the framework: a figure with <code>basis</code> <code>none</code>, a <code>null</code> figure without it, and low &gt; mid or mid &gt; high. An estimate is never written to <code>runs.jsonl</code>, never added to, averaged with or divided by a measurement (framework schema §6, fourth separation).</p>
+<h2 id="what-is-not-carried-over-from-techieflow-s-schema"><a id="what-is-not-carried-over-from-techieflows-schema"></a>What is not carried over from TechieFlow's schema<a class="anchor-link" href="#what-is-not-carried-over-from-techieflow-s-schema">#</a></h2>
+<p>Everything <code>tf-emit.sh</code>-only injects — <code>harness</code> detection, per-run token-window enrichment
+(§2.5–§2.7 of the framework schema), <code>run-void</code> records, the framework's own <code>attempt</code> derivation
+helper — is TechieFlow measuring itself running its own tasks. Chatur is not TechieFlow: it has no
+<code>tf-emit.sh</code>, no <code>cmd</code> vocabulary of framework task names beyond what its own agent loop reports,
+and no multi-harness detection problem (there is exactly one tool writing these files: Chatur
+itself, hence <code>tool: "chatur"</code> rather than <code>harness</code>). A field from the framework schema that Chatur
+has no way to measure yet is simply not in the closed lists above; REQ-FN-042 already covers "not
+measured" for every field this document does keep.</p>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script>
+// Light/dark toggle. The initial theme was already applied flash-free by the
+// <head> script (saved choice, else time-of-day). Clicking flips it, saves the
+// choice, and reloads so Mermaid re-renders in the matching theme.
+(function(){
+  var btn = document.getElementById('themeToggle');
+  if(!btn) return;
+  var relabel = function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  };
+  relabel();
+  btn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem('tf-theme', next); }catch(e){}
+    location.reload();
+  });
+})();
+
+// Copy buttons on every code <pre> — but NEVER on a `pre.mermaid`:
+// mermaid reads the <pre>'s textContent as the diagram source, so a button
+// appended here glues "copy" onto the last line and breaks the parse
+// (flowcharts → "Syntax error"; sequence diagrams silently absorb it).
+// Mermaid blocks get copy/export from their own .diagram toolbar instead.
+document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'copy';
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Mermaid init — theme follows the resolved light/dark theme
+if (window.mermaid) {
+  var mermaidTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+  mermaid.initialize({ startOnLoad: true, theme: mermaidTheme, securityLevel: 'loose' });
+}
+
+// Mermaid toolbar wiring — run after mermaid renders
+function wireMermaidToolbars() {
+  document.querySelectorAll('.diagram').forEach(dia => {
+    if (dia.dataset.wired) return;
+    const merm = dia.querySelector('.mermaid');
+    const svg = merm && merm.querySelector('svg');
+    if (!svg) return;
+    dia.dataset.wired = '1';
+    let scale = 1;
+    const label = dia.querySelector('.zlabel');
+    const apply = () => {
+      svg.style.transform = `scale(${scale})`;
+      svg.style.transformOrigin = 'top left';
+      if (label) label.textContent = Math.round(scale * 100) + '%';
+    };
+    const setScale = (s) => { scale = Math.max(0.25, Math.min(4, s)); apply(); };
+    dia.querySelector('[data-zin]').onclick = () => setScale(scale * 1.2);
+    dia.querySelector('[data-zout]').onclick = () => setScale(scale / 1.2);
+    dia.querySelector('[data-fit]').onclick = () => {
+      svg.style.transform = '';
+      svg.removeAttribute('width');
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+      scale = 1;
+      if (label) label.textContent = 'Fit';
+    };
+    dia.querySelector('[data-one]').onclick = () => {
+      svg.style.transform = '';
+      svg.style.maxWidth = 'none';
+      svg.style.width = '';
+      svg.style.height = '';
+      scale = 1;
+      if (label) label.textContent = '100%';
+    };
+    dia.querySelector('[data-fs]').onclick = () => {
+      dia.classList.toggle('fs');
+      if (dia.classList.contains('fs')) {
+        document.addEventListener('keydown', escFs);
+      } else {
+        document.removeEventListener('keydown', escFs);
+      }
+    };
+    function escFs(e) { if (e.key === 'Escape') { dia.classList.remove('fs'); document.removeEventListener('keydown', escFs); } }
+    dia.querySelector('[data-pop]').onclick = () => openInNewTab(svg);
+    // Ctrl+wheel zoom
+    merm.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+    }, { passive: false });
+  });
+}
+
+function openInNewTab(svg) {
+  const svgSource = new XMLSerializer().serializeToString(svg);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Diagram</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e6e8ee;font-family:system-ui,sans-serif}
+  .bar{position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#161a22;border-bottom:1px solid #2a3142;display:flex;gap:8px;z-index:10}
+  .bar button{background:#1c2230;color:#9aa3b2;border:1px solid #2a3142;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}
+  .bar button:hover{color:#7cc4ff;border-color:#7cc4ff}
+  .bar .hint{margin-left:auto;color:#9aa3b2;font-size:11.5px;align-self:center}
+  #stage{position:absolute;top:42px;bottom:0;left:0;right:0;overflow:hidden}
+  #stage svg{width:100%;height:100%}
+</style>
+</head><body>
+<div class="bar">
+  <button onclick="zpz.zoomIn()">+</button>
+  <button onclick="zpz.zoomOut()">−</button>
+  <button onclick="zpz.fit();zpz.center()">Fit</button>
+  <button onclick="zpz.resetZoom();zpz.center()">1:1</button>
+  <button onclick="window.print()">Print</button>
+  <button onclick="dlPng()">PNG</button>
+  <button onclick="dlSvg()">SVG</button>
+  <span class="hint">Drag to pan · Ctrl+wheel to zoom · + / − keys</span>
+</div>
+<div id="stage">${svgSource}</div>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"><\/script>
+<script>
+  const el = document.querySelector('#stage svg');
+  const zpz = svgPanZoom(el, { zoomScaleSensitivity: .3, minZoom: .2, maxZoom: 10, controlIconsEnabled: false, fit: true, center: true });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zpz.zoomIn();
+    if (e.key === '-' || e.key === '_') zpz.zoomOut();
+    if (e.key === '0') { zpz.resetZoom(); zpz.center(); }
+  });
+  function dlSvg() {
+    const blob = new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagram.svg'; a.click();
+  }
+  function dlPng() {
+    const src = new XMLSerializer().serializeToString(el);
+    const img = new Image();
+    const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(src)));
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth * 2; c.height = el.clientHeight * 2;
+      const ctx = c.getContext('2d'); ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagram.png'; a.click(); });
+    };
+    img.src = url;
+  }
+<\/script>
+</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// Run wiring after mermaid finishes (it renders async)
+if (window.mermaid) {
+  setTimeout(wireMermaidToolbars, 400);
+  setTimeout(wireMermaidToolbars, 1200);  // safety re-run for slow renders
+}
+</script>
+</body>
+</html>

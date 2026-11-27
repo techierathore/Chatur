@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Business Requirements — Phase 4: More users</h1>
-    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>Chatur-P4-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-11-27 &middot; source <code>Chatur-P4-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -122,6 +122,9 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#the-owner-s-evening-test-21-nov-workbench-and-settings">The owner&#x27;s evening test, 21 Nov (Workbench and Settings)</a></li>
         <li class="h3"><a href="#the-owner-s-test-of-22-nov-start-workbench">The owner&#x27;s test of 22 Nov (Start, Workbench)</a></li>
         <li class="h3"><a href="#chatur-s-own-measurements-the-agents-commands-owner-22-nov-2026-evening">Chatur&#x27;s own measurements, the agents&#x27; commands (owner, 22 Nov 2026 evening)</a></li>
+        <li class="h3"><a href="#the-owner-s-test-of-23-nov-workbench">The owner&#x27;s test of 23 Nov (Workbench)</a></li>
+        <li class="h3"><a href="#the-owner-s-test-of-25-nov-start-workbench-measurements">The owner&#x27;s test of 25 Nov (Start, Workbench, Measurements)</a></li>
+        <li class="h3"><a href="#what-is-left-on-each-key-and-one-task-on-several-models-owner-27-nov-2026">What is left on each key, and one task on several models (owner, 27 Nov 2026)</a></li>
         <li><a href="#non-functional-requirements">4. Non-functional requirements</a></li>
         <li><a href="#development-status">5. Development status</a></li>
         <li><a href="#where-the-rest-lives">6. Where the rest lives</a></li>
@@ -139,7 +142,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </tbody>
 </table>
 <h2 id="summary"><a id="1-summary"></a>1. Summary<a class="anchor-link" href="#summary">#</a></h2>
-<p>The first three phases make Chatur good enough for the owner. This one makes it something another developer can be given. Feedback, issues, licences and feature control go through App Manager, which already does all four, and role and rule data is synced between machines through it rather than carried in a file. Chatur's verifier gains the thing its own build needed all along: it drives the windows of the Mac and Windows applications it has built, so a native head is checked the way a web page already is. The owner, by now working on many projects at once, gets one view across all of them and the ability to work in separate working copies so two runs never fight over the same files. Chatur's actions are offered to other tools, so something outside can start a process. And the installers are signed, which is what turns a download the owner trusts into one a stranger can. BRD-235 to BRD-246 hold the owner's evening test of 21 Nov 2026, BRD-247 to BRD-252 the owner's test of 22 Nov 2026 from the Start menu, and BRD-253 to BRD-275 the owner's request that evening.</p>
+<p>The first three phases make Chatur good enough for the owner. This one makes it something another developer can be given. Feedback, issues, licences and feature control go through App Manager, which already does all four, and role and rule data is synced between machines through it rather than carried in a file. Chatur's verifier gains the thing its own build needed all along: it drives the windows of the Mac and Windows applications it has built, so a native head is checked the way a web page already is. The owner, by now working on many projects at once, gets one view across all of them and the ability to work in separate working copies so two runs never fight over the same files. Chatur's actions are offered to other tools, so something outside can start a process. And the installers are signed, which is what turns a download the owner trusts into one a stranger can. BRD-235 to BRD-246 hold the owner's evening test of 21 Nov 2026, BRD-247 to BRD-252 the owner's test of 22 Nov 2026 from the Start menu, BRD-253 to BRD-275 the owner's request that evening, BRD-287 to BRD-298 that of 27 Nov.</p>
 <h2 id="screens-and-flow"><a id="2-screens-and-flow"></a>2. Screens and flow<a class="anchor-link" href="#screens-and-flow">#</a></h2>
 <p>One row per routed page this phase adds; dialogs are written exactly as in the phase-1 BRD.</p>
 <table>
@@ -150,8 +153,9 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>All projects</td><td><code>/all-projects</code></td><td>Owner, Licensed developer</td><td><a href="mockups/all-projects.html">mockup</a></td><td>project, phase, open, verified, last worked</td></tr>
 <tr><td>Worktrees</td><td><code>/worktrees</code></td><td>Owner</td><td><a href="mockups/worktrees.html">mockup</a></td><td>working copy, branch, run, path, state</td></tr>
 <tr><td>Integrations</td><td><code>/integrations</code></td><td>Owner</td><td><a href="mockups/integrations.html">mockup</a></td><td>action, what starts it, address, state</td></tr>
-<tr><td>Measurements</td><td><code>/measurements</code></td><td>Owner, Licensed developer</td><td><a href="mockups/measurements.html">mockup</a></td><td>period, runs, tokens read, tokens written, cost, time, by model, by agent, by command, mistakes, found by, first-pass, estimate and actual, runs list</td></tr>
-<tr><td>Measurements across projects</td><td><code>/measurements/all</code></td><td>Owner, Licensed developer</td><td><a href="mockups/measurements-all.html">mockup</a></td><td>period, project, runs, tokens read, tokens written, cost, time, mistakes</td></tr>
+<tr><td>Measurements</td><td><code>/measurements</code></td><td>Owner, Licensed developer</td><td><a href="mockups/measurements.html">mockup</a></td><td>period, runs, tokens read, tokens written, cost, time, by model, by agent, by command, mistakes, found by, first-pass, estimate and actual, runs list, what is left on each key</td></tr>
+<tr><td>Measurements across projects</td><td><code>/measurements/all</code></td><td>Owner, Licensed developer</td><td><a href="mockups/measurements-all.html">mockup</a></td><td>period, project, runs, tokens read, tokens written, cost, time, mistakes, what is left on each key</td></tr>
+<tr><td>Compare models</td><td><code>/compare-models</code></td><td>Owner, Licensed developer</td><td><a href="mockups/compare-models.html">mockup</a></td><td>models, kind of task, task, time, tokens, cost, answer or changed files, right or wrong, past comparisons</td></tr>
 </tbody>
 </table>
 <p><strong>Primary journey:</strong></p>
@@ -363,9 +367,11 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </li>
 <li><strong>BRD-244</strong> — New project is one dialog in every state and always comes from this machine's templates. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
 <ul>
-<li><em>Acceptance:</em> When the person chooses New project in any state on Workbench, then one dialog lists this machine's templates, framework and location, and adds to an open solution.
+<li><em>Acceptance:</em> When the person chooses New project in any state on Workbench, then one dialog lists this machine's templates, shows where things will be made, and adds to an open solution.
 </li>
 <li><em>Changed 2026-11-22:</em> with no solution open, New project made an empty solution and showed no templates (BRD-247).
+</li>
+<li><em>Changed 2026-11-23:</em> the location is no longer a field to type when a folder is open; the dialog shows the folder and the two paths it will make (BRD-279).
 </li>
 </ul>
 </li>
@@ -375,13 +381,19 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <ul>
 <li><strong>BRD-247</strong> — New project with no solution open makes the solution and its first project from a template, and opens it. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start-empty.html">mockup</a>
 <ul>
-<li><em>Acceptance:</em> When the person creates a project with nothing or an empty folder open on Start, then the solution and its first project are made from the template and opened.
+<li><em>Acceptance:</em> When the person creates a project with no solution on Start, then the solution gets a folder of its own in the chosen location and each project one inside that.
+</li>
+<li><em>Changed 2026-11-23:</em> a folder that was open and not empty got a second folder named after the solution inside it, with the solution and the project in there. The folder that is open, or the one picked, was then always the solution's folder.
+</li>
+<li><em>Changed 2026-11-26:</em> the owner's test of 25 Nov asked for the opposite, as Visual Studio does: the solution's folder is made when it is not there, then the solution in it, then each project in its own folder inside it. This replaces the 23 Nov rule. The one exception is the folder that is open holding projects and no solution (BRD-276), whose solution is made in that folder and takes them in.
 </li>
 </ul>
 </li>
 <li><strong>BRD-248</strong> — After New project, Run has a target. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
 <ul>
-<li><em>Acceptance:</em> When the person creates a project with New project on Workbench, then Run's target list names the new project without anything more, and "No target found" does not stay.
+<li><em>Acceptance:</em> When the person adds a project that can run with New project on Workbench, then it is the project that runs; a library added later leaves that choice.
+</li>
+<li><em>Changed 2026-11-26:</em> the new project was in the list but the first project stayed the one to run (owner's test of 25 Nov).
 </li>
 </ul>
 </li>
@@ -409,7 +421,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <ul>
 <li><strong>BRD-253</strong> — Measurements, in the main menu, for the open project, read from its own docs/metrics files and nothing else. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
 <ul>
-<li><em>Acceptance:</em> When the person chooses Project ▸ Measurements on Measurements, then the open project's figures show, read only from its docs/metrics files, with no network call.
+<li><em>Acceptance:</em> When the person picks a project and chooses Project ▸ Measurements on Measurements, then its figures show, chat sessions included, read only from its docs/metrics files.
 </li>
 </ul>
 </li>
@@ -522,6 +534,128 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </ul>
 </li>
 </ul>
+<h3 id="the-owner-s-test-of-23-nov-workbench"><a id="the-owners-test-of-23-nov-workbench"></a>The owner's test of 23 Nov (Workbench)<a class="anchor-link" href="#the-owner-s-test-of-23-nov-workbench">#</a></h3>
+<p>Added 2026-11-23 from the owner's test of the installed Chatur. He opened a folder, chose New project, and got the solution and the project inside a second folder named after the solution: the folder was not empty, because a chat in it the day before had made Chatur write <code>docs/metrics</code> there (phase 1 BRD-74, changed the same day). One rule now holds for every starting point: the folder that is open, or the one picked, is the solution's folder. BRD-280 and BRD-281 are under Non-functional requirements.</p>
+<ul>
+<li><strong>BRD-276</strong> — A folder with projects and no solution gets a solution that takes them in. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person creates a project in the open folder that holds projects and no solution, then the dialog says so and the new solution holds them all.
+</li>
+</ul>
+</li>
+<li><strong>BRD-277</strong> — A folder that has a solution gets the new project added to that solution. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person creates a project on Workbench with a folder open that holds a solution, then the project is added to that solution and no second solution is made.
+</li>
+</ul>
+</li>
+<li><strong>BRD-278</strong> — FILES shows the solution as its root, with its projects below it. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a project with a solution is open on Workbench, then FILES shows the solution as its one root with the projects below it and no solution file beside them.
+</li>
+<li><em>Changed 2026-11-26:</em> the 23 Nov wording kept the folder as the root with the solution file beside the project folders, which the owner's test of 25 Nov found wrong: as in Visual Studio, the solution is the root.
+</li>
+</ul>
+</li>
+<li><strong>BRD-279</strong> — New project shows where things will be made before it makes them. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types the names in New project, then the dialog shows the solution's folder, the solution file and the project folder as full paths.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="the-owner-s-test-of-25-nov-start-workbench-measurements"><a id="the-owners-test-of-25-nov-start-workbench-measurements"></a>The owner's test of 25 Nov (Start, Workbench, Measurements)<a class="anchor-link" href="#the-owner-s-test-of-25-nov-start-workbench-measurements">#</a></h3>
+<p>Added 2026-11-26 from the owner's test of the installed Chatur on 25 Nov (<code>docs/screenshots/25-Nov-26-Run</code>). The solution is now the root of FILES and a new solution gets its own folder (BRD-247, BRD-278, BRD-279 changed; they replace the 23 Nov rule); a project just added is the one that runs (BRD-248); projects start together (BRD-283); the project types can be searched (BRD-282); a folder with no solution is said so (BRD-284); the chat follows its newest message (BRD-285); closing the file view asks (BRD-83); the two buttons that handed a file to another editor are gone (BRD-84, BRD-85); and a real chat now writes its sessions and tokens into <code>docs/metrics</code> in TechieFlow's shape, so Measurements shows them (BRD-74, BRD-75, BRD-253). BRD-286 is under Non-functional requirements.</p>
+<ul>
+<li><strong>BRD-282</strong> — Search the project types in New project. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types in the search box above the project types in New project, then the list narrows to the types that hold every word typed.
+</li>
+</ul>
+</li>
+<li><strong>BRD-283</strong> — Several projects start together, a saved choice per solution. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person ticks two or more projects in Multiple startup projects and presses Run, then each is built and started together and Stop ends them all.
+</li>
+</ul>
+</li>
+<li><strong>BRD-284</strong> — A folder with projects and no solution is said so and asked about before it opens. <em>Screen:</em> Start · <em>Mockup:</em> <a href="mockups/start.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens a folder that holds a project and no solution on Start, then Chatur says so and asks whether to open it, before opening.
+</li>
+</ul>
+</li>
+<li><strong>BRD-285</strong> — The chat moves to the newest message after a long reply or a command such as *yolo. <em>Screen:</em> Workbench · <em>Mockup:</em> <a href="mockups/main.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a long reply or a command such as *yolo makes the conversation longer than its window on Workbench, then the conversation shows its newest message.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="what-is-left-on-each-key-and-one-task-on-several-models-owner-27-nov-2026">What is left on each key, and one task on several models (owner, 27 Nov 2026)<a class="anchor-link" href="#what-is-left-on-each-key-and-one-task-on-several-models-owner-27-nov-2026">#</a></h3>
+<p>Added 2026-11-27 from the owner's request of that morning. Both Measurements screens show what is left on every connected key: asked of the provider where it has an address for its balance or limit (OpenRouter, DeepSeek), else Chatur's own count of what was used against a limit the person types for that key, else "not known". The owner's one connected provider on 27 Nov, Anthropic with a key, has no such address for a normal key (its usage and cost reports need an admin key), so it is of the second kind. Compare models gives one task to two to four connected models side by side; a task that changes files gives each model its own copy under the project's bin folder. BRD-297 and BRD-298 are under Non-functional requirements; the run of 26 Nov's leftovers (REQ-FN-059's test, four screens against their mockups, the ASP.NET https line in Output) are fixes to existing rows, not new items.</p>
+<ul>
+<li><strong>BRD-287</strong> — What is left on each key, on both Measurements screens. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person opens Measurements or Measurements across projects, then each connected provider has one line saying what is left on its key and how that is known.
+</li>
+</ul>
+</li>
+<li><strong>BRD-288</strong> — Ask the provider, where it has an address that tells its balance or its limit. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a connected provider has an address for its balance or limit on Measurements, then Chatur asks it and the line shows the amount left and when it was asked.
+</li>
+</ul>
+</li>
+<li><strong>BRD-289</strong> — A limit typed for a key, counted against what Chatur used. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person types a limit and start date for a key on Measurements, then its line shows the limit, Chatur's own cost since that date, and what is left.
+</li>
+</ul>
+</li>
+<li><strong>BRD-290</strong> — No number reads "not known", never a guess. <em>Screen:</em> Measurements · <em>Mockup:</em> <a href="mockups/measurements.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a key has no address and no limit typed, or its address does not answer, on Measurements, then its line reads "not known" and says why.
+</li>
+</ul>
+</li>
+<li><strong>BRD-291</strong> — Pick two to four connected models and give them one task on the open project. <em>Screen:</em> Compare models · <em>Mockup:</em> <a href="mockups/compare-models.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person ticks two to four models and types a task on Compare models, then Run starts each; one or five models are refused with the reason.
+</li>
+</ul>
+</li>
+<li><strong>BRD-292</strong> — A read-only question needs no copy and changes nothing. <em>Screen:</em> Compare models · <em>Mockup:</em> <a href="mockups/compare-models.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the kind is "Question, changes nothing" on Compare models, then each model answers from the open project and no file of the project changes.
+</li>
+</ul>
+</li>
+<li><strong>BRD-293</strong> — A task that changes files gives each model its own copy under the project's bin folder, removed afterwards. <em>Screen:</em> Compare models · <em>Mockup:</em> <a href="mockups/compare-models.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the kind is "Task that changes files" on Compare models, then each model works in its own copy under the project's bin folder, removed when the run ends.
+</li>
+</ul>
+</li>
+<li><strong>BRD-294</strong> — Time, tokens, cost and the answer or changed files, side by side. <em>Screen:</em> Compare models · <em>Mockup:</em> <a href="mockups/compare-models.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a comparison ends on Compare models, then one column per model shows its time, tokens in and out, cost or "no price", and its answer or its changed files.
+</li>
+</ul>
+</li>
+<li><strong>BRD-295</strong> — Mark each model's result right or wrong. <em>Screen:</em> Compare models · <em>Mockup:</em> <a href="mockups/compare-models.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When the person marks a model's result right or wrong on Compare models, then the mark is kept and shows again when that comparison is opened again.
+</li>
+</ul>
+</li>
+<li><strong>BRD-296</strong> — Comparisons and marks are kept in docs/metrics in TfLens's shape and open again. <em>Screen:</em> Compare models · <em>Mockup:</em> <a href="mockups/compare-models.html">mockup</a>
+<ul>
+<li><em>Acceptance:</em> When a comparison ends or a mark changes on Compare models, then runs.jsonl holds one compare-models record per model with the mark, and the comparison opens again.
+</li>
+</ul>
+</li>
+</ul>
 <h2 id="non-functional-requirements"><a id="4-non-functional-requirements"></a>4. Non-functional requirements<a class="anchor-link" href="#non-functional-requirements">#</a></h2>
 <table>
 <thead><tr><th>Id</th><th>Area</th><th>Requirement</th><th>Measure</th></tr></thead>
@@ -532,12 +666,17 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>BRD-261</td><td>Correctness</td><td>Every number on the measurements screens is computed by code and equals the total added up again from the files</td><td>When a test adds up the fixture's files again on Measurements, then every figure equals it, unmeasured ones read "not measured", and the words are TfLens's</td></tr>
 <tr><td>BRD-263</td><td>Documentation</td><td>The UsageGuide has "The agents and their commands", one table per agent, from the one command list in the code</td><td>When a test compares the UsageGuide with the command list on Workbench, then each agent's table names every command once, with what, example and where, and nothing else</td></tr>
 <tr><td>BRD-264</td><td>Documentation</td><td>The README names the four agents and their commands in short and links to the guide's section</td><td>When a test compares the README with the command list on Workbench, then every command is named once under its agent and no other command is named</td></tr>
-<tr><td>BRD-275</td><td>Testing</td><td>The owner's test has a part for the measurements screens and one for typing a command of each agent</td><td>When the owner follows the Owner's test on Workbench, then one part walks the measurements screens, one types a command to each agent, and the eight parts stay</td></tr>
+<tr><td>BRD-275</td><td>Testing</td><td>The owner's test has a part for the measurements screens and one for typing a command of each agent</td><td>When the owner follows the Owner's test, then one part walks the measurements screens, picking the project in the app, and one types a command to each agent</td></tr>
+<tr><td>BRD-280</td><td>Testing</td><td>New project's tests compare the exact paths on disk for each starting point</td><td>When the tests of New project run, then for each of the four starting points every path made on disk is compared with the one wanted.</td></tr>
+<tr><td>BRD-281</td><td>Testing</td><td>The owner's test makes its folders under this repository's bin folder and starts with the empty-folder case</td><td>When the owner follows the Owner's test, then every folder it makes is under this repository's bin folder, and part 1 is the empty-folder case.</td></tr>
+<tr><td>BRD-286</td><td>Testing</td><td>The owner's test names no path in the measurements part, and a real model call proves what Measurements shows</td><td>When the owner follows the Owner's test, then the measurements part picks the project in the app, and its docs/metrics holds the chat's sessions</td></tr>
+<tr><td>BRD-297</td><td>Testing</td><td>Compare models is proven with a real read-only question on two models</td><td>When the tests ask two connected models a real read-only question on Compare models, then both answers show with time, tokens and cost, and runs.jsonl holds both records</td></tr>
+<tr><td>BRD-298</td><td>Testing</td><td>The owner's test has parts for the keys and for Compare models, and runs in one order</td><td>When the owner follows the Owner's test on Measurements and Compare models, then one part reads each key, one compares two named models, and all parts run in one order</td></tr>
 </tbody>
 </table>
 <h2 id="development-status"><a id="5-development-status"></a>5. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-11-23.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P4-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-11-27.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P4-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
@@ -548,11 +687,12 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>Integrations</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
 <tr><td>The owner's evening test, 21 Nov (Workbench, Settings)</td><td>12</td><td>12</td><td>0</td><td>Done</td></tr>
 <tr><td>The owner's test of 22 Nov (Start, Workbench)</td><td>6</td><td>6</td><td>0</td><td>Done</td></tr>
-<tr><td>Measurements</td><td>7</td><td>7</td><td>0</td><td>Done</td></tr>
-<tr><td>Measurements across projects</td><td>1</td><td>0</td><td>1</td><td>In progress</td></tr>
+<tr><td>Measurements</td><td>11</td><td>10</td><td>1</td><td>Partial</td></tr>
+<tr><td>Measurements across projects</td><td>1</td><td>1</td><td>0</td><td>Done</td></tr>
 <tr><td>Settings</td><td>1</td><td>1</td><td>0</td><td>Done</td></tr>
-<tr><td>Workbench</td><td>10</td><td>10</td><td>0</td><td>Done</td></tr>
-<tr><td>Non-functional</td><td>4</td><td>4</td><td>0</td><td>Done</td></tr>
+<tr><td>Workbench</td><td>18</td><td>18</td><td>0</td><td>Done</td></tr>
+<tr><td>Non-functional</td><td>9</td><td>9</td><td>0</td><td>Done</td></tr>
+<tr><td>Compare models</td><td>6</td><td>6</td><td>0</td><td>Done</td></tr>
 </tbody>
 </table>
 <h2 id="where-the-rest-lives"><a id="6-where-the-rest-lives"></a>6. Where the rest lives<a class="anchor-link" href="#where-the-rest-lives">#</a></h2>

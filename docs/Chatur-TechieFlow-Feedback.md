@@ -8,9 +8,9 @@
 
 ## Summary
 
-48 entries: 2 open and not blocking (TF-052, TF-053), 18 fixed upstream and not yet re-checked here (TF-008, TF-010, TF-013 to TF-019, TF-021, TF-024, TF-025, TF-037 to TF-039, TF-046 to TF-048), 28 closed (TF-049 to TF-051 re-checked and closed on 2026-11-21).
+49 entries: 3 open and not blocking (TF-052, TF-053, TF-054), 18 fixed upstream and not yet re-checked here (TF-008, TF-010, TF-013 to TF-019, TF-021, TF-024, TF-025, TF-037 to TF-039, TF-046 to TF-048), 28 closed (TF-049 to TF-051 re-checked and closed on 2026-11-21).
 
-Nothing is blocked. TF-052 (21 Nov 2026): late in a long verify the menu walk reads three chat-panel menus as "opens nothing"; they open by hand. TF-053 (23 Nov 2026): the walk clicks a trigger hidden at 390 px, and the mockup check counts icons of sample rows it dropped; REQ-FN-313 waits on the second.
+Nothing is blocked. TF-052 (21 Nov 2026): late in a long verify the menu walk reads three chat-panel menus as "opens nothing"; they open by hand. TF-053 (23 Nov 2026): the walk clicks a trigger hidden at 390 px, and the mockup check counts icons of sample rows it dropped; REQ-FN-313 waits on the second. TF-054 (27 Nov 2026): TfLens has no gate value for a person's own right-or-wrong mark; Chatur writes `owner-mark`.
 
 ## Entries
 
@@ -684,6 +684,18 @@ On a fresh fixture with one seeded check-in the `history-table` box finding did 
 - **Encountered in:** `*build-phase Chatur`, verify of 23 Nov 2026 (REQ-UI-107 to REQ-UI-123, REQ-FN-313).
 - **Workaround:** (1) walk both widths in one run. (2) none.
 - **Suggested fix:** (1) skip a trigger whose `isVisible()` is false. (2) name the element, and remove sample-row icons at every ancestor.
+
+### TF-054 — TfLens's `gate` list has no value for a person's own right or wrong on a run
+
+- **Status:** open
+- **Severity:** minor
+- **Blocks:** no — Chatur writes `owner-mark` in its own schema copy (docs/Chatur-Metrics-Schema.md) and carries on.
+- **Repro:** Chatur's Compare models (BRD-295, BRD-296) lets the owner mark each model's answer right or wrong, and keeps the mark in the project's `docs/metrics/gates.jsonl` with `run_id` = that model's run `started`. `.tfcore/telemetry/SCHEMA.md` §3.2 lists `gate` as build, test-users, acceptance, render, assets, visual, mockup-parity, perf, standards and escaped: each is a check a verify runs. None is a person looking at a result and judging it.
+- **Expected:** a value for a person's own verdict on a run, so TfLens can show it apart from the gates' own catch rates (and never pool it into them).
+- **Actual:** no value fits. Chatur writes `gate: "owner-mark"` on a wrong mark (`verdict: "FAIL"`) and an empty `gate` on a right mark (`verdict: "Verified"`), with `gates_run: ["owner-mark"]`. TfLens's gate catch distribution would count an `owner-mark` failure as a gate of its own until it knows the value.
+- **Encountered in:** `*build-phase Chatur`, 27 Nov 2026 (REQ-UI-133, REQ-FN-330).
+- **Workaround:** none needed in the app; Chatur's own copy of the list carries `owner-mark`.
+- **Suggested fix:** add `owner-mark` (or a name TechieFlow prefers, which Chatur will then write) to §3.2 as "Not a gate: a person's own verdict on a run", reported on its own row like `escaped`.
 
 ## Replies from TechieFlow
 

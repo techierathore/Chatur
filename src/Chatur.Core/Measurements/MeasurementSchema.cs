@@ -4,8 +4,9 @@ namespace Chatur.Core.Measurements;
 /// The closed vocabulary <c>docs/Chatur-Metrics-Schema.md</c> documents — copied from
 /// <c>.tfcore/telemetry/SCHEMA.md</c> and trimmed to what Chatur itself can measure. Used by
 /// <see cref="MeasurementActions"/> to refuse a field or a value the schema does not know
-/// (REQ-FN-043) and to leave anything not measured empty (REQ-FN-042). Every value is a string —
-/// see the schema document's "One deliberate difference from TechieFlow's schema".
+/// (REQ-FN-043) and to leave anything not measured empty (REQ-FN-042). A record is written in TechieFlow's own shape
+/// (REQ-FN-040, owner's test of 25 Nov 2026): <c>v</c> and the counts are numbers, a list is an array, a figure not
+/// measured is <c>null</c>, so TfLens reads the file unchanged. Callers still hand over text; the writer types it.
 /// </summary>
 internal static class MeasurementSchema
 {
@@ -57,13 +58,32 @@ internal static class MeasurementSchema
         ["misses.jsonl"] = new HashSet<string> { "miss", "miss-fix", "miss-amend" }
     };
 
+    /// <summary>The fields whose value is a whole number in TechieFlow's schema (SCHEMA.md §2, §4, §5, §5.5).</summary>
+    public static readonly IReadOnlySet<string> IntFields = new HashSet<string>
+    {
+        "duration_s", "reqs_count", "files_written", "tokens_in", "tokens_out", "tokens_cache_read", "tokens_cache_write",
+        "input_tokens", "output_tokens", "cache_read_tokens", "cache_creation_tokens", "attempt", "files", "insertions",
+        "deletions", "fix_attempt"
+    };
+
+    /// <summary>The fields whose value is a number with a fraction (SCHEMA.md §2.5 <c>cost_usd</c>).</summary>
+    public static readonly IReadOnlySet<string> NumberFields = new HashSet<string> { "cost_usd" };
+
+    /// <summary>The fields whose value is a list of strings; a caller gives them separated by commas (SCHEMA.md §2, §3: <c>gates_run</c> is a list too).</summary>
+    public static readonly IReadOnlySet<string> ArrayFields = new HashSet<string> { "reqs_touched", "subagents", "gates_run" };
+
+    /// <summary>The fields whose value is true or false.</summary>
+    public static readonly IReadOnlySet<string> BoolFields = new HashSet<string> { "reopened" };
+
     /// <summary>Closed lists for fields whose value is not free text, checked wherever the field appears.</summary>
     public static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> EnumValuesByField = new Dictionary<string, IReadOnlySet<string>>
     {
         ["req_class"] = new HashSet<string> { "UI", "FN", "RAG", "NFR" },
         ["verdict"] = new HashSet<string> { "Verified", "Needs re-verify", "FAIL", "Blocked", "Implemented", "Done (pre-existing)" },
         ["prior_verdict"] = new HashSet<string> { "Verified", "Needs re-verify", "FAIL", "Blocked", "Implemented", "Done (pre-existing)" },
-        ["gate"] = new HashSet<string> { "build", "acceptance", "render", "assets", "visual", "mockup-parity", "perf", "standards", "escaped" },
+        // "owner-mark" is Chatur's own: a person's right or wrong on a compared model (REQ-UI-133). TfLens has no value for it
+        // (docs/Chatur-TechieFlow-Feedback.md).
+        ["gate"] = new HashSet<string> { "build", "acceptance", "render", "assets", "visual", "mockup-parity", "perf", "standards", "escaped", "owner-mark" },
         ["found_gate"] = new HashSet<string> { "build", "acceptance", "render", "assets", "visual", "mockup-parity", "perf", "standards", "escaped" },
         ["failure_class"] = new HashSet<string>
         {
@@ -102,7 +122,7 @@ internal static class MeasurementSchema
 
         foreach (var vField in aFields.Keys)
         {
-            if (vField is "v" or "at" or "app" or "tool")
+            if (vField is "v" or "ts" or "at" or "app" or "tool" or "harness" or "project_type")
             {
                 continue; // injected — a caller-supplied value here is silently overridden, not refused.
             }
@@ -128,6 +148,18 @@ internal static class MeasurementSchema
                 }
 
                 continue;
+            }
+
+            if (IntFields.Contains(vField) && !double.TryParse(vValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _))
+            {
+                aReason = $"\"{vValue}\" is not a number, which \"{vField}\" needs.";
+                return false;
+            }
+
+            if (NumberFields.Contains(vField) && !double.TryParse(vValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _))
+            {
+                aReason = $"\"{vValue}\" is not a number, which \"{vField}\" needs.";
+                return false;
             }
 
             if (EnumValuesByField.TryGetValue(vField, out var vAllowedValues) && !vAllowedValues.Contains(vValue))

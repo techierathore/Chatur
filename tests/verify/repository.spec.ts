@@ -329,17 +329,3 @@ test('REQ-UI-042 a project folder that is not a git repository says so on Reposi
   removeProjectsUnder(NO_REPO_ROOT); // the project this test made goes with its folder (owner, 20 Nov 2026)
 });
 
-test("REQ-FN-045 Open in the editor on Repository opens the changed file in the owner's editor", async ({ page }) => {
-  test.info().annotations.push({ type: 'skipped-clause', description: 'The editor opening is a native launch; the web harness launcher only logs it by design, so the request reaching the app is verified.' });
-  const vLog = path.resolve(`tests/.artifacts/verify/app-${new URL(process.env.BASE_URL ?? 'http://localhost:5280').port || '5280'}.log`);
-  const countIn = (aNeedle: string) => (existsSync(vLog) ? readFileSync(vLog, 'utf8').split(aNeedle).length - 1 : 0);
-  await openRepository(page);
-  await page.getByTestId('change-path-new-feature.txt').click();
-  await expect(page.getByTestId('diff-file')).toHaveText('new-feature.txt');
-  const vNeedle = `Would open ${path.join(REPO, 'new-feature.txt')} in the owner's editor`;
-  const vBefore = countIn(vNeedle);
-  await expect(page.getByTestId('diff-open')).toBeEnabled();
-  await page.getByTestId('diff-open').click();
-  await expect.poll(() => countIn(vNeedle), { timeout: 15_000 }).toBeGreaterThan(vBefore);
-  await expect(page.getByTestId('new-branch')).toHaveCount(0); // no button that only looks like one
-});

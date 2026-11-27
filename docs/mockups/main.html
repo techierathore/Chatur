@@ -10,6 +10,8 @@
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg"><defs>
 <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
 <symbol id="i-folder-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H21a1 1 0 0 1 .97 1.24l-1.4 5.6A2 2 0 0 1 18.63 18H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
 <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/></symbol>
 <symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
@@ -65,6 +67,7 @@ function pickTpl(b){b.parentNode.querySelectorAll('button').forEach(function(x){
 function npFolder(){var f=document.getElementById('np-loc');return (f&&f.value.trim())||'~/Source/TfLens';}
 function npLoc(){var n=document.getElementById('np-name').value.trim();document.getElementById('np-project-path').textContent=n?npFolder()+'/'+n:'Shown when the project has a name';}
 function npChange(){document.getElementById('np-fixed').style.display='none';document.getElementById('np-typed').style.display='';document.getElementById('np-loc').focus();}
+function tplSearch(v){var w=v.toLowerCase().split(' ').filter(Boolean);document.querySelectorAll('[data-testid=template-list] > button').forEach(function(b){var t=b.textContent.toLowerCase();b.style.display=w.every(function(x){return t.indexOf(x)>=0;})?'':'none';});}
 function closeDlg(id,m){document.getElementById(id).classList.remove('open');if(m)say(m);}
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=document.querySelector('.scrim.open');if(d)d.classList.remove('open');closeAll();}});
 </script>
@@ -221,6 +224,9 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=docum
     <button data-tf-sample data-run="TfLens.Api" onclick="setRun('TfLens.Api',event)"><span class="tick"></span>TfLens.Api</button>
     <button data-tf-sample data-run="TfLens.DbMigration" onclick="setRun('TfLens.DbMigration',event)"><span class="tick"></span>TfLens.DbMigration</button>
     <div class="note">Only projects that run. Your choice is kept for this solution and offered next time you open it.</div>
+    <!-- REQ-FN-324: like Visual Studio's Multiple startup projects; shown when the solution has two or more projects that run. -->
+    <hr data-tf-state="solution-with-two-runnable-projects">
+    <button data-tf-sample data-testid="target-multiple" data-tf-state="solution-with-two-runnable-projects" onclick="closeAll();document.getElementById('startup-projects').classList.add('open')"><span class="tick"></span>Multiple startup projects…</button>
    </div>
   </div>
   <button class="find" onclick="say('Finds a file, a symbol or some text in TfLens.')" data-testid="find"><svg><use href="#i-search"/></svg>Find in TfLens<span class="grow"></span><span class="xs faint">⌘P</span></button>
@@ -231,7 +237,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=docum
   <div class="panel files" data-testid="files-panel">
    <div class="ph" style="justify-content:space-between" data-testid="files-head"><span>Files</span><button class="iconbtn" onclick="say('Reads the project\'s files from disk again, so files made outside Chatur show.')" title="Refresh the files" data-testid="files-refresh"><svg><use href="#i-refresh"/></svg></button></div>
    <div class="tree" data-testid="file-tree">
-    <a href="main.html" data-tf-state="sample-data"><svg><use href="#i-folder-open"/></svg>TfLens.sln</a>
+    <!-- REQ-UI-125 (owner's test of 25 Nov 2026): the solution is the root of the tree and its projects are below it, as in Visual Studio. The solution file is not a row beside them; a project is drawn with its own mark. -->
+    <a href="main.html" data-testid="tree-solution" data-kind="solution" data-tf-state="sample-data"><svg><use href="#i-layers"/></svg>TfLens</a>
     <!-- BRD-225: names starting with a dot, and .vs, are listed only with View ▸ Show hidden files. -->
     <a href="main.html" class="d1 hid" data-tf-state="hidden-files-shown"><svg><use href="#i-folder"/></svg>.github</a>
     <a href="main.html" class="d1 hid" data-tf-state="hidden-files-shown"><svg><use href="#i-folder"/></svg>.vs</a>
@@ -242,14 +249,14 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=docum
     <a href="main.html" class="d3" data-tf-state="sample-data"><svg><use href="#i-file"/></svg>Coverage.razor</a>
     <!-- BRD-228: right-click a project (its folder or its .csproj) for "Set as the project to run". -->
     <div class="popwrap" data-testid="tree-project" data-tf-state="sample-data">
-     <a href="main.html" class="d2" oncontextmenu="return ctx(this,event)" title="Right-click: Set as the project to run"><svg><use href="#i-folder"/></svg>TfLens.Api</a>
+     <a href="main.html" class="d2" oncontextmenu="return ctx(this,event)" data-kind="project" title="Right-click: Set as the project to run"><svg><use href="#i-box"/></svg>TfLens.Api</a>
      <div class="pop" data-testid="tree-menu" data-tf-state="context-menu-open" role="menu">
       <button role="menuitem" onclick="setRun('TfLens.Api',event)" data-testid="tree-set-run">Set as the project to run</button>
       <div class="note">The same on TfLens.Api.csproj. Only a project that runs offers it.</div>
      </div>
     </div>
-    <a href="main.html" class="d2" data-tf-state="sample-data"><svg><use href="#i-folder"/></svg>TfLens.DbMigration</a>
-    <a href="main.html" class="d2" data-tf-state="sample-data"><svg><use href="#i-folder"/></svg>TfLens.Tests</a>
+    <a href="main.html" class="d2" data-kind="project" data-tf-state="sample-data"><svg><use href="#i-box"/></svg>TfLens.DbMigration</a>
+    <a href="main.html" class="d2" data-kind="project" data-tf-state="sample-data"><svg><use href="#i-box"/></svg>TfLens.Tests</a>
     <!-- BRD-217: a folder Windows will not list keeps its row, marked; everything else still shows. A folder is read when it is opened. -->
     <a href="main.html" class="d1 locked" data-testid="tree-unreadable" data-tf-state="sample-data" title="Windows will not let Chatur read this folder. Everything else is listed."><svg><use href="#i-lock"/></svg>artifacts<span class="nr">not readable</span></a>
     <a href="main.html" class="d1" data-tf-state="sample-data"><svg><use href="#i-folder"/></svg>docs</a>
@@ -426,15 +433,18 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=docum
       machine's `dotnet new list`. The folder that is open is shown as "Will be created in", never as a field to type,
       with "Change location" for the rare case; under it the two full paths Create will make follow the name as it is
       typed. With a folder open that has no solution, a "Solution name" field comes first and the solution file's path
-      reads <that folder>/<solution name>.slnx: the solution file goes in the folder itself and the project one folder
-      under it, never in a folder named after the solution (BRD-247, owner's test of 23 Nov 2026). A folder with projects
-      and no solution adds one line: "This folder has a project and no solution. Create makes the solution here and
-      adds it to it: OwnerTest/OwnerTest.csproj" (BRD-276). With nothing open, "Will be created in" is one Location
+      reads <that folder>/<solution name>/<solution name>.slnx: the solution gets a folder of its own named after it, the
+      solution file in it and each project in a folder of its own inside that, also when the names are the same
+      (BRD-247; owner's test of 25 Nov 2026, which replaced that of 23 Nov). "Solution folder" names it. The open folder with projects
+      and no solution is the one exception: its solution is made in that folder and takes them in, and one line says so:
+      "<folder> has a project and no solution. Create makes the solution there and adds it to it: OwnerTest/OwnerTest.csproj" (BRD-276). With nothing open, "Will be created in" is one Location
       field with a folder button, and the same two paths. Escape closes. -->
  <div class="scrim" id="new-project" role="dialog" aria-modal="true" aria-labelledby="new-project-title" data-testid="new-project-dialog" data-tf-state="dialog-open">
   <div class="dlg" style="max-width:640px">
    <div><h2 id="new-project-title">New project in TfLens</h2>
     <div class="sm dim">Pick a template and name the project. It is made with dotnet new and added to the solution.</div></div>
+   <!-- REQ-UI-127: the list of project types is long, so a search box narrows it as the person types. -->
+   <input class="fld" placeholder="Search the project types" aria-label="Search the project types" data-testid="template-search" oninput="tplSearch(this.value)">
    <div data-testid="template-list" style="max-height:200px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--r)">
     <button class="choice" style="border:0;border-bottom:1px solid var(--line);border-radius:0;flex-direction:row;align-items:center;gap:10px;background:var(--accent-soft)" data-testid="template-console" aria-pressed="true" onclick="pickTpl(this)"><b class="grow">Console App</b><span class="mono">console</span><span class="xs">Common/Console</span></button>
     <button class="choice" style="border:0;border-bottom:1px solid var(--line);border-radius:0;flex-direction:row;align-items:center;gap:10px" data-testid="template-classlib" aria-pressed="false" onclick="pickTpl(this)"><b class="grow">Class Library</b><span class="mono">classlib</span><span class="xs">Common/Library</span></button>
@@ -456,6 +466,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=docum
     </div>
     <div id="np-typed" class="field" style="display:none"><label for="np-loc">Location</label><input class="fld mono" id="np-loc" value="~/Source/TfLens" placeholder="The folder the solution goes in" data-testid="new-project-location" oninput="npLoc()"></div>
     <div data-testid="new-project-paths" class="xs" style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px">
+     <span class="dim">Solution folder</span><span class="mono" data-testid="new-project-solution-folder">~/Source/TfLens</span>
      <span class="dim">Solution file (already there)</span><span class="mono" data-testid="new-project-solution-path">~/Source/TfLens/TfLens.sln</span>
      <span class="dim">Project folder</span><span class="mono" id="np-project-path" data-testid="new-project-project-path">Shown when the project has a name</span>
     </div>
@@ -464,6 +475,36 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=docum
    <div class="row" style="justify-content:flex-end">
     <button class="tb" onclick="closeDlg('new-project')" data-testid="new-project-cancel">Cancel</button>
     <button class="tb primary" onclick="closeDlg('new-project','The project is made, added to TfLens.sln, and shown in Files and in the run targets.')" data-testid="new-project-create">Create</button>
+   </div>
+  </div>
+ </div>
+
+ <!-- REQ-FN-324 (owner's test of 25 Nov 2026): Multiple startup projects, opened from the target picker or Project ▸ Multiple startup projects.
+      Each project that can run has a tick; two or more ticked and Run builds and starts them together, each line of Output named
+      with its project, and Stop ends them all. The choice is kept for this solution; the picker then reads "2 startup projects". -->
+ <div class="scrim" id="startup-projects" role="dialog" aria-modal="true" aria-labelledby="startup-title" data-testid="startup-dialog" data-tf-state="dialog-open">
+  <div class="dlg" style="max-width:520px">
+   <div><h2 id="startup-title">Multiple startup projects</h2>
+    <div class="sm dim">Tick the projects Run starts together. The choice is kept for this solution.</div></div>
+   <div data-testid="startup-row-tfLens-api" style="display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--r);padding:8px 12px"><input type="checkbox" checked aria-label="TfLens.Api" data-testid="startup-tick-tfLens-api"><div style="display:flex;flex-direction:column"><b class="sm">TfLens.Api</b><span class="mono xs dim">src/TfLens.Api/TfLens.Api.csproj</span></div></div>
+   <div data-testid="startup-row-tflens" style="display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--r);padding:8px 12px"><input type="checkbox" checked aria-label="TfLens" data-testid="startup-tick-tflens"><div style="display:flex;flex-direction:column"><b class="sm">TfLens</b><span class="mono xs dim">src/TfLens/TfLens.csproj</span></div></div>
+   <div class="xs dim" data-testid="startup-hint">2 ticked: Run builds and starts them together, and Stop ends them all.</div>
+   <div class="row" style="justify-content:flex-end">
+    <button class="tb" onclick="closeDlg('startup-projects')" data-testid="startup-cancel">Cancel</button>
+    <button class="tb primary" onclick="closeDlg('startup-projects','Saved for this solution. The picker reads 2 startup projects, and Run starts both.')" data-testid="startup-save">Save</button>
+   </div>
+  </div>
+ </div>
+
+ <!-- REQ-UI-041 (owner's test of 25 Nov 2026): the file view's own close button asks the same question as closing one tab when a file in it
+      has unsaved changes; Keep editing leaves the view and the text as they were. -->
+ <div class="scrim" id="close-unsaved" role="alertdialog" aria-modal="true" aria-labelledby="close-unsaved-title" data-testid="close-unsaved-dialog" data-tf-state="dialog-open">
+  <div class="dlg" style="max-width:440px">
+   <div><h2 id="close-unsaved-title">Close without saving?</h2>
+    <div class="sm dim">A file in this view has changes that have not been saved. Closing the view now loses them.</div></div>
+   <div class="row" style="justify-content:flex-end">
+    <button class="tb" onclick="closeDlg('close-unsaved')" data-testid="close-unsaved-cancel">Keep editing</button>
+    <button class="tb" style="color:var(--bad)" onclick="closeDlg('close-unsaved','The unsaved files are closed and the file view goes. The chat takes the whole window.')" data-testid="close-unsaved-discard">Close without saving</button>
    </div>
   </div>
  </div>

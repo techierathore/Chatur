@@ -103,8 +103,8 @@ The window itself, and where the work happens.
 |---|---|---|
 | `menubar` | Menubar | File, Edit, View, Project, Tools, Help; the signed-in user at the right |
 | `toolbar` | Button row | `run`, `build`, `target`, `find`; `stop` only while something runs |
-| `files-panel` | Card + tree | the project's files; `branch` beneath them picks a local or remote branch |
-| `tabs` | Tabs | the open files and views; `close-file-view` gives the conversation the window |
+| `files-panel` | Card + tree | the solution as the root, its projects below; `branch` picks a branch |
+| `tabs` | Tabs | the open files and views; `close-file-view` gives the chat the window, asking if a file is unsaved |
 | `editor` | code pane | the open file with syntax colour; a change waiting on it is shown in place and the file is read-only until it is settled |
 | `conversation` | ScrollArea | the turns, each naming its model, tokens and seconds; the agent's steps as chips |
 | `proposed-change` | Card + diff | on disk against proposed, with Open, Approve and Reject |

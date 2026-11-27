@@ -103,6 +103,28 @@ public sealed class RunSequenceTests : MigratedDatabaseFixture
         Assert.Contains(vLines, aLine => aLine.Text == "Process exited with code 3." && aLine.IsError);
     }
 
+    /// <summary>
+    /// When a running program writes the ASP.NET https-port warning (a <c>warn:</c> header and its indented message) and
+    /// then a <c>fail:</c> line, then Output marks the warning lines as warnings and not errors, and the fail line as an error.
+    /// </summary>
+    [Fact(DisplayName = "REQ-UI-107 Output marks the https port warning as a warning and a fail line as an error")]
+    public async Task OutputMarksLinesByTheirLevel()
+    {
+        var vSolution = WriteSolution("Tool", "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+        var vLauncher = new ScriptedLauncher(aArguments => aArguments.StartsWith("run", StringComparison.Ordinal)
+            ? ["warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]", "      Failed to determine the https port for redirect.", "fail: App.Worker[1]", "      The job failed."]
+            : []);
+
+        var vLines = await RunToEndAsync(vSolution, vLauncher);
+
+        var vWarning = Assert.Single(vLines, aLine => aLine.Text.Contains("Failed to determine the https port", StringComparison.Ordinal));
+        Assert.False(vWarning.IsError);
+        Assert.True(vWarning.IsWarning);
+        Assert.Contains(vLines, aLine => aLine.Text.StartsWith("warn:", StringComparison.Ordinal) && aLine.IsWarning && !aLine.IsError);
+        Assert.Contains(vLines, aLine => aLine.Text.StartsWith("fail:", StringComparison.Ordinal) && aLine.IsError);
+        Assert.Contains(vLines, aLine => aLine.Text.Contains("The job failed.", StringComparison.Ordinal) && aLine.IsError);
+    }
+
     /// <summary>When a solution's test project is run, then its tests run with dotnet test after the build.</summary>
     [Fact(DisplayName = "REQ-UI-107 running a solution's test project runs its tests")]
     public async Task TestProjectRunsItsTests()
@@ -199,8 +221,6 @@ public sealed class RunSequenceTests : MigratedDatabaseFixture
         public List<string> Commands { get; } = [];
 
         public List<string> Opened { get; } = [];
-
-        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 
         public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 

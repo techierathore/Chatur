@@ -167,8 +167,8 @@ public sealed class MeasurementActions : IMeasurementActions
         try
         {
             using var vDoc = JsonDocument.Parse(aJsonLine);
-            // Chatur's own streams date a record with "at"; an estimate record is dated with TechieFlow's "ts".
-            if ((vDoc.RootElement.TryGetProperty("at", out var vAt) || vDoc.RootElement.TryGetProperty("ts", out vAt))
+            // A record is dated with TechieFlow's "ts"; Chatur's records before 25 Nov 2026 used "at", and still read.
+            if ((vDoc.RootElement.TryGetProperty("ts", out var vAt) || vDoc.RootElement.TryGetProperty("at", out vAt))
                 && vAt.ValueKind == JsonValueKind.String
                 && DateTime.TryParse(vAt.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var vParsed))
             {
@@ -185,7 +185,7 @@ public sealed class MeasurementActions : IMeasurementActions
 
     /// <inheritdoc />
     /// <remarks>
-    /// Every field is signed with <c>tool: "chatur"</c> (REQ-FN-041) and dated with <c>at</c> — the
+    /// Every record is signed with <c>harness: "chatur"</c> (REQ-FN-041) and dated with <c>ts</c> — the
     /// same field <see cref="TryReadAt"/> above reads back for <see cref="StreamsAsync"/>'s "newest
     /// record" column. A field this stream does not know, or a value outside its closed list
     /// (<c>docs/Chatur-Metrics-Schema.md</c>), refuses the whole write rather than writing part of a
@@ -194,19 +194,16 @@ public sealed class MeasurementActions : IMeasurementActions
     /// <c>RefusedWrite</c>, and the caller's session carries on (REQ-UI-035).
     /// </remarks>
     public Task AppendAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, CancellationToken aCt = default) =>
-        AppendCoreAsync(aProjectId, aStreamName, aFields, true, aCt);
-
-    /// <inheritdoc />
-    public Task AppendWhenMeasuredAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, CancellationToken aCt = default) =>
-        AppendCoreAsync(aProjectId, aStreamName, aFields, false, aCt);
+        AppendCoreAsync(aProjectId, aStreamName, aFields, aCt);
 
     /// <summary>
-    /// The one writer behind both appends. On 23 Nov 2026 the owner found <c>docs/metrics</c> with five files, four
-    /// of them empty, in a folder he had only opened and chatted in: every chat turn's record made the folder and
-    /// all five stream files. Now the folder is made only for a record a command needs
-    /// (<paramref name="aMakeFolder"/>), only the stream written to gets a file, and no empty file is ever made.
+    /// The one writer. A record is a fact about something that happened (a model call, a build, a run), so the folder is made
+    /// for it when it is not there yet (owner's test of 25 Nov 2026: a real chat in a new folder left nothing in
+    /// <c>docs/metrics</c>, because the 23 Nov rule wrote a chat turn only where the folder already was). A folder
+    /// that is only opened, and a chat that never reached a model, write nothing, since nothing calls this. Only the stream written to gets a
+    /// file, and no empty file is ever made.
     /// </summary>
-    private async Task AppendCoreAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, bool aMakeFolder, CancellationToken aCt)
+    private async Task AppendCoreAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, CancellationToken aCt)
     {
         var vStreamFileName = NormalizeStreamName(aStreamName);
 
@@ -219,12 +216,6 @@ public sealed class MeasurementActions : IMeasurementActions
         }
 
         var vMetricsFolder = MetricsFolderOf(vProjectRow.Value.Path);
-        if (!aMakeFolder && !Directory.Exists(vMetricsFolder))
-        {
-            // Not a refusal: the project is not measured, and nobody asked for a file in it.
-            return;
-        }
-
         if (!MeasurementSchema.TryValidate(vStreamFileName, aFields, out var vRefusalReason))
         {
             await RefuseAsync(aProjectId, vStreamFileName, vRefusalReason!, aCt).ConfigureAwait(false);
@@ -276,14 +267,17 @@ public sealed class MeasurementActions : IMeasurementActions
             cancellationToken: aCt)).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// One record in TechieFlow's own shape (SCHEMA.md §1): <c>v</c> a number, <c>ts</c> to the second with a <c>Z</c>,
+    /// <c>kind</c>, <c>app</c>, <c>project_type</c>, and <c>harness</c> naming Chatur as the tool (REQ-FN-041), then the
+    /// stream's fields typed as the schema types them. A figure not measured is <c>null</c>, never a guess (REQ-FN-042).
+    /// </summary>
     private static string BuildLine(string aStreamFileName, string aAppName, IReadOnlyDictionary<string, string?> aFields)
     {
-        var vRecord = new Dictionary<string, string>
+        var vRecord = new Dictionary<string, object?>
         {
-            ["v"] = "1",
-            ["at"] = DateTime.UtcNow.ToString("O"),
-            ["app"] = aAppName,
-            ["tool"] = "chatur"
+            ["v"] = 1,
+            ["ts"] = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)
         };
 
         var vKnownKinds = MeasurementSchema.KindsByStream[aStreamFileName];
@@ -291,13 +285,48 @@ public sealed class MeasurementActions : IMeasurementActions
         vRecord["kind"] = string.IsNullOrEmpty(vRequestedKind)
             ? (vKnownKinds.Count == 1 ? vKnownKinds.First() : string.Empty)
             : vRequestedKind;
+        vRecord["app"] = aAppName;
+        vRecord["project_type"] = "app";
+        vRecord["project_type_inferred"] = true;
+        vRecord["harness"] = "chatur";
 
         foreach (var vField in MeasurementSchema.KnownFieldsByStream[aStreamFileName])
         {
-            vRecord[vField] = aFields.TryGetValue(vField, out var vValue) ? vValue ?? string.Empty : string.Empty;
+            var vValue = aFields.TryGetValue(vField, out var vText) ? vText : null;
+            vRecord[vField] = TypedValue(vField, vValue);
         }
 
         return JsonSerializer.Serialize(vRecord);
+    }
+
+    private static object? TypedValue(string aField, string? aValue)
+    {
+        if (string.IsNullOrWhiteSpace(aValue))
+        {
+            return MeasurementSchema.ArrayFields.Contains(aField) ? Array.Empty<string>() : null;
+        }
+
+        if (MeasurementSchema.IntFields.Contains(aField))
+        {
+            return (long)Math.Round(double.Parse(aValue, NumberStyles.Float, CultureInfo.InvariantCulture), MidpointRounding.AwayFromZero);
+        }
+
+        if (MeasurementSchema.NumberFields.Contains(aField))
+        {
+            return double.Parse(aValue, NumberStyles.Float, CultureInfo.InvariantCulture);
+        }
+
+        if (MeasurementSchema.ArrayFields.Contains(aField))
+        {
+            return aValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        }
+
+        if (MeasurementSchema.BoolFields.Contains(aField))
+        {
+            return string.Equals(aValue, "true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return aValue;
     }
 
     private static string NormalizeStreamName(string aStreamName)

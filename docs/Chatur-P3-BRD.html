@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Business Requirements — Phase 3: End to end and unattended</h1>
-    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>Chatur-P3-BRD.md</code></div>
+    <div class="subtitle">Rendered 2026-11-27 &middot; source <code>Chatur-P3-BRD.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -532,7 +532,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <p>Added 2026-11-10 on the owner's ask, a mandatory feature. Before a build, a verify, a fix or a whole brief-to-verified run starts, Chatur shows what it should cost, and afterwards it sets that estimate beside what the run actually cost. TechieFlow v1.3.0 does the same thing with a script (<code>*estimate-phase</code>, <code>tf-estimate.sh</code>, framework schema §2.8 and §6); Chatur does it in its own code from the same rules, so the two give the same figures from the same records. No script is called and no task file is read while Chatur runs.</p>
 <p><strong>The rule, in code, with no model asked.</strong> For each row in scope and each line of work, Chatur takes the earlier live runs of that process that touched at least one row of the same kind (REQ-UI, REQ-FN, REQ-RAG, REQ-NFR) and were run on the model that will run this step. From each run it takes output tokens per row and seconds per row (the run's figure divided by the rows it touched). Low, middle and high are the first quartile, the median and the third quartile of those figures, interpolated between neighbours and rounded to whole numbers half to even, exactly as <code>tf-estimate.sh</code> does. The lines of work are build (<code>build-phase</code>), machine QA (<code>verify-phase</code> plus <code>fix-issues</code>, added for display and never stored added), and after handoff (<code>triage</code>: <code>triage-issues</code> and, in a sister project's records, <code>triage-and-fix</code>). A phase total is the sum of the row figures that have one, and says how many rows it covers. The owner's own testing is never estimated and prints "not measured".</p>
 <p><strong>Which runs count, in order (owner, 10 Nov 2026).</strong> The first of these with at least three runs gives the figure: (1) this project's runs on the step's model; (2) those plus the sister projects' runs on the step's model, labelled "from sister projects"; (3) this project's runs on any model, labelled "from all models"; (4) those plus the sister projects' runs on any model, labelled "from all models" and "from sister projects". None with three: no precedent, never a number, over the runs of the widest pool tried. A project with no run of its own and sister projects that have some is estimated from theirs; "No estimate yet" shows only when no step has a figure from any pool (BRD-208).</p>
-<p><strong>The model a step runs on.</strong> The first model of the tier routing gives the step. With automatic routing on, the estimate is still made for that model, and the screen says that automatic routing may choose another; the actual always names the model that ran. The estimate record's <code>model</code> is that model and its optional <code>tier</code> is that tier (BRD-205, <a href="Chatur-Metrics-Schema.md">the metrics schema</a>).</p>
+<p><strong>The model a step runs on.</strong> The first model of the tier routing gives the step. With automatic routing on, the estimate is still made for that model, and the screen says that automatic routing may choose another; the actual always names the model that ran. The estimate record's <code>model</code> is that model and its optional <code>tier</code> is that tier (BRD-205, <a href="Chatur-Metrics-Schema.html">the metrics schema</a>).</p>
 <p><strong>A brief with no checklist yet.</strong> An end-to-end run from a brief has no rows before day-1 and split-brd have run. Before Start the estimate says so; the run writes its estimate when it reaches the build step, without stopping. In step-by-step mode the estimate is shown at that step before its Start (BRD-193).</p>
 <p><strong>Fixtures for the acceptance lines.</strong> The checklist rows REQ-UI-083 to REQ-UI-090 and REQ-FN-107 to REQ-FN-116 name these; each is a unit test's input. Each is a set of run records in a test project named <code>Fixture</code>, whose phase 2 checklist holds REQ-FN-301, REQ-FN-302 and REQ-FN-303. Every run is live, measured, and on <code>claude-opus-5-5</code> unless the row says otherwise.</p>
 <table>
@@ -548,7 +548,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </table>
 <p><strong>The five open points, answered by the owner on 10 Nov 2026</strong> (written into the rules above):</p>
 <ol>
-<li><em>The <code>model</code> field</em> holds the model that will run the step. The tier goes into the record as one extra optional field, <code>tier</code>, described in <a href="Chatur-Metrics-Schema.md">the metrics schema</a>.
+<li><em>The <code>model</code> field</em> holds the model that will run the step. The tier goes into the record as one extra optional field, <code>tier</code>, described in <a href="Chatur-Metrics-Schema.html">the metrics schema</a>.
 </li>
 <li><em>History by model:</em> same model first. Fewer than three runs on that model: runs on all models, labelled "from all models". Only when that also has fewer than three does the row read "no precedent".
 </li>
@@ -835,7 +835,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 </table>
 <h2 id="development-status"><a id="5-development-status"></a>5. Development status<a class="anchor-link" href="#development-status">#</a></h2>
 <p>Written by the status gate after every build, verify and handoff; not by hand.</p>
-<p><strong>Snapshot as of 2026-11-23.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
+<p><strong>Snapshot as of 2026-11-27.</strong> Live per-requirement status: <code>PROJECT-STATUS.md</code> and the Requirements Status table in <code>docs/Chatur-P3-Checklist.md</code>.</p>
 <table>
 <thead><tr><th>Screen</th><th>Requirements</th><th>Verified</th><th>Open</th><th>Status</th></tr></thead>
 <tbody>
@@ -863,7 +863,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td>The Start, Workbench and Settings items BRD-210 to BRD-216 narrow to one account (BRD-11, BRD-13, BRD-14, BRD-17, BRD-35)</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
 <tr><td>The Processes screen whose Start BRD-192 puts an estimate in front of</td><td><a href="Chatur-P2-BRD.html">phase 2 BRD</a></td></tr>
 <tr><td>Settings ▸ Measurements, where BRD-197's sister projects are named</td><td><a href="Chatur-BRD.html">phase 1 BRD</a></td></tr>
-<tr><td>The rules the estimate copies (<code>tf-estimate.sh</code>, the estimates stream, the four separations)</td><td><code>.tfcore/telemetry/SCHEMA.md</code> §2.8 and §6, and <a href="Chatur-Metrics-Schema.md">the metrics schema</a></td></tr>
+<tr><td>The rules the estimate copies (<code>tf-estimate.sh</code>, the estimates stream, the four separations)</td><td><code>.tfcore/telemetry/SCHEMA.md</code> §2.8 and §6, and <a href="Chatur-Metrics-Schema.html">the metrics schema</a></td></tr>
 <tr><td>Every phase, its screens and its BRD range</td><td><a href="Chatur-Phases.html">Chatur-Phases.md</a></td></tr>
 <tr><td>This phase's work list</td><td><a href="Chatur-P3-Checklist.md">Chatur-P3-Checklist.md</a></td></tr>
 </tbody>

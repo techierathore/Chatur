@@ -107,9 +107,35 @@ public sealed class WorkbenchState : IDisposable
     public void SetRunTargets(IReadOnlyList<RunTarget> aTargets)
     {
         RunTargets = aTargets;
+        StartupTargets = [];
         SelectedRunTarget = aTargets.FirstOrDefault(t => t.IsAvailableOnThisMachine) ?? aTargets.FirstOrDefault();
         RaiseChanged();
     }
+
+    /// <summary>The targets that start together when Run is pressed (REQ-FN-324); empty when one project runs.</summary>
+    public IReadOnlyList<RunTarget> StartupTargets { get; private set; } = [];
+
+    /// <summary>Whether there are two or more projects that can run, so choosing several to start together means something (REQ-FN-324).</summary>
+    public bool CanChooseStartup =>
+        RunTargets.Where(t => !t.IsTest && t.IsAvailableOnThisMachine && t.ProjectFile.Length > 0)
+            .Select(t => t.ProjectFile).Distinct(StringComparer.OrdinalIgnoreCase).Count() >= 2;
+
+    /// <summary>Whether Run starts several projects together.</summary>
+    public bool HasMultipleStartup => StartupTargets.Count > 1;
+
+    /// <summary>Replaces the several-projects-together choice read from the saved one (REQ-FN-324).</summary>
+    /// <param name="aTargets">The targets that start together; fewer than two means one project runs.</param>
+    public void SetStartupTargets(IReadOnlyList<RunTarget> aTargets)
+    {
+        StartupTargets = aTargets.Count > 1 ? aTargets : [];
+        RaiseChanged();
+    }
+
+    /// <summary>Raised when something asks for the dialog that chooses the projects Run starts together (REQ-FN-324).</summary>
+    public event Action? StartupDialogRequested;
+
+    /// <summary>Asks the toolbar to open Multiple startup projects, from the target picker or the Project menu.</summary>
+    public void RequestStartupDialog() => StartupDialogRequested?.Invoke();
 
     /// <summary>Selects a target that this machine can build.</summary>
     public void SelectRunTarget(RunTarget aTarget)
@@ -120,6 +146,7 @@ public sealed class WorkbenchState : IDisposable
         }
 
         SelectedRunTarget = aTarget;
+        StartupTargets = [];
         RaiseChanged();
     }
 
@@ -485,6 +512,7 @@ public sealed class WorkbenchState : IDisposable
         PendingFilePath = null;
         objPendingChangePaths.Clear();
         RunTargets = [];
+        StartupTargets = [];
         SelectedRunTarget = null;
         Reset();
     }

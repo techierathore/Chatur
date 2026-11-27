@@ -2,7 +2,6 @@
 @layout Layouts.SecondaryLayout
 @inject IProjectActions ProjectActions
 @inject ISourceControlActions SourceControl
-@inject IFileActions Files
 @inject IAccountActions Accounts
 @inject Chatur.Core.Platform.IClock Clock
 @inject ToastService ToastService
@@ -168,8 +167,6 @@ else
             <CardContent Class="flex flex-col gap-2">
                 <div class="flex items-center justify-between gap-2" data-testid="diff">
                     <span class="font-mono text-sm" data-testid="diff-file">@objCurrentDiffFile</span>
-                    @* Opens the changed file in the owner's own editor (REQ-FN-045). *@
-                    <Button Class="rounded-full" Variant="ButtonVariant.Link" Disabled="@(objCurrentDiffFile is null)" OnClick="OpenDiffFileAsync" data-testid="diff-open">Open in the editor</Button>
                 </div>
                 <CodeBlock Language="diff" Code="@objCurrentDiff" />
             </CardContent>

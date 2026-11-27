@@ -104,6 +104,19 @@ if (( T_H6 <= FLOOR )); then
   while (( $(date +%s) < T_H1 )); do sleep 1; done
 fi
 
+# The mockup's open branch is main (branch-current). The menu walk switches the fixture to other branches and can
+# leave it on one, run/BRD-96-101 included (2026-11-27, REQ-UI-042): the hand check-ins below then went onto that
+# run branch, and the app, true to the data, marked them "a process wrote it" on rows 1, 2 and 4. So the open branch
+# is put back on main first. `git switch` carries pending changes across; a switch git refuses stops the seed.
+if git -C "$REPO" rev-parse -q --verify refs/heads/main >/dev/null; then
+  if [[ "$(git -C "$REPO" symbolic-ref -q HEAD || echo HEAD)" != "refs/heads/main" ]]; then
+    git -C "$REPO" switch -q main || { echo "could not switch $REPO back to main; the seed writes nothing"; exit 1; }
+    echo "switched the fixture back to main"
+  fi
+elif [[ "$(git -C "$REPO" symbolic-ref -q HEAD || echo HEAD)" == refs/heads/run/* ]]; then
+  echo "refusing to seed: $REPO is open on a run branch and has no main to go back to"; exit 1
+fi
+
 BRANCH_REF="$(git -C "$REPO" symbolic-ref -q HEAD || echo HEAD)" # the branch HEAD points at (or HEAD itself when detached)
 
 BASE="$(git -C "$REPO" rev-parse HEAD)"

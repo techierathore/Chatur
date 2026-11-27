@@ -1,0 +1,7 @@
+### rung 1: dotnet build tests/unit/Chatur.Tests/Chatur.Tests.csproj
+/mnt/c/1MyCode/Chatur/.tfcore/utils/tf-build.sh: line 345: dotnet: command not found
+### exit 127
+### rung 2: /home/srkra/.dotnet/dotnet build tests/unit/Chatur.Tests/Chatur.Tests.csproj
+MSBUILD : error MSB1009: Project file does not exist.
+Switch: tests/unit/Chatur.Tests/Chatur.Tests.csproj
+### exit 1

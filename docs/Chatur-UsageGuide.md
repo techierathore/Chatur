@@ -5,7 +5,7 @@
 | App | Chatur |
 | Kind | app |
 | Size | Large |
-| Date | 2026-11-22 |
+| Date | 2026-11-27 |
 
 ## Test users
 
@@ -150,78 +150,169 @@ Type a command with its star in the agent's conversation. In the examples `MyApp
 ### Owner's test 1: an empty folder, New project, and the disk
 
 - **Sign in as:** your own account
-- **Steps:** 1) Make the empty folder `C:\1MyCode\Chatur\bin\OwnerTest`. 2) Windows key, type `Chatur`, Enter. 3) "Open a folder"; type that folder; Open. 4) File ▸ New project; "Blazor Web App"; Solution name `Checking-Chatur`. 5) Create. 6) Look in Explorer.
-- **Expected:** 2) "Nothing is open yet" offers New project and three Open ways. 4) "Will be created in" names OwnerTest, beside "Change location"; then Solution file `…\OwnerTest\Checking-Chatur.slnx` and Project folder `…\OwnerTest\Checking-Chatur`. 6) OwnerTest holds `Checking-Chatur.slnx` and `Checking-Chatur\Checking-Chatur.csproj`; no `docs`, no second folder inside. FILES shows the same. Agent-run on the installed app, own test data folder, 23 Nov.
-- **Covers:** REQ-FN-310, REQ-UI-125, REQ-UI-126, REQ-NFR-019, REQ-NFR-013, REQ-UI-008
+- **Steps:** 1) Windows key, type `Chatur`, Enter: "Nothing is open yet" shows New project and three Open ways. 2) "Open a folder"; type `C:\1MyCode\Chatur\bin\OwnerTest` (empty); Open. 3) File ▸ New project. 4) Type `blazor` in the search box; click "Blazor Web App"; Solution name `Checking-Chatur`. 5) Create.
+- **Expected:** 2) The folder opens at once. 4) The list narrows as you type. "Will be created in" names OwnerTest; under it Solution folder `…\OwnerTest\Checking-Chatur`, Solution file `…\Checking-Chatur\Checking-Chatur.slnx`, Project folder `…\Checking-Chatur\Checking-Chatur`. 5) OwnerTest holds only `Checking-Chatur`, with `Checking-Chatur.slnx` and the project folder inside; nothing is directly in OwnerTest. Agent-run on its own test data folder.
+- **Covers:** REQ-FN-310, REQ-UI-126, REQ-UI-127, REQ-NFR-019, REQ-NFR-013, REQ-UI-008
 
-### Owner's test 2: from nothing, New project in a folder you name
+### Owner's test 2: the solution is the root of FILES
 
 - **Sign in as:** your own account
-- **Steps:** 1) File ▸ Close. 2) Press "New project" (under Get started, or on "Nothing is open yet"). 3) Click "Console App". 4) Solution name `FromNothing`, Project name `TryConsole`, Location `C:\1MyCode\Chatur\bin\FromNothing`. 5) Press Create.
-- **Expected:** One Location field, empty until you type. Under it Solution file `C:\1MyCode\Chatur\bin\FromNothing\FromNothing.slnx` and Project folder `C:\1MyCode\Chatur\bin\FromNothing\TryConsole`. After Create exactly those exist, with `TryConsole\TryConsole.csproj` and `Program.cs`; the main window is on FromNothing and the target picker reads TryConsole.
+- **Steps:** 1) After test 1 look at FILES. 2) In a terminal: `dotnet new console -n Early -o C:\1MyCode\Chatur\bin\LateSln\Early`. File ▸ Close; open `C:\1MyCode\Chatur\bin\LateSln` as a folder (Open as it is). 3) In that folder run `dotnet new sln --name Late` and `dotnet sln add Early\Early.csproj`; press the refresh button in FILES.
+- **Expected:** 1) One root, "Checking-Chatur", with the solution mark; the project below it has the project mark and the play mark; the `.slnx` is not a row beside it. 2) FILES lists `Early`. 3) The root becomes "Late" with Early below it. Agent-run on its own test data folder.
+- **Covers:** REQ-UI-125
+
+### Owner's test 3: from nothing, New project in a folder you name
+
+- **Sign in as:** your own account
+- **Steps:** 1) File ▸ Close. 2) Press "New project" (under Get started, or on "Nothing is open yet"). 3) Click "Console App". 4) Solution name `FromNothing`, Project name `TryConsole`, Location `C:\1MyCode\Chatur\bin`. 5) Press Create.
+- **Expected:** One Location field, empty until you type. Under it Solution folder `C:\1MyCode\Chatur\bin\FromNothing`, Solution file `C:\1MyCode\Chatur\bin\FromNothing\FromNothing.slnx` and Project folder `C:\1MyCode\Chatur\bin\FromNothing\TryConsole`. The folder `bin` does not need a `FromNothing` folder first: Create makes it. After Create `bin` holds the new folder `FromNothing` and nothing else new; inside it are `FromNothing.slnx` and `TryConsole\TryConsole.csproj` with `Program.cs`. The main window is on FromNothing, FILES shows FromNothing with TryConsole below it, and the target picker reads TryConsole.
 - **Covers:** REQ-FN-310, REQ-FN-309, REQ-NFR-013
 
-### Owner's test 3: add projects from this machine's templates
+### Owner's test 4: add projects from this machine's templates
 
 - **Sign in as:** your own account
-- **Steps:** 1) File ▸ New project. 2) Click "Blazor Web App", type `TryWeb` in Name, press Create. 3) The same with "Class Library" `TryLib` and "xUnit Test Project" `TryLib.Tests`.
-- **Expected:** The dialog reads "New project in FromNothing"; only the name is typed. It shows "Will be created in `C:\1MyCode\Chatur\bin\FromNothing`", the solution file "already there", and Project folder `C:\1MyCode\Chatur\bin\FromNothing\TryWeb`. Each project is one folder under FromNothing, in FILES and in the target picker.
+- **Steps:** 1) File ▸ New project. 2) Search `blazor`, click "Blazor Web App", type `TryWeb` in Name, press Create. 3) The same with "Class Library" `TryLib`, then "xUnit Test Project" `TryLib.Tests`.
+- **Expected:** The dialog reads "New project in FromNothing"; only the name is typed. It shows "Will be created in" `C:\1MyCode\Chatur\bin\FromNothing`, the solution file "already there", and Project folder `…\FromNothing\TryWeb`. Each project is one folder inside the solution's folder, below the root in FILES.
 - **Covers:** REQ-UI-112, REQ-UI-126
 
-### Owner's test 4: run the web app
+### Owner's test 5: the project just added is the one that runs
 
 - **Sign in as:** your own account
-- **Steps:** 1) In `C:\1MyCode\Chatur\bin\FromNothing`: target picker ▸ TryWeb; press Run. 2) Press Stop.
-- **Expected:** Output opens by itself: `> dotnet build …`, the build's lines, `Now listening on: http://localhost:<port>`, `Opening http://localhost:<port> in the browser`; your browser opens there. Stop writes `Run stopped.`.
+- **Steps:** 1) After TryWeb is made, look at the target picker and FILES. 2) After TryLib and TryLib.Tests, look again.
+- **Expected:** After TryWeb the picker reads TryWeb and FILES marks it with the play mark. A library and a test project cannot run, so they leave TryWeb chosen.
+- **Covers:** REQ-FN-309, REQ-UI-106
+
+### Owner's test 6: run the web app
+
+- **Sign in as:** your own account
+- **Steps:** 1) In `C:\1MyCode\Chatur\bin\FromNothing` the picker reads TryWeb; press Run. 2) Press Stop.
+- **Expected:** Output opens by itself: `> dotnet build …`, the build's lines, `Now listening on: http://localhost:<port>`, `Opening http://localhost:<port> in the browser`; your browser opens there. The line `Failed to determine the https port for redirect.` is a warning and is not drawn red as an error. Stop writes `Run stopped.`.
 - **Covers:** REQ-UI-107, REQ-FN-306
 
-### Owner's test 5: the console app, a broken build and the exit code
+### Owner's test 7: the console app, a broken build and the exit code
 
 - **Sign in as:** your own account
 - **Steps:** 1) In `C:\1MyCode\Chatur\bin\FromNothing`: target picker ▸ TryConsole; press Run. 2) FILES ▸ TryConsole ▸ Program.cs; delete the `;` at the end of its line; Ctrl+S; press Run. 3) Put the `;` back; Ctrl+S.
 - **Expected:** 1) `Hello, World!`, then `Process exited with code 0.`. 2) `The program was not started.`; the label reads "build failed".
 - **Covers:** REQ-UI-107, REQ-UI-108
 
-### Owner's test 6: the test project
+### Owner's test 8: the test project
 
 - **Sign in as:** your own account
 - **Steps:** 1) In `C:\1MyCode\Chatur\bin\FromNothing`: target picker ▸ TryLib.Tests; press Run.
 - **Expected:** `> dotnet test …`, a passed summary with 0 failed, and `Process exited with code 0.`.
 - **Covers:** REQ-UI-107
 
-### Owner's test 7: a folder with a project and no solution
+### Owner's test 9: several projects start together
 
 - **Sign in as:** your own account
-- **Steps:** 1) In a terminal: `dotnet new console -n Loose -o C:\1MyCode\Chatur\bin\LooseOne\Loose`. 2) File ▸ Close; "Open a folder"; `C:\1MyCode\Chatur\bin\LooseOne`; Open. 3) File ▸ New project; click "Class Library"; Solution name `Gathered`, Project name `Second`. 4) Press Create.
-- **Expected:** 3) The dialog says "This folder has a project and no solution. Create makes the solution here and adds it to it: Loose\Loose.csproj". 4) LooseOne holds `Gathered.slnx`, `Loose` and `Second`; the solution lists both projects; the target picker reads Loose.
-- **Covers:** REQ-UI-124, REQ-FN-309
+- **Steps:** 1) Target picker ▸ "Multiple startup projects…". 2) Tick TryConsole and TryWeb; Save. 3) Press Run. 4) Press Stop.
+- **Expected:** 1) Only the projects that can run are listed: TryConsole and TryWeb. 2) The picker reads "2 startup projects"; FILES marks both. 3) Both are built, then started together; every Output line carries its project's name, e.g. `[TryConsole] Hello, World!` and `[TryWeb] Now listening on: …`. 4) Both end: `All 2 projects ended.`.
+- **Covers:** REQ-FN-324
 
-### Owner's test 8: in an empty folder, the Analyst's own commands
+### Owner's test 10: the choice is kept, and one project again
 
-- **Sign in as:** your own account (a model provider connected; else First task 3)
+- **Sign in as:** your own account
+- **Steps:** 1) File ▸ Close; reopen FromNothing from the project switcher. 2) Target picker ▸ TryWeb. 3) Press Run.
+- **Expected:** 1) The picker still reads "2 startup projects": the choice is kept for the solution. 2) It reads TryWeb. 3) Only TryWeb runs; its lines carry no project name.
+- **Covers:** REQ-FN-324
+
+### Owner's test 11: the file window
+
+- **Sign in as:** your own account
+- **Steps:** 1) FILES ▸ TryConsole ▸ Program.cs. 2) Look beside Save. 3) Type a line in the editor. 4) Press the × at the right end of the tab bar (the whole file view), then "Keep editing". 5) Press that × again, then "Close without saving".
+- **Expected:** 2) Save, and no other button: nothing opens the file in another program (Chatur is the editor). 4) "Close without saving?" asks; Keep editing leaves the file view and your text as they were. 5) The file view closes and the chat takes the window; the file on disk is as it was.
+- **Covers:** REQ-UI-041, REQ-FN-045, REQ-FN-046
+
+### Owner's test 12: a folder with a project and no solution
+
+- **Sign in as:** your own account
+- **Steps:** 1) In a terminal: `dotnet new console -n Loose -o C:\1MyCode\Chatur\bin\LooseOne\Loose`. 2) File ▸ Close; "Open a folder"; `C:\1MyCode\Chatur\bin\LooseOne`; Open. 3) Press "Go back", Open again, then "Open as it is".
+- **Expected:** 2) "This folder has no solution" names `Loose\Loose.csproj` and asks before anything opens. 3) Go back opens nothing and keeps the path; Open as it is opens the folder.
+- **Covers:** REQ-FN-325
+
+### Owner's test 13: the solution takes the project in, and the new one runs
+
+- **Sign in as:** your own account
+- **Steps:** 1) With LooseOne open: File ▸ New project; "Console App"; Solution name `Gathered`, Project name `Second`. 2) Press Create.
+- **Expected:** 1) "…\LooseOne has a project and no solution. Create makes the solution there and adds it to it: Loose\Loose.csproj". 2) LooseOne holds `Gathered.slnx`, `Loose` and `Second`. FILES has one root, "Gathered", with Loose and Second below it, and Second, just added, is the one that runs. A class library added this way would not run, so it would not be chosen.
+- **Covers:** REQ-UI-124, REQ-FN-309, REQ-UI-125
+
+### Owner's test 14: your model key, for the parts that ask a model
+
+- **Sign in as:** your own account
+- **Steps:** 1) Tools ▸ Settings (Ctrl+,): Model providers opens in the second window. 2) If your Anthropic provider is listed as connected, close the window: nothing to do. 3) Else press "Add a provider"; Name `Anthropic`; Connector Anthropic; paste your key; press Test, then Add; close the window.
+- **Expected:** 2) or 3) The table shows your Anthropic provider, connected, with claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5. Each account keeps its own keys.
+- **Covers:** REQ-FN-014, REQ-FN-017, REQ-UI-019
+
+### Owner's test 15: in an empty folder, the Analyst's own commands
+
+- **Sign in as:** your own account (the key of part 14 connected)
 - **Steps:** 1) Make and open the empty folder `C:\1MyCode\Chatur\bin\BrainTest`, as in test 1. 2) Model picker ▸ your model; agent picker ▸ Analyst. 3) Type `Don't you have brain-storm command ?`; Send. 4) `*help`; Send. 5) `*yolo`; Send. 6) Look at BrainTest in Explorer.
-- **Expected:** The greeting lists 12 commands, brainstorm among them. 3) "Yes." with `*brainstorm {topic}`, named "Chatur (no model)". 4) The 12 commands as a numbered list, names drawn as code, no `**`. 5) "YOLO is on" with **Go ahead** in bold. 6) BrainTest is still empty: chatting made no file in it.
+- **Expected:** The greeting lists 12 commands. 3) "Yes." with `*brainstorm {topic}`, named "Chatur (no model)". 4) The 12 commands as a numbered list, names drawn as code, no `**`. 5) "YOLO is on" with **Go ahead** in bold. 6) BrainTest is still empty: chatting that never reached a model made no file.
 - **Covers:** REQ-FN-308, REQ-FN-311, REQ-UI-114, REQ-FN-040
 
-### Owner's test 9: the Analyst brainstorms with you, then writes the brief
+### Owner's test 16: the chat follows its newest message
 
 - **Sign in as:** your own account
-- **Steps:** 1) In `C:\1MyCode\Chatur\bin\BrainTest`, type `*brainstorm a small to-do app for one person`; Send. 2) Answer its questions (e.g. one person, desktop, small, focused, yes save it; ideas: due dates, a today view, quick add). 3) Say "That is enough ideas, save the session". 4) `*create-project-brief BrainTest`; Send; say "take the sensible reading and write the brief now" if it asks.
+- **Steps:** 1) In test 15, after `*help` and again after `*yolo`, look at the conversation without scrolling.
+- **Expected:** The newest message is in view each time, though the agent's greeting above it is tall.
+- **Covers:** REQ-UI-128
+
+### Owner's test 17: the Analyst brainstorms with you, then writes the brief
+
+- **Sign in as:** your own account
+- **Steps:** 1) In `C:\1MyCode\Chatur\bin\BrainTest`, type `*brainstorm a small to-do app for one person`; Send. 2) Answer its questions (one person, desktop, small, focused, yes save it; ideas: due dates, a today view, quick add). 3) Say "That is enough ideas, save the session". 4) `*create-project-brief BrainTest`; Send; say "take the sensible reading and write the brief now" if it asks.
 - **Expected:** 3) `docs\brainstorming-session-results.md` appears in FILES. 4) The reply ends "Chatur: *create-project-brief is done — docs/BrainTest-Brief.md is written"; FILES shows it, dated today.
-- **Covers:** REQ-FN-312
+- **Covers:** REQ-FN-312, REQ-UI-128
 
-### Owner's test 10: the measurements screens
+### Owner's test 18: the sessions are written under the project
 
 - **Sign in as:** your own account
-- **Steps:** 1) Open a project that has `docs\metrics`: `C:\1MyCode\Chatur`. 2) Project ▸ Measurements. 3) Period ▸ Last 7 days, then All history. 4) Click the first run line; Esc. 5) Save as zip ▸ Save ▸ Close. 6) Click "Measurements across projects". 7) Click "Measurements" under Corrections, then its link.
-- **Expected:** 2) Seven tiles, splits, Misses with first-pass rate; a missing figure reads "not measured", a cost "no price". 3) Figures shrink. 4) The run's command, model, tokens, time, result, rows. 5) A .zip in the project folder. 6) One line per project. 7) Back on Project measurements.
-- **Covers:** REQ-UI-115 to REQ-UI-121, REQ-FN-313, REQ-FN-314, REQ-NFR-017
+- **Steps:** 1) After test 17 open `docs\metrics\sessions.jsonl` in BrainTest from FILES.
+- **Expected:** One or more lines, each with `"harness":"chatur"`, the session's id, the model, and `input_tokens` and `output_tokens` as numbers: the format TfLens reads. No other file is in `docs\metrics`.
+- **Covers:** REQ-FN-040
 
-### Owner's test 11: one command to each agent
+### Owner's test 19: the measurements screens
 
-- **Sign in as:** your own account (a model provider connected)
-- **Steps:** 1) Before each agent: agent picker ▸ the agent; new chat; your model; `*yolo` (not the Verifier, which has none). 2) Analyst: `*research-prompt note-taking apps for one person that work offline`. 3) Architect: `*research which local database suits a desktop to-do app for one person`. 4) Flow master: `*develop-status <project>`. 5) Verifier: `*report all <project>`.
-- **Expected:** 2) `docs\<project>-Research-Prompt.md` appears in FILES. 3) The same file is written again. 4) "No end-to-end run", or its step, rows and tokens. 5) "… row(s) in scope" and a table of rows.
+- **Sign in as:** your own account
+- **Steps:** 1) In the project switcher at the top pick `BrainTest` (nothing to type). 2) Project ▸ Measurements. 3) Period ▸ Last 7 days, then All history. 4) Click the first line; Esc. 5) Save as zip ▸ Save ▸ Close.
+- **Expected:** 2) Seven tiles: the chat's sessions counted and their tokens, the same as the chat's own token count; a split by your model; Misses with first-pass rate; a missing figure reads "not measured", a cost "no price". 4) The line is a chat session: command `chat`, model, tokens, time. 5) A .zip in BrainTest.
+- **Covers:** REQ-UI-115 to REQ-UI-120, REQ-FN-314, REQ-NFR-014, REQ-NFR-020, REQ-FN-040
+
+### Owner's test 20: across projects
+
+- **Sign in as:** your own account
+- **Steps:** 1) Click "Measurements across projects". 2) Click "Measurements" under Corrections, then its link.
+- **Expected:** 1) One line per project, BrainTest among them. 2) Back on Project measurements.
+- **Covers:** REQ-FN-313, REQ-UI-121
+
+### Owner's test 21: what is left on each key
+
+- **Sign in as:** your own account
+- **Steps:** 1) With BrainTest picked, Project ▸ Measurements; find "What is left on each key". 2) On your Anthropic line press "Type a limit"; Limit `5.00`; leave Counting from as it is; Save. 3) Click "Measurements across projects". 4) Back on Project measurements: "Change limit", then "Remove the limit".
+- **Expected:** 1) One line per connected provider; Anthropic reads "not known": a normal key has no balance, and no limit is typed. 2) "Chatur's own count": Limit $5.00, Used a few cents (the calls since install), Left $5.00 less that. 3) The same line. 4) "not known" again.
+- **Covers:** REQ-UI-129, REQ-UI-131, REQ-FN-326, REQ-NFR-022
+
+### Owner's test 22: one question to two models
+
+- **Sign in as:** your own account
+- **Steps:** 1) Second window ▸ "Compare models". 2) Tick only `claude-haiku-5-5`; Run. 3) Also tick `claude-sonnet-5-5`; Kind ▸ "Question, changes nothing". 4) Task: `Which files are in the docs folder of this project? Answer in one sentence.` 5) Run. 6) Right if a card names the files in FILES ▸ docs, else Wrong. 7) Reopen Compare models; click the first Past comparison.
+- **Expected:** 2) "One model is not a comparison — pick at least two." 5) Two cards side by side: time, tokens, cost, answer; no file changed. 7) Answers and marks again; `docs\metrics\runs.jsonl` has two `compare-models` lines.
+- **Covers:** REQ-FN-327, REQ-FN-328, REQ-UI-132, REQ-UI-133, REQ-FN-330, REQ-NFR-021, REQ-NFR-022
+
+### Owner's test 23: one task that changes files, on two models
+
+- **Sign in as:** your own account
+- **Steps:** 1) On Compare models, with `claude-haiku-5-5` and `claude-sonnet-5-5` ticked, Kind ▸ "Task that changes files". 2) Task: `Add a file docs/notes.md with the one line: Made in Compare models.` 3) Press Run and wait for both cards. 4) Look at FILES ▸ docs in BrainTest, and in Explorer at `C:\1MyCode\Chatur\bin\BrainTest\bin`.
+- **Expected:** 3) Each card lists its changed files, `docs/notes.md` added with its line, beside its time, tokens and cost. 4) BrainTest has no `docs\notes.md`: each model worked in its own copy. The copies were made under BrainTest's own bin folder and are gone; no `chatur-compare` folder is left there.
+- **Covers:** REQ-FN-329, REQ-UI-132, REQ-NFR-022
+
+### Owner's test 24: one command to each agent
+
+- **Sign in as:** your own account (the key of part 14 connected)
+- **Steps:** 1) In BrainTest, before each agent: agent picker ▸ the agent; new chat; your model; `*yolo` (not the Verifier, which has none). 2) Analyst: `*research-prompt note-taking apps for one person that work offline`. 3) Architect: `*research which local database suits a desktop to-do app for one person`. 4) Flow master: `*develop-status BrainTest`. 5) Verifier: `*report all BrainTest`.
+- **Expected:** 2) `docs\BrainTest-Research-Prompt.md` appears in FILES. 3) The same file is written again. 4) "No end-to-end run", or its step, rows and tokens. 5) "This project has no checklist yet, so there is nothing to report." (BrainTest has no checklist).
 - **Covers:** REQ-FN-317, REQ-FN-322, REQ-FN-320, REQ-NFR-017
 
 ### If the key is refused
@@ -249,7 +340,7 @@ Type a command with its star in the agent's conversation. In the examples `MyApp
 
 - **Sign in as:** user 1
 - **Steps:** 1) Open a file from FILES, change a line, press Save. 2) Press Build. 3) Press Run, then Stop. 4) Ask the agent a question with "Go ahead" chosen. 5) View ▸ Chat off and on.
-- **Expected:** An unsaved tab is marked and asks before closing. Build and Run stream their lines into Output; Stop ends everything the run started. The reply names its model and tokens. The chat closes and comes back.
+- **Expected:** An unsaved tab is marked and asks before closing, and so does closing the whole file view. Build and Run stream their lines into Output; Stop ends everything the run started. The reply names its model and tokens. The chat closes and comes back.
 - **Covers:** REQ-UI-011 to REQ-UI-016, REQ-UI-021 to REQ-UI-024, REQ-UI-040, REQ-UI-041, REQ-UI-073, REQ-UI-074
 
 ### Prerequisites
@@ -269,7 +360,7 @@ Type a command with its star in the agent's conversation. In the examples `MyApp
 ### Measurements and Measurements across projects
 
 - **Sign in as:** user 1
-- **Steps:** 1) Open a project that has `docs\metrics`. 2) Project ▸ Measurements; pick each period; open a run line; Save as zip. 3) "Measurements across projects" in the side list; click a project's name.
+- **Steps:** 1) Pick a project that has `docs\metrics` in the project switcher. 2) Project ▸ Measurements; pick each period; open a run line; Save as zip. 3) "Measurements across projects" in the side list; click a project's name.
 - **Expected:** Figures come only from the project's files; a missing figure reads "not measured", a run without cost "no price". The zip holds `docs/metrics/<file>.jsonl`. Across projects shows one line per project; a name opens its Measurements.
 - **Covers:** REQ-UI-115 to REQ-UI-121, REQ-FN-313, REQ-FN-314, REQ-NFR-014
 

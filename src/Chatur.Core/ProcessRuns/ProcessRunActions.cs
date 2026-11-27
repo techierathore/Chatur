@@ -476,7 +476,7 @@ public sealed class ProcessRunActions : IProcessRunActions, IUnattendedProcessRu
     /// <param name="aRunId">The run.</param>
     public static string FollowUpSettingKey(int aRunId) => $"ProcessRun.FollowedBy.{aRunId}";
 
-    private static string Stamp(DateTime aUtc) => aUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+    private static string Stamp(DateTime aUtc) => aUtc.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
 
     private static DateTime ParseStamp(string aStamp) =>
         DateTime.Parse(aStamp, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);

@@ -16,7 +16,7 @@ const ringOffset = (aLocator: Locator): Promise<string> =>
 
 async function openNewProject(aPage: Page): Promise<Locator> {
   await aPage.goto('/start?all=1', { waitUntil: 'networkidle' });
-  const vDialog = aPage.getByTestId('open-project-dialog');
+  const vDialog = aPage.getByTestId('new-project-dialog');
   await expect(async () => {
     if (!(await vDialog.isVisible())) await aPage.getByTestId('new-project').click();
     await expect(vDialog).toBeVisible({ timeout: 2_500 });
@@ -30,7 +30,8 @@ test.beforeEach(async ({ page }) => {
 
 test('REQ-UI-080 a focused field on New project keeps its text inside, its ring on its border and clear of its label', async ({ page }) => {
   const vDialog = await openNewProject(page);
-  const vName = page.getByTestId('open-project-name').locator('xpath=descendant-or-self::input').first();
+  await expect(page.getByTestId('template-loading')).toHaveCount(0, { timeout: 120_000 });
+  const vName = page.getByTestId('new-project-name').locator('xpath=descendant-or-self::input').first();
   await vName.focus();
   // The text sits inside the field, never against its border.
   expect(await px(vName, 'padding-left')).toBeGreaterThanOrEqual(10);
@@ -47,7 +48,7 @@ test('REQ-UI-080 a focused field on New project keeps its text inside, its ring 
   expect(vFieldBox.x - vDialogBox.x).toBeGreaterThanOrEqual(14);
   expect(vDialogBox.x + vDialogBox.width - (vFieldBox.x + vFieldBox.width)).toBeGreaterThanOrEqual(14);
   // The buttons keep their text inside too.
-  for (const vId of ['open-project-cancel', 'open-project-go']) {
+  for (const vId of ['new-project-cancel', 'new-project-create']) {
     expect(await px(page.getByTestId(vId), 'padding-left'), vId).toBeGreaterThanOrEqual(10);
   }
   await page.screenshot({ path: `${SHOTS}/REQ-UI-080-new-project.png` });

@@ -1,0 +1,213 @@
+@page "/compare-models"
+@layout Layouts.SecondaryLayout
+@implements IDisposable
+@inject AppState State
+
+@* UI Design phase 4 "Screen: Compare models" — mockups/compare-models.html (REQ-FN-327 to REQ-FN-330, REQ-UI-132,
+   REQ-UI-133, REQ-NFR-021). One task, two to four connected models, side by side on the open project. Every figure comes
+   from ICompareModelsActions; the page keeps no number of its own. *@
+<div class="flex flex-col gap-4" data-testid="page">
+    <div class="flex flex-wrap items-center gap-2.5" data-testid="compare-heading">
+        <div>
+            <h1 class="text-lg font-semibold">Compare models</h1>
+            <p class="text-sm text-muted-foreground">
+                One task, two to four of your models, side by side on <span data-testid="compare-project">@(State.SelectedProject?.Name ?? "no project")</span>.
+            </p>
+        </div>
+    </div>
+
+    @if (!State.IsFeatureOn(Chatur.Core.Licences.ChaturFeatures.Measurements))
+    {
+        <Empty Title="Compare models is not part of this licence" Description="Nothing runs here while the licence has the feature off." Size="EmptySize.Small" data-testid="feature-off" />
+    }
+    else
+    {
+        @if (State.SelectedProject is null)
+        {
+            <Empty Title="No project open" Description="Open a project; every model works on it." Size="EmptySize.Small" data-testid="no-project" />
+        }
+
+        <Card data-testid="compare-form">
+            <CardContent Class="flex flex-col gap-2.5 p-3.5">
+                <span class="text-xs text-muted-foreground">Models — pick two to four</span>
+                <div class="flex flex-wrap gap-2" data-testid="compare-models">
+                    @if (objModels.Count == 0)
+                    {
+                        <span class="text-sm text-muted-foreground" data-testid="compare-no-models">No connected model yet. Connect a provider under Model providers.</span>
+                    }
+                    @foreach (var vModel in objModels)
+                    {
+                        var vPicked = objPicked.Contains(vModel.ModelId);
+                        <Label For="@($"model-check-{vModel.Slug}")"
+                               Class="@(vPicked ? "inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-sm font-normal text-primary" : "inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-sm font-normal text-muted-foreground")"
+                               data-testid="@($"model-pick-{vModel.Slug}")">
+                            <Checkbox Id="@($"model-check-{vModel.Slug}")" Checked="vPicked" CheckedChanged="@((bool aOn) => OnPickChanged(vModel.ModelId, aOn))"
+                                      Disabled="objIsRunning" data-testid="@($"model-check-{vModel.Slug}")" />
+                            <span class="font-mono text-xs">@vModel.Identifier</span>
+                            <span class="text-muted-foreground">· @vModel.ProviderName</span>
+                        </Label>
+                    }
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <div data-testid="compare-kind">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger AsChild>
+                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="rounded-full font-normal" Disabled="objIsRunning" data-testid="compare-kind-button">
+                                    <span class="text-muted-foreground">Kind</span>
+                                    <span>@KindLabel(objKind)</span>
+                                    <LucideIcon Name="chevron-down" Size="14" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent Class="min-w-56" data-testid="compare-kind-pop">
+                                <DropdownMenuItem OnClick="@(() => SetKind(CompareKind.Question))" data-testid="kind-question">
+                                    <span class="w-4 shrink-0 text-center">@(objKind == CompareKind.Question ? "✓" : "")</span>
+                                    <span class="ml-2">@KindLabel(CompareKind.Question)</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem OnClick="@(() => SetKind(CompareKind.Change))" data-testid="kind-change">
+                                    <span class="w-4 shrink-0 text-center">@(objKind == CompareKind.Change ? "✓" : "")</span>
+                                    <span class="ml-2">@KindLabel(CompareKind.Change)</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <span class="text-xs text-muted-foreground" style="flex-basis:100%" data-testid="compare-kind-note">A task that changes files gives each model its own copy under bin/chatur-compare, removed when the run ends.</span>
+                </div>
+
+                <FieldLabel For="compare-task" Class="text-xs font-normal text-muted-foreground">Task</FieldLabel>
+                <Textarea Id="compare-task" @bind-Value="objTask" Disabled="objIsRunning" Class="min-h-20 leading-relaxed"
+                          Placeholder="Which files in docs/metrics does this project write? Answer in one sentence." data-testid="compare-task" />
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="@(PickLineIsRefusal ? "text-xs text-destructive" : "text-xs text-muted-foreground")" data-testid="compare-pick-count">@PickLine</span>
+                    <span class="flex-1"></span>
+                    <Button Variant="ButtonVariant.Outline" Class="rounded-full" Size="ButtonSize.Small" OnClick="RunAsync" Disabled="@(objIsRunning || State.SelectedProject is null)" data-testid="compare-run">
+                        <LucideIcon Name="refresh-cw" Size="14" />
+                        Run
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+
+        @if (objComparison is { } vComparison)
+        {
+            <div class="flex flex-wrap items-center gap-2" data-testid="compare-status">
+                <Badge Variant="@StateVariant(vComparison.State)" Class="rounded-full border-transparent" data-testid="compare-state">@vComparison.State</Badge>
+                <span class="text-xs text-muted-foreground" data-testid="compare-status-note">@StatusNote(vComparison)</span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px" data-testid="compare-results">
+                @foreach (var vResult in vComparison.Results)
+                {
+                    var vN = vResult.Position;
+                    <Card data-testid="@($"result-{vN}")">
+                        <CardContent Class="flex flex-col gap-2 p-3.5">
+                            <div class="flex items-center gap-2">
+                                <b class="min-w-0 truncate font-mono text-sm" data-testid="@($"result-model-{vN}")">@vResult.Model</b>
+                                <span class="flex-1"></span>
+                                <Badge Variant="@MarkVariant(vResult)" Class="shrink-0 rounded-full border-transparent" data-testid="@($"result-mark-{vN}")">@MarkText(vResult)</Badge>
+                            </div>
+                            <span class="text-xs text-muted-foreground">@vResult.ProviderName · @vResult.Connector</span>
+                            <div class="text-sm" style="display:grid;grid-template-columns:auto 1fr;gap:2px 12px">
+                                <span class="text-muted-foreground">Time</span><span data-testid="@($"result-time-{vN}")">@TimeText(vResult)</span>
+                                <span class="text-muted-foreground">Tokens in / out</span><span data-testid="@($"result-tokens-{vN}")">@TokensText(vResult)</span>
+                                <span class="text-muted-foreground">Cost</span><span data-testid="@($"result-cost-{vN}")">@CostText(vResult)</span>
+                            </div>
+                            @if (vResult.Error is not null)
+                            {
+                                <Alert Variant="AlertVariant.Danger" data-testid="@($"result-error-{vN}")">
+                                    <AlertDescription>@vResult.Error</AlertDescription>
+                                </Alert>
+                            }
+                            @if (vComparison.Kind == CompareKind.Change && vResult.State != "running")
+                            {
+                                <div class="flex flex-col gap-1 rounded-md border p-2.5">
+                                    <span class="text-xs text-muted-foreground">Changed files — its own copy, now removed</span>
+                                    <div class="font-mono text-xs" data-testid="@($"result-files-{vN}")">
+                                        @if (vResult.Files.Count == 0)
+                                        {
+                                            <span class="text-muted-foreground">no file changed</span>
+                                        }
+                                        @foreach (var vFile in vResult.Files)
+                                        {
+                                            <div>@FileLine(vFile)</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(vResult.Answer))
+                            {
+                                <Prose ConstrainWidth="false" Class="min-w-0 rounded-md border p-2.5 text-xs leading-relaxed [overflow-wrap:anywhere]" data-testid="@($"result-answer-{vN}")">@((MarkupString)Chatur.Core.Documents.MarkdownHtml.Reply(vResult.Answer))</Prose>
+                            }
+                            else if (vResult.State == "running")
+                            {
+                                <span class="text-xs text-muted-foreground" data-testid="@($"result-answer-{vN}")">running…</span>
+                            }
+                            <div class="flex gap-1.5">
+                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="@(vResult.Mark == "right" ? "rounded-full border-primary bg-primary/10 text-primary" : "rounded-full")"
+                                        Disabled="@(vResult.State == "running" || objIsMarking)" OnClick="@(() => MarkAsync(vResult, true))"
+                                        aria-pressed="@(vResult.Mark == "right" ? "true" : "false")" data-testid="@($"mark-right-{vN}")">
+                                    <LucideIcon Name="check" Size="14" />
+                                    Right
+                                </Button>
+                                <Button Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="@(vResult.Mark == "wrong" ? "rounded-full border-destructive bg-destructive/10 text-destructive" : "rounded-full")"
+                                        Disabled="@(vResult.State == "running" || objIsMarking)" OnClick="@(() => MarkAsync(vResult, false))"
+                                        aria-pressed="@(vResult.Mark == "wrong" ? "true" : "false")" data-testid="@($"mark-wrong-{vN}")">
+                                    <LucideIcon Name="x" Size="14" />
+                                    Wrong
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                }
+            </div>
+        }
+
+        <Card data-testid="compare-history">
+            <CardHeader Class="flex flex-row items-center gap-2 space-y-0 px-3.5 py-2.5">
+                <CardTitle Class="text-sm">Past comparisons</CardTitle>
+                <span class="flex-1"></span>
+                <span class="text-xs text-muted-foreground">kept in Chatur and in docs/metrics · a line opens it</span>
+            </CardHeader>
+            <CardContent Class="p-0">
+                @if (objHistory.Count == 0)
+                {
+                    <Empty Title="No comparison yet" Description="Pick two to four models, type a task and press Run." Size="EmptySize.Small" data-testid="history-empty" />
+                }
+                else
+                {
+                    <DataTable TData="HistoryLine" Data="@objHistory" SelectionMode="DataTableSelectionMode.Single"
+                               SelectedItems="objHistoryPicked" SelectedItemsChanged="OnHistoryPickedAsync"
+                               ShowPagination="false" MinWidth="720px" Class="border-0"
+                               RowAttributes="@(aLine => new Dictionary<string, object> { ["data-testid"] = $"history-row-{aLine.Line}", ["class"] = "cursor-pointer border-t" })"
+                               data-testid="history-table">
+                        <Columns>
+                            <DataTableColumn TData="HistoryLine" TValue="string" Property="@(aLine => aLine.When)" Header="When" CellClass="whitespace-nowrap text-muted-foreground" />
+                            <DataTableColumn TData="HistoryLine" TValue="string" Property="@(aLine => aLine.Kind)" Header="Kind" CellClass="whitespace-nowrap" />
+                            <DataTableColumn TData="HistoryLine" TValue="string" Property="@(aLine => aLine.Task)" Header="Task" />
+                            <DataTableColumn TData="HistoryLine" TValue="string" Property="@(aLine => aLine.Models)" Header="Models" CellClass="font-mono text-xs" />
+                            <DataTableColumn TData="HistoryLine" TValue="string" Property="@(aLine => aLine.Marks)" Header="Marks">
+                                <CellTemplate Context="aLine">
+                                    <div class="flex flex-wrap gap-1">
+                                        @if (aLine.Summary.Right > 0)
+                                        {
+                                            <Badge Variant="BadgeVariant.Success" Class="rounded-full border-transparent">@aLine.Summary.Right right</Badge>
+                                        }
+                                        @if (aLine.Summary.Wrong > 0)
+                                        {
+                                            <Badge Variant="BadgeVariant.Danger" Class="rounded-full border-transparent">@aLine.Summary.Wrong wrong</Badge>
+                                        }
+                                        @if (aLine.Summary.NotMarked > 0)
+                                        {
+                                            <Badge Variant="BadgeVariant.Secondary" Class="rounded-full border-transparent">@aLine.Summary.NotMarked not marked</Badge>
+                                        }
+                                    </div>
+                                </CellTemplate>
+                            </DataTableColumn>
+                        </Columns>
+                    </DataTable>
+                }
+            </CardContent>
+        </Card>
+    }
+</div>

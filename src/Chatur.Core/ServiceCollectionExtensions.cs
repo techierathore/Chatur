@@ -126,6 +126,11 @@ public static class ServiceCollectionExtensions
         aServices.AddScoped<IMeasurementActions, MeasurementActions>();
         // Chatur's own measurements inside Chatur (REQ-UI-115, REQ-FN-313, REQ-FN-314): read from docs/metrics only, no network.
         aServices.AddScoped<IMetricsReportActions, MetricsReportActions>();
+        // What is left on each key (REQ-UI-129 to REQ-UI-131, REQ-FN-326): a balance address, else priced calls counted
+        // against a typed limit, else "not known". Every model call is recorded by the provider factory through the recorder.
+        aServices.AddScoped<IKeyUsageRecorder, KeyUsageRecorder>();
+        aServices.AddScoped<IKeyBalanceActions, KeyBalanceActions>();
+        aServices.AddHttpClient(KeyBalanceActions.HttpClientName);
         aServices.AddScoped<IProcessActions, Processes.ProcessActions>();
         aServices.AddScoped<ISourceControlActions, SourceControlActions>();
         // Working copies (REQ-FN-079, REQ-FN-080, REQ-UI-068, cluster P4-D): the same class's git worktree half.
@@ -163,6 +168,8 @@ public static class ServiceCollectionExtensions
         aServices.AddScoped<IEstimateActions, Estimates.EstimateActions>();
         // Integrations (REQ-FN-081..083, REQ-UI-069): what Chatur offers to outside tools.
         aServices.AddScoped<IIntegrationActions, Integrations.IntegrationActions>();
+        // Compare models (REQ-FN-327 to REQ-FN-330, REQ-UI-132, REQ-UI-133): one task to two to four models side by side.
+        aServices.AddScoped<ICompareModelsActions, CompareModels.CompareModelsActions>();
         // Feedback and issues (REQ-UI-062, REQ-FN-073, REQ-UI-063, REQ-FN-074): raised through App Manager; a test host may swap the source.
         Feedback.FeedbackServiceCollectionExtensions.AddChaturFeedback(aServices);
 

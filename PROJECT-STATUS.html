@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Status</h1>
-    <div class="sub">Last rendered: 2026-11-23</div>
+    <div class="sub">Last rendered: 2026-11-27</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#where-i-am">Where I am</a></li>
@@ -121,7 +121,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Status</h1>
-    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>PROJECT-STATUS.md</code></div>
+    <div class="subtitle">Rendered 2026-11-27 &middot; source <code>PROJECT-STATUS.md</code></div>
     <div class="cta-next" style="padding:20px; background:var(--cta-bg); border:2px solid var(--accent); border-radius:10px; margin:20px 0;">
       <div style="font-size:11px; color:var(--muted); letter-spacing:.5px;">NEXT COMMAND TO RUN</div>
       <div style="font-family:var(--mono); font-size:18px; margin-top:6px;">(owner) set current_phase to Released after UAT — no agent command</div>
@@ -142,13 +142,13 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
     </div>
 <hr>
 <p>project: Chatur
-last_updated: 2026-11-23
+last_updated: 2026-11-27
 current_phase: Phase 3 of 4 (End to end and unattended) · UAT — handoff done, 94 of 94 verified
 last_verified_build: PASS
-last_verified_date: 2026-11-23
+last_verified_date: 2026-11-27
 ---</p>
 <h2 id="where-i-am">Where I am<a class="anchor-link" href="#where-i-am">#</a></h2>
-<p>Phase 3 of 4 (End to end and unattended): ready for the owner's test from the Start menu. The brief of 22 Nov evening added BRD-253 to BRD-275 to phase 4: the Measurements screens, the agents' command tables and nine commands run end to end. Phase 4 has 59 of 60 rows Verified; REQ-FN-313 needs re-verify on one mockup finding (TF-053). Chatur is installed again; Owner's test parts 1 to 10 pass on the install.</p>
+<p>Phase 3 of 4 (End to end and unattended), with phase 4 work added on 27 Nov: what is left on each key on both Measurements screens, and Compare models (one task to two to four models). Both are Verified, along with the six fixes left from 26 Nov. Chatur now uses TechieRag 1.2.1, which prices Claude 5.x calls. The Owner's test is one order of 24 parts and passes in full on the installed app. Chatur has been reinstalled.</p>
 <h2 id="next-command-to-run">Next command to run<a class="anchor-link" href="#next-command-to-run">#</a></h2>
 <p>Claude Code:</p>
 <pre><code>(owner) set current_phase to Released after UAT — no agent command</code></pre>
@@ -167,24 +167,26 @@ last_verified_date: 2026-11-23
 </tbody>
 </table>
 <ul>
-<li>None in phase 3. Phase 4: REQ-FN-313 Needs re-verify (mockup check at 390 px, TF-053).
+<li>None in phase 3. Phase 4: REQ-UI-130 Implemented (asking a provider's balance address; no OpenRouter or DeepSeek key exists to test it live).
 </li>
 </ul>
 <h2 id="known-blockers">Known blockers<a class="anchor-link" href="#known-blockers">#</a></h2>
 <ul>
-<li>Phase 1, hand steps once per release: REQ-FN-001, REQ-FN-002, REQ-FN-022, REQ-FN-030, REQ-FN-048; REQ-FN-012 needs the Mac; REQ-NFR-006 needs a published nightly.
+<li>REQ-UI-130 needs a real OpenRouter or DeepSeek key (<code>balanceProvider</code> in the test settings) for its browser test; unit tests with a fake address pass.
 </li>
-<li>REQ-FN-078 is proven against the harness's stand-in for App Manager only: App Manager keeps no roles or rules yet (AM-002).
+<li>Phase 1, hand steps once per release: REQ-FN-001, REQ-FN-002, REQ-FN-022, REQ-FN-030, REQ-FN-048; REQ-FN-012 needs the Mac; REQ-NFR-006 a published nightly.
 </li>
-<li>REQ-FN-083 and REQ-UI-069 are graded on recorded checks and a seeded release: a real window check needs the Mac or Windows verifier, a real signature needs the certificates.
+<li>REQ-FN-078 is proven against a stand-in for App Manager only: it keeps no roles or rules yet (AM-002).
 </li>
-<li>TF-052, TF-053: the menu walk reads late or hidden menus as "opens nothing"; REQ-FN-313 waits on TF-053.
+<li>REQ-FN-083 and REQ-UI-069: a real window check needs the Mac or Windows verifier, a real signature the certificates.
+</li>
+<li>TF-052: the menu walk reads late chat-panel menus as "opens nothing"; a second walk passes.
+</li>
+<li>TF-054: TfLens has no gate value for a person's own mark; Chatur writes <code>owner-mark</code>.
 </li>
 <li>TR-RAG-010: a cut-off tool call is dropped silently; Chatur asks again with more room.
 </li>
-<li>The screen check cannot drive the Windows app by address; its own test files click through it.
-</li>
-<li>Owner, before the next commit: the <code>[verify-seed]</code> check-ins and branches written on 15 Nov (TF-037); remove them by hand.
+<li>Owner, before the next commit: remove the <code>[verify-seed]</code> check-ins of 15 Nov in Chatur's own history (TF-037).
 </li>
 </ul>
 <h2 id="verification-log">Verification log<a class="anchor-link" href="#verification-log">#</a></h2>
@@ -192,20 +194,20 @@ last_verified_date: 2026-11-23
 <table>
 <thead><tr><th>Date</th><th>Phase</th><th>Result</th><th>Status table</th></tr></thead>
 <tbody>
-<tr><td>2026-11-20</td><td>*verify ui Chatur --phase all</td><td>63/94 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-11-21</td><td>build-phase</td><td>94/94 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
-<tr><td>2026-11-22</td><td>handoff-phase</td><td>94/94 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-11-22</td><td>triage-and-fix</td><td>94/94 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 <tr><td>2026-11-23</td><td>build-phase</td><td>94/94 Verified</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-11-26</td><td>triage-and-fix</td><td>20 rows Verified across phases 1, 3, 4</td><td>docs/Chatur-P4-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-11-26</td><td>handoff-phase</td><td>94/94 Verified; ready for the owner's test</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
+<tr><td>2026-11-27</td><td>build-phase</td><td>94/94 Verified; 18 of 19 new and reopened rows Verified across phases 1, 2, 4</td><td>docs/Chatur-P3-Checklist.md#requirements-status</td></tr>
 </tbody>
 </table>
 <h2 id="library-feedback-summary">Library feedback summary<a class="anchor-link" href="#library-feedback-summary">#</a></h2>
 <ul>
 <li>AppManager: 1 open · 1 closed — docs/Chatur-AppManager-Feedback.md
 </li>
-<li>TechieFlow: 2 open · 18 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 28 closed — docs/Chatur-TechieFlow-Feedback.md
+<li>TechieFlow: 3 open · 18 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 28 closed — docs/Chatur-TechieFlow-Feedback.md
 </li>
-<li>TechieRag: 1 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 6 closed — docs/Chatur-TechieRag-Feedback.md
+<li>TechieRag: 1 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 7 closed — docs/Chatur-TechieRag-Feedback.md
 </li>
 <li>TrBlazeUI: 5 open · 24 closed — docs/Chatur-TrBlazeUI-Feedback.md
 </li>
@@ -221,7 +223,7 @@ last_verified_date: 2026-11-23
 </li>
 <li>Worktrees: the mockup's "Give the next run its own copy" box and its size line are not built; nothing stands behind them yet.
 </li>
-<li>All projects shows "not opened" where the mockup draws "handed over": Chatur keeps no hand-over state per project.
+<li>Chat sessions carry no cost in <code>sessions.jsonl</code>, so Measurements reads "no price" for them; the key panel counts their price.
 </li>
 <li>The run queue moves only while its tab is open.
 </li>

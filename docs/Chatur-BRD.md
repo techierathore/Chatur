@@ -310,12 +310,14 @@ The corrections tab: what Chatur changed about itself, and the owner's word on i
 The measurements tab: the same numbers TechieFlow writes today, written by Chatur into each project.
 
 - **BRD-74** — The five files. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-measurements.html)
-  - *Acceptance:* When a command needing a record runs in a project on Settings, then its file is in `docs/metrics`; a folder only opened or chatted in gets no file.
-  - *Changed 2026-11-23:* every chat turn made `docs/metrics` and all five files, four of them empty, in whatever folder was open (owner's test). A file is now made only when a command needs it; a chat turn is recorded only in a project that already has `docs/metrics`.
+  - *Acceptance:* When a model call or a command needs a record in a project, then it is written to docs/metrics in TechieFlow's shape; a folder only opened gets no file.
+  - *Changed 2026-11-23:* every chat turn made `docs/metrics` and all five files, four of them empty, in whatever folder was open (owner's test). A file is now made only when a command needs it.
+  - *Changed 2026-11-26:* the 23 Nov rule, a chat turn recorded only where `docs/metrics` already was, left a real chat with a real model in a new folder with no record at all, and Measurements empty (owner's test of 25 Nov). A turn that reaches a model now makes the folder and writes the session and its tokens, one record per session carrying what it has used in all; the records are TechieFlow's own (`v` and the counts numbers, `ts` to the second, a list an array), not strings with `at`.
 - **BRD-75** — Chatur signs its work. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-measurements.html)
-  - *Acceptance:* When Chatur writes a record on Settings, then the field naming the tool reads `chatur`.
+  - *Acceptance:* When Chatur writes a record on Settings, then the field naming the tool, `harness`, reads `chatur`.
+  - *Changed 2026-11-26:* the field is TechieFlow's `harness`; it was `tool`, which TfLens does not read.
 - **BRD-76** — What was not measured stays empty. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-measurements.html)
-  - *Acceptance:* When a number was not measured on Settings, then its field is written empty and never filled with a guess.
+  - *Acceptance:* When a number was not measured on Settings, then its field is written empty (`null`) and never filled with a guess.
 - **BRD-77** — An unknown field is refused. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-measurements.html)
   - *Acceptance:* When a record carries a field or value the schema does not know on Settings, then the write is refused and the reason is logged.
 - **BRD-78** — A failed write never stops the work. *Screen:* Settings · *Mockup:* [mockup](mockups/settings-measurements.html)
@@ -343,11 +345,12 @@ The files card: enough of an editor for a quick change, and a door to the owner'
 - **BRD-82** — Edit and save. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When the owner changes the text and saves on Workbench, then the file on disk holds the new text.
 - **BRD-83** — An unsaved tab is marked. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When a tab has unsaved changes on Workbench, then it is marked, and closing it asks before the change is lost.
+  - *Acceptance:* When a file in the file view on Workbench has unsaved changes, then closing a tab or the whole view asks first, and keeping the file leaves the view open.
+  - *Changed 2026-11-26:* the view's own close button closed it without asking (owner's test of 25 Nov).
 - **BRD-84** — Open it in the owner's editor. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When the owner chooses his own editor for a file on Workbench, then that program opens with the file.
+  - *Removed 2026-11-26:* the owner did not ask for the button and it defeats the purpose of Chatur, which is the editor (owner's test of 25 Nov). The file window has no button that opens a file in another editor, and nothing else in Chatur does (Repository's "Open in the editor" went with it).
 - **BRD-85** — Open it with whatever the machine uses. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When the owner opens a file with the system's default application, then the machine's own choice of program opens it.
+  - *Removed 2026-11-26:* with BRD-84: Chatur is the editor, so no button opens a file with another program.
 
 ### Repository
 
@@ -379,14 +382,14 @@ The owner's own hand on check-in, push and branches.
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-11-22.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
+**Snapshot as of 2026-11-27.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
 | Sign in | 5 | 3 | 2 | Partial |
 | Register | 4 | 4 | 0 | Done |
 | Start | 6 | 6 | 0 | Done |
-| Workbench | 34 | 34 | 0 | Done |
+| Workbench | 32 | 32 | 0 | Done |
 | Prerequisites | 5 | 4 | 1 | Partial |
 | Settings | 33 | 31 | 2 | Partial |
 | Repository | 5 | 4 | 1 | Partial |

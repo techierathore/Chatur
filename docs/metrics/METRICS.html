@@ -106,10 +106,11 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout">
   <nav class="side">
     <h1>Chatur — Development Metrics</h1>
-    <div class="sub">Last rendered: 2026-11-23</div>
+    <div class="sub">Last rendered: 2026-11-26</div>
     <div class="group">Contents</div>
     <ol>
         <li><a href="#streams">Streams</a></li>
+        <li><a href="#this-run-triage-and-fix-started-2026-11-26t08-48-44z">This run — triage-and-fix started 2026-11-26T08:48:44Z</a></li>
         <li><a href="#this-run-build-phase-started-2026-11-22t13-24-25z">This run — build-phase started 2026-11-22T13:24:25Z</a></li>
         <li><a href="#first-pass-rate">1. First-pass rate</a></li>
         <li><a href="#gate-catch-distribution">2. Gate catch distribution</a></li>
@@ -128,12 +129,13 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
   </nav>
   <main>
     <h1>Chatur — Development Metrics</h1>
-    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>METRICS.md</code></div>
+    <div class="subtitle">Rendered 2026-11-26 &middot; source <code>METRICS.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
       <ol>
         <li><a href="#streams">Streams</a></li>
+        <li><a href="#this-run-triage-and-fix-started-2026-11-26t08-48-44z">This run — triage-and-fix started 2026-11-26T08:48:44Z</a></li>
         <li><a href="#this-run-build-phase-started-2026-11-22t13-24-25z">This run — build-phase started 2026-11-22T13:24:25Z</a></li>
         <li><a href="#first-pass-rate">1. First-pass rate</a></li>
         <li><a href="#gate-catch-distribution">2. Gate catch distribution</a></li>
@@ -150,17 +152,27 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li><a href="#what-is-missing-and-what-the-script-and-streams-flagged">7. What is missing, and what the script and streams flagged</a></li>
       </ol>
     </div>
-<p><strong>Report date 2026-11-23.</strong> Project type <code>app</code>. Schema v1. Every figure below comes from <code>bash .tfcore/telemetry/tf-metrics.sh --report .</code>; nothing was worked out by hand. All records are live, none rebuilt, so there is no backfilled column. One project type (<code>app</code>), so nothing is pooled across types. On 23 Nov the streams, this run's section and section 1 were refreshed; later sections read as of 16 Nov, and the script's own printout holds today's detail for them.</p>
+<p><strong>Report date 2026-11-26.</strong> Project type <code>app</code>. Schema v1. Every figure below comes from <code>bash .tfcore/telemetry/tf-metrics.sh --report .</code>; nothing was worked out by hand. All records are live, none rebuilt, so there is no backfilled column. One project type (<code>app</code>), so nothing is pooled across types. On 23 Nov the streams, this run's section and section 1 were refreshed; later sections read as of 16 Nov, and the script's own printout holds today's detail for them.</p>
 <h2 id="streams">Streams<a class="anchor-link" href="#streams">#</a></h2>
 <table>
 <thead><tr><th>Stream</th><th>Records</th></tr></thead>
 <tbody>
-<tr><td><code>runs.jsonl</code></td><td>225 (0 voided)</td></tr>
-<tr><td><code>gates.jsonl</code></td><td>4,328 (0 backfilled)</td></tr>
-<tr><td><code>sessions.jsonl</code></td><td>38 sessions</td></tr>
-<tr><td><code>commits.jsonl</code></td><td>32</td></tr>
-<tr><td><code>misses.jsonl</code></td><td>889 misses (88 open, 801 resolved), 851 fix records</td></tr>
+<tr><td><code>runs.jsonl</code></td><td>229 (1 voided)</td></tr>
+<tr><td><code>gates.jsonl</code></td><td>4,349 (0 backfilled)</td></tr>
+<tr><td><code>sessions.jsonl</code></td><td>44 sessions</td></tr>
+<tr><td><code>commits.jsonl</code></td><td>33</td></tr>
+<tr><td><code>misses.jsonl</code></td><td>908 misses (91 open, 817 resolved), 867 fix records</td></tr>
 <tr><td><code>estimates.jsonl</code></td><td>0</td></tr>
+</tbody>
+</table>
+<h2 id="this-run-triage-and-fix-started-2026-11-26t08-48-44z"><a id="this-run--triage-and-fix-started-2026-11-26t084844z"></a>This run — triage-and-fix started 2026-11-26T08:48:44Z<a class="anchor-link" href="#this-run-triage-and-fix-started-2026-11-26t08-48-44z">#</a></h2>
+<p>The owner's test of 25 Nov (<code>docs/screenshots/25-Nov-26-Run</code>): 14 rows logged by triage (10 demoted, 4 new), one more NFR row added by hand, 18 rows touched and <code>Verified</code> by the verifier, REQ-FN-045 and REQ-FN-046 removed (N/A). Measured by OpenCode for the whole window, one sub-agent included: 199,067 output tokens, 634 input, 139,177,115 cache read, 16,529,005 cache write, $58.17 (<code>cost_source: opencode-db</code>), 6 h 06 min wall clock, model claude-sonnet-5-5. The real model calls the checks made through Chatur's own test provider are the app's, not this window's, and are not counted here.</p>
+<table>
+<thead><tr><th>Row</th><th>Miss</th><th>Cause</th><th>Time to find</th></tr></thead>
+<tbody>
+<tr><td>REQ-UI-125</td><td>MISS-Chatur-20261123-19 (open since 23 Nov)</td><td>The solution was drawn beside its project, not as the root</td><td>not measured (open before this run)</td></tr>
+<tr><td>REQ-UI-041</td><td>MISS-Chatur-20261120-17 (open since 20 Nov)</td><td>The file view's own close button never asked</td><td>not measured (open before this run)</td></tr>
+<tr><td>REQ-FN-040, REQ-UI-115</td><td>logged this run</td><td>A real chat left no record: the 23 Nov rule wrote a chat turn only where <code>docs/metrics</code> already was; Measurements never read <code>sessions.jsonl</code>; records were strings, not TechieFlow's numbers</td><td>found by one read-only investigation</td></tr>
 </tbody>
 </table>
 <h2 id="this-run-build-phase-started-2026-11-22t13-24-25z"><a id="this-run--build-phase-started-2026-11-22t132425z"></a>This run — build-phase started 2026-11-22T13:24:25Z<a class="anchor-link" href="#this-run-build-phase-started-2026-11-22t13-24-25z">#</a></h2>

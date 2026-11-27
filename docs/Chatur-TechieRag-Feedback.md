@@ -4,13 +4,13 @@
 |---|---|
 | App | Chatur |
 | Upstream | TechieRag |
-| Updated | 2026-10-29 (TR-RAG-008 and TR-RAG-009 fixed upstream, next release after 1.1.7; thinking extended to every provider) |
+| Updated | 2026-11-27 (TR-RAG-011 filed and closed: Chatur moved to 1.2.1, which prices Claude 5.x calls) |
 
 ## Summary
 
-Nothing is blocked. 10 entries: 1 open and not blocking (TR-RAG-010, 23 Nov 2026: a tool call cut off at the output limit is dropped without a word; Chatur asks again with a larger limit), 3 fixed upstream and not yet re-checked here (TR-RAG-006; TR-RAG-008 and TR-RAG-009, fixed 2026-10-29 for the next TechieRag release after 1.1.7), 6 closed (TR-RAG-007 closed 2026-10-24).
+Nothing is blocked. 11 entries: 1 open and not blocking (TR-RAG-010, 23 Nov 2026: a tool call cut off at the output limit is dropped without a word; Chatur asks again with a larger limit), 3 fixed upstream and not yet re-checked here (TR-RAG-006; TR-RAG-008 and TR-RAG-009, fixed 2026-10-29 for the next TechieRag release after 1.1.7), 7 closed (TR-RAG-011 closed 2026-11-27 on 1.2.1, which prices Claude 5.x calls).
 
-Chatur is on 1.1.7 since 2026-10-24 (1.1.5 from 2026-10-11). REQ-FN-071 and REQ-FN-072 are built on `ModelChooser` and Verified (2026-10-11).
+Chatur is on 1.2.1 since 2026-11-27 (1.1.7 from 2026-10-24, 1.1.5 from 2026-10-11). REQ-FN-071 and REQ-FN-072 are built on `ModelChooser` and Verified (2026-10-11).
 
 ## Entries
 
@@ -174,6 +174,20 @@ unreachable through TechieRag. Everything else about Chatur's provider/routing/m
 - **Encountered in:** REQ-FN-318, `*build-phase Chatur` of 22 Nov 2026 (about 50 minutes to find).
 - **Workaround:** `AgentActions` reads `FinishReason`; on `max_tokens` or `length` with no call, it asks again once with `MaxTokens = 32000` and tells the model its last call was cut off (`AgentActions.IsCutOff`, `CutOffMaxTokens`).
 - **Suggested fix:** emit the partial tool call as a `ToolCall` event flagged incomplete (or throw a typed exception), and document the default `MaxTokens` per connector.
+
+### TR-RAG-011 — A call's own usage carries no price, and on 1.1.7 a model with no price costs $0
+
+> ✅ **Closed 2026-11-27** — re-checked here: Chatur moved to TechieRag 1.2.1 on 27 Nov 2026. The real two-model run of compare-models.spec.ts (REQ-NFR-021) recorded KeyUsage prices from TechieRag's own table: claude-haiku-5-5 536 in / 50 out = $0.0000786, claude-sonnet-5-5 = $0.001572, both matching the list prices; no call stored without a price.
+
+- **Status:** open
+- **Severity:** major
+- **Blocks:** no — a call with no price is stored with no price, and the key's line reads "not known" and says how many calls had none. On 1.1.7 that is likely every Claude 5.x call, so the owner's Anthropic key shows "not known" until Chatur moves to TechieRag 1.2.0 or later.
+- **Repro:** TechieRag 1.1.7. Stream any call with `ChatStreamEventsAsync`; read `Usage.EstimatedCostUsd` on `Completed`, or listen to `OnCompletionCompleted`. Then `new TokenUsageTracker().RecordUsage(new TokenUsage { ModelName = "claude-sonnet-5-5", InputTokens = 1000, OutputTokens = 500 })`.
+- **Expected:** each call's usage carries its price, or says plainly that no price is known.
+- **Actual:** `LlmCompletionEventArgs` has no cost, and the call's own `EstimatedCostUsd` is not filled by the provider. Only `TokenUsageTracker.RecordUsage` fills it, from its table, and a model missing from that table gets 0, the same as a free call. Your 1.2.0 notes (REQ-RAG-164) add the current Claude prices and `IsPriceKnown`.
+- **Encountered in:** REQ-UI-131, REQ-FN-326 (`*build-phase Chatur`, 27 Nov 2026).
+- **Workaround:** `KeyUsageRecorder.PriceOf` prices each call through `TokenUsageTracker.RecordUsage`; a price of 0 with tokens, or estimated tokens, is stored as no price, never $0.
+- **Suggested fix:** put the price (or "price not known") on the call's own `TokenUsage` and on `LlmCompletionEventArgs`, so a host need not run a tracker per call.
 
 ## Replies from TechieRag
 

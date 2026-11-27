@@ -27,6 +27,21 @@ public partial class FileTreeBranch
         aBuilder.CloseComponent();
     };
 
+    private HashSet<string> objRootsSeen = [];
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        // The solution at the root of Files starts open, once each time it is read (REQ-UI-125).
+        foreach (var vRoot in Nodes.Where(n => n.IsSolution && objRootsSeen.Add(n.RelativePath)))
+        {
+            objOpen.Add(vRoot.RelativePath);
+        }
+    }
+
+    private static string FolderIcon(FileTreeNode aNode, bool aOpen) =>
+        aNode.IsSolution ? "layers" : aNode.IsProject ? "box" : aOpen ? "folder-open" : "folder";
+
     private void SetOpen(string aPath, bool aOpen)
     {
         if (aOpen)

@@ -47,7 +47,7 @@
         </span>
     </div>
 
-    <ScrollArea Class="min-h-0 flex-1" StickToEnd="true" data-testid="conversation">
+    <ScrollArea @ref="objScroll" Class="min-h-0 flex-1" StickToEnd="true" data-testid="conversation">
         @if (AppStateService.SelectedProject is null)
         {
             <Empty Title="No project open" Description="Open a project to start a conversation with an agent." Size="EmptySize.Small" />

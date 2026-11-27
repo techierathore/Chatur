@@ -120,7 +120,7 @@ public partial class OutputStrip : IDisposable
                     break;
                 }
 
-                objLines.Add(new LogLine(vLine.Text, vLine.IsError ? LogLineKind.Failure : LogLineKind.Ordinary));
+                objLines.Add(new LogLine(vLine.Text, vLine.IsError ? LogLineKind.Failure : vLine.IsWarning ? LogLineKind.Warning : LogLineKind.Ordinary));
                 UpdateStatus(vLine);
 
                 if (vLine.IsError)
@@ -147,7 +147,28 @@ public partial class OutputStrip : IDisposable
     private void UpdateStatus(OutputLine aLine)
     {
         var vText = aLine.Text;
-        if (vText.StartsWith("Build succeeded in ", StringComparison.Ordinal))
+
+        // Several startup projects run together, each line with its project's name before it (REQ-FN-324): the strip
+        // reads "running" while any runs and says "ended" only when the last one has.
+        if (vText.StartsWith('['))
+        {
+            if (vText.Contains("] > dotnet run", StringComparison.Ordinal))
+            {
+                objStatusText = "running";
+            }
+
+            return;
+        }
+
+        if (vText.StartsWith("All ", StringComparison.Ordinal) && vText.EndsWith(" projects ended.", StringComparison.Ordinal))
+        {
+            objStatusText = "ended";
+        }
+        else if (vText.StartsWith("The programs were not started", StringComparison.Ordinal))
+        {
+            objStatusText = "build failed";
+        }
+        else if (vText.StartsWith("Build succeeded in ", StringComparison.Ordinal))
         {
             objStatusText = "build passed";
         }

@@ -87,7 +87,7 @@ Phase 1, the Workbench: Chatur at its smallest but whole. Sign in, open a projec
 | REQ-FN-037 | Keep it | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-106 REQ-UI-034 REQ-FN-037 REQ-FN-038 REQ-FN-039 Corre`; Settings / corrections renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 1 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-037) |
 | REQ-FN-038 | Undo it | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-106 REQ-UI-034 REQ-FN-037 REQ-FN-038 REQ-FN-039 Corre`; Settings / corrections renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 1 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-038) |
 | REQ-FN-039 | Kept corrections feed the next build | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-106 REQ-UI-034 REQ-FN-037 REQ-FN-038 REQ-FN-039 Corre`; Settings / corrections renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 1 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-039) |
-| REQ-FN-040 | The five files | Implemented | 75% | 2026-11-23 [REQ-FN-040] fixed: a record makes a file only when a command needs it (a process run); a chat turn is recorded only where docs/metrics already is, and no empty file is made (`MeasurementActions`). Cause: every chat turn made the folder and all five files. | [view](#d-req-fn-040) |
+| REQ-FN-040 | The five files | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-FN-040 REQ-FN-041 REQ-FN-042 REQ-UI-115 a real chat turn`; Settings / measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-040) |
 | REQ-FN-041 | Chatur signs its work | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-041 REQ-FN-042 a no-provider turn writes a chatur-sig`; Settings / measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-041) |
 | REQ-FN-042 | What was not measured stays empty | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-041 REQ-FN-042 a no-provider turn writes a chatur-sig`; Settings / measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-042) |
 | REQ-FN-043 | An unknown field is refused | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-043 one unknown field refuses the whole record and th`; Settings / measurements renders and looks right @1280/390 in light and dark mode; matches its mockup | [view](#d-req-fn-043) |
@@ -98,10 +98,10 @@ Phase 1, the Workbench: Chatur at its smallest but whole. Sign in, open a projec
 | REQ-UI-039 | Browse the project | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-UI-039 a folder that cannot be read does not stop the tr`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-039) |
 | REQ-UI-040 | Open a file | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-UI-040 opening a file from the tree shows its text in a `; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-040) |
 | REQ-FN-044 | Edit and save | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-044 saving writes the new text to disk`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-044) |
-| REQ-UI-041 | An unsaved tab is marked | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-UI-041 an unsaved tab is marked, and closing it asks bef`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-041) |
-| REQ-FN-045 | Open it in the owner's editor | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-045 the owner's editor is launched with the file`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-045) |
-| REQ-FN-046 | Open it with whatever the machine uses | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-046 the system default application is launched with t`; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 16 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-046) |
-| REQ-UI-042 | What changed | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-106 REQ-UI-042 REQ-UI-043 REQ-UI-044 REQ-FN-047 REQ-F`; Repository renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 3 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-042) |
+| REQ-UI-041 | An unsaved tab is marked | Verified | 100% | 2026-11-26 verify: PASS — test `REQ-UI-041 closing the whole file view with an unsaved file `; Workbench renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 15 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-041) |
+| REQ-FN-045 | Open it in the owner's editor | N/A | 0% | 2026-11-26 removed on the owner's word (25 Nov test): Chatur is the editor, so no button hands a file to another program; the buttons, their tests and the launcher call are gone | [view](#d-req-fn-045) |
+| REQ-FN-046 | Open it with whatever the machine uses | N/A | 0% | 2026-11-26 removed on the owner's word (25 Nov test): Chatur is the editor, so no button hands a file to another program; the buttons, their tests and the launcher call are gone | [view](#d-req-fn-046) |
+| REQ-UI-042 | What changed | Verified | 100% | 2026-11-27 verify: PASS — test `REQ-UI-042 every changed file is listed with its state and c`; Repository renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 3 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-042) |
 | REQ-UI-043 | Check in | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-106 REQ-UI-042 REQ-UI-043 REQ-UI-044 REQ-FN-047 REQ-F`; Repository renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 3 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-043) |
 | REQ-UI-044 | Push and pull | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-106 REQ-UI-042 REQ-UI-043 REQ-UI-044 REQ-FN-047 REQ-F`; Repository renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 3 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-ui-044) |
 | REQ-FN-047 | Switch branch | Verified | 100% | 2026-11-21 verify: PASS — test `REQ-FN-106 REQ-UI-042 REQ-UI-043 REQ-UI-044 REQ-FN-047 REQ-F`; Repository renders and looks right @1280/390 in light and dark mode; matches its mockup; mockup-parity: 3 sample box(es) not measured, the app drew no data there (a tests/verify/seed/ script puts it in the drawn state) | [view](#d-req-fn-047) |
@@ -316,15 +316,15 @@ Phase 1, the Workbench: Chatur at its smallest but whole. Sign in, open a projec
 
 <a id="d-req-ui-041"></a>
 - **REQ-UI-041** — An unsaved tab is marked. *BRD:* BRD-83 · *Mockup:* mockups/main.html
-  - *Acceptance:* When a tab has unsaved changes on Workbench, then it is marked, and closing it asks before the change is lost.
+  - *Acceptance:* When a file in the file view on Workbench has unsaved changes, then closing a tab or the whole view asks first, and keeping the file leaves the view open.
 
 <a id="d-req-fn-045"></a>
 - **REQ-FN-045** — Open it in the owner's editor. *BRD:* BRD-84 · *Mockup:* mockups/main.html
-  - *Acceptance:* When the owner chooses his own editor for a file on Workbench, then that program opens with the file.
+  - *Acceptance:* Removed 2026-11-26: Chatur is the editor, so the file window has no button that opens a file in another editor.
 
 <a id="d-req-fn-046"></a>
 - **REQ-FN-046** — Open it with whatever the machine uses. *BRD:* BRD-85 · *Mockup:* mockups/main.html
-  - *Acceptance:* When the owner opens a file with the system's default application, then the machine's own choice of program opens it.
+  - *Acceptance:* Removed 2026-11-26: the file window has no button that opens a file with another program.
 
 ## Page: Prerequisites (`/prerequisites`)
 
@@ -454,7 +454,7 @@ Phase 1, the Workbench: Chatur at its smallest but whole. Sign in, open a projec
 
 <a id="d-req-fn-040"></a>
 - **REQ-FN-040** — The five files. *BRD:* BRD-74 · *Mockup:* mockups/settings-measurements.html
-  - *Acceptance:* When a command needing a record runs in a project on Settings, then its file is in `docs/metrics`; a folder only opened or chatted in gets no file.
+  - *Acceptance:* When a model call or a command needs a record in a project, then it is written to docs/metrics in TechieFlow's shape; a folder only opened gets no file.
 
 <a id="d-req-fn-041"></a>
 - **REQ-FN-041** — Chatur signs its work. *BRD:* BRD-75 · *Mockup:* mockups/settings-measurements.html

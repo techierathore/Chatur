@@ -48,6 +48,10 @@ public partial class SecondaryLayout : IDisposable
     private string DesktopItemClass(SecondaryNavItem aItem) =>
         IsCurrent(aItem) ? DesktopActiveClass : DesktopInactiveClass;
 
+    /// <summary>A group heading as the end of its test id: "This project" becomes <c>this-project</c>.</summary>
+    /// <param name="aHeading">The heading.</param>
+    private static string GroupSlug(string aHeading) => aHeading.ToLowerInvariant().Replace(' ', '-');
+
     /// <summary>Whether a navigation row is the one open right now.</summary>
     /// <param name="aItem">The row to check.</param>
     private bool IsCurrent(SecondaryNavItem aItem) =>

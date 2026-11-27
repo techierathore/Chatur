@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" data-theme="amber">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatur — Compare models</title>
+<link rel="stylesheet" href="chatur.css">
+<script>(function(){var t=localStorage.getItem('chatur-theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');})();</script>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="8" y="8" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></symbol>
+<symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+<symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15.5 7.5 3 3L22 7l-3-3"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></symbol>
+<symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-5-4.5-8.6-10-8.6Z"/></symbol>
+<symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+<symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+</defs></svg>
+<script>
+function say(m){alert(m);}
+function closeAll(keep){document.querySelectorAll('.menu.open,.popwrap.open').forEach(function(e){if(e!==keep)e.classList.remove('open');});}
+function pop(btn,ev){ev.stopPropagation();var w=btn.parentNode;var was=w.classList.contains('open');closeAll();if(!was)w.classList.add('open');}
+document.addEventListener('click',function(){closeAll();});
+function toggleTheme(){var d=document.documentElement.classList.toggle('dark');localStorage.setItem('chatur-theme',d?'dark':'light');}
+function setPalette(p,ev){if(ev)ev.stopPropagation();document.documentElement.setAttribute('data-theme',p);localStorage.setItem('chatur-palette',p);
+ var n=document.getElementById('palette-name');if(n)n.textContent=p.charAt(0).toUpperCase()+p.slice(1);
+ document.querySelectorAll('#palette-pop .tick').forEach(function(s){s.innerHTML='';});
+ var t=document.querySelector('#palette-tick-'+p);if(t)t.innerHTML='✓';closeAll();}
+document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.getItem('chatur-palette')||'amber');});
+function choose(btn,ev){if(ev)ev.stopPropagation();var list=btn.parentNode,wrap=list.parentNode;
+ var v=wrap.querySelector('[data-value]');if(v)v.textContent=btn.getAttribute('data-choice')||'';
+ var h=wrap.querySelector('input[type=hidden]');if(h)h.value=btn.getAttribute('data-choice')||'';
+ list.querySelectorAll('.tick').forEach(function(s){s.innerHTML='';});
+ var t=btn.querySelector('.tick');if(t)t.innerHTML='✓';closeAll();}
+</script>
+
+<div class="subwin" data-testid="window">
+
+ <div class="subbar" data-testid="subbar">
+  <a class="logo" href="index.html" data-testid="logo" title="Chatur — click for the list of screens" aria-label="Chatur"></a>
+  <span class="t" data-testid="window-title">Compare models</span>
+  <span class="pill" data-testid="scope">TfLens</span>
+  <span class="grow"></span>
+  <button class="iconbtn" onclick="toggleTheme()" title="Light or dark" data-testid="theme-toggle"><svg><use href="#i-theme"/></svg></button>
+  <div class="popwrap" data-testid="palette" data-tf-state="mockup-only">
+   <button class="pick" style="height:24px" onclick="pop(this,event)" title="Only in this mockup — the real one is the Appearance page"><span class="lbl">Palette</span><span id="palette-name">Amber</span><svg><use href="#i-chevron"/></svg></button>
+   <div class="pop right" id="palette-pop" data-testid="palette-pop" data-tf-state="popup-open">
+    <button onclick="setPalette('amber',event)"><span class="tick" id="palette-tick-amber">✓</span>Amber</button>
+    <button onclick="setPalette('indigo',event)"><span class="tick" id="palette-tick-indigo"></span>Indigo</button>
+    <button onclick="setPalette('teal',event)"><span class="tick" id="palette-tick-teal"></span>Teal</button>
+    <button onclick="setPalette('slate',event)"><span class="tick" id="palette-tick-slate"></span>Slate</button>
+   </div>
+  </div>
+  <a class="pick" href="main.html" data-testid="close-window"><svg><use href="#i-x"/></svg>Close</a>
+ </div>
+
+ <div class="subbody">
+
+  <nav class="subnav" data-testid="subnav">
+   <div class="g">This project</div>
+   <a href="prerequisites.html" data-testid="nav-prerequisites"><svg><use href="#i-wrench"/></svg>Prerequisites</a>
+   <a href="repository.html" data-testid="nav-repository"><svg><use href="#i-branch"/></svg>Repository</a>
+   <a href="worktrees.html" data-testid="nav-worktrees"><svg><use href="#i-copy"/></svg>Working copies</a>
+   <a href="measurements.html" data-testid="nav-project-measurements"><svg><use href="#i-chart"/></svg>Project measurements</a>
+   <a href="compare-models.html" data-testid="nav-compare-models" class="on"><svg><use href="#i-users"/></svg>Compare models</a>
+   <div class="g">Chatur</div>
+   <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
+   <a href="settings-routing.html" data-testid="nav-routing"><svg><use href="#i-route"/></svg>Routing</a>
+   <a href="settings-agents.html" data-testid="nav-agents"><svg><use href="#i-users"/></svg>Agents</a>
+   <a href="settings-corrections.html" data-testid="nav-corrections"><svg><use href="#i-refresh"/></svg>Corrections</a>
+   <a href="settings-measurements.html" data-testid="nav-measurements"><svg><use href="#i-chart"/></svg>Measurements</a>
+   <a href="settings-appearance.html" data-testid="nav-appearance"><svg><use href="#i-palette"/></svg>Appearance</a>
+   <a href="settings-account.html" data-testid="nav-account"><svg><use href="#i-person"/></svg>Account</a>
+   <div class="g">Your account</div>
+   <a href="licence.html" data-testid="nav-licence"><svg><use href="#i-key"/></svg>Licence</a>
+   <a href="feedback.html" data-testid="nav-feedback"><svg><use href="#i-alert"/></svg>Feedback</a>
+   <a href="integrations.html" data-testid="nav-integrations"><svg><use href="#i-route"/></svg>Integrations</a>
+   <a href="all-projects.html" data-testid="nav-all-projects"><svg><use href="#i-chart"/></svg>All projects</a>
+   <a href="measurements-all.html" data-testid="nav-measurements-all"><svg><use href="#i-chart"/></svg>Measurements across projects</a>
+  </nav>
+
+  <div class="subpage" data-testid="page">
+
+   <div class="row" data-testid="compare-heading" style="flex-wrap:wrap;gap:10px">
+    <div><div class="h1">Compare models</div>
+     <div class="lead">One task, two to four of your models, side by side on <span data-testid="compare-project">TfLens</span>.</div></div>
+   </div>
+
+   <div class="panel" style="padding:12px 14px;gap:10px" data-testid="compare-form">
+    <div class="xs dim">Models — pick two to four</div>
+    <div class="row" style="flex-wrap:wrap;gap:8px" data-testid="compare-models">
+     <label class="pill" data-testid="model-pick-claude-opus-5-5" data-tf-sample><input type="checkbox" data-testid="model-check-claude-opus-5-5"> claude-opus-5-5 <span class="dim">· My-Claude</span></label>
+     <label class="pill" data-testid="model-pick-claude-sonnet-5-5" data-tf-sample><input type="checkbox" checked data-testid="model-check-claude-sonnet-5-5"> claude-sonnet-5-5 <span class="dim">· My-Claude</span></label>
+     <label class="pill" data-testid="model-pick-claude-haiku-5-5" data-tf-sample><input type="checkbox" checked data-testid="model-check-claude-haiku-5-5"> claude-haiku-5-5 <span class="dim">· My-Claude</span></label>
+    </div>
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+     <div class="popwrap" data-testid="compare-kind">
+      <button class="pick" onclick="pop(this,event)" data-testid="compare-kind-button"><span class="lbl">Kind</span><span data-value>Question, changes nothing</span><svg><use href="#i-chevron"/></svg></button>
+      <div class="pop" data-tf-state="popup-open">
+       <button data-choice="Question, changes nothing" onclick="choose(this,event)" data-testid="kind-question"><span class="tick">✓</span>Question, changes nothing</button>
+       <button data-choice="Task that changes files" onclick="choose(this,event)" data-testid="kind-change"><span class="tick"></span>Task that changes files</button>
+      </div>
+     </div>
+     <span class="xs dim" style="flex-basis:100%" data-testid="compare-kind-note">A task that changes files gives each model its own copy under bin/chatur-compare, removed when the run ends.</span>
+    </div>
+    <label class="xs dim">Task <textarea data-testid="compare-task" rows="3" style="width:100%;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);color:var(--fg);padding:8px 12px">Which files in docs/metrics does this project write? Answer in one sentence.</textarea></label>
+    <div class="row"><span class="xs dim" data-testid="compare-pick-count">2 picked · two to four</span><span class="grow"></span><button class="pick" onclick="say('Runs every picked model on the same task.')" data-testid="compare-run"><svg><use href="#i-refresh"/></svg>Run</button></div>
+   </div>
+
+   <div class="row" style="flex-wrap:wrap;gap:8px" data-testid="compare-status" data-tf-state="with-comparison"><span class="pill ok" data-testid="compare-state">done</span><span class="xs dim">Question, changes nothing · 27 Nov 10:42 · nothing in the project changed</span></div>
+
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px" data-testid="compare-results" data-tf-state="with-comparison">
+    <div class="panel" style="padding:12px 14px;gap:8px" data-testid="result-1" data-tf-sample>
+     <div class="row"><b class="mono sm" data-testid="result-model-1">claude-sonnet-5-5</b><span class="grow"></span><span class="pill ok" data-testid="result-mark-1">right</span></div>
+     <div class="xs dim">My-Claude · Anthropic</div>
+     <div class="sm" style="display:grid;grid-template-columns:auto 1fr;gap:3px 12px">
+      <span class="dim">Time</span><span data-testid="result-time-1">14s</span>
+      <span class="dim">Tokens in / out</span><span data-testid="result-tokens-1">8,210 / 96</span>
+      <span class="dim">Cost</span><span data-testid="result-cost-1">$0.02</span></div>
+     <pre class="mono xs" data-testid="result-answer-1" style="white-space:pre-wrap;border:1px solid var(--line2);border-radius:var(--r);padding:10px;margin:0">TfLens reads six files from docs/metrics: runs, gates, misses, sessions, commits and estimates. A line that is not JSON is counted as unreadable, never guessed at.</pre>
+     <div class="row" style="gap:6px"><button class="pick" onclick="say('Marked right; kept in docs/metrics.')" data-testid="mark-right-1"><svg><use href="#i-check"/></svg>Right</button><button class="pick" onclick="say('Marked wrong; kept in docs/metrics.')" data-testid="mark-wrong-1"><svg><use href="#i-x"/></svg>Wrong</button></div>
+    </div>
+    <div class="panel" style="padding:12px 14px;gap:8px" data-testid="result-2" data-tf-sample>
+     <div class="row"><b class="mono sm" data-testid="result-model-2">claude-haiku-5-5</b><span class="grow"></span><span class="pill" data-testid="result-mark-2">not marked</span></div>
+     <div class="xs dim">My-Claude · Anthropic</div>
+     <div class="sm" style="display:grid;grid-template-columns:auto 1fr;gap:3px 12px">
+      <span class="dim">Time</span><span data-testid="result-time-2">4s</span>
+      <span class="dim">Tokens in / out</span><span data-testid="result-tokens-2">8,210 / 41</span>
+      <span class="dim">Cost</span><span data-testid="result-cost-2">$0.00</span></div>
+     <pre class="mono xs" data-testid="result-answer-2" style="white-space:pre-wrap;border:1px solid var(--line2);border-radius:var(--r);padding:10px;margin:0">It reads docs/metrics/*.jsonl — runs.jsonl, gates.jsonl, misses.jsonl, sessions.jsonl and commits.jsonl.</pre>
+     <div class="row" style="gap:6px"><button class="pick" onclick="say('Marked right; kept in docs/metrics.')" data-testid="mark-right-2"><svg><use href="#i-check"/></svg>Right</button><button class="pick" onclick="say('Marked wrong; kept in docs/metrics.')" data-testid="mark-wrong-2"><svg><use href="#i-x"/></svg>Wrong</button></div>
+    </div>
+   </div>
+
+   <div class="panel" style="padding:12px 14px;gap:8px" data-testid="result-files-sample" data-tf-state="kind-change">
+    <div class="xs dim">Changed files — claude-sonnet-5-5 · its own copy, now removed</div>
+    <div class="mono xs" data-testid="result-files-1">M src/Readme.md (+3 −1)<br>A docs/notes.md (+12)</div>
+   </div>
+
+   <div class="panel" data-testid="compare-history">
+    <div class="ph">Past comparisons<span class="grow"></span><span class="xs faint" style="text-transform:none;letter-spacing:0">from docs/metrics · a line opens it</span></div>
+    <div class="wide"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:720px" data-testid="history-table" data-tf-state="with-history">
+     <thead><tr class="xs dim" style="text-align:left"><th style="padding:8px 10px;font-weight:500">When</th><th style="padding:8px 10px;font-weight:500">Kind</th><th style="padding:8px 10px;font-weight:500">Task</th><th style="padding:8px 10px;font-weight:500">Models</th><th style="padding:8px 10px;font-weight:500">Marks</th></tr></thead>
+     <tbody>
+      <tr style="border-top:1px solid var(--line2);cursor:pointer" onclick="say('Opens this comparison again.')" data-testid="history-row-1" data-tf-sample><td class="dim" style="padding:9px 10px">27 Nov 10:42</td><td style="padding:9px 10px">question</td><td style="padding:9px 10px">Which files in docs/metrics…</td><td style="padding:9px 10px"><span class="mono xs">claude-sonnet-5-5 · claude-haiku-5-5</span></td><td style="padding:9px 10px"><span class="pill ok">1 right</span> <span class="pill">1 not marked</span></td></tr>
+      <tr style="border-top:1px solid var(--line2);cursor:pointer" onclick="say('Opens this comparison again.')" data-testid="history-row-2" data-tf-sample><td class="dim" style="padding:9px 10px">26 Nov 18:05</td><td style="padding:9px 10px">changes files</td><td style="padding:9px 10px">Add a line to the readme…</td><td style="padding:9px 10px"><span class="mono xs">claude-opus-5-5 · claude-haiku-5-5</span></td><td style="padding:9px 10px"><span class="pill ok">1 right</span> <span class="pill bad">1 wrong</span></td></tr>
+      </tbody></table></div>
+   </div>
+
+  </div>
+ </div>
+</div>
+</body>
+</html>

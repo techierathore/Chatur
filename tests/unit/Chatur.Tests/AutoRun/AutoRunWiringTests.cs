@@ -69,8 +69,6 @@ public sealed class AutoRunWiringTests : MigratedDatabaseFixture
 
     private sealed class NoLauncher : IProcessLauncher
     {
-        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
-
         public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 
         public Task<int> RunAsync(string aCommand, string aArguments, string aWorkingDirectory, Action<string> aOnOutputLine, CancellationToken aCt = default) => Task.FromResult(0);

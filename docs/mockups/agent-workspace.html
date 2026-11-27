@@ -321,16 +321,16 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=docum
      <div class="panel" data-testid="commands-panel">
       <div class="ph">Its commands</div>
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
-       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-verify-phase" data-tf-state="sample-data" data-tf-sample>
+       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-verify-phase">
         <button class="pick" style="width:150px;justify-content:center" onclick="say('Runs verify-phase on phase 2 of TfLens.')" data-testid="run-verify-phase"><svg><use href="#i-play"/></svg><span class="mono">verify-phase</span></button>
         <span class="sm dim">Checks the built phase against every requirement and writes the verdicts.</span></div>
-       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-triage-issues" data-tf-state="sample-data" data-tf-sample>
+       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-triage-issues">
         <button class="pick" style="width:150px;justify-content:center" onclick="say('Runs triage-issues on the open issues of TfLens.')" data-testid="run-triage-issues"><svg><use href="#i-play"/></svg><span class="mono">triage-issues</span></button>
         <span class="sm dim">Sorts what has been reported into the checklist it belongs to.</span></div>
-       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-metrics-report" data-tf-state="sample-data" data-tf-sample>
+       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-metrics-report">
         <button class="pick" style="width:150px;justify-content:center" onclick="say('Runs metrics-report over every run Chatur has recorded.')" data-testid="run-metrics-report"><svg><use href="#i-play"/></svg><span class="mono">metrics-report</span></button>
         <span class="sm dim">Reads the run records and says what they add up to.</span></div>
-       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-log-miss" data-tf-state="sample-data" data-tf-sample>
+       <div class="row" style="align-items:flex-start;gap:10px" data-testid="command-log-miss">
         <button class="pick" style="width:150px;justify-content:center" onclick="say('Records one miss against TfLens, with what was expected and what happened.')" data-testid="run-log-miss"><svg><use href="#i-alert"/></svg><span class="mono">log-miss</span></button>
         <span class="sm dim">Records one thing that went wrong, so the next run can be measured against it.</span></div>
       </div>

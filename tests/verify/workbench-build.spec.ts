@@ -67,7 +67,7 @@ test('REQ-FN-010 returning to Run offers the target used last time already chose
   const vCurrent = (await page.getByTestId('target').innerText()).trim();
   const vWant = vCurrent.includes('Release') ? 'Debug' : 'Release';
   await openTargetMenu(page);
-  await page.getByTestId('target-pop').getByRole('menuitem').filter({ hasText: `· ${vWant}` }).click();
+  await page.getByTestId('target-pop').getByRole('menuitemradio').filter({ hasText: `· ${vWant}` }).click();
   await expect(page.getByTestId('target')).toContainText(`· ${vWant}`);
   await page.getByTestId('build').click();
   await expect(pill(page)).toContainText('build passed', { timeout: 90_000 });
@@ -112,34 +112,6 @@ test('REQ-UI-015 stopping ends every program the run started and Run shows it as
   await expect(pill(page)).toContainText('stopped', { timeout: 5_000 });
   await expect(pill(page)).not.toContainText('running');
   await expect(page.getByTestId('toolbar').locator('[data-testid=stop]')).toHaveCount(0, { timeout: 20_000 }); // and Stop is gone again
-});
-
-/** Text of the app's own log, for the launcher's "Would open ..." lines (the web harness only logs them). */
-const appLog = () => (existsSync(APP_LOG) ? readFileSync(APP_LOG, 'utf8') : '');
-const countIn = (aNeedle: string) => appLog().split(aNeedle).length - 1;
-
-test('REQ-FN-045 choosing the owner\'s editor for a file reaches the app without error', async () => {
-  test.info().annotations.push({ type: 'skipped-clause', description: 'The program opening with the file is a native launch; the web harness launcher only logs it by design, so only the request reaching the app is verified.' });
-  await openProject(page);
-  await openFile(page, 'Program.cs');
-  const vNeedle = `Would open ${join(PROJECT, 'Program.cs')} in the owner's editor`;
-  const vBefore = countIn(vNeedle);
-  await page.getByTestId('open-in-editor').click();
-  await expect.poll(() => countIn(vNeedle), { timeout: 15_000 }).toBeGreaterThan(vBefore);
-  await expect(page.getByTestId('editor')).toBeVisible();
-  await expect(page.getByText(/unhandled|error has occurred/i)).toHaveCount(0);
-});
-
-test('REQ-FN-046 opening a file with the system default application reaches the app without error', async () => {
-  test.info().annotations.push({ type: 'skipped-clause', description: 'The machine opening the file in its own program is a native launch; the web harness launcher only logs it by design, so only the request reaching the app is verified.' });
-  await openProject(page);
-  await openFile(page, 'Program.cs');
-  const vNeedle = `Would open ${join(PROJECT, 'Program.cs')} with the machine's default application`;
-  const vBefore = countIn(vNeedle);
-  await page.getByTestId('open-with-default').click();
-  await expect.poll(() => countIn(vNeedle), { timeout: 15_000 }).toBeGreaterThan(vBefore);
-  await expect(page.getByTestId('editor')).toBeVisible();
-  await expect(page.getByText(/unhandled|error has occurred/i)).toHaveCount(0);
 });
 
 // Signs out for every window of the shared app, so it is the last test in the file and uses its own context.

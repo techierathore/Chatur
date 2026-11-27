@@ -213,13 +213,14 @@ test('REQ-UI-073 File ▸ Open a solution opens the .sln as the project', async 
   await page.getByTestId('open-project-cancel').click();
 });
 
-test('REQ-UI-073 File ▸ New project makes a solution on disk and opens it', async () => {
-  const vName = `MenuNew${STAMP}`;
+test('REQ-UI-073 File ▸ New project opens the New project dialog with this machine\'s templates (making the project is REQ-UI-112)', async () => {
   await pick(page, 'file', 'new');
-  await submitProjectDialog(page, { path: ROOT, name: vName });
-  await expect(projectName(page)).toHaveText(vName, { timeout: 60_000 });
-  const vFiles = readdirSync(join(ROOT, vName));
-  expect(vFiles.some((f) => /\.slnx?$/.test(f)), `a solution file in ${vFiles.join(', ')}`).toBe(true);
+  const vDialog = page.getByTestId('new-project-dialog');
+  await expect(vDialog).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('open-project-dialog')).toHaveCount(0);
+  await expect(page.getByTestId('template-list')).toBeVisible({ timeout: 120_000 });
+  await page.getByTestId('new-project-cancel').click();
+  await expect(vDialog).toBeHidden();
 });
 
 test('REQ-UI-073 File ▸ Clone a repository copies it and opens it; a bad address is refused with the reason', async () => {
@@ -300,7 +301,7 @@ test('REQ-UI-073 File ▸ Close folder (Close solution for a solution) leaves th
   await expect(page.getByTestId('recent-list')).toBeVisible();
   // and nothing is reopened by itself
   await page.goto('/', { waitUntil: 'networkidle' });
-  await expect(projectName(page)).toHaveText('No project', { timeout: 20_000 });
+  await expect(projectName(page)).toHaveText('None open', { timeout: 20_000 });
   await openProject(page);
 });
 
@@ -311,9 +312,11 @@ test('REQ-UI-073 Start ▸ Clone, Open a solution, Open a folder and New project
   for (const vButton of ['clone-repo', 'open-solution', 'open-folder', 'new-project']) {
     await expect(page.getByTestId(vButton)).toBeEnabled();
     await page.getByTestId(vButton).click();
-    await expect(vDialog).toBeVisible();
-    await page.getByTestId('open-project-cancel').click();
-    await expect(vDialog).toBeHidden();
+    // New project has its own dialog (REQ-UI-112); the other three share the open dialog.
+    const vOwn = vButton === 'new-project' ? page.getByTestId('new-project-dialog') : vDialog;
+    await expect(vOwn).toBeVisible();
+    await page.getByTestId(vButton === 'new-project' ? 'new-project-cancel' : 'open-project-cancel').click();
+    await expect(vOwn).toBeHidden();
   }
   const vFolder = join(ROOT, `StartFolder${STAMP}`);
   mkdirSync(vFolder, { recursive: true });

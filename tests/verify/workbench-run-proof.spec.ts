@@ -133,6 +133,12 @@ test('REQ-FN-306 REQ-UI-107 running the Blazor web app opens the browser at its 
   // The address answers: the app really is up where the browser was sent.
   const vResponse = await page.request.get(vAddress, { ignoreHTTPSErrors: true, timeout: 30_000 });
   expect(vResponse.status()).toBe(200);
+  // That first request makes the template's https redirection log its "warn:" with the indented line "Failed to
+  // determine the https port for redirect.": a warning by its own level, never marked as an error (BRD-235, 27 Nov).
+  const vHttpsLine = output().getByText('Failed to determine the https port for redirect.');
+  await expect(vHttpsLine.first()).toBeVisible({ timeout: 30_000 });
+  await expect(output()).not.toContainText(/Failure:\s*\S*\s*Failed to determine the https port/);
+  expect(await vHttpsLine.first().evaluate((e) => e.closest('[data-slot="log-view-line"]')?.getAttribute('data-log-kind'))).toBe('warning');
   await page.screenshot({ path: 'tests/.artifacts/verify/shots/REQ-FN-306-web-run.png' });
   await page.getByTestId('stop').click();
   await expect(output()).toContainText('Run stopped.', { timeout: 30_000 });

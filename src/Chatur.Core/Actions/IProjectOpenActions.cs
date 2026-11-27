@@ -23,6 +23,14 @@ public interface IProjectOpenActions
     Task<ProjectSummary> OpenFolderAsync(string aPath, CancellationToken aCt = default);
 
     /// <summary>
+    /// Looks at a folder before it is opened (REQ-FN-325): whether it holds a solution, and the projects it holds when it
+    /// does not, so the person can be told and asked first. Nothing is changed.
+    /// </summary>
+    /// <param name="aPath">The folder's absolute path.</param>
+    /// <param name="aCt">A token that cancels the look.</param>
+    Task<FolderCheck> CheckFolderAsync(string aPath, CancellationToken aCt = default) => Task.FromResult(new FolderCheck(true, []));
+
+    /// <summary>
     /// Opens a file (BRD-215): the project is the nearest folder above it that holds a solution or a
     /// repository, or else the file's own folder, and the file is the one to show first.
     /// </summary>
@@ -57,3 +65,8 @@ public interface IProjectOpenActions
 /// <param name="Project">The project that holds the file, now selected.</param>
 /// <param name="RelativePath">The file's path relative to the project's folder, with <c>/</c> between parts, as the files panel names it.</param>
 public sealed record ProjectFileOpened(ProjectSummary Project, string RelativePath);
+
+/// <summary>What <see cref="IProjectOpenActions.CheckFolderAsync"/> found in a folder (REQ-FN-325).</summary>
+/// <param name="HasSolution">Whether a <c>.sln</c> or <c>.slnx</c> file is directly in the folder.</param>
+/// <param name="Projects">The project files in the folder and up to four folders down, relative to it, when it holds no solution; empty otherwise.</param>
+public sealed record FolderCheck(bool HasSolution, IReadOnlyList<string> Projects);

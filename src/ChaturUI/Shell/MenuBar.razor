@@ -173,13 +173,18 @@
                     @foreach (var vTarget in objTargets)
                     {
                         <MenubarItem OnClick="() => SelectTarget(vTarget)" Disabled="@(!vTarget.IsAvailableOnThisMachine)" data-testid="@($"menu-project-target-{vTarget.RunTargetId}")">
-                            <span class="inline-flex w-4 flex-none">@if (vTarget == objSelectedTarget) { <LucideIcon Name="check" Size="14" /> }</span>
+                            <span class="inline-flex w-4 flex-none">@if (Workbench.HasMultipleStartup ? Workbench.StartupTargets.Any(t => t.RunTargetId == vTarget.RunTargetId) : vTarget == objSelectedTarget) { <LucideIcon Name="check" Size="14" /> }</span>
                             <span class="whitespace-nowrap">@vTarget.Name</span>
                             @if (!vTarget.IsAvailableOnThisMachine)
                             {
                                 <span class="ml-2 whitespace-nowrap text-xs text-muted-foreground">needs another machine</span>
                             }
                         </MenubarItem>
+                    }
+                    @* REQ-FN-324: the projects Run starts together, kept for this solution. *@
+                    @if (Workbench.CanChooseStartup)
+                    {
+                        <MenubarItem OnClick="Workbench.RequestStartupDialog" data-testid="menu-project-multiple-startup">Multiple startup projects…</MenubarItem>
                     }
                     <MenubarSeparator />
                 }

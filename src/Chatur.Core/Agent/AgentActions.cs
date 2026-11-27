@@ -329,7 +329,6 @@ public sealed class AgentActions : IAgentActions
         {
             const string vText = "No model provider is configured yet. Add one under Settings ▸ Providers.";
             await AppendEventAsync(aSessionId, vSeq, "assistant", vText, null, null, vCt, vRoleId).ConfigureAwait(false);
-            await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, null, null, null, vStartedUtc, vCt).ConfigureAwait(false);
             yield return new AgentReplyChunk(vText, true, null, null);
             yield break;
         }
@@ -611,7 +610,7 @@ public sealed class AgentActions : IAgentActions
                 await AppendEventAsync(aSessionId, vStoppedSeq, "assistant", vShown.ToString(), vModelName, vTotalTokens, CancellationToken.None, vRoleId, vRoutingReason).ConfigureAwait(false);
             }
 
-            await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, vModelName, vInputTokens, vOutputTokens, vStartedUtc, CancellationToken.None).ConfigureAwait(false);
+            await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, vModelName, CancellationToken.None).ConfigureAwait(false);
             yield break;
         }
 
@@ -638,7 +637,7 @@ public sealed class AgentActions : IAgentActions
         var vReportedModelName = vFailed ? null : vModelName;
         var vReportedReason = vReportedModelName is null ? null : vRoutingReason;
         await AppendEventAsync(aSessionId, vSeq, "assistant", vShown.ToString(), vReportedModelName, vTotalTokens, vCt, vRoleId, vReportedReason).ConfigureAwait(false);
-        await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, vReportedModelName, vInputTokens, vOutputTokens, vStartedUtc, vCt).ConfigureAwait(false);
+        await AppendSessionMeasurementAsync(vSession.ProjectId, aSessionId, vReportedModelName ?? vModelName, vCt).ConfigureAwait(false);
         yield return new AgentReplyChunk(string.Empty, true, vReportedModelName, vTotalTokens, vReportedReason);
     }
 
@@ -1317,33 +1316,59 @@ public sealed class AgentActions : IAgentActions
     }
 
     /// <summary>
-    /// Appends this turn's <c>sessions</c> record to the project's <c>docs/metrics</c> when the project has that
-    /// folder (REQ-FN-040; a folder the person only opened gets no file, owner's test of 23 Nov 2026).
-    /// Only what Chatur actually knows is sent — session id, model, turn length and the tokens the
-    /// model reported; everything else is left for <see cref="IMeasurementActions.AppendAsync"/> to
-    /// write empty (REQ-FN-042). A measurement failure never reaches the turn (REQ-UI-035):
-    /// <c>AppendAsync</c> already logs and records a refusal, and anything it still throws is dropped here.
+    /// Appends the session's <c>sessions</c> record to the project's <c>docs/metrics</c> after a turn that reached a model
+    /// (REQ-FN-040; owner's test of 25 Nov 2026). The record carries what the session has used in all, as TfLens reads it:
+    /// one session may be written many times and the one with the most output tokens stands. Only what Chatur knows is
+    /// sent, everything else is left for <see cref="IMeasurementActions.AppendAsync"/> to write as not measured
+    /// (REQ-FN-042). A measurement failure never reaches the turn (REQ-UI-035): <c>AppendAsync</c> already logs and
+    /// records a refusal, and anything it still throws is dropped here.
     /// </summary>
-    private async Task AppendSessionMeasurementAsync(int aProjectId, int aSessionId, string? aModel, int? aInputTokens, int? aOutputTokens, DateTime aStartedUtc, CancellationToken aCt)
+    private async Task AppendSessionMeasurementAsync(int aProjectId, int aSessionId, string? aModel, CancellationToken aCt)
     {
         try
         {
-            var vSeconds = Math.Max(0, (objClock.UtcNow - aStartedUtc).TotalSeconds);
+            SessionTotals? vTotals;
+            using (var vConnection = objDb.OpenConnection())
+            {
+                vTotals = await vConnection.QuerySingleOrDefaultAsync<SessionTotals>(new CommandDefinition(
+                    "SELECT StartedUtc, TokensIn, TokensOut FROM Session WHERE SessionId = @aSessionId",
+                    new { aSessionId },
+                    cancellationToken: aCt)).ConfigureAwait(false);
+            }
+
+            if (vTotals is null)
+            {
+                return;
+            }
+
+            var vStarted = DateTime.Parse(vTotals.StartedUtc, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind).ToUniversalTime();
+            var vSeconds = Math.Max(0, (objClock.UtcNow - vStarted).TotalSeconds);
             var vFields = new Dictionary<string, string?>
             {
                 ["kind"] = "session",
-                ["session_id"] = aSessionId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                // A name that is the same for the same session whoever reads the project's files, since every account numbers its own sessions from 1.
+                ["session_id"] = $"chatur-{vStarted:yyyyMMddHHmmss}-{aSessionId.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
                 ["model"] = aModel,
-                ["duration_s"] = vSeconds.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
-                ["input_tokens"] = aInputTokens?.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                ["output_tokens"] = aOutputTokens?.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                ["duration_s"] = vSeconds.ToString("0", System.Globalization.CultureInfo.InvariantCulture),
+                ["input_tokens"] = vTotals.TokensIn?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["output_tokens"] = vTotals.TokensOut?.ToString(System.Globalization.CultureInfo.InvariantCulture)
             };
-            await objMeasurements.AppendWhenMeasuredAsync(aProjectId, "sessions.jsonl", vFields, aCt).ConfigureAwait(false);
+            await objMeasurements.AppendAsync(aProjectId, "sessions.jsonl", vFields, aCt).ConfigureAwait(false);
         }
         catch (Exception)
         {
             // Measuring is never allowed to stop the work (REQ-UI-035).
         }
+    }
+
+    /// <summary>A session's start and what it has used in all, as Chatur's database holds them.</summary>
+    private sealed class SessionTotals
+    {
+        public string StartedUtc { get; set; } = string.Empty;
+
+        public long? TokensIn { get; set; }
+
+        public long? TokensOut { get; set; }
     }
 
     /// <summary>
@@ -1359,12 +1384,12 @@ public sealed class AgentActions : IAgentActions
             {
                 ["kind"] = "run",
                 ["cmd"] = "dotnet build",
-                ["started"] = aStartedUtc.ToString("O"),
-                ["ended"] = vEndedUtc.ToString("O"),
-                ["duration_s"] = Math.Max(0, (vEndedUtc - aStartedUtc).TotalSeconds).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
+                ["started"] = aStartedUtc.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture),
+                ["ended"] = vEndedUtc.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture),
+                ["duration_s"] = Math.Max(0, (vEndedUtc - aStartedUtc).TotalSeconds).ToString("0", System.Globalization.CultureInfo.InvariantCulture),
                 ["build_result"] = aPassed ? "pass" : "fail"
             };
-            await objMeasurements.AppendWhenMeasuredAsync(aProjectId, "runs.jsonl", vFields, aCt).ConfigureAwait(false);
+            await objMeasurements.AppendAsync(aProjectId, "runs.jsonl", vFields, aCt).ConfigureAwait(false);
         }
         catch (Exception)
         {

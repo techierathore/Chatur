@@ -172,6 +172,25 @@ document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;var d
    </div>
   </div>
  </div>
+ <!-- REQ-FN-325 (owner's test of 25 Nov 2026): Open a folder that holds a project and no solution says so and asks before it opens.
+      "Go back" opens nothing and keeps the path typed; "Open as it is" opens the folder. A solution can be made later with File ▸ New project. -->
+ <div class="scrim" id="open-folder-ask" role="dialog" aria-modal="true" aria-labelledby="open-folder-ask-title" data-testid="open-project-dialog" data-tf-state="dialog-open">
+  <div class="dlg">
+   <div><h2 id="open-folder-ask-title">Open a folder</h2>
+    <div class="sm dim">Anything on disk, project or not.</div></div>
+   <div class="field"><label for="folder-path">The folder</label>
+    <div class="row"><input class="fld mono" id="folder-path" data-testid="open-project-path" value="C:\1MyCode\Chatur\bin\LooseOne"><button class="pick" onclick="say('Opens the machine\'s folder picker. The folder you choose fills the path.')" data-testid="open-project-browse">Browse…</button></div></div>
+   <div data-testid="open-project-no-solution" style="border:1px solid var(--line);border-radius:var(--r);padding:10px 12px">
+    <b class="sm">This folder has no solution</b>
+    <div class="sm dim">It holds a project but no .sln or .slnx file: <span class="mono xs">Loose/Loose.csproj</span>. Open it as it is, or go back. A solution can be made later with File ▸ New project.</div>
+   </div>
+   <div class="row">
+    <span class="grow"></span>
+    <button class="pick" onclick="closeDlg('open-folder-ask')" data-testid="open-project-no-solution-back">Go back</button>
+    <a class="send" href="main.html" data-testid="open-project-no-solution-go">Open as it is</a>
+   </div>
+  </div>
+ </div>
 </div>
 </body>
 </html>

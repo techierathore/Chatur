@@ -1,0 +1,35 @@
+@* Multiple startup projects (REQ-FN-324), as Visual Studio has it: the projects of the open solution that can run, each
+   with a tick, and the choice kept for this solution. Two or more ticked, and Run builds and starts them together (an
+   API and its web app, say); one or none, and Run starts the one project picked in the target picker. *@
+<Dialog Open="Open" OpenChanged="OpenChanged">
+    <DialogContent Class="max-w-lg" data-testid="startup-dialog">
+        <DialogHeader>
+            <DialogTitle>Multiple startup projects</DialogTitle>
+            <DialogDescription>Tick the projects Run starts together. The choice is kept for this solution.</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-2">
+            @if (objProjects.Count == 0)
+            {
+                <p class="text-sm text-muted-foreground" data-testid="startup-none">This project has nothing that can run.</p>
+            }
+            @foreach (var vProject in objProjects)
+            {
+                var vFile = vProject.ProjectFile;
+                <div class="flex items-center gap-3 rounded-md border px-3 py-2" data-testid="@($"startup-row-{Slug(vFile)}")">
+                    <Checkbox Checked="@objTicked.Contains(vFile)" CheckedChanged="@(vOn => Tick(vFile, vOn))" Id="@($"startup-{Slug(vFile)}")" data-testid="@($"startup-tick-{Slug(vFile)}")" />
+                    <Label For="@($"startup-{Slug(vFile)}")" Class="flex min-w-0 flex-1 flex-col font-normal">
+                        <span class="truncate text-sm font-medium">@NameOf(vProject)</span>
+                        <span class="truncate font-mono text-xs text-muted-foreground">@vFile</span>
+                    </Label>
+                </div>
+            }
+            <p class="text-xs text-muted-foreground" data-testid="startup-hint">@Hint</p>
+        </DialogBody>
+        <DialogFooter>
+            <DialogClose AsChild>
+                <Button Variant="ButtonVariant.Outline" data-testid="startup-cancel">Cancel</Button>
+            </DialogClose>
+            <Button Disabled="@(objIsBusy || objProjects.Count == 0)" OnClick="SaveAsync" data-testid="startup-save">Save</Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

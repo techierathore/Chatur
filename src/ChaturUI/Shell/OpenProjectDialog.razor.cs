@@ -37,6 +37,9 @@ public partial class OpenProjectDialog
     private bool objIsBusy;
     private bool objWasOpen;
 
+    /// <summary>The projects of a folder that holds some and no solution, while the person is asked whether to open it as it is (REQ-FN-325); otherwise none.</summary>
+    private IReadOnlyList<string>? objNoSolution;
+
     /// <summary>Whether this opening is New project inside the solution open on the Workbench (BRD-244, REQ-UI-112).</summary>
     private bool objInSolution;
 
@@ -119,6 +122,7 @@ public partial class OpenProjectDialog
             objPath = string.Empty;
             objAddress = string.Empty;
             objErrorMessage = null;
+            objNoSolution = null;
             var vOnWorkbench = IsOnWorkbench();
             objInSolution = Mode == ProjectOpenMode.NewProject
                 && AppStateService.SelectedProject is { Kind: "Solution" }
@@ -156,13 +160,33 @@ public partial class OpenProjectDialog
         }
     }
 
+    /// <summary>The folder had no solution and the person went back: the path stays typed, nothing was opened (REQ-FN-325).</summary>
+    private void GoBack() => objNoSolution = null;
+
+    /// <summary>The folder had no solution and the person chose to open it as it is (REQ-FN-325).</summary>
+    private Task OpenAnywayAsync() => SubmitAsync(true);
+
     /// <summary>Does what the File menu item said, then shows the project on the Workbench.</summary>
-    private async Task SubmitAsync()
+    private Task SubmitAsync() => SubmitAsync(false);
+
+    private async Task SubmitAsync(bool aNoSolutionConfirmed)
     {
         objIsBusy = true;
         objErrorMessage = null;
         try
         {
+            // A folder with projects and no solution is said so, and asked about, before it opens (REQ-FN-325).
+            if (Mode == ProjectOpenMode.Folder && !aNoSolutionConfirmed)
+            {
+                var vCheck = await Opener.CheckFolderAsync(objPath);
+                if (!vCheck.HasSolution && vCheck.Projects.Count > 0)
+                {
+                    objNoSolution = vCheck.Projects;
+                    return;
+                }
+            }
+
+            objNoSolution = null;
             string? vFileToOpen = null;
             switch (Mode)
             {

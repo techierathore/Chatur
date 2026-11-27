@@ -1,0 +1,118 @@
+@using TrBlazeUI.Components.DatePicker
+
+@* "What is left on each key" (mockups/measurements.html and measurements-all.html "keys-panel", and the "limit-dialog";
+   REQ-UI-129 to REQ-UI-131, REQ-FN-326). One line per connected provider; every figure and every note comes ready from
+   IKeyBalanceActions, and a figure with no basis reads "—" or "not known", never a guess. Shared by both Measurements screens. *@
+<Card data-testid="keys-panel">
+    <CardHeader>
+        <div class="flex items-center gap-2">
+            <CardTitle>What is left on each key</CardTitle>
+            <span class="flex-1"></span>
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="LoadAsync" Disabled="objIsLoading" data-testid="keys-recheck">
+                <LucideIcon Name="refresh-cw" Size="14" />
+                Ask again
+            </Button>
+        </div>
+    </CardHeader>
+    <CardContent Class="p-0">
+        @if (objLines is null)
+        {
+            <div class="flex flex-col gap-2 px-6 pb-4" data-testid="keys-loading">
+                <Skeleton Class="h-8 w-full" />
+            </div>
+        }
+        else if (objLines.Count == 0)
+        {
+            <p class="px-6 pb-4 text-sm text-muted-foreground" data-testid="keys-empty">No provider is connected, so there is no key to show. Connect one under Model providers.</p>
+        }
+        else
+        {
+            <DataTable TData="KeyBalanceLine" Data="@objLines" ShowPagination="false" MinWidth="760px" Class="border-0"
+                       RowAttributes="@(aLine => new Dictionary<string, object> { ["data-testid"] = $"key-row-{RowOf(aLine)}", ["class"] = "border-t" })"
+                       data-testid="keys-table">
+                <Columns>
+                    <DataTableColumn TData="KeyBalanceLine" TValue="string" Property="@(aLine => aLine.ProviderName)" Header="Provider">
+                        <CellTemplate Context="aLine">
+                            <b class="font-semibold" data-testid="@($"key-name-{RowOf(aLine)}")">@aLine.ProviderName</b>
+                            <div class="text-xs text-muted-foreground">@KeyBalanceFormat.Kind(aLine)</div>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="KeyBalanceLine" TValue="string" Property="@(aLine => KeyBalanceFormat.Source(aLine.Kind))" Header="How it is known">
+                        <CellTemplate Context="aLine">
+                            <Badge Variant="@SourceVariant(aLine.Kind)" Class="rounded-full border-transparent" data-testid="@($"key-source-{RowOf(aLine)}")">@KeyBalanceFormat.Source(aLine.Kind)</Badge>
+                            <div class="text-xs text-muted-foreground" data-testid="@($"key-note-{RowOf(aLine)}")">@aLine.Note</div>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="KeyBalanceLine" TValue="string" Property="@(aLine => KeyBalanceFormat.Money(aLine.LimitUsd, aLine.Currency))" Header="Limit" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                        <CellTemplate Context="aLine">
+                            <span data-testid="@($"key-limit-{RowOf(aLine)}")">@KeyBalanceFormat.Money(aLine.LimitUsd, aLine.Currency)</span>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="KeyBalanceLine" TValue="string" Property="@(aLine => KeyBalanceFormat.Money(aLine.UsedUsd, aLine.Currency))" Header="Used" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                        <CellTemplate Context="aLine">
+                            <span data-testid="@($"key-used-{RowOf(aLine)}")">@KeyBalanceFormat.Money(aLine.UsedUsd, aLine.Currency)</span>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="KeyBalanceLine" TValue="string" Property="@(aLine => KeyBalanceFormat.Left(aLine))" Header="Left" Align="DataTableColumnAlign.End" CellClass="whitespace-nowrap">
+                        <CellTemplate Context="aLine">
+                            <b class="font-semibold" data-testid="@($"key-left-{RowOf(aLine)}")">@KeyBalanceFormat.Left(aLine)</b>
+                        </CellTemplate>
+                    </DataTableColumn>
+                    <DataTableColumn TData="KeyBalanceLine" TValue="string" Property="@(aLine => aLine.ProviderName)" Header="" Align="DataTableColumnAlign.End">
+                        <CellTemplate Context="aLine">
+                            @if (aLine.CanSetLimit)
+                            {
+                                <Button Class="rounded-full" Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => OpenLimit(aLine))" data-testid="@($"key-set-limit-{RowOf(aLine)}")">@(aLine.Limit is null ? "Type a limit" : "Change limit")</Button>
+                            }
+                        </CellTemplate>
+                    </DataTableColumn>
+                </Columns>
+            </DataTable>
+        }
+        <p class="px-4 py-2 text-xs text-muted-foreground" data-testid="keys-note">A provider with no number reads "not known", never a guess. Chatur's own count adds up the calls Chatur made through that key since the date you gave, at the price TechieRag has for each model.</p>
+        @if (objError is not null)
+        {
+            <p class="px-4 pb-3 text-sm text-alert-warning" role="alert" data-testid="keys-error">@objError</p>
+        }
+    </CardContent>
+</Card>
+
+<Dialog Open="objLimitOpen" OpenChanged="OnLimitOpenChanged">
+    <DialogContent Class="max-w-md" data-testid="limit-dialog">
+        <DialogHeader>
+            <DialogTitle>Limit for @(objLimitLine?.ProviderName)</DialogTitle>
+            <DialogDescription>Chatur counts the price of every call it makes through this key from the day you choose, against this limit.</DialogDescription>
+        </DialogHeader>
+        <DialogBody Class="flex flex-col gap-3">
+            <Field>
+                <FieldLabel>Limit in US dollars</FieldLabel>
+                <FieldContent>
+                    <Input Value="@objAmount" ValueChanged="OnAmountChanged" AriaLabel="Limit in US dollars" Class="rounded-full" data-testid="limit-amount" />
+                    @if (Check.AmountError is not null && objAmountTouched)
+                    {
+                        <FieldError data-testid="limit-amount-error">@Check.AmountError</FieldError>
+                    }
+                </FieldContent>
+            </Field>
+            <Field>
+                <FieldLabel>Counting from</FieldLabel>
+                <FieldContent>
+                    <DatePicker Value="objFrom" ValueChanged="OnFromChanged" Placeholder="Counting from" Class="w-full rounded-full" data-testid="limit-from" />
+                    @if (Check.FromError is not null)
+                    {
+                        <FieldError data-testid="limit-from-error">@Check.FromError</FieldError>
+                    }
+                </FieldContent>
+            </Field>
+        </DialogBody>
+        <DialogFooter>
+            @if (objLimitLine?.Limit is not null)
+            {
+                <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="ClearLimitAsync" Disabled="objIsSaving" data-testid="limit-clear">Remove the limit</Button>
+            }
+            <span class="flex-1"></span>
+            <Button Class="rounded-full" Variant="ButtonVariant.Outline" OnClick="CloseLimit" data-testid="limit-cancel">Cancel</Button>
+            <Button Class="rounded-full" OnClick="SaveLimitAsync" Disabled="@(objIsSaving || !Check.IsValid)" data-testid="limit-save">Save</Button>
+        </DialogFooter>
+    </DialogContent>
+</Dialog>

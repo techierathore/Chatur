@@ -41,11 +41,13 @@ public static class MetricsCalculator
     /// <param name="aPeriod">The period.</param>
     /// <param name="aNowUtc">The current time, in UTC.</param>
     /// <param name="aZone">The time zone day boundaries are taken in.</param>
-    public static MetricsComputation Compute(string? aRunsText, string? aGatesText, string? aMissesText, MetricsPeriod aPeriod, DateTime aNowUtc, TimeZoneInfo aZone)
+    /// <param name="aSessionsText">The text of sessions.jsonl, or <see langword="null"/>: each chat session in it counts once, as a "chat" line with its tokens, so what was said to a model shows (owner's test of 25 Nov 2026).</param>
+    public static MetricsComputation Compute(string? aRunsText, string? aGatesText, string? aMissesText, MetricsPeriod aPeriod, DateTime aNowUtc, TimeZoneInfo aZone, string? aSessionsText = null)
     {
         var vWindow = WindowOf(aPeriod, aNowUtc, aZone);
         var vUnreadable = 0;
         var vRuns = ReadRuns(aRunsText, vWindow, ref vUnreadable);
+        vRuns.AddRange(ReadSessions(aSessionsText, vWindow, vRuns.Count + 1, ref vUnreadable));
         var vGates = ReadObjects(aGatesText, ref vUnreadable);
         var vMisses = ReadObjects(aMissesText, ref vUnreadable);
 
@@ -334,6 +336,66 @@ public static class MetricsCalculator
                 WallClockS = WallClockOf(vJson, vAt),
                 Result = Str(vJson, "build_result"),
                 RowsTouched = RowsOf(vJson),
+                Raw = Indent(vRecord.Text)
+            });
+        }
+
+        return vResult;
+    }
+
+    /// <summary>
+    /// One line per chat session: a session may be written once per turn with what it has used in all, so, as TfLens does,
+    /// the record with the most output tokens stands for the session.
+    /// </summary>
+    private static List<RunFacts> ReadSessions(string? aText, (bool Bounded, DateTime? StartUtc, DateTime? EndUtc) aWindow, int aFirstLine, ref int aUnreadable)
+    {
+        var vResult = new List<RunFacts>();
+        var vBySession = new Dictionary<string, (Rec Record, long Out)>(StringComparer.Ordinal);
+        var vAnonymous = new List<Rec>();
+        foreach (var vRecord in ReadObjects(aText, ref aUnreadable).Where(aRec => Str(aRec.Json, "kind") == "session"))
+        {
+            var vId = Str(vRecord.Json, "session_id");
+            if (vId is null)
+            {
+                vAnonymous.Add(vRecord);
+                continue;
+            }
+
+            var vOut = Whole(vRecord.Json, "output_tokens") ?? 0;
+            if (!vBySession.TryGetValue(vId, out var vKept) || vOut >= vKept.Out)
+            {
+                vBySession[vId] = (vRecord, vOut);
+            }
+        }
+
+        var vLine = aFirstLine;
+        foreach (var vRecord in vBySession.Values.Select(aPair => aPair.Record).Concat(vAnonymous).OrderBy(aRec => aRec.Line))
+        {
+            var vJson = vRecord.Json;
+            var vAt = DateOf(vJson);
+            if (!InWindow(aWindow, vAt))
+            {
+                continue;
+            }
+
+            var vOut = Whole(vJson, "output_tokens");
+            vResult.Add(new RunFacts
+            {
+                Line = vLine++,
+                AtUtc = vAt,
+                Command = "chat",
+                Mode = "session",
+                Agent = NotMeasuredWord,
+                Model = Str(vJson, "model") ?? NotMeasuredWord,
+                TokensMeasured = vOut is not null,
+                TokensIn = Whole(vJson, "input_tokens"),
+                TokensOut = vOut,
+                CacheRead = Whole(vJson, "cache_read_tokens"),
+                CacheWrite = Whole(vJson, "cache_creation_tokens"),
+                CostUsd = Num(vJson, "cost_usd"),
+                WallClockS = Whole(vJson, "duration_s") is > 0 and { } vSeconds ? vSeconds : null,
+                Result = null,
+                RowsTouched = [],
                 Raw = Indent(vRecord.Text)
             });
         }

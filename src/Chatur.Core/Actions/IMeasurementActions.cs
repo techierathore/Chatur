@@ -30,16 +30,4 @@ public interface IMeasurementActions
     /// <param name="aCt">A token that cancels the write.</param>
     /// <remarks>A failed write is logged and never stops the session (REQ-UI-035).</remarks>
     Task AppendAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, CancellationToken aCt = default);
-
-    /// <summary>
-    /// Appends one record Chatur notes on its own, with nobody having asked for it (a chat turn, a build the agent
-    /// ran): written exactly as <see cref="AppendAsync"/> writes, but only when the project already has a
-    /// <c>docs/metrics</c> folder. A folder the person merely opened gets no file from Chatur (BRD-74 as changed on
-    /// 23 Nov 2026); the turn's figures stay in Chatur's own database.
-    /// </summary>
-    /// <param name="aProjectId">The project the record belongs to.</param>
-    /// <param name="aStreamName">The stream to append to, e.g. <c>"sessions.jsonl"</c>.</param>
-    /// <param name="aFields">The record's fields; a missing value is written empty.</param>
-    /// <param name="aCt">A token that cancels the write.</param>
-    Task AppendWhenMeasuredAsync(int aProjectId, string aStreamName, IReadOnlyDictionary<string, string?> aFields, CancellationToken aCt = default);
 }

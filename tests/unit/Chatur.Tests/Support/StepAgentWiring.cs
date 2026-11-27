@@ -117,8 +117,6 @@ public static class StepAgentWiring
 
     private sealed class SucceedingLauncher : IProcessLauncher
     {
-        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
-
         public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 
         public Task<int> RunAsync(string aCommand, string aArguments, string aWorkingDirectory, Action<string> aOnOutputLine, CancellationToken aCt = default)
@@ -180,10 +178,7 @@ public sealed class DiskFileActions : IFileActions
     }
 
     /// <inheritdoc />
-    public Task OpenInEditorAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default) => Task.CompletedTask;
-
     /// <inheritdoc />
-    public Task OpenWithDefaultAppAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default) => Task.CompletedTask;
 }
 
 /// <summary>A scripted streaming model: each queued response is one model call. A gate holds the model after its first piece of text, so a test can act while the agent is still working.</summary>

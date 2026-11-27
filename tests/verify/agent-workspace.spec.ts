@@ -106,6 +106,9 @@ test('REQ-UI-054 the Start button of a row is inside the panel, not clipped', as
 
 const thread = () => page.getByTestId('conversation-thread');
 
+/** Chatur's own reply to *verify-phase, which starts a process run (BRD-274): "Started: verify-phase, process run N, …". */
+const STARTED_VERIFY = /(Started|Already running): verify-phase, process run \d+/;
+
 test('REQ-FN-058 an action the agent has no right to is not offered, and its right is listed once as withheld', async () => {
   await openWorkspace('verifier', 'Verifier');
   await expect(page.getByTestId('command-verify-phase')).toBeVisible({ timeout: 30_000 });
@@ -170,8 +173,14 @@ test.describe('in the conversation', () => {
     await expect(thread().getByTestId('msg-1')).toContainText('*verify-phase', { timeout: 30_000 });
     await expect(thread().getByTestId('msg-1')).toContainText('You');
     await expect(thread().getByTestId('msg-2')).toContainText('Verifier', { timeout: 30_000 });
-    await expect(thread().getByTestId('msg-2')).toContainText('Understood.', { timeout: 60_000 });
-    expect(stub.calls.length).toBeGreaterThan(vCalls);
+    // *verify-phase starts a process run, so Chatur answers it itself, says so and links to the run (BRD-274,
+    // AgentCommandRunner.StartProcessAsync). The project row outlives resetFixture, so a run from an earlier test
+    // in the same database is reported as "Already running" — the same command, the same run link.
+    await expect(thread().getByTestId('msg-2')).toContainText(STARTED_VERIFY, { timeout: 60_000 });
+    await expect(thread().getByTestId('msg-2').getByTestId('msg-model')).toHaveText('Chatur (no model)');
+    await expect(thread().getByTestId('msg-2').getByTestId('msg-text').locator('a', { hasText: /Processes ▸ run \d+/ }))
+      .toHaveAttribute('href', /\/processes\/\d+\/run$/);
+    expect(stub.calls.length, 'a command is Chatur\'s to carry out, not a model\'s guess (BRD-249)').toBe(vCalls);
     // the main window around it did not move: tabs, conversation and the tab's own view are all still there
     await expect(page.getByTestId('tool-area')).toBeVisible();
     await expect(tab(page, 'Agents')).toBeVisible();
@@ -194,7 +203,7 @@ test.describe('in the conversation', () => {
       query("SELECT COUNT(*) AS n FROM Session WHERE State<>'Stopped' AND RoleId IN (SELECT RoleId FROM Role WHERE Code='verifier')")[0].n as number;
     const vBefore = await vCount();
     await page.getByTestId('run-verify-phase').click();
-    await expect(thread().getByTestId('msg-2')).toContainText('Understood.', { timeout: 60_000 });
+    await expect(thread().getByTestId('msg-2')).toContainText(STARTED_VERIFY, { timeout: 60_000 });
     await expect.poll(vCount, { timeout: 30_000 }).toBe(vBefore + 1);
     const vVerifierSessions = vOpen();
 

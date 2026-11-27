@@ -234,24 +234,6 @@ public partial class Repository
                 : vWhen.ToString("d MMMM");
     }
 
-    /// <summary>Opens the file whose difference is shown in the owner's own editor (REQ-FN-045).</summary>
-    private async Task OpenDiffFileAsync()
-    {
-        if (objProject is null || objCurrentDiffFile is null)
-        {
-            return;
-        }
-
-        try
-        {
-            await Files.OpenInEditorAsync(objProject.ProjectId, objCurrentDiffFile);
-        }
-        catch (Exception aEx) when (aEx is InvalidOperationException or IOException)
-        {
-            ToastService.Error(aEx.Message, "Could not open the file");
-        }
-    }
-
     /// <summary>Shows the old and new text of one changed file (REQ-UI-042).</summary>
     /// <param name="aPath">The file's path relative to the repository root.</param>
     private async Task ShowDiffAsync(string aPath)

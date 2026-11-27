@@ -9,8 +9,7 @@ using Xunit;
 namespace Chatur.Tests;
 
 /// <summary>
-/// Tests for the Workbench's file rows: saving (REQ-FN-044), opening in the owner's editor
-/// (REQ-FN-045) and the machine's default program (REQ-FN-046), approving and rejecting a proposed
+/// Tests for the Workbench's file rows: saving (REQ-FN-044), approving and rejecting a proposed
 /// change (REQ-FN-033, REQ-FN-034) and the run target chosen last time (REQ-FN-010), against a
 /// migrated temporary database and a temporary project folder.
 /// </summary>
@@ -44,26 +43,6 @@ public sealed class WorkbenchFileAndChangeTests : MigratedDatabaseFixture
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => CreateFiles().SaveAsync(objProjectId, "../escaped.txt", "x"));
 
         Assert.False(File.Exists(Path.Combine(Path.GetDirectoryName(objProjectPath)!, "escaped.txt")));
-    }
-
-    /// <summary>When the owner chooses his own editor for a file, then that program is launched with the file's full path (REQ-FN-045).</summary>
-    [Fact(DisplayName = "REQ-FN-045 the owner's editor is launched with the file")]
-    public async Task OwnersEditorOpensTheFile()
-    {
-        await CreateFiles().OpenInEditorAsync(objProjectId, "Program.cs");
-
-        Assert.Equal(Path.Combine(objProjectPath, "Program.cs"), objLauncher.EditorPath);
-        Assert.Null(objLauncher.DefaultAppPath);
-    }
-
-    /// <summary>When the owner opens a file with the system's default application, then the machine's own launcher gets the file (REQ-FN-046).</summary>
-    [Fact(DisplayName = "REQ-FN-046 the system default application is launched with the file")]
-    public async Task DefaultApplicationOpensTheFile()
-    {
-        await CreateFiles().OpenWithDefaultAppAsync(objProjectId, "Program.cs");
-
-        Assert.Equal(Path.Combine(objProjectPath, "Program.cs"), objLauncher.DefaultAppPath);
-        Assert.Null(objLauncher.EditorPath);
     }
 
     /// <summary>When the owner approves a change, then the file holds the new text and the row is Approved (REQ-FN-033).</summary>
@@ -135,8 +114,6 @@ public sealed class WorkbenchFileAndChangeTests : MigratedDatabaseFixture
 
     private sealed class EmittingLauncher(params string[] aLines) : IProcessLauncher
     {
-        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
-
         public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default) => Task.CompletedTask;
 
         public Task<int> RunAsync(string aCommand, string aArguments, string aWorkingDirectory, Action<string> aOnOutputLine, CancellationToken aCt = default)
@@ -177,7 +154,7 @@ public sealed class WorkbenchFileAndChangeTests : MigratedDatabaseFixture
         base.Dispose();
     }
 
-    private FileActions CreateFiles() => new(CreateFactory(), objLauncher);
+    private FileActions CreateFiles() => new(CreateFactory());
 
     private ChangeActions CreateChanges() => new(CreateFactory(), CreateFiles());
 
@@ -200,15 +177,7 @@ public sealed class WorkbenchFileAndChangeTests : MigratedDatabaseFixture
 
     private sealed class FakeLauncher : IProcessLauncher
     {
-        public string? EditorPath { get; private set; }
-
         public string? DefaultAppPath { get; private set; }
-
-        public Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default)
-        {
-            EditorPath = aFilePath;
-            return Task.CompletedTask;
-        }
 
         public Task OpenWithDefaultAppAsync(string aFilePath, CancellationToken aCt = default)
         {

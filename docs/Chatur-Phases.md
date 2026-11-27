@@ -18,7 +18,7 @@ The shell was settled on the owner's reviews of 2026-09-21 and 2026-09-22: one w
 | 1 | Workbench | Sign in, Register, Start, Workbench, Prerequisites, Settings, Repository | BRD-1 to BRD-95, BRD-156 to BRD-158 | done |
 | 2 | Project workflow | Processes, Process run, Requirements board, Agent workspace | BRD-96 to BRD-117, BRD-187 to BRD-187 | done |
 | 3 | End to end and unattended | End-to-end run, Run queue, Run report | BRD-118 to BRD-136, BRD-159 to BRD-186, BRD-188 to BRD-209, BRD-210 to BRD-216, BRD-217 to BRD-229, BRD-230 to BRD-234 | building |
-| 4 | More users | Feedback and issues, Licence, All projects, Worktrees, Integrations, Measurements, Measurements across projects | BRD-137 to BRD-155, BRD-235 to BRD-252, BRD-253 to BRD-275, BRD-276 to BRD-281 | planned |
+| 4 | More users | Feedback and issues, Licence, All projects, Worktrees, Integrations, Measurements, Measurements across projects, Compare models | BRD-137 to BRD-155, BRD-235 to BRD-252, BRD-253 to BRD-275, BRD-276 to BRD-281, BRD-282 to BRD-286, BRD-287 to BRD-298 | planned |
 
 Phase 1 closed on 2026-10-06 with 97 of 98 rows Verified, the nightly download included. REQ-FN-012 (Homebrew tools found when Chatur starts from Finder on a Mac) stays open in the phase 1 checklist until a Mac can test it; the owner chose to move on to phase 2 rather than mark it N/A.
 
@@ -32,4 +32,4 @@ On 2026-10-13 the owner's test found the main window mostly a shell; verify had 
 
 On 2026-11-10 the owner's estimate feature reopened phase 3: BRD-192 to BRD-209, 18 rows. The phase now holds 69 requirements, inside the 100 a phase may carry.
 
-On 2026-11-22 the owner's evening request added BRD-253 to BRD-275 (measurements, command tables, nine commands end to end) to phase 4; BRD-276 to BRD-281 followed on 2026-11-23: 66 requirements.
+Phase 4 grew on 22, 23, 26 and 27 Nov (BRD-253 to BRD-298): 83 requirements.

@@ -1,19 +1,11 @@
 namespace Chatur.Core.Platform;
 
 /// <summary>
-/// Platform port over starting another program: the owner's chosen editor, the machine's default
-/// application for a file, or a build/run command whose output streams back line by line
+/// Platform port over starting another program: the machine's default application for an address, or a build/run command whose output streams back line by line
 /// (Architecture §2, §7 "Build and run").
 /// </summary>
 public interface IProcessLauncher
 {
-    /// <summary>
-    /// Opens a file in the program the owner chose as their editor.
-    /// </summary>
-    /// <param name="aFilePath">The absolute path of the file to open.</param>
-    /// <param name="aCt">A token that cancels the launch.</param>
-    Task OpenInEditorAsync(string aFilePath, CancellationToken aCt = default);
-
     /// <summary>
     /// Opens a file with whatever program the machine associates with it.
     /// </summary>

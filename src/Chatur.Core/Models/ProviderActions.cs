@@ -294,8 +294,9 @@ public sealed class ProviderActions : IProviderActions
             cancellationToken: aCt);
         await vConnection.ExecuteAsync(vDeleteModels).ConfigureAwait(false);
 
+        // [REQ-UI-131] The provider's KeyUsage rows go with it (ON DELETE CASCADE); its typed limit goes too.
         var vDeleteProvider = new CommandDefinition(
-            "DELETE FROM Provider WHERE ProviderId = @aProviderId;",
+            "DELETE FROM Setting WHERE Key = 'KeyLimit:' || @aProviderId; DELETE FROM Provider WHERE ProviderId = @aProviderId;",
             new { aProviderId },
             cancellationToken: aCt);
         await vConnection.ExecuteAsync(vDeleteProvider).ConfigureAwait(false);

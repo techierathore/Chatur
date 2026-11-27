@@ -3,6 +3,7 @@ using Chatur.Core.Actions;
 using Chatur.Core.Platform;
 using ChaturUI.Services;
 using Microsoft.AspNetCore.Components;
+using TrBlazeUI.Components.ScrollArea;
 using Microsoft.JSInterop;
 
 namespace ChaturUI.Shell;
@@ -38,6 +39,12 @@ public partial class ConversationPanel : IDisposable
     private IReadOnlyList<RoleSummary> objRoles = [];
     private IReadOnlyList<ModelSummary> objModels = [];
     private List<DisplayMessage> objMessages = [];
+
+    /// <summary>The conversation's scroll area, to move it to the newest message (REQ-UI-128).</summary>
+    private ScrollArea? objScroll;
+
+    /// <summary>Whether the view is to move to the newest message after the next draw (REQ-UI-128).</summary>
+    private bool objScrollPending;
     private SessionSummary? objCurrentSession;
     private AgentSuggestion? objSuggestion;
     private int? objSelectedRoleId;
@@ -112,6 +119,21 @@ public partial class ConversationPanel : IDisposable
     /// <summary>Hooks the chat box's keys to this panel each time the box is drawn anew (it is gone while the chat is closed).</summary>
     protected override async Task OnAfterRenderAsync(bool aFirstRender)
     {
+        // REQ-UI-128 (owner's test of 25 Nov 2026): the view moves to the newest message once what was added is drawn. StickToEnd
+        // only follows a reader already at the end, so a long reply, or *yolo after the agent's tall greeting, left the view behind.
+        if (objScrollPending && objScroll is not null)
+        {
+            objScrollPending = false;
+            try
+            {
+                await objScroll.ScrollToEndAsync();
+            }
+            catch (Exception aException) when (aException is JSException or InvalidOperationException or TaskCanceledException)
+            {
+                // The window went away between the draw and the scroll; nothing is left to scroll.
+            }
+        }
+
         if (!Workbench.ConversationVisible || objComposerHost.Id is null || objComposerHost.Id == objAttachedHostId)
         {
             return;
@@ -497,6 +519,7 @@ public partial class ConversationPanel : IDisposable
             .Where(e => e.Kind is "user" or "assistant")
             .Select(e => new DisplayMessage(e.Kind, e.Payload, e.Model, e.Tokens, true, null, e.Seq, e.RoleName, e.RoutingReason))
             .ToList();
+        objScrollPending = true;
 
         // A handed step's agent is still writing while the run holds the step: its last line keeps the spinner.
         if (Workbench.Handed?.SessionId == aSessionId && objMessages.FindLastIndex(m => m.Role != "user") is var vLast and >= 0)
@@ -809,6 +832,7 @@ public partial class ConversationPanel : IDisposable
         objSending = true;
 
         objMessages.Add(new DisplayMessage("user", vText, null, null, true, DateTime.Now));
+        objScrollPending = true;
         var vAssistantIndex = objMessages.Count;
         // The reply carries the agent that writes it, so choosing another agent later does not rename it (REQ-FN-024).
         var vWritingRoleName = objRoles.FirstOrDefault(r => r.RoleId == objSelectedRoleId)?.Name ?? vSession.RoleName;
@@ -868,6 +892,10 @@ public partial class ConversationPanel : IDisposable
         await LoadProposedChangesAsync(vSession.SessionId);
         await LoadTotalTokensAsync(vSession.SessionId);
         await ResolveLiveSeqsAsync(vSession.SessionId);
+
+        // The reply is done and its steps and proposed changes sit under it: the view goes to the newest (REQ-UI-128).
+        objScrollPending = true;
+        await InvokeAsync(StateHasChanged);
 
         // A reply may have written files (an agent in Go ahead, *log-miss, *generate-html): FILES reads the folder again,
         // so what was written is there to open (owner's test of 22 Nov 2026, point 2.4).

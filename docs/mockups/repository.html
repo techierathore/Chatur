@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
    <a href="repository.html" data-testid="nav-repository" class="on"><svg><use href="#i-branch"/></svg>Repository</a>
    <a href="worktrees.html" data-testid="nav-worktrees" data-tf-state="later-phase"><svg><use href="#i-copy"/></svg>Working copies<span class="pill" style="margin-left:auto">later</span></a>
    <a href="measurements.html" data-testid="nav-project-measurements"><svg><use href="#i-chart"/></svg>Project measurements</a>
+   <a href="compare-models.html" data-testid="nav-compare-models"><svg><use href="#i-users"/></svg>Compare models</a>
    <div class="g">Chatur</div>
    <a href="settings-providers.html" data-testid="nav-providers"><svg><use href="#i-key"/></svg>Model providers</a>
    <a href="settings-routing.html" data-testid="nav-routing"><svg><use href="#i-route"/></svg>Routing</a>
@@ -172,10 +173,7 @@ document.addEventListener('DOMContentLoaded',function(){setPalette(localStorage.
     <div class="ph">What changed in the file you are on</div>
     <div style="padding:12px 14px">
      <div class="change" data-testid="diff">
-      <div class="ch"><svg><use href="#i-pencil"/></svg><span class="mono" data-testid="diff-file">src/TfLens/Query.cs</span>
-       <span class="acts">
-        <a class="pick" href="main.html" data-testid="diff-open" data-tf-state="no-phase-1-requirement">Open in the editor</a>
-       </span></div>
+      <div class="ch"><svg><use href="#i-pencil"/></svg><span class="mono" data-testid="diff-file">src/TfLens/Query.cs</span></div>
       <pre><span class="ln"><span class="c">// paging lives in the query, not the component</span></span><span class="ln del">- <span class="k">public</span> <span class="t">IReadOnlyList</span>&lt;<span class="t">RepoRow</span>&gt; Page()</span><span class="ln del">-     <span class="k">return</span> objRows.OrderBy(r =&gt; r.Name).ToList();</span><span class="ln add">+ <span class="k">public</span> <span class="t">IReadOnlyList</span>&lt;<span class="t">RepoRow</span>&gt; Page(<span class="k">int</span> aPage, <span class="k">int</span> aSize)</span><span class="ln add">+     <span class="k">return</span> objRows.OrderBy(r =&gt; r.Name)</span><span class="ln add">+         .Skip(aPage * aSize)</span><span class="ln add">+         .Take(aSize).ToList();</span><span class="ln add">+ <span class="k">public</span> <span class="k">const</span> <span class="k">int</span> DefaultSize = <span class="n">25</span>;</span><span class="ln add">+ <span class="k">public</span> <span class="k">string</span> Label =&gt; <span class="s">"repositories"</span>;</span></pre>
      </div>
     </div>

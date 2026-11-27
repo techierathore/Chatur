@@ -1,17 +1,27 @@
 # Chatur — Development Metrics
 
-**Report date 2026-11-23.** Project type `app`. Schema v1. Every figure below comes from `bash .tfcore/telemetry/tf-metrics.sh --report .`; nothing was worked out by hand. All records are live, none rebuilt, so there is no backfilled column. One project type (`app`), so nothing is pooled across types. On 23 Nov the streams, this run's section and section 1 were refreshed; later sections read as of 16 Nov, and the script's own printout holds today's detail for them.
+**Report date 2026-11-26.** Project type `app`. Schema v1. Every figure below comes from `bash .tfcore/telemetry/tf-metrics.sh --report .`; nothing was worked out by hand. All records are live, none rebuilt, so there is no backfilled column. One project type (`app`), so nothing is pooled across types. On 23 Nov the streams, this run's section and section 1 were refreshed; later sections read as of 16 Nov, and the script's own printout holds today's detail for them.
 
 ## Streams
 
 | Stream | Records |
 |---|---|
-| `runs.jsonl` | 225 (0 voided) |
-| `gates.jsonl` | 4,328 (0 backfilled) |
-| `sessions.jsonl` | 38 sessions |
-| `commits.jsonl` | 32 |
-| `misses.jsonl` | 889 misses (88 open, 801 resolved), 851 fix records |
+| `runs.jsonl` | 229 (1 voided) |
+| `gates.jsonl` | 4,349 (0 backfilled) |
+| `sessions.jsonl` | 44 sessions |
+| `commits.jsonl` | 33 |
+| `misses.jsonl` | 908 misses (91 open, 817 resolved), 867 fix records |
 | `estimates.jsonl` | 0 |
+
+## This run — triage-and-fix started 2026-11-26T08:48:44Z
+
+The owner's test of 25 Nov (`docs/screenshots/25-Nov-26-Run`): 14 rows logged by triage (10 demoted, 4 new), one more NFR row added by hand, 18 rows touched and `Verified` by the verifier, REQ-FN-045 and REQ-FN-046 removed (N/A). Measured by OpenCode for the whole window, one sub-agent included: 199,067 output tokens, 634 input, 139,177,115 cache read, 16,529,005 cache write, $58.17 (`cost_source: opencode-db`), 6 h 06 min wall clock, model claude-sonnet-5-5. The real model calls the checks made through Chatur's own test provider are the app's, not this window's, and are not counted here.
+
+| Row | Miss | Cause | Time to find |
+|---|---|---|---|
+| REQ-UI-125 | MISS-Chatur-20261123-19 (open since 23 Nov) | The solution was drawn beside its project, not as the root | not measured (open before this run) |
+| REQ-UI-041 | MISS-Chatur-20261120-17 (open since 20 Nov) | The file view's own close button never asked | not measured (open before this run) |
+| REQ-FN-040, REQ-UI-115 | logged this run | A real chat left no record: the 23 Nov rule wrote a chat turn only where `docs/metrics` already was; Measurements never read `sessions.jsonl`; records were strings, not TechieFlow's numbers | found by one read-only investigation |
 
 ## This run — build-phase started 2026-11-22T13:24:25Z
 

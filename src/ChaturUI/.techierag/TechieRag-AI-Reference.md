@@ -9,7 +9,7 @@ TechieRag is a complete RAG (Retrieval-Augmented Generation) + LLM management pl
 - **Vector Storage** - Store and search vectors (3 backends)
 - **Document Processing** - Ingest PDFs, Office files, Markdown, text, HTML, code, etc. (13 processors)
 - **LLM Completions** - Chat, streaming, structured output (6 API providers, a local in-process model, a ChatGPT subscription)
-- **Typed Streaming** - `LlmStreamEvent` (text delta, tool call, completed) from every provider, and the streaming agent loop
+- **Typed Streaming** - `LlmStreamEvent` (text delta, thinking, tool call, completed) from every provider, and the streaming agent loop
 - **Tool/Function Calling** - Full agent loop with tool execution, MCP tool servers, flows
 - **Agents** - Microsoft Agent Framework over TechieRag (`TechieRag.Agents`), and agentic retrieval on the classic loop
 - **Local Model** - Qwen2.5 0.5B on phones, Phi-3 mini on desktops, any ONNX Runtime GenAI model by name (`TechieRag.Local`)
@@ -32,11 +32,13 @@ Packages are published on **nuget.org** — the default feed every .NET SDK alre
 
 | Package | Purpose |
 |---------|---------|
-| `TechieRag` | Core library - embeddings, vector stores, document processing, LLM providers, tools and agent loop, MCP, flows, connectors, web ingestion, persistence, all services (`net10.0`, `net8.0`) |
+| `TechieRag` | Core library - embeddings, the SQLite vector store, document processing, LLM providers, tools and agent loop, MCP, flows, connectors, web ingestion, persistence, all services (`net10.0`, `net8.0`) |
 | `TechieRag.Embedded` | ONNX-based embedded embedding provider and reranker (no external API; the models download once, then work offline). Carries the native ONNX Runtime wiring for MAUI heads (`net10.0`) |
 | `TechieRag.Telemetry` | Opt-in OpenTelemetry exporters (OTLP, console) for the core's traces and metrics; the core links no exporter (`net10.0`, `net8.0`) |
 | `TechieRag.Local` | In-process local language model behind `UseLocalLlm()` on ONNX Runtime GenAI: Windows, Apple-silicon macOS, Linux, Android, iOS, Mac Catalyst. Depends on `TechieRag.Embedded` for downloads and native wiring (`net10.0`) |
 | `TechieRag.Agents` | Agents on Microsoft Agent Framework over TechieRag: `TechieRagAgentBuilder`, `ITechieRagAgent`, the seam adapters, `AddTechieRagAgent` (`net10.0`, `net8.0`) |
+| `TechieRag.PgVector` | PostgreSQL since 1.3.0: `PgVectorStore` (`UsePgVector`) and the PostgreSQL conversation, workspace and token-usage stores (`UsePostgres`, `WithPersistence(StoreProvider.Postgres)`); brings Npgsql and Pgvector (`net10.0`, `net8.0`) |
+| `TechieRag.Qdrant` | Qdrant since 1.3.0: `QdrantStore` (`UseQdrant`); brings Qdrant.Client and gRPC (`net10.0`, `net8.0`) |
 
 ### Install Commands
 
@@ -50,6 +52,10 @@ dotnet add package TechieRag.Telemetry
 dotnet add package TechieRag.Local
 # Optional: agents on Microsoft Agent Framework over TechieRag
 dotnet add package TechieRag.Agents
+# Needed for PostgreSQL / pgvector (UsePgVector, UsePostgres) since 1.3.0
+dotnet add package TechieRag.PgVector
+# Needed for Qdrant (UseQdrant) since 1.3.0
+dotnet add package TechieRag.Qdrant
 ```
 
 ### NuGet Configuration
@@ -297,8 +303,9 @@ var response = await rag.AskAsync("What is quantum computing?");
 
 | Method | Description |
 |--------|-------------|
-| `UseSqliteVec(connectionString)` | SQLite with vec extension; `UseSqliteVec()` with no path uses the per-app default database (`DataRoot.DefaultDatabasePath`) |
+| `UseSqliteVec(databasePath)` | SQLite store in one database file. The argument is a file path, used exactly as given, or a connection string that names the file, such as `"Data Source=app.db"` (REQ-RAG-167; before 1.3.0 that form failed with SQLite Error 14). No native SQLite extension is loaded: vectors are kept in a column and ranked by an exact cosine scan in managed code, the same on every platform. The store creates two tables, `Documents` and `Chunks`. `UseSqliteVec()` with no path uses the per-app default database (`DataRoot.DefaultDatabasePath`) |
 | `UsePgVector(connectionString)` | PostgreSQL with pgvector extension |
+| `UsePostgres(connectionString, defaultUserId)` | Vectors, conversations and workspaces in one PostgreSQL database (REQ-RAG-152) |
 | `UseQdrant(endpoint, apiKey)` | Qdrant vector database |
 
 ### LLM Providers
@@ -351,22 +358,26 @@ Package `TechieRag`; namespaces `TechieRag.Abstractions`, `TechieRag.Models`, `T
 
 ```csharp
 // ILlmProvider - additive with a default implementation; the six built-in providers, the local model
-// and the subscription provider override it. Order: TextDelta*, ToolCall*, then exactly one Completed.
+// and the subscription provider override it. Order: TextDelta* (Thinking events among them, normally
+// all before the answer), ToolCall*, then exactly one Completed.
 IAsyncEnumerable<LlmStreamEvent> ChatStreamEventsAsync(IReadOnlyList<ChatMessage> messages,
     LlmCompletionOptions? options = null, CancellationToken cancellationToken = default);
 
-public enum LlmStreamEventKind { TextDelta, ToolCall, Completed }
+public enum LlmStreamEventKind { TextDelta, ToolCall, Completed, Thinking }
 public sealed class LlmStreamEvent
 {
     public required LlmStreamEventKind Kind { get; init; }
-    public string? Text { get; init; }          // TextDelta
+    public string? Text { get; init; }          // TextDelta and Thinking
     public ToolCall? ToolCall { get; init; }    // ToolCall: id, name, complete arguments JSON
     public TokenUsage? Usage { get; init; }     // Completed
     public string? FinishReason { get; init; }  // Completed
     public string? ModelName { get; init; }     // Completed
+    public string? ProviderState { get; init; } // Completed: opaque, for the next call (Anthropic thinking blocks)
     public static LlmStreamEvent FromText(string text);
+    public static LlmStreamEvent FromThinking(string text);
     public static LlmStreamEvent FromToolCall(ToolCall toolCall);
     public static LlmStreamEvent FromCompleted(TokenUsage usage, string finishReason, string modelName);
+    public static LlmStreamEvent FromCompleted(TokenUsage usage, string finishReason, string modelName, string? providerState);
 }
 
 // TechieRag.Llm.LlmStreamEventExtensions - the text-only projection (what ChatStreamAsync returns)
@@ -1351,6 +1362,26 @@ var runner = new AgentLoopRunner(local, registry);
 var answer = await runner.RunAsync([ChatMessage.User("What's the weather in Paris?")]);
 ```
 
+### Local picture reading: `LocalModel.ReadsImages`, `Phi35VisionInstruct`, `IMultimodalLlmProvider`
+
+Package `TechieRag.Local`; namespace `TechieRag.Local` (owner, 2026-11-05; REQ-RAG-145 to REQ-RAG-151). A picture is read on the user's own machine with the same `ChatImage`, `ChatContentPart` and `ChatMessage.UserWithImages` code a hosted provider takes, so an app's code is the same for local and hosted. The model only turns the picture into text; checking dates, overlaps and duplicates is the app's job.
+
+- **Models.** `LocalModel.Phi35VisionInstruct` (`phi-3.5-vision-instruct`, Microsoft's processor build, about 3.2 GB, MIT) runs on a laptop's processor. `LocalModel.Phi4MultimodalInstruct` (`phi-4-multimodal-instruct`, about 5.1 GB) is a graphics-card build: `LocalModel.RequiresGpu` is true, and loading it throws `NotSupportedException` before its terms are asked and before any download, because this package ships the processor engine only. Neither runs on Android or iOS.
+- **Which models read pictures.** `LocalModel.ReadsImages` is true for the two picture models and false for Qwen2.5 0.5B and Phi-3 mini. For `FromHuggingFace` and `FromFolder` models it is read from the model's own `genai_config.json` (a `model.vision` section), so for a Hugging Face model it is known after the download. `LocalLlmProvider` implements `IMultimodalLlmProvider`; `SupportsInput(ChatContentKind.Image)` (and `SupportsVision()`) gives the same answer as `Model.ReadsImages`.
+- **Asking for pictures.** `LocalLlmOptions.ReadsImages = true` with no model named runs `Phi35VisionInstruct` on a desktop; on a phone, or with a text model named, creating the provider throws `NotSupportedException`.
+- **A text model given a picture** throws `LocalModelInputNotSupportedException` (a `NotSupportedException`) naming the model, before it is loaded or run; `ModelId`, `ModelName`, `InputKind` and `Count` say what was refused. A picture is never dropped without notice.
+- **Bytes only.** Give pictures with `ChatImage.FromBytes` or `FromBase64`. A `ChatImage.FromUrl` picture throws `NotSupportedException`: the local provider never fetches anything.
+- **Context.** A picture's tokens depend on its size: a 1200 × 900 calendar page took 1,960 tokens with its prompt. The engine counts them once it has read the picture; a prompt that does not fit throws `LocalPromptTooLongException` with that count. Keep `ContextSize` at 3,072 or more for a page-sized picture (the default is 4,096).
+
+```csharp
+using var llm = new LocalLlmProvider(new LocalLlmOptions { ReadsImages = true, TermsAccepted = true });
+var turn = ChatMessage.UserWithImages(
+    "Write one line for each meeting, in the form HH:MM - title.",
+    ChatImage.FromBytes(await File.ReadAllBytesAsync("calendar.png"), "image/png"));
+var reply = await llm.ChatAsync([turn], new LlmCompletionOptions { MaxTokens = 200, Temperature = 0 });
+// reply.Content: "09:00 - Weekly planning\n10:30 - Budget review with Priya\n…"; the app parses and checks it.
+```
+
 ### Choosing a model for a piece of work: `ModelChooser`
 
 Package `TechieRag`; namespace `TechieRag.Llm` (REQ-RAG-128, Chatur TR-RAG-006). `ModelRouter` turns a model name into a service; `ModelChooser` decides which name. `new ModelChooser(smallModel, options?)` takes any `ILlmProvider`; a cheap or local one is enough. `ChooseAsync(request, candidates)` takes the request text and `ModelCandidate { ModelId, Tier?, Notes?, Cost? }` items, the free-text fields written in the host's own words. It returns a `ModelChoice` with `Candidate`, `ModelId`, `Reason` (one sentence to show and log), `Source` (`ModelChoiceSource.SmallModel`, `OnlyCandidate` or `Fallback`) and the small model's `Usage`. One candidate is returned without a model call. Otherwise the small model gets one chat call at temperature 0 in JSON mode, with the request cut to `ModelChooserOptions.MaxRequestCharacters` (default 4000). The reply's id is matched ignoring case. An id without its `connector/` prefix matches when exactly one candidate ends with it. **The answer is always a candidate:** a reply that is not JSON, or names a model that was not offered, gives `ModelChooserOptions.FallbackModelId` (else the first candidate) with `Source = Fallback`. **A failure of the small model is thrown** (unreachable, refused, cancelled), never turned into a choice; catch it to use the host's own rule. `ModelChooserOptions.Guidance` adds the host's rule to the instructions. The interface `IModelChooser` lets a unit test pass a fixed choice.
@@ -1453,9 +1484,10 @@ var reply = await llm.ChatAsync(messages, new LlmCompletionOptions
 
 Package `TechieRag`; namespace `TechieRag.Models` (Lekhak TR-RAG-009). `LlmCompletionOptions` exposes provider-neutral reasoning controls that each connector maps to its own wire fields.
 
-- `DisableReasoning = true`: Venice sends `venice_parameters.disable_thinking` and `strip_thinking_response`; OpenAI-style services send `reasoning_effort: low`.
-- `MaxReasoningTokens`: Venice sends `venice_parameters.max_thinking_tokens`; OpenAI-style services send `max_reasoning_tokens`.
-- `ReasoningEffort`: standard values `low`, `medium`, `high`; mapped to `reasoning_effort` on OpenAI-style providers.
+- `DisableReasoning = true`: Venice sends `venice_parameters.disable_thinking` and `strip_thinking_response`; OpenAI-style services send `reasoning_effort: low`; Gemini sends `thinkingBudget: 0`; Ollama sends `think: false`; Anthropic and the ChatGPT subscription ask for no thinking.
+- `MaxReasoningTokens`: Venice sends `venice_parameters.max_thinking_tokens`; OpenAI-style services send `max_reasoning_tokens`; Anthropic turns on extended thinking with that `budget_tokens` (at least 1024, and `max_tokens` is raised above it); Gemini sends `thinkingConfig` with that `thinkingBudget` and `includeThoughts: true`; Ollama sends `think: true`; the ChatGPT subscription asks for a reasoning summary.
+- `ReasoningEffort`: standard values `low`, `medium`, `high`; mapped to `reasoning_effort` on OpenAI-style providers and to `reasoning.effort` on the ChatGPT subscription. Without a budget, Anthropic and Gemini turn it into one (low 1024; medium 4096 on Anthropic, 8192 on Gemini; high 16384 on Anthropic, 24576 on Gemini), and Ollama sends `think: true`.
+- **Anthropic with thinking on** leaves out `temperature` and `top_p`, because the service refuses them while it thinks.
 
 ```csharp
 var reply = await llm.ChatAsync(messages, new LlmCompletionOptions
@@ -1464,6 +1496,49 @@ var reply = await llm.ChatAsync(messages, new LlmCompletionOptions
     MaxReasoningTokens = 250
 });
 ```
+
+### Thinking text from reasoning models
+
+Package `TechieRag`; namespaces `TechieRag.Models`, `TechieRag.Llm` (Chatur TR-RAG-008 and TR-RAG-009; REQ-RAG-137 to REQ-RAG-144). A reasoning model's thinking is kept out of the answer and handed to the host on its own, so a screen can show it, fold it away or ignore it.
+
+- **Streaming.** `ChatStreamEventsAsync` yields `LlmStreamEventKind.Thinking` events, with the fragment in `Text`. They normally all come before the first `TextDelta`. `ChatStreamAsync` and `ToTextStreamAsync` return the answer only; thinking never reaches them.
+- **Whole replies.** `ChatAsync` returns the thinking in `LlmResponse.Thinking` (null when there was none) and the answer alone in `Content`. `ToChatMessage()` leaves the thinking text out, so it is not sent back to the model on the next turn.
+- **Rules every built-in provider keeps.** Thinking never appears in the answer text. A call with no thinking yields no `Thinking` event and a null `LlmResponse.Thinking`. The event order is unchanged: `Thinking` and `TextDelta` events, then `ToolCall` events, then exactly one `Completed`, last.
+- **Token count.** The `Completed` event's `Usage.ReasoningTokens` (and `LlmResponse.Usage.ReasoningTokens`) is the count the service reported, inside `OutputTokens`; it is never estimated, and it stays 0 where the service reports none.
+- **A leading `<think>` block.** Some models write their reasoning into the answer text as `<think>…</think>`. Where noted below it is split out, even when the tags arrive cut across chunks. Only a block at the very start counts, after optional white space; a `<think>` later in the answer is the model's own text and is kept. A block the model never closed (the token limit hit mid-thought) is all thinking.
+- **Asking for thinking.** Anthropic, Gemini, Ollama and the ChatGPT subscription only return thinking when the call sets `MaxReasoningTokens` or `ReasoningEffort` (see Reasoning controls); the OpenAI-style services and the local model send what the model produces.
+
+| Provider | Sends thinking | From | Reasoning token count |
+|---|---|---|---|
+| `OpenAICompatible` and every connector and route on it, `LmStudio`, `AzureAIFoundry` | Yes | `reasoning_content` (DeepSeek, Kimi, OpenCode Go) or `reasoning` (OpenRouter) field; a leading `<think>` block (minimax-m3, DeepSeek-R1 and Qwen builds) | `completion_tokens_details.reasoning_tokens` |
+| `Anthropic` and `anthropic-compatible/` routes | Yes, when asked | `thinking` content blocks (`thinking_delta` while streaming) | No: the service counts thinking inside `output_tokens` without a separate figure, so it is 0 |
+| `GoogleGemini` | Yes, when asked | parts marked `thought: true` | `thoughtsTokenCount` (added to `OutputTokens`) |
+| `Ollama` | Yes | the `thinking` field of `/api/chat` (`think: true`); a leading `<think>` block when the model writes one | No: Ollama reports none |
+| `TechieRag.Local` (`LocalLlmProvider`) | Yes | a leading `<think>` block (Qwen3, DeepSeek-R1 builds) | Counted with the model's own tokenizer |
+| ChatGPT subscription (`ChatGptSubscriptionLlmProvider`) | A summary, when asked | `response.reasoning_summary_text.delta`; parts joined by a blank line | `output_tokens_details.reasoning_tokens` |
+| A custom provider on the default `ChatStreamEventsAsync` | Only what its `ChatAsync` puts in `LlmResponse.Thinking`, sent first | | What it reports |
+
+**What cannot be shown.** The ChatGPT subscription never returns its raw reasoning, only the summary. Anthropic `redacted_thinking` blocks carry encrypted data and no text. Neither is ever put in `Thinking`. A model that does not reason sends nothing, on every provider.
+
+**Anthropic tool turns keep their thinking.** With thinking on, Anthropic refuses a tool-use turn whose earlier assistant message lost its signed thinking blocks. They travel in `ChatMessage.ProviderState`, an opaque string that `LlmResponse.ProviderState`, the `Completed` event's `ProviderState` and `ToChatMessage()` carry. The provider sends them back first and unchanged. Keep `ProviderState` when you store or rebuild the conversation; other providers ignore it. `AgentLoopRunner` keeps it on its own. Through `TechieRag.Agents` it rides a `TextReasoningContent` with empty text and the state in `ProtectedData`.
+
+- **Agent Framework.** `LlmProviderChatClient` maps a `Thinking` event, and a whole reply's `LlmResponse.Thinking`, to `TextReasoningContent`.
+
+```csharp
+var thinking = new StringBuilder();
+var answer = new StringBuilder();
+await foreach (var e in llm.ChatStreamEventsAsync(messages))
+{
+    switch (e.Kind)
+    {
+        case LlmStreamEventKind.Thinking: thinking.Append(e.Text); break;   // show greyed, or fold away
+        case LlmStreamEventKind.TextDelta: answer.Append(e.Text); break;
+        case LlmStreamEventKind.Completed: Console.WriteLine($"reasoning tokens: {e.Usage!.ReasoningTokens}"); break;
+    }
+}
+```
+
+A `switch` over `LlmStreamEventKind` that treated every other value as `Completed` (a `default:` branch) must now name `Completed` itself, or it will read a `Thinking` event as the end of the stream.
 
 ### Per-call and per-provider request timeout
 
@@ -1500,7 +1575,286 @@ var agentPath = Path.Combine(
 Console.WriteLine(File.Exists(agentPath) ? "techierag agent ready" : "build to deploy");
 ```
 
+### One PostgreSQL database for everything (REQ-RAG-152)
+
+`UsePostgres(connectionString)` is `UsePgVector(connectionString)` plus `WithPersistence(StoreProvider.Postgres, connectionString)`. One call puts the vectors (`Documents`, `Chunks`), the conversations (`TrThread`, `TrMessage`) and the workspaces (`TrWorkspace`, `TrWorkspaceDocument`) in one database. The server needs pgvector. Proven on PostgreSQL 18 + pgvector in CI.
+
+```csharp
+var rag = new TechieRagBuilder()
+    .UsePostgres("Host=db;Database=app;Username=app;Password=...", defaultUserId: userId)
+    .UseEmbedding(EmbeddingSource.Ollama)
+    .Build();
+await rag.InitializeAsync();
+var threads = rag.GetConversationStore();      // PostgresConversationStore
+var workspaces = rag.GetWorkspaceManager();     // over PostgresWorkspaceStore
+```
+
+### Host data skill (REQ-RAG-153) and change records with Undo (REQ-RAG-154)
+
+Namespace `TechieRag.Agentic.HostData`. A host registers its own entities. The agent gets ONE tool set for all of them: `host_data_list`, `host_data_read`, `host_data_create`, `host_data_update` and `host_data_delete`, each taking an `entity` argument. `HostDataSkill` is an `IToolHandler`: pass it to `AgentLoopRunner`, combine it with other tools in `CompositeToolHandler`, wrap it in `GuardedToolHandler`, or hand it to a `TechieRag.Agents` agent.
+
+```csharp
+var task = new HostEntity("task", "A to-do item of the user.",
+[
+    new HostEntityField("title", HostFieldType.Text, "What to do.", Required: true),
+    new HostEntityField("due", HostFieldType.DateTime, "When it is due, local time."),
+    new HostEntityField("priority", HostFieldType.Choice, "How important it is.") { Choices = ["low", "normal", "high"] }
+])
+{
+    List   = (query, ct) => repo.FindAsync(query.Text, query.Limit, ct),     // IReadOnlyList<HostEntityRecord>
+    Read   = (id, ct) => repo.ReadAsync(id, ct),                             // HostEntityRecord? (null = not found)
+    Create = (values, ct) => repo.CreateAsync(values, ct),                   // values: IReadOnlyDictionary<string, JsonElement>
+    Update = (id, values, ct) => repo.UpdateAsync(id, values, ct),           // only the named fields change
+    Delete = (id, ct) => repo.DeleteAsync(id, ct)
+};
+
+var skill = new HostDataSkill(new HostDataSkillOptions
+{
+    OnChangeAsync = (change, ct) => changeLog.SaveAsync(change, ct)          // awaited before the model sees the result
+}).Register(task);
+
+skill.BeginTurn(turnId);                                                     // each change carries this turn id
+var answer = await new AgentLoopRunner(llm, skill).RunAsync(messages);
+foreach (HostDataChange change in skill.TurnChanges) { /* show a card with Undo */ }
+
+HostDataChange reversal = await skill.UndoAsync(change);                     // through the host's own handlers
+```
+
+Rules:
+- A null handler is an operation the entity does not offer. A tool appears only when some entity offers it, and its `entity` enum names only those entities. An entity that offers update or delete must offer read, because the skill reads the "before" state first; `Register` refuses one that does not.
+- The model's `fields` are checked before any handler runs: the name must be known, the value must have the right type (`Date` is `yyyy-MM-dd`, `DateTime` is ISO 8601), a choice must be in `Choices`, and a create must name every required field. A mismatch goes back to the model as a failed `ToolResult` it can correct. `ToolResult.Message.Code` is one of `HostDataMessageCodes` for the trace. A handler that throws becomes `HostDataHandlerFailed`; the model is told, and the turn goes on.
+- `HostDataChange`: `ChangeId`, `Entity`, `EntityId`, `Kind` (`Created`/`Updated`/`Deleted`), `Before`, `After` (`HostEntityRecord`: `Id` + `Values`), `TurnId`, `ToolCallId`, `UndoOf`, `At`. It is plain data: store it as JSON and undo it later.
+- `UndoAsync`: Created → the delete handler; Updated → the update handler with `Before.Values`; Deleted → the create handler with `Before.Values` (the host may give a new id). It returns the reversal as a new change with `UndoOf` set, and raises it like any change. It throws `HostDataException` (`Code` `HostDataCannotUndo` or `HostDataUnknownEntity`) when the entity lacks the handler.
+- The delete tool has `RequiresConfirmation = true` by default (`HostDataSkillOptions.DeleteRequiresConfirmation`).
+- Each entity is described ONCE (REQ-RAG-160, Sevak TR-RAG-061): its description, its fields and, when it offers only some operations, `Can: list, read.` are written in the first tool's description (`host_data_list` when any entity offers list); the other four say "The entities and their fields are listed on host_data_list." Fifteen entities with 2 to 9 fields are about 7,100 characters of tool definitions, and a 4,096-token local model (Qwen 2.5 0.5B) has room for them. Before 1.1.10 every tool repeated every entity.
+- Offer only the entities a turn needs, so a small model's prompt stays short: `skill.BeginTurn(turnId, ["task", "project"])` or `skill.OfferEntities(["task", "project"])`; `OfferEntities(null)` offers all again. Read `ToolDefinitions` after the call: the tools and their `entity` enums then name only those entities, and a call naming another is refused with `HostDataEntityNotOffered`. `OfferedEntities` lists them. A name that is not registered throws `ArgumentException`. `UndoAsync` still reaches every registered entity.
+
+```csharp
+skill.BeginTurn(turnId, router.EntitiesFor(userText));   // e.g. ["task", "project"] for "move my bank task to Friday"
+var answer = await new AgentLoopRunner(localLlm, skill).RunAsync(messages);
+```
+
+### One option set for every provider (REQ-RAG-158) and tool requests written as text (REQ-RAG-159)
+
+**Sampling options on Claude models (REQ-RAG-158, Sevak TR-RAG-063).** Claude Fable and Mythos, Claude Opus 4.7 and later, and every Claude model of generation 5 (`claude-sonnet-5-5`, `claude-opus-5-5`, `claude-haiku-5-5`, …) answer `temperature`, `top_p` or `top_k` with HTTP 400 ("temperature is deprecated for this model"). `AnthropicLlmProvider` leaves `Temperature` and `TopP` out of the request for those models and still sends them to Claude Opus 4.6, Sonnet 4.6, Haiku 4.5, older models and non-Claude models behind an Anthropic-compatible endpoint. A model the rule does not know that refuses one anyway gets the call sent again once without them, and is remembered for the rest of the process. So a host passes one `LlmCompletionOptions` to every provider:
+
+```csharp
+var claude = new AnthropicLlmProvider(apiKey, "claude-sonnet-5-5");
+var reply = await claude.ChatAsync(messages, new LlmCompletionOptions { Temperature = 0.3f });   // temperature not sent; no 400
+```
+
+**Tool requests a model writes as text (REQ-RAG-159, Sevak TR-RAG-062).** Small local models (Phi-3 mini, Qwen 2.5 0.5B) often write the tool request in the answer instead of as a structured call. `AgentLoopRunner` (`RunAsync` and `RunStreamAsync`) reads three forms when they name one of the loop's tools: a bare JSON object `{"name": "rag-search", "arguments": {"query": "…"}}`, the same in a code fence, and `<tool_call>…</tool_call>` tags (several per turn). `{"tool_calls": [...]}`, an array, the OpenAI `{"function": {...}}` shape, `parameters` for `arguments` and arguments written as a JSON string are read too. The request runs through the loop's own `IToolHandler` (so `GuardedToolHandler`, the egress gate and every guardrail apply) and counts against `maxIterations`, exactly as a structured call; its result is fed back and the request text is never the final answer. JSON naming no offered tool stays the answer. While streaming, text that starts like a request (`{`, `[`, a fence or `<tool_call>`) is held back until the turn ends, then either run as a call or sent as one text delta.
+
+```csharp
+var answer = await new AgentLoopRunner(new LocalLlmProvider(LocalModel.Phi3Mini4kInstruct), tools).RunAsync(messages);
+// The model wrote {"name": "rag-search", ...}; the loop ran rag-search and answer.Content is the model's next reply.
+```
+
+### PostgreSQL search returns every chunk (REQ-RAG-161)
+
+**Sevak TR-RAG-060.** Before 1.1.10 `PgVectorStore.InitializeAsync` built an IVFFlat index on the empty `Chunks` table. IVFFlat trains its lists from the rows present when it is built, so with `ivfflat.probes = 1` a search over N chunks returned some, one or none of them. From 1.1.10:
+
+- The index is HNSW (`CREATE INDEX IdxChunksEmbedding ON Chunks USING hnsw (Embedding vector_cosine_ops)`), which needs no training. On start-up an existing IVFFlat `IdxChunksEmbedding` is dropped and rebuilt as HNSW, with a logged warning.
+- Each search runs in its own transaction with `SET LOCAL hnsw.ef_search = topK` (at least 40, at most 1,000) and, on pgvector 0.8.0 or later, `SET LOCAL hnsw.iterative_scan = strict_order`, so a search with topK of N or more returns all N in cosine order, with or without a document filter.
+- On pgvector before 0.8.0 a filtered search, or one for more than 1,000 results, is answered by an exact scan. When HNSW cannot be built (pgvector before 0.5.0, or a vector wider than 2,000 dimensions) the store has no vector index and every search is exact.
+
+A host that set `Options=-c ivfflat.probes=…` on its connection string can remove it; it does no harm if kept.
+
+```csharp
+var rag = new TechieRagBuilder().UseEmbedded().UsePostgres(connectionString).Build();
+await rag.InitializeAsync();                       // an older IVFFlat index is replaced by HNSW here, once
+await rag.IngestTextAsync("The ledger closes on Friday.", "ledger.txt");
+await rag.IngestTextAsync("The van is serviced in March.", "van.txt");
+var results = await rag.SearchAsync("When is the van serviced?", topK: 2);   // both chunks, every time
+```
+
+### Token usage by day and by month (REQ-RAG-162)
+
+**Sevak TR-RAG-059.** `ITokenTracker` kept the session only. From 1.1.10 every usage can also go to a durable `ITokenUsageLog`, and the tracker answers ranges:
+
+```csharp
+var rag = new TechieRagBuilder()
+    .UseSqliteVec()
+    .WithPersistence(StoreProvider.Sqlite)          // also keeps usage in TrTokenUsage (UsageTracking.PersistUsage, default true)
+    .Build();
+
+var tracker = rag.GetTokenTracker();
+var today = DateOnly.FromDateTime(DateTime.Now);
+var india = TimeZoneInfo.FindSystemTimeZoneById("Asia/Kolkata");
+var spentToday = tracker.GetUsageByDay(today, today, india)[today].TotalEstimatedCostUsd;
+var spentThisMonth = tracker.GetUsageByMonth(today, today, india)[new DateOnly(today.Year, today.Month, 1)].TotalEstimatedCostUsd;
+var lastHour = tracker.GetUsageBetween(DateTime.UtcNow.AddHours(-1), DateTime.UtcNow);
+```
+
+- `GetUsageBetween(fromUtc, toUtc)`: half-open UTC range. `GetUsageByDay(firstDay, lastDay, timeZone)` and `GetUsageByMonth(firstDay, lastDay, timeZone)`: one entry per day (or per month, keyed by its first day), empty ones at zero; `timeZone` null means this machine's.
+- With a log the ranges include usage from before a restart; without one, only this session's.
+- Built-in logs: `SqliteTokenUsageLog(connectionString)`, `PostgresTokenUsageLog(connectionString)` (table `TrTokenUsage`, created on first use). Any other: implement `ITokenUsageLog` (`Append`, `Read`) and pass it with `WithTokenUsageLog(log)`. Writes are synchronous on purpose, so a UI thread never waits on an asynchronous write.
+- A log write that fails raises `TokenUsageTracker.OnUsageLogFailed`; the model call is not failed and the usage still counts in the session.
+- A custom `ITokenTracker` gets the three methods as default members that throw `NotSupportedException`.
+
+### Embedded model: downloaded flag and folder (REQ-RAG-163)
+
+**AstroLyfe TR-RAG-001.** `EmbeddedEmbeddingProvider.IsModelDownloaded()` said false, and `GetModelDirectory()` named an empty folder, while the model ran from another folder. From 1.1.10 both answer for the folder the model runs from:
+
+- `IsModelDownloaded()` is true when the default model is complete under the model root, complete in an older version's folder next to the assembly, or loaded by a provider in this process from any folder (including `new EmbeddedEmbeddingProvider(folder)`), as long as that folder still holds the model file.
+- `GetModelDirectory()` returns the folder a provider loaded the model from, else the folder one would load it from now. The folder a download writes to is `EmbeddedModel.GetModelDirectory()`; `EmbeddedModel.GetLoadDirectory()` is the per-model form of the new rule.
+- New on the provider: `ModelDirectory` (the folder this provider loaded from, null before) and `IsLoaded`.
+
+```csharp
+using var embedder = new EmbeddedEmbeddingProvider("/srv/models/bge-m3");
+await embedder.EmbedAsync("warm-up");
+var health = new { Downloaded = EmbeddedEmbeddingProvider.IsModelDownloaded(), Folder = embedder.ModelDirectory }; // true, /srv/models/bge-m3
+```
+
+### Claude prices and "price not known" (REQ-RAG-164)
+
+**Sevak TR-RAG-064.** The built-in price table had no current Claude model, and a model it did not know cost $0, so a host's spend read $0.00 and a cost budget never warned. From 1.1.10 the table carries Anthropic's list prices per million input and output tokens, read on 2026-11-13 from https://platform.claude.com/docs/en/about-claude/pricing:
+
+| Model id | Input | Output |
+|---|---|---|
+| `claude-fable-5-2`, `claude-mythos-5-2` | $8 | $40 |
+| `claude-fable-5-1`, `claude-mythos-5-1`, `claude-fable-5`, `claude-mythos-5` | $10 | $50 |
+| `claude-opus-5-5` | $4 | $20 |
+| `claude-opus-5`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `claude-opus-4-5` | $5 | $25 |
+| `claude-opus-4-1`, `claude-opus-4` (retired except on Bedrock and Google Cloud) | $15 | $75 |
+| `claude-sonnet-5-5`, `claude-sonnet-5` | $2 | $10 |
+| `claude-sonnet-4-6`, `claude-sonnet-4-5`, `claude-sonnet-4` | $3 | $15 |
+| `claude-haiku-5-5` (prompt up to 100,000 tokens / above) | $0.10 / $0.50 | $0.50 / $2.50 |
+| `claude-haiku-4-5` | $1 | $5 |
+
+- A key prices the plain id, a dated id (`claude-opus-4-5-20251101`), a Vertex id (`claude-haiku-4-5@20251001`) and a Bedrock id (`us.anthropic.claude-sonnet-4-5-20250929-v1:0`). It never prices another version: `claude-opus-5` does not price `claude-opus-5-7`, which stays "price not known" until it is added. The longest fitting key wins.
+- Claude Haiku 5.5's prompt length counts input, cache read and cache write tokens. Cache reads and writes themselves are not priced by the table.
+- **Telling "price not known" from $0:** `TokenUsage.IsPriceKnown` is false (a known price that came to $0 stays true); `TokenUsageSummary.UnpricedOperationCount`, `UnpricedTokens` and `UnpricedModels` count them apart from `TotalEstimatedCostUsd`, and `IsCostComplete` is false; `BudgetStatus.IsCostIncomplete` is true; `TokenUsageTracker.OnPriceNotKnown` fires for each one; `TryGetPricing(model, out pricing)` asks before a call. The usage log keeps the mark.
+
+```csharp
+var tracker = (TokenUsageTracker)rag.GetTokenTracker();
+tracker.OnPriceNotKnown += (_, usage) => logger.LogWarning("No price for {Model}; add it with SetModelPricing", usage.ModelName);
+var today = tracker.GetUsageByDay(day, day)[day];
+var label = today.IsCostComplete
+    ? $"${today.TotalEstimatedCostUsd:F2} today"
+    : $"${today.TotalEstimatedCostUsd:F2} today + {today.UnpricedTokens:N0} tokens with no price";
+tracker.SetModelPricing("claude-opus-5-7", 4m, 20m);   // a model the table does not know yet
+```
+
+### Image generation (REQ-RAG-155)
+
+Namespaces: the providers and `ImageGenerationProviderFactory` are in `TechieRag.ImageGeneration`, the interface in `TechieRag.Abstractions`, and `ImageSize`, `GeneratedImage`, `ImageGenerationOptions` and `ImageGenerationUsage` in `TechieRag.Models`. `IImageGenerationProvider.GenerateImageAsync(prompt, ImageSize size, ImageGenerationOptions? options)` returns `GeneratedImage(Bytes, MediaType, Size, Usage)`. `MediaType` and `Size` are read from the image bytes, so you can see when a service sent something other than what you asked for. Routes work like chat routes:
+
+```csharp
+var images = ImageGenerationProviderFactory.CreateForModel("openai/gpt-image-1", apiKey);   // also "gemini/...", "venice/..."
+GeneratedImage image = await images.GenerateImageAsync("a lighthouse at dawn", ImageSize.Square1024);
+await File.WriteAllBytesAsync("hero.png", image.Bytes);   // image.Usage.TotalTokens, image.Usage.Images
+```
+
+| Connector | Default model | Sizes | Usage |
+|---|---|---|---|
+| `openai` | `gpt-image-1` (PNG, `output_format`) | 1024x1024, 1536x1024, 1024x1536 (DALL·E 3/2 have their own lists) | input, output and total tokens |
+| `gemini` | `gemini-2.5-flash-image` (`generateContent`, image output) | by aspect ratio 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9; tier 1K/2K/4K from the long side; 1024x1024 exact | `usageMetadata` tokens |
+| `venice` | `venice-sd35` (PNG, width and height) | any up to 1280 a side | image count only (Venice reports no tokens) |
+| `openai-compatible` | none: name it, `openai-compatible/<model>` (REQ-RAG-156) | the service's; GPT Image and DALL·E names get OpenAI's lists | whatever the service returns in OpenAI's `usage` |
+| `azure-openai` | none: the deployment, `azure-openai/<deployment>` (REQ-RAG-157) | the service's; name `Model = "gpt-image-1"` in the options to check sizes first | OpenAI's `usage` |
+
+The last two need an endpoint, as an argument or an `@https://` suffix like the chat routes. Without one they are refused before any request:
+
+```csharp
+var compatible = ImageGenerationProviderFactory.CreateForModel("openai-compatible/flux-dev@https://images.example.com/v1", key);
+var azure = ImageGenerationProviderFactory.CreateForModel("azure-openai/hero-images", azureKey,
+    endpoint: "https://my-resource.openai.azure.com");   // api-key header, api-version 2025-04-01-preview
+// Or directly: new AzureOpenAIImageGenerationProvider(azureKey, "hero-images", endpoint, apiVersion: "…")
+```
+
+A bare model name resolves when it names one service: `gpt-image-*` and `dall-e-*` are OpenAI, `gemini-*` is Gemini. A size the model does not make throws `ArgumentException` before any request, and a refusal throws `LlmHttpException`. The key is held in memory and sent only in a header (`Authorization`, or `x-goog-api-key` for Gemini). It is never put in a URL, a log or a file. Options: `Model`, `Quality` (OpenAI, Venice), `NegativePrompt` and `Seed` (Venice), `Timeout` (default 120 s).
+
 ---
+
+## 1.3.0 Additions
+
+Seven packages ship together at one version from 1.3.0: TechieRag, TechieRag.Embedded, TechieRag.Telemetry, TechieRag.Agents, TechieRag.Local, and the new TechieRag.PgVector and TechieRag.Qdrant.
+
+### PostgreSQL and Qdrant are packages of their own (REQ-RAG-168)
+
+**TrStudio TR-RAG-006.** The core package no longer carries Npgsql, Pgvector, Qdrant.Client (and its three gRPC libraries) or Azure.AI.OpenAI, so an app that uses only SQLite ships none of them. Add `TechieRag.PgVector` for `UsePgVector`, `UsePostgres`, `WithPersistence(StoreProvider.Postgres)` and `PgVectorStore` / `PostgresConversationStore` / `PostgresWorkspaceStore` / `PostgresTokenUsageLog`; add `TechieRag.Qdrant` for `UseQdrant` and `QdrantStore`. Namespaces and builder calls are unchanged, so code compiles as before; the builder finds the package at build time. Without it, `Build()` throws `InvalidOperationException` naming the package to add. `AzureOpenAIEmbeddingProvider` now sends the same request over raw HTTP (`api-version` 2024-10-21, key in `api-key`); its constructor that took the SDK's `EmbeddingClient` is gone.
+
+```csharp
+// dotnet add package TechieRag.PgVector   (same version as TechieRag)
+var rag = new TechieRagBuilder()
+    .UseEmbedded()
+    .UsePostgres(connectionString)   // unchanged call; now served by TechieRag.PgVector
+    .Build();
+```
+
+### Embedded bge-m3 with 8-bit weights for bulk ingest (REQ-RAG-165)
+
+**Sevak TR-RAG-065.** On a processor, 88 percent of bge-m3's time per chunk is 32-bit float matrix multiplication. `EmbeddedModel.BgeM3Int8` (`bge-m3-int8`) is the same graph with 8-bit weights: 1024 dimensions, the same tokenizer and languages, a 0.6 GB download pinned to one commit of `Xenova/bge-m3` (MIT). On the same 34 chunks of 500 characters, one at a time, median per chunk: bge-m3 962 ms, bge-m3-int8 360 ms under WSL; 1,186 ms and 388 ms on Windows (Intel Core i5-11300H). Its vectors are about 0.98 cosine to bge-m3's, but its `EmbeddingSignature` differs, so a corpus embedded with bge-m3 reads as stale and is embedded again, never mixed. Batching chunks into one padded pass was measured and not adopted: slower in 32-bit, and in 8-bit the padding changes each text's quantization scale. `BgeM3` stays the default; desktop only.
+
+```csharp
+var rag = new TechieRagBuilder()
+    .UseEmbedded(EmbeddedModel.BgeM3Int8)   // 0.6 GB once; about 2.5 times as fast on a processor
+    .UseSqliteVec()
+    .Build();
+var stale = await rag.DetectStaleEmbeddingsAsync();   // a bge-m3 corpus shows here: re-ingest it
+```
+
+### Model list with price, data handling and reasoning (REQ-RAG-166)
+
+**Lekhak TR-RAG-011.** `LlmProviderFactory.ListModelDetailsAsync(route or connector, apiKey, endpoint?)` returns `LlmModelDetails` per model: `Id`, `InputPricePerMillionUsd`, `OutputPricePerMillionUsd`, `DataHandling` (`LlmModelDataHandling.NotKnown`, `RunsItself`, `PassesOn`, `Local`) and `SupportsReasoning`, each empty when the service says nothing. It makes the same one request as `ListModelsAsync` and returns the same ids. Read today: Venice (`model_spec.pricing` per million, `privacy` "private" = runs it itself, "anonymized" = passes the text on, `capabilities.supportsReasoning`) and OpenRouter (`pricing.prompt` / `completion` per token, scaled to a million; `supported_parameters` naming `reasoning`), recognised by the answer's shape; LM Studio and Ollama models are `Local`. The library keeps no price table for this list.
+
+```csharp
+var models = await LlmProviderFactory.ListModelDetailsAsync(ModelRouter.Require("venice/x"), key);
+foreach (var model in models)
+{
+    var price = model.InputPricePerMillionUsd is { } input ? $"${input}/M in, ${model.OutputPricePerMillionUsd}/M out" : "price not known";
+    var leaves = model.DataHandling == LlmModelDataHandling.PassesOn;   // warn: the text goes to another company
+}
+```
+
+### Metadata filter in search (REQ-RAG-169)
+
+**TrStudio TR-RAG-003.** `SearchOptions.MetadataFilter` (`IReadOnlyDictionary<string, string>`) keeps only chunks whose metadata carries every given value, compared as text (a number or true/false by its JSON form). SqliteVec and PgVector apply it in their own query, so the result is the best matching chunks even when other chunks are closer; other stores take the default `IVectorStore.SearchMatchingAsync`, which widens its candidate set until it has enough matches. It combines with `DocumentFilter` / `DocumentFilters`. A key may not hold `"` or `\`. An `ITechieRag` implementation that does not override the options overload throws `NotSupportedException` instead of returning unfiltered results.
+
+```csharp
+var results = await rag.SearchAsync(query, new SearchOptions
+{
+    TopK = 5,
+    MetadataFilter = new Dictionary<string, string> { ["userId"] = userId.ToString(), ["characterId"] = characterId.ToString() }
+});
+```
+
+### Embedding service unavailable (REQ-RAG-170)
+
+**TrStudio TR-RAG-004.** When an embedding service cannot be reached (connection refused, host not found, TLS failure) or does not answer in time, every built-in HTTP embedding provider throws `EmbeddingUnavailableException` (namespace `TechieRag.Models`, an `HttpRequestException`, with `ProviderName`). It reaches the caller of `IngestTextAsync`, `IngestAsync` and `SearchAsync`. A service that answers with an error status still throws a plain `HttpRequestException` with `StatusCode`; a cancellation the caller asked for stays an `OperationCanceledException`.
+
+```csharp
+try
+{
+    results = await rag.SearchAsync(query);
+}
+catch (EmbeddingUnavailableException)
+{
+    results = KeywordSearch(query);   // embeddings are down; fall back
+}
+```
+
+### Exact counts, sources and abstention (REQ-RAG-172)
+
+**MyDiary TR-RAG-001.** `ITechieRag.FindMatchesAsync(query, new MatchOptions { MinScore = … })` returns a `MatchReport`: every document with a chunk at or above the score (`Documents`, each `MatchedDocument` with `DocumentId`, `DocumentName`, `BestScore`, `Chunks`), `DocumentCount`, `ChunkCount`, `IsEmpty`, `IsComplete`. The count is the library's: matches are read best-first until one scores below `MinScore` (cap `MaxMatches`, 10,000), with no model involved. `AskWithEvidenceAsync(question, new EvidenceAskOptions { Match = … })` counts first; when nothing matches it returns at once with `RagResponse.Abstained` true, an empty answer and no model call; otherwise it answers from the best matching chunks with the exact count and names in the prompt, asking the model to begin its reply with the count, and sets `RagResponse.Matches`. No tool call is needed, so it works with `TechieRag.Local`. `MinScore` is required: the right value depends on the embedding model (for bge-m3 start near 0.5 to 0.6 and check against your data). `MatchOptions` also takes `DocumentFilters` and `MetadataFilter`.
+
+```csharp
+var response = await rag.AskWithEvidenceAsync("How many times did I go to the gym in October?", new EvidenceAskOptions
+{
+    Match = new MatchOptions { MinScore = 0.55f, MetadataFilter = new Dictionary<string, string> { ["month"] = "2026-10" } }
+});
+if (response.Abstained)
+{
+    ShowNoMatchingEntries();                       // the host's own words and language
+}
+else
+{
+    ShowCount(response.Matches!.DocumentCount);    // the library's count, not the model's
+    ShowSources(response.Matches.Documents);
+    ShowAnswer(response.Answer);
+}
+```
 
 ## ITechieRag Interface - Complete Method Reference
 
@@ -1510,20 +1864,29 @@ Console.WriteLine(File.Exists(agentPath) ? "techierag agent ready" : "build to d
 // Initialize the client (must be called before other operations)
 Task InitializeAsync(CancellationToken ct = default);
 
-// Ingest a single file
-Task<IngestionStats> IngestAsync(string filePath, CancellationToken ct = default);
+// Ingest a single file; returns the new document's id
+Task<string> IngestAsync(string filePath, CancellationToken ct = default);
 
-// Ingest all files in a directory
-Task<IngestionStats> IngestDirectoryAsync(string directoryPath, string searchPattern = "*.*",
+// Ingest all files in a directory; returns the new documents' ids
+Task<IReadOnlyList<string>> IngestDirectoryAsync(string directoryPath, string searchPattern = "*.*",
     CancellationToken ct = default);
 
-// Ingest raw text directly
-Task<IngestionStats> IngestTextAsync(string text, string documentId,
-    Dictionary<string, string>? metadata = null, CancellationToken ct = default);
+// Ingest raw text directly; returns the new document's id. Metadata values are object (REQ-RAG-171, TrStudio
+// TR-RAG-002): pass strings, numbers or true/false. They come back on SearchResult.Chunk.Metadata as object too
+// (a JsonElement once read from a store), so read them with ?.ToString() before parsing (for example Guid.TryParse).
+Task<string> IngestTextAsync(string text, string documentName,
+    Dictionary<string, object>? metadata = null, CancellationToken ct = default);
+
+// The same under a caller key: an earlier document stored under that key is replaced (REQ-RAG-120)
+Task<string> IngestTextAsync(string text, string documentName, string? sourceKey,
+    Dictionary<string, object>? metadata, CancellationToken ct = default);
 
 // Search for similar content
 Task<IReadOnlyList<SearchResult>> SearchAsync(string query, int topK = 5,
     string? documentFilter = null, CancellationToken ct = default);
+
+// Search with per-call options: document set, metadata filter (REQ-RAG-169), rerank switch
+Task<IReadOnlyList<SearchResult>> SearchAsync(string query, SearchOptions? options, CancellationToken ct = default);
 
 // Delete a document and its vectors
 Task DeleteDocumentAsync(string documentId, CancellationToken ct = default);
@@ -1727,6 +2090,7 @@ public class TokenUsage
     public int CacheReadTokens { get; set; }
     public int CacheWriteTokens { get; set; }
     public decimal EstimatedCostUsd { get; set; }
+    public bool IsPriceKnown { get; set; }            // false: no price for the model, cost 0 is NOT "free" (1.1.10)
     public string ModelName { get; set; }
     public string ProviderName { get; set; }
     public DateTime Timestamp { get; set; }
@@ -1739,8 +2103,12 @@ public class TokenUsageSummary
     public long TotalTokens { get; }
     public long TotalReasoningTokens { get; set; }
     public long TotalCompletionTokens { get; }        // output minus reasoning
-    public decimal TotalEstimatedCostUsd { get; set; }
+    public decimal TotalEstimatedCostUsd { get; set; } // priced operations only
     public int OperationCount { get; set; }
+    public int UnpricedOperationCount { get; set; }   // 1.1.10: operations with no known price
+    public long UnpricedTokens { get; set; }
+    public IReadOnlyList<string> UnpricedModels { get; set; }
+    public bool IsCostComplete { get; }               // UnpricedOperationCount == 0
 }
 
 public class UsageBudget

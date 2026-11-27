@@ -150,6 +150,14 @@ export async function openByDialog(aPage: Page, aButton: 'open-folder' | 'open-s
   }).toPass({ timeout: 30_000 });
   await aPage.getByTestId('open-project-path').fill(aPath);
   await aPage.getByTestId('open-project-go').click();
+  // A folder with a project and no solution is asked about first (REQ-FN-325); a test that needs it open goes on.
+  const vAsk = aPage.getByTestId('open-project-no-solution');
+  await expect.poll(async () => {
+    if (await vAsk.isVisible()) return 'ask';
+    const vName = aPage.getByTestId('project-switch-name');
+    return (await vName.count()) > 0 && ((await vName.first().textContent({ timeout: 1_000 }).catch(() => null))?.trim() === aName) ? 'open' : 'waiting';
+  }, { timeout: 30_000, intervals: [250, 500] }).not.toBe('waiting');
+  if (await vAsk.isVisible()) await aPage.getByTestId('open-project-no-solution-go').click();
   await expect(aPage.getByTestId('project-switch-name')).toHaveText(aName, { timeout: 30_000 });
   await expect(aPage.getByTestId('file-tree')).toBeVisible({ timeout: 20_000 });
 }

@@ -81,7 +81,10 @@ public partial class FilesPanel : IDisposable
 
     /// <summary>Whether a row's project is the one set to run now, for its tick in the right-click menu.</summary>
     /// <param name="aTarget">The row's run target.</param>
-    public bool IsRunTarget(RunTarget aTarget) => Workbench.SelectedRunTarget?.RunTargetId == aTarget.RunTargetId;
+    public bool IsRunTarget(RunTarget aTarget) =>
+        Workbench.HasMultipleStartup
+            ? Workbench.StartupTargets.Any(t => t.RunTargetId == aTarget.RunTargetId)
+            : Workbench.SelectedRunTarget?.RunTargetId == aTarget.RunTargetId;
 
     /// <summary>Right-click ▸ Set as the project to run (BRD-228): chosen now and remembered for this solution.</summary>
     /// <param name="aTarget">The row's run target.</param>
@@ -206,6 +209,13 @@ public partial class FilesPanel : IDisposable
         {
             objTree = vProjectId is { } vId ? await Files.TreeAsync(vId) : [];
             Remember(objTree);
+
+            // The solution is the root and arrives with its children read, open from the start (REQ-UI-125).
+            foreach (var vRoot in objTree.Where(n => n.IsSolution))
+            {
+                objChildren[vRoot.RelativePath] = vRoot.Children;
+                Remember(vRoot.Children);
+            }
         }
         catch (Exception aException)
         {

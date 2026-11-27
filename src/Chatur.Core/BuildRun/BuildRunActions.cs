@@ -73,7 +73,9 @@ public sealed class BuildRunActions : IBuildRunActions
             var vStored = vRows.Select(r => Path.GetFullPath(Path.Combine(vRoot, SpecOf(r).Path))).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var vStale = vRows.All(r => SolutionProjects.IsSolutionFile(SpecOf(r).Path))
                 || vRows.Any(r => !File.Exists(Path.Combine(vRoot, SpecOf(r).Path)))
-                || SolutionProjects.TestProjects(vProjectPath!).Any(t => !vStored.Contains(t));
+                || SolutionProjects.TestProjects(vProjectPath!).Any(t => !vStored.Contains(t))
+                // A project added to the solution since (by New project, an agent or outside Chatur) is offered at once.
+                || SolutionProjects.Runnable(vProjectPath!).Any(r => !vStored.Contains(r.Path));
             if (vStale && (SolutionProjects.Runnable(vProjectPath!).Count > 0 || SolutionProjects.TestProjects(vProjectPath!).Count > 0))
             {
                 vRememberedName = vRows.FirstOrDefault(r => r.IsLastUsed)?.Name;
@@ -103,13 +105,114 @@ public sealed class BuildRunActions : IBuildRunActions
         }
 
         return vRows
-            .Select(r => new RunTarget(r.RunTargetId, r.Name, r.Platform, IsAvailableOnThisMachine(r.Platform), SpecOf(r).Path.Replace('\\', '/')))
+            .Select(r => new RunTarget(r.RunTargetId, r.Name, r.Platform, IsAvailableOnThisMachine(r.Platform), SpecOf(r).Path.Replace('\\', '/'), SpecOf(r).Test))
             .ToList();
     }
 
     /// <inheritdoc />
-    public async Task SetRunTargetAsync(int aProjectId, int aRunTargetId, CancellationToken aCt = default) =>
+    public async Task SetRunTargetAsync(int aProjectId, int aRunTargetId, CancellationToken aCt = default)
+    {
+        // Choosing one project to run ends a Multiple startup choice (REQ-FN-324).
+        await SetStartupAsync(aProjectId, [], aCt).ConfigureAwait(false);
         await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> SetRunTargetForProjectFileAsync(int aProjectId, string aProjectFile, CancellationToken aCt = default)
+    {
+        var vRoot = await FolderOfAsync(aProjectId).ConfigureAwait(false);
+        if (vRoot is null || string.IsNullOrWhiteSpace(aProjectFile))
+        {
+            return false;
+        }
+
+        var vRelative = Path.GetRelativePath(vRoot, aProjectFile).Replace('\\', '/');
+        var vTarget = (await TargetsAsync(aProjectId, aCt).ConfigureAwait(false))
+            .FirstOrDefault(t => t.IsAvailableOnThisMachine && !t.IsTest && string.Equals(t.ProjectFile, vRelative, StringComparison.OrdinalIgnoreCase));
+        if (vTarget is null)
+        {
+            return false;
+        }
+
+        await SetRunTargetAsync(aProjectId, vTarget.RunTargetId, aCt).ConfigureAwait(false);
+        return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<RunTarget>> StartupAsync(int aProjectId, CancellationToken aCt = default)
+    {
+        var vFiles = await ReadStartupFilesAsync(aProjectId).ConfigureAwait(false);
+        if (vFiles.Count < 2)
+        {
+            return [];
+        }
+
+        var vTargets = await TargetsAsync(aProjectId, aCt).ConfigureAwait(false);
+        var vChosen = new List<RunTarget>();
+        foreach (var vFile in vFiles)
+        {
+            var vMatch = vTargets.Where(t => !t.IsTest && string.Equals(t.ProjectFile, vFile, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(t => t.IsAvailableOnThisMachine).FirstOrDefault();
+            if (vMatch is { IsAvailableOnThisMachine: true })
+            {
+                vChosen.Add(vMatch);
+            }
+        }
+
+        return vChosen.Count < 2 ? [] : vChosen;
+    }
+
+    /// <inheritdoc />
+    public async Task SetStartupAsync(int aProjectId, IReadOnlyList<string> aProjectFiles, CancellationToken aCt = default)
+    {
+        var vFiles = aProjectFiles.Select(f => f.Replace('\\', '/')).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        using var vConnection = objDb.OpenConnection();
+        var vKey = StartupSettingKey(aProjectId);
+        if (vFiles.Count < 2)
+        {
+            await vConnection.ExecuteAsync("DELETE FROM Setting WHERE Key = @vKey", new { vKey }).ConfigureAwait(false);
+            return;
+        }
+
+        await vConnection.ExecuteAsync(
+            "INSERT INTO Setting (Key, Value) VALUES (@vKey, @vValue) ON CONFLICT (Key) DO UPDATE SET Value = excluded.Value",
+            new { vKey, vValue = JsonSerializer.Serialize(vFiles) }).ConfigureAwait(false);
+    }
+
+    private static string StartupSettingKey(int aProjectId) => $"Startup.Projects.{aProjectId}";
+
+    private async Task<List<string>> ReadStartupFilesAsync(int aProjectId)
+    {
+        using var vConnection = objDb.OpenConnection();
+        var vKey = StartupSettingKey(aProjectId);
+        var vValue = await vConnection.QuerySingleOrDefaultAsync<string>("SELECT Value FROM Setting WHERE Key = @vKey", new { vKey }).ConfigureAwait(false);
+        if (string.IsNullOrEmpty(vValue))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(vValue) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>The folder a project's targets are relative to: the one around a solution file, or the project's own folder; null when the project is gone.</summary>
+    private async Task<string?> FolderOfAsync(int aProjectId)
+    {
+        using var vConnection = objDb.OpenConnection();
+        var vPath = await vConnection.QuerySingleOrDefaultAsync<string>("SELECT Path FROM Project WHERE ProjectId = @aProjectId", new { aProjectId }).ConfigureAwait(false);
+        if (string.IsNullOrEmpty(vPath))
+        {
+            return null;
+        }
+
+        return File.Exists(vPath) ? Path.GetDirectoryName(vPath) : vPath;
+    }
 
     private static TargetSpec SpecOf(RunTargetRow aRow)
     {
@@ -145,7 +248,22 @@ public sealed class BuildRunActions : IBuildRunActions
             return new BuildResult(false, TimeSpan.Zero, []);
         }
 
-        var vResult = await BuildCoreAsync(vState, vGeneration, vProjectPath, vSpec, aCt).ConfigureAwait(false);
+        // Several startup projects build together (REQ-FN-324).
+        var vStartup = await StartupAsync(aProjectId, aCt).ConfigureAwait(false);
+        BuildResult? vResult;
+        if (vStartup.Count > 1)
+        {
+            vResult = await BuildStartupAsync(vState, vGeneration, aProjectId, vStartup, aCt).ConfigureAwait(false);
+            if (vResult is { Succeeded: true })
+            {
+                vState.Publish(vGeneration, new OutputLine($"Build succeeded in {vResult.Duration.TotalSeconds:0.0}s — {vStartup.Count} projects", false));
+            }
+
+            await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+            return vResult ?? new BuildResult(false, TimeSpan.Zero, []);
+        }
+
+        vResult = await BuildCoreAsync(vState, vGeneration, vProjectPath, vSpec, aCt).ConfigureAwait(false);
         if (vResult is null)
         {
             return new BuildResult(false, TimeSpan.Zero, []);
@@ -157,6 +275,35 @@ public sealed class BuildRunActions : IBuildRunActions
 
         await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
         return vResult;
+    }
+
+    /// <summary>
+    /// Builds each startup project in turn and says so once, like a solution build (REQ-FN-324). The first project that
+    /// fails ends it; null when the build was stopped.
+    /// </summary>
+    private async Task<BuildResult?> BuildStartupAsync(RunState aState, int aGeneration, int aProjectId, IReadOnlyList<RunTarget> aTargets, CancellationToken aCt)
+    {
+        var vErrors = new List<BuildError>();
+        var vStopwatch = Stopwatch.StartNew();
+        foreach (var vTarget in aTargets)
+        {
+            var (vPath, vSpec) = await LoadTargetAsync(aProjectId, vTarget.RunTargetId, aCt).ConfigureAwait(false);
+            var vResult = await BuildCoreAsync(aState, aGeneration, vPath, vSpec, aCt).ConfigureAwait(false);
+            if (vResult is null)
+            {
+                return null;
+            }
+
+            vErrors.AddRange(vResult.Errors);
+            if (!vResult.Succeeded)
+            {
+                var vFailed = new BuildResult(false, vStopwatch.Elapsed, vErrors);
+                aState.Publish(aGeneration, new OutputLine(BuildFailedLine(vFailed), true));
+                return vFailed;
+            }
+        }
+
+        return new BuildResult(true, vStopwatch.Elapsed, vErrors);
     }
 
     /// <summary>
@@ -312,6 +459,15 @@ public sealed class BuildRunActions : IBuildRunActions
     {
         // The run outlives the request that started it: it stays the starting account's (BRD-216).
         using var vPin = AccountScope.Enter(aUserId);
+
+        // Several startup projects start together (REQ-FN-324).
+        var vStartup = await StartupAsync(aProjectId, aCt).ConfigureAwait(false);
+        if (vStartup.Count > 1)
+        {
+            await RunStartupAsync(aProjectId, aRunTargetId, vStartup, aCt, aState, aGeneration).ConfigureAwait(false);
+            return;
+        }
+
         var (vProjectPath, vSpec) = await LoadTargetAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
         var vState = aState;
 
@@ -341,25 +497,72 @@ public sealed class BuildRunActions : IBuildRunActions
             return;
         }
 
-        var vProfile = vSpec.Test ? null : LaunchSettings.ProjectProfile(vFullPath);
-        var vIsWeb = !vSpec.Test && IsWebProjectFile(vFullPath);
-        var vTfm = vSpec.Tfm is null ? string.Empty : $" -f {vSpec.Tfm}";
-        var vArguments = vSpec.Test
-            ? $"test \"{vFullPath}\" -c {vSpec.Config} --no-build{vTfm}"
-            : $"run --project \"{vFullPath}\" -c {vSpec.Config} --no-build"
+        await RunProgramAsync(vState, aGeneration, vProjectPath, vSpec, null, aCt).ConfigureAwait(false);
+        await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Builds every startup project, then starts them all together, each line of each program shown with the project's
+    /// name before it, the way Visual Studio runs several startup projects (REQ-FN-324). Stop ends them all.
+    /// </summary>
+    private async Task RunStartupAsync(int aProjectId, int aRunTargetId, IReadOnlyList<RunTarget> aTargets, CancellationToken aCt, RunState aState, int aGeneration)
+    {
+        var vBuild = await BuildStartupAsync(aState, aGeneration, aProjectId, aTargets, aCt).ConfigureAwait(false);
+        if (vBuild is null)
+        {
+            return;
+        }
+
+        if (!vBuild.Succeeded)
+        {
+            aState.Publish(aGeneration, new OutputLine("The programs were not started.", true));
+            return;
+        }
+
+        var vRuns = new List<Task>();
+        foreach (var vTarget in aTargets)
+        {
+            var (vProjectPath, vSpec) = await LoadTargetAsync(aProjectId, vTarget.RunTargetId, aCt).ConfigureAwait(false);
+            var vName = Path.GetFileNameWithoutExtension(vSpec.Path);
+            vRuns.Add(RunProgramAsync(aState, aGeneration, vProjectPath, vSpec, vName, aCt));
+        }
+
+        aState.Publish(aGeneration, new OutputLine($"Starting {aTargets.Count} projects together: {string.Join(", ", aTargets.Select(t => Path.GetFileNameWithoutExtension(t.ProjectFile)))}", false));
+        await Task.WhenAll(vRuns).ConfigureAwait(false);
+        aState.Publish(aGeneration, new OutputLine($"All {aTargets.Count} projects ended.", false));
+        await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Runs one built project (or its tests) and shows its lines until it ends, its exit code always among them
+    /// (REQ-UI-108). With a <paramref name="aTag"/> every line is shown as <c>[tag] line</c>, for several projects at once.
+    /// </summary>
+    private async Task RunProgramAsync(RunState aState, int aGeneration, string aProjectPath, TargetSpec aSpec, string? aTag, CancellationToken aCt)
+    {
+        var vFullPath = Path.Combine(aProjectPath, aSpec.Path);
+        var vPrefix = aTag is null ? string.Empty : $"[{aTag}] ";
+        var vProfile = aSpec.Test ? null : LaunchSettings.ProjectProfile(vFullPath);
+        var vIsWeb = !aSpec.Test && IsWebProjectFile(vFullPath);
+        var vTfm = aSpec.Tfm is null ? string.Empty : $" -f {aSpec.Tfm}";
+        var vArguments = aSpec.Test
+            ? $"test \"{vFullPath}\" -c {aSpec.Config} --no-build{vTfm}"
+            : $"run --project \"{vFullPath}\" -c {aSpec.Config} --no-build"
                 + (vProfile is null ? " --no-launch-profile" : $" --launch-profile \"{vProfile.Name}\"") + vTfm;
-        vState.Publish(aGeneration, new OutputLine($"> dotnet {vArguments}", false));
+        aState.Publish(aGeneration, new OutputLine($"{vPrefix}> dotnet {vArguments}", false));
 
         var vBrowserOpened = 0;
+        var vLevels = new ProgramLineLevels();
         try
         {
             var vExitCode = await objLauncher.RunAsync(
                 "dotnet",
                 vArguments,
-                vProjectPath,
+                aProjectPath,
                 aLine =>
                 {
-                    vState.Publish(aGeneration, new OutputLine(aLine, IsProgramErrorLine(aLine)));
+                    // A line is an error by its own level, never because it came on standard error (REQ-UI-107, BRD-235).
+                    var vLevel = vLevels.Read(aLine);
+                    aState.Publish(aGeneration, new OutputLine(vPrefix + aLine, vLevel == ProgramLineLevel.Error, vLevel == ProgramLineLevel.Warning));
 
                     // A web project opens in the browser once it says it is listening (REQ-FN-306), once per run.
                     if ((vIsWeb || vProfile?.LaunchBrowser == true)
@@ -367,25 +570,23 @@ public sealed class BuildRunActions : IBuildRunActions
                         && Interlocked.Exchange(ref vBrowserOpened, 1) == 0)
                     {
                         var vAddress = LaunchSettings.BrowserAddress(vProfile, vListening);
-                        vState.Publish(aGeneration, new OutputLine($"Opening {vAddress} in the browser", false));
+                        aState.Publish(aGeneration, new OutputLine($"{vPrefix}Opening {vAddress} in the browser", false));
                         _ = objLauncher.OpenBrowserAsync(vAddress, CancellationToken.None);
                     }
                 },
-                vState.LinkedToken(aCt)).ConfigureAwait(false);
+                aState.LinkedToken(aCt)).ConfigureAwait(false);
 
             // The exit code is always shown, 0 included (REQ-UI-108).
-            vState.Publish(aGeneration, new OutputLine($"Process exited with code {vExitCode}.", vExitCode != 0));
+            aState.Publish(aGeneration, new OutputLine($"{vPrefix}Process exited with code {vExitCode}.", vExitCode != 0));
         }
         catch (OperationCanceledException)
         {
-            vState.Publish(aGeneration, new OutputLine("Run stopped.", false));
+            aState.Publish(aGeneration, new OutputLine($"{vPrefix}Run stopped.", false));
         }
         catch (Exception aException)
         {
-            vState.Publish(aGeneration, new OutputLine($"Failed to run: {aException.Message}", true));
+            aState.Publish(aGeneration, new OutputLine($"{vPrefix}Failed to run: {aException.Message}", true));
         }
-
-        await MarkLastUsedAsync(aProjectId, aRunTargetId, aCt).ConfigureAwait(false);
     }
 
     /// <summary>Whether the project file is a web project, read from its SDK; a project that cannot be read is not.</summary>
@@ -399,21 +600,6 @@ public sealed class BuildRunActions : IBuildRunActions
         {
             return false;
         }
-    }
-
-    /// <summary>
-    /// A line of the running program's own output that reports a failure: a log line at fail or crit level, an
-    /// unhandled exception, or a compiler-style error (REQ-UI-107: errors marked).
-    /// </summary>
-    private static bool IsProgramErrorLine(string aLine)
-    {
-        var vText = aLine.TrimStart();
-        return vText.StartsWith("fail:", StringComparison.Ordinal)
-            || vText.StartsWith("crit:", StringComparison.Ordinal)
-            || vText.StartsWith("Unhandled exception", StringComparison.Ordinal)
-            || vText.StartsWith("[FAIL]", StringComparison.Ordinal)
-            || vText.StartsWith("Failed ", StringComparison.Ordinal)
-            || ErrorLineRegex.IsMatch(aLine);
     }
 
     private RunState GetOrCreateState(int aProjectId) =>

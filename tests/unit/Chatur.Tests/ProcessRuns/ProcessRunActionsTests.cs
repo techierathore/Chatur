@@ -160,7 +160,7 @@ public sealed class ProcessRunActionsTests : MigratedDatabaseFixture
 
         var vRecord = Assert.Single(File.ReadAllLines(RunsFile), aLine => aLine.Length > 0);
         using var vDoc = JsonDocument.Parse(vRecord);
-        Assert.Equal("chatur", vDoc.RootElement.GetProperty("tool").GetString());
+        Assert.Equal("chatur", vDoc.RootElement.GetProperty("harness").GetString());
         Assert.Equal("run", vDoc.RootElement.GetProperty("kind").GetString());
         Assert.Equal(Process, vDoc.RootElement.GetProperty("cmd").GetString());
     }

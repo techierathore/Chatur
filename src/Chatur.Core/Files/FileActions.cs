@@ -1,6 +1,6 @@
 using Chatur.Core.Actions;
+using Chatur.Core.BuildRun;
 using Chatur.Core.Data;
-using Chatur.Core.Platform;
 using Dapper;
 
 namespace Chatur.Core.Files;
@@ -23,17 +23,14 @@ public sealed class FileActions : IFileActions
     };
 
     private readonly IDbConnectionFactory objDb;
-    private readonly IProcessLauncher objProcessLauncher;
 
     /// <summary>
     /// Creates the action set.
     /// </summary>
     /// <param name="aDb">Opens connections to Chatur's own database, to read the project's own path.</param>
-    /// <param name="aProcessLauncher">Opens a file in the owner's editor or the machine's default application (REQ-FN-045, REQ-FN-046).</param>
-    public FileActions(IDbConnectionFactory aDb, IProcessLauncher aProcessLauncher)
+    public FileActions(IDbConnectionFactory aDb)
     {
         objDb = aDb;
-        objProcessLauncher = aProcessLauncher;
     }
 
     /// <inheritdoc />
@@ -46,7 +43,22 @@ public sealed class FileActions : IFileActions
         }
 
         var vShowHidden = await ShowHiddenAsync(aCt).ConfigureAwait(false);
-        return ReadLevel(vProjectPath, vProjectPath, vShowHidden) ?? [];
+        var vLevel = ReadLevel(vProjectPath, vProjectPath, vShowHidden) ?? [];
+        var vSolution = SolutionOf(vProjectPath);
+        if (vSolution is null)
+        {
+            return vLevel;
+        }
+
+        // The solution is the root of the tree and its projects come first, as in Visual Studio (REQ-UI-125, owner's test of 25 Nov 2026).
+        var vSolutionName = Path.GetFileName(vSolution);
+        var vChildren = MarkProjects(vLevel.Where(n => !string.Equals(n.Name, vSolutionName, StringComparison.OrdinalIgnoreCase)), vProjectPath, vSolution);
+        var vProjects = ProjectFoldersOf(vSolution, vProjectPath);
+        var vOrdered = vChildren.Where(n => n.IsProject).OrderBy(n => vProjects.IndexOf(n.RelativePath))
+            .Concat(vChildren.Where(n => n.IsFolder && !n.IsProject))
+            .Concat(vChildren.Where(n => !n.IsFolder))
+            .ToList();
+        return [new FileTreeNode(Path.GetFileNameWithoutExtension(vSolution), vSolutionName, true, vOrdered, true, true)];
     }
 
     /// <inheritdoc />
@@ -60,7 +72,8 @@ public sealed class FileActions : IFileActions
         }
 
         var vShowHidden = await ShowHiddenAsync(aCt).ConfigureAwait(false);
-        return ReadLevel(vProjectPath, vFolder, vShowHidden) ?? [];
+        var vNodes = ReadLevel(vProjectPath, vFolder, vShowHidden) ?? [];
+        return SolutionOf(vProjectPath) is { } vSolution ? MarkProjects(vNodes, vProjectPath, vSolution) : vNodes;
     }
 
     /// <inheritdoc />
@@ -106,6 +119,36 @@ public sealed class FileActions : IFileActions
     /// <param name="aName">A file or folder's own name.</param>
     public static bool IsHiddenName(string aName) =>
         aName.StartsWith('.') || string.Equals(aName, ".vs", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The solution file the tree is rooted in: the first <c>.sln</c> or <c>.slnx</c> directly in the project's folder, so
+    /// a project opened first and given its solution afterwards shows the solution as its root too (REQ-UI-125).
+    /// </summary>
+    private static string? SolutionOf(string aFolder)
+    {
+        try
+        {
+            return Directory.Exists(aFolder)
+                ? Directory.EnumerateFiles(aFolder).Where(SolutionProjects.IsSolutionFile).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).FirstOrDefault()
+                : null;
+        }
+        catch (Exception aException) when (aException is UnauthorizedAccessException or IOException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>The folders, relative to the solution's folder with forward slashes, that hold the projects the solution lists, in the solution's order.</summary>
+    private static List<string> ProjectFoldersOf(string aSolution, string aRoot) =>
+        SolutionProjects.Listed(aSolution)
+            .Select(p => Path.GetRelativePath(aRoot, Path.GetDirectoryName(p) ?? aRoot).Replace('\\', '/'))
+            .ToList();
+
+    private static List<FileTreeNode> MarkProjects(IEnumerable<FileTreeNode> aNodes, string aRoot, string aSolution)
+    {
+        var vFolders = ProjectFoldersOf(aSolution, aRoot).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return aNodes.Select(n => n.IsFolder && vFolders.Contains(n.RelativePath) ? n with { IsProject = true } : n).ToList();
+    }
 
     private async Task<string> LoadProjectPathAsync(int aProjectId, CancellationToken aCt)
     {
@@ -244,23 +287,5 @@ public sealed class FileActions : IFileActions
         }
 
         await File.WriteAllTextAsync(vFullPath, aContent, aCt).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    /// <remarks>Resolves the file to an absolute path under the project's own root, then hands it to <see cref="IProcessLauncher.OpenInEditorAsync"/> (REQ-FN-045).</remarks>
-    public async Task OpenInEditorAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default)
-    {
-        var vProjectPath = await LoadProjectPathAsync(aProjectId, aCt).ConfigureAwait(false);
-        var vFullPath = ResolveSafePath(vProjectPath, aRelativePath);
-        await objProcessLauncher.OpenInEditorAsync(vFullPath, aCt).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    /// <remarks>Resolves the file to an absolute path under the project's own root, then hands it to <see cref="IProcessLauncher.OpenWithDefaultAppAsync"/> (REQ-FN-046).</remarks>
-    public async Task OpenWithDefaultAppAsync(int aProjectId, string aRelativePath, CancellationToken aCt = default)
-    {
-        var vProjectPath = await LoadProjectPathAsync(aProjectId, aCt).ConfigureAwait(false);
-        var vFullPath = ResolveSafePath(vProjectPath, aRelativePath);
-        await objProcessLauncher.OpenWithDefaultAppAsync(vFullPath, aCt).ConfigureAwait(false);
     }
 }

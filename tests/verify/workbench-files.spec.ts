@@ -72,8 +72,8 @@ test('REQ-UI-011 only targets this machine can build are choosable; one needing 
   await openProject(page, MULTI);
   await openTargetMenu(page);
   const vPop = page.getByTestId('target-pop');
-  const vRemote = vPop.getByRole('menuitem').filter({ hasText: remoteLabel() });
-  const vBuildable = vPop.getByRole('menuitem').filter({ hasText: 'net10.0 ·' });
+  const vRemote = vPop.getByRole('menuitemradio').filter({ hasText: remoteLabel() });
+  const vBuildable = vPop.getByRole('menuitemradio').filter({ hasText: 'net10.0 ·' });
   await expect(vRemote.first()).toBeVisible();
   await expect(vRemote.first()).toContainText('needs another machine');
   await expect(vRemote.first()).toHaveAttribute('data-disabled', /.*/);

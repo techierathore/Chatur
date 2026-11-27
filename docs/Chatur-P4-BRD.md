@@ -11,7 +11,7 @@
 
 ## 1. Summary
 
-The first three phases make Chatur good enough for the owner. This one makes it something another developer can be given. Feedback, issues, licences and feature control go through App Manager, which already does all four, and role and rule data is synced between machines through it rather than carried in a file. Chatur's verifier gains the thing its own build needed all along: it drives the windows of the Mac and Windows applications it has built, so a native head is checked the way a web page already is. The owner, by now working on many projects at once, gets one view across all of them and the ability to work in separate working copies so two runs never fight over the same files. Chatur's actions are offered to other tools, so something outside can start a process. And the installers are signed, which is what turns a download the owner trusts into one a stranger can. BRD-235 to BRD-246 hold the owner's evening test of 21 Nov 2026, BRD-247 to BRD-252 the owner's test of 22 Nov 2026 from the Start menu, and BRD-253 to BRD-275 the owner's request that evening.
+The first three phases make Chatur good enough for the owner. This one makes it something another developer can be given. Feedback, issues, licences and feature control go through App Manager, which already does all four, and role and rule data is synced between machines through it rather than carried in a file. Chatur's verifier gains the thing its own build needed all along: it drives the windows of the Mac and Windows applications it has built, so a native head is checked the way a web page already is. The owner, by now working on many projects at once, gets one view across all of them and the ability to work in separate working copies so two runs never fight over the same files. Chatur's actions are offered to other tools, so something outside can start a process. And the installers are signed, which is what turns a download the owner trusts into one a stranger can. BRD-235 to BRD-246 hold the owner's evening test of 21 Nov 2026, BRD-247 to BRD-252 the owner's test of 22 Nov 2026 from the Start menu, BRD-253 to BRD-275 the owner's request that evening, BRD-287 to BRD-298 that of 27 Nov.
 
 ## 2. Screens and flow
 
@@ -24,8 +24,9 @@ One row per routed page this phase adds; dialogs are written exactly as in the p
 | All projects | `/all-projects` | Owner, Licensed developer | [mockup](mockups/all-projects.html) | project, phase, open, verified, last worked |
 | Worktrees | `/worktrees` | Owner | [mockup](mockups/worktrees.html) | working copy, branch, run, path, state |
 | Integrations | `/integrations` | Owner | [mockup](mockups/integrations.html) | action, what starts it, address, state |
-| Measurements | `/measurements` | Owner, Licensed developer | [mockup](mockups/measurements.html) | period, runs, tokens read, tokens written, cost, time, by model, by agent, by command, mistakes, found by, first-pass, estimate and actual, runs list |
-| Measurements across projects | `/measurements/all` | Owner, Licensed developer | [mockup](mockups/measurements-all.html) | period, project, runs, tokens read, tokens written, cost, time, mistakes |
+| Measurements | `/measurements` | Owner, Licensed developer | [mockup](mockups/measurements.html) | period, runs, tokens read, tokens written, cost, time, by model, by agent, by command, mistakes, found by, first-pass, estimate and actual, runs list, what is left on each key |
+| Measurements across projects | `/measurements/all` | Owner, Licensed developer | [mockup](mockups/measurements-all.html) | period, project, runs, tokens read, tokens written, cost, time, mistakes, what is left on each key |
+| Compare models | `/compare-models` | Owner, Licensed developer | [mockup](mockups/compare-models.html) | models, kind of task, task, time, tokens, cost, answer or changed files, right or wrong, past comparisons |
 
 **Primary journey:**
 
@@ -133,10 +134,12 @@ Added 2026-11-21 from fifteen minutes of the owner's own use (his notes of that 
 Added 2026-11-22 from the owner's test of the installed Chatur, started from the Start menu. Starting from nothing, there was no New project on "Nothing is open yet"; New project from an empty folder made an empty solution with no templates, and Run then said "No target found". The Analyst greeted with two commands, said it had no brainstorm, and its reply showed raw `**` marks. Every agent now carries every command of its TechieFlow agent, done by Chatur itself. BRD-252 is under Non-functional requirements.
 
 - **BRD-247** — New project with no solution open makes the solution and its first project from a template, and opens it. *Screen:* Start · *Mockup:* [mockup](mockups/start-empty.html)
-  - *Acceptance:* When the person creates a project with no solution open on Start, then the solution file is made in that folder, the project one folder under, and it opens.
-  - *Changed 2026-11-23:* a folder that was open and not empty got a second folder named after the solution inside it, with the solution and the project in there. The folder that is open, or the one picked, is now always the solution's folder.
+  - *Acceptance:* When the person creates a project with no solution on Start, then the solution gets a folder of its own in the chosen location and each project one inside that.
+  - *Changed 2026-11-23:* a folder that was open and not empty got a second folder named after the solution inside it, with the solution and the project in there. The folder that is open, or the one picked, was then always the solution's folder.
+  - *Changed 2026-11-26:* the owner's test of 25 Nov asked for the opposite, as Visual Studio does: the solution's folder is made when it is not there, then the solution in it, then each project in its own folder inside it. This replaces the 23 Nov rule. The one exception is the folder that is open holding projects and no solution (BRD-276), whose solution is made in that folder and takes them in.
 - **BRD-248** — After New project, Run has a target. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When the person creates a project with New project on Workbench, then Run's target list names the new project without anything more, and "No target found" does not stay.
+  - *Acceptance:* When the person adds a project that can run with New project on Workbench, then it is the project that runs; a library added later leaves that choice.
+  - *Changed 2026-11-26:* the new project was in the list but the first project stayed the one to run (owner's test of 25 Nov).
 - **BRD-249** — Every agent carries every command its TechieFlow agent has, done in Chatur. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When the person types any TechieFlow command of an agent to that agent on Workbench, then Chatur runs it itself and *help lists it.
 - **BRD-250** — A reply is drawn as formatted text. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
@@ -149,7 +152,7 @@ Added 2026-11-22 from the owner's test of the installed Chatur, started from the
 Added 2026-11-22. TfLens reaches only repositories it can see; these numbers are wanted inside Chatur for any project, private or offline, read from its own `docs/metrics` files with no network call, in TfLens's words. The agents' command tables go into the UsageGuide and the README from the command list in code. Nine commands not yet run end to end are each run to their end. BRD-261, BRD-263, BRD-264 and BRD-275 are under Non-functional requirements.
 
 - **BRD-253** — Measurements, in the main menu, for the open project, read from its own docs/metrics files and nothing else. *Screen:* Measurements · *Mockup:* [mockup](mockups/measurements.html)
-  - *Acceptance:* When the person chooses Project ▸ Measurements on Measurements, then the open project's figures show, read only from its docs/metrics files, with no network call.
+  - *Acceptance:* When the person picks a project and chooses Project ▸ Measurements on Measurements, then its figures show, chat sessions included, read only from its docs/metrics files.
 - **BRD-254** — Pick the period. *Screen:* Measurements · *Mockup:* [mockup](mockups/measurements.html)
   - *Acceptance:* When the person picks Today, 7 days, 30 days, All or two dates on Measurements, then every figure on the screen counts only the records inside that period.
 - **BRD-255** — Runs, tokens, cost and time, split by model, by agent and by command. *Screen:* Measurements · *Mockup:* [mockup](mockups/measurements.html)
@@ -192,13 +195,52 @@ Added 2026-11-22. TfLens reaches only repositories it can see; these numbers are
 Added 2026-11-23 from the owner's test of the installed Chatur. He opened a folder, chose New project, and got the solution and the project inside a second folder named after the solution: the folder was not empty, because a chat in it the day before had made Chatur write `docs/metrics` there (phase 1 BRD-74, changed the same day). One rule now holds for every starting point: the folder that is open, or the one picked, is the solution's folder. BRD-280 and BRD-281 are under Non-functional requirements.
 
 - **BRD-276** — A folder with projects and no solution gets a solution that takes them in. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When the person creates a project on Workbench in a folder with projects and no solution, then the dialog says so, and the new solution there holds them all.
+  - *Acceptance:* When the person creates a project in the open folder that holds projects and no solution, then the dialog says so and the new solution holds them all.
 - **BRD-277** — A folder that has a solution gets the new project added to that solution. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
   - *Acceptance:* When the person creates a project on Workbench with a folder open that holds a solution, then the project is added to that solution and no second solution is made.
-- **BRD-278** — After Create, FILES keeps the folder that was open as its root. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When the person creates a project on Workbench with a folder open, then FILES lists that folder's solution file and project folders, with no folder wrapped around them.
+- **BRD-278** — FILES shows the solution as its root, with its projects below it. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When a project with a solution is open on Workbench, then FILES shows the solution as its one root with the projects below it and no solution file beside them.
+  - *Changed 2026-11-26:* the 23 Nov wording kept the folder as the root with the solution file beside the project folders, which the owner's test of 25 Nov found wrong: as in Visual Studio, the solution is the root.
 - **BRD-279** — New project shows where things will be made before it makes them. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
-  - *Acceptance:* When the person types the names in New project on Workbench, then the dialog shows the folder and the full paths of the solution file and the project folder.
+  - *Acceptance:* When the person types the names in New project, then the dialog shows the solution's folder, the solution file and the project folder as full paths.
+
+### The owner's test of 25 Nov (Start, Workbench, Measurements)
+
+Added 2026-11-26 from the owner's test of the installed Chatur on 25 Nov (`docs/screenshots/25-Nov-26-Run`). The solution is now the root of FILES and a new solution gets its own folder (BRD-247, BRD-278, BRD-279 changed; they replace the 23 Nov rule); a project just added is the one that runs (BRD-248); projects start together (BRD-283); the project types can be searched (BRD-282); a folder with no solution is said so (BRD-284); the chat follows its newest message (BRD-285); closing the file view asks (BRD-83); the two buttons that handed a file to another editor are gone (BRD-84, BRD-85); and a real chat now writes its sessions and tokens into `docs/metrics` in TechieFlow's shape, so Measurements shows them (BRD-74, BRD-75, BRD-253). BRD-286 is under Non-functional requirements.
+
+- **BRD-282** — Search the project types in New project. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the person types in the search box above the project types in New project, then the list narrows to the types that hold every word typed.
+- **BRD-283** — Several projects start together, a saved choice per solution. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When the person ticks two or more projects in Multiple startup projects and presses Run, then each is built and started together and Stop ends them all.
+- **BRD-284** — A folder with projects and no solution is said so and asked about before it opens. *Screen:* Start · *Mockup:* [mockup](mockups/start.html)
+  - *Acceptance:* When the person opens a folder that holds a project and no solution on Start, then Chatur says so and asks whether to open it, before opening.
+- **BRD-285** — The chat moves to the newest message after a long reply or a command such as *yolo. *Screen:* Workbench · *Mockup:* [mockup](mockups/main.html)
+  - *Acceptance:* When a long reply or a command such as *yolo makes the conversation longer than its window on Workbench, then the conversation shows its newest message.
+
+### What is left on each key, and one task on several models (owner, 27 Nov 2026)
+
+Added 2026-11-27 from the owner's request of that morning. Both Measurements screens show what is left on every connected key: asked of the provider where it has an address for its balance or limit (OpenRouter, DeepSeek), else Chatur's own count of what was used against a limit the person types for that key, else "not known". The owner's one connected provider on 27 Nov, Anthropic with a key, has no such address for a normal key (its usage and cost reports need an admin key), so it is of the second kind. Compare models gives one task to two to four connected models side by side; a task that changes files gives each model its own copy under the project's bin folder. BRD-297 and BRD-298 are under Non-functional requirements; the run of 26 Nov's leftovers (REQ-FN-059's test, four screens against their mockups, the ASP.NET https line in Output) are fixes to existing rows, not new items.
+
+- **BRD-287** — What is left on each key, on both Measurements screens. *Screen:* Measurements · *Mockup:* [mockup](mockups/measurements.html)
+  - *Acceptance:* When the person opens Measurements or Measurements across projects, then each connected provider has one line saying what is left on its key and how that is known.
+- **BRD-288** — Ask the provider, where it has an address that tells its balance or its limit. *Screen:* Measurements · *Mockup:* [mockup](mockups/measurements.html)
+  - *Acceptance:* When a connected provider has an address for its balance or limit on Measurements, then Chatur asks it and the line shows the amount left and when it was asked.
+- **BRD-289** — A limit typed for a key, counted against what Chatur used. *Screen:* Measurements · *Mockup:* [mockup](mockups/measurements.html)
+  - *Acceptance:* When the person types a limit and start date for a key on Measurements, then its line shows the limit, Chatur's own cost since that date, and what is left.
+- **BRD-290** — No number reads "not known", never a guess. *Screen:* Measurements · *Mockup:* [mockup](mockups/measurements.html)
+  - *Acceptance:* When a key has no address and no limit typed, or its address does not answer, on Measurements, then its line reads "not known" and says why.
+- **BRD-291** — Pick two to four connected models and give them one task on the open project. *Screen:* Compare models · *Mockup:* [mockup](mockups/compare-models.html)
+  - *Acceptance:* When the person ticks two to four models and types a task on Compare models, then Run starts each; one or five models are refused with the reason.
+- **BRD-292** — A read-only question needs no copy and changes nothing. *Screen:* Compare models · *Mockup:* [mockup](mockups/compare-models.html)
+  - *Acceptance:* When the kind is "Question, changes nothing" on Compare models, then each model answers from the open project and no file of the project changes.
+- **BRD-293** — A task that changes files gives each model its own copy under the project's bin folder, removed afterwards. *Screen:* Compare models · *Mockup:* [mockup](mockups/compare-models.html)
+  - *Acceptance:* When the kind is "Task that changes files" on Compare models, then each model works in its own copy under the project's bin folder, removed when the run ends.
+- **BRD-294** — Time, tokens, cost and the answer or changed files, side by side. *Screen:* Compare models · *Mockup:* [mockup](mockups/compare-models.html)
+  - *Acceptance:* When a comparison ends on Compare models, then one column per model shows its time, tokens in and out, cost or "no price", and its answer or its changed files.
+- **BRD-295** — Mark each model's result right or wrong. *Screen:* Compare models · *Mockup:* [mockup](mockups/compare-models.html)
+  - *Acceptance:* When the person marks a model's result right or wrong on Compare models, then the mark is kept and shows again when that comparison is opened again.
+- **BRD-296** — Comparisons and marks are kept in docs/metrics in TfLens's shape and open again. *Screen:* Compare models · *Mockup:* [mockup](mockups/compare-models.html)
+  - *Acceptance:* When a comparison ends or a mark changes on Compare models, then runs.jsonl holds one compare-models record per model with the mark, and the comparison opens again.
 
 ## 4. Non-functional requirements
 
@@ -210,15 +252,18 @@ Added 2026-11-23 from the owner's test of the installed Chatur. He opened a fold
 | BRD-261 | Correctness | Every number on the measurements screens is computed by code and equals the total added up again from the files | When a test adds up the fixture's files again on Measurements, then every figure equals it, unmeasured ones read "not measured", and the words are TfLens's |
 | BRD-263 | Documentation | The UsageGuide has "The agents and their commands", one table per agent, from the one command list in the code | When a test compares the UsageGuide with the command list on Workbench, then each agent's table names every command once, with what, example and where, and nothing else |
 | BRD-264 | Documentation | The README names the four agents and their commands in short and links to the guide's section | When a test compares the README with the command list on Workbench, then every command is named once under its agent and no other command is named |
-| BRD-275 | Testing | The owner's test has a part for the measurements screens and one for typing a command of each agent | When the owner follows the Owner's test on Workbench, then one part walks the measurements screens, one types a command to each agent, and the eight parts stay |
+| BRD-275 | Testing | The owner's test has a part for the measurements screens and one for typing a command of each agent | When the owner follows the Owner's test, then one part walks the measurements screens, picking the project in the app, and one types a command to each agent |
 | BRD-280 | Testing | New project's tests compare the exact paths on disk for each starting point | When the tests of New project run, then for each of the four starting points every path made on disk is compared with the one wanted. |
 | BRD-281 | Testing | The owner's test makes its folders under this repository's bin folder and starts with the empty-folder case | When the owner follows the Owner's test, then every folder it makes is under this repository's bin folder, and part 1 is the empty-folder case. |
+| BRD-286 | Testing | The owner's test names no path in the measurements part, and a real model call proves what Measurements shows | When the owner follows the Owner's test, then the measurements part picks the project in the app, and its docs/metrics holds the chat's sessions |
+| BRD-297 | Testing | Compare models is proven with a real read-only question on two models | When the tests ask two connected models a real read-only question on Compare models, then both answers show with time, tokens and cost, and runs.jsonl holds both records |
+| BRD-298 | Testing | The owner's test has parts for the keys and for Compare models, and runs in one order | When the owner follows the Owner's test on Measurements and Compare models, then one part reads each key, one compares two named models, and all parts run in one order |
 
 ## 5. Development status
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-11-23.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P4-Checklist.md`.
+**Snapshot as of 2026-11-27.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P4-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
@@ -229,11 +274,12 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | Integrations | 4 | 4 | 0 | Done |
 | The owner's evening test, 21 Nov (Workbench, Settings) | 12 | 12 | 0 | Done |
 | The owner's test of 22 Nov (Start, Workbench) | 6 | 6 | 0 | Done |
-| Measurements | 7 | 7 | 0 | Done |
-| Measurements across projects | 1 | 0 | 1 | In progress |
+| Measurements | 11 | 10 | 1 | Partial |
+| Measurements across projects | 1 | 1 | 0 | Done |
 | Settings | 1 | 1 | 0 | Done |
-| Workbench | 10 | 10 | 0 | Done |
-| Non-functional | 4 | 4 | 0 | Done |
+| Workbench | 18 | 18 | 0 | Done |
+| Non-functional | 9 | 9 | 0 | Done |
+| Compare models | 6 | 6 | 0 | Done |
 
 ## 6. Where the rest lives
 

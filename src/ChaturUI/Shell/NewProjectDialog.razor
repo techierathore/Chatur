@@ -1,9 +1,10 @@
 @* New project, the one dialog of every state (BRD-244, BRD-247, BRD-276, REQ-UI-112, REQ-FN-310): this machine's own
    `dotnet new` project templates, the names, the framework, and where things go. The folder that is open is shown as
    "Will be created in", not typed, with "Change location" for the rare case; with nothing open there is one Location
-   field. Under it the two full paths Create will make, changing as the names are typed: the solution file, in that
-   folder itself, and the project folder, directly under it. A folder that already has a solution gets the project
-   added to it; a folder with projects and no solution is told its solution will take them in. *@
+   field. Under it the full paths Create will make, changing as the names are typed: a new solution gets a folder of
+   its own, named after it, with the solution file in it and each project in a folder inside that (owner's test of
+   25 Nov 2026). A folder that already has a solution gets the project added to it; the open folder with projects and
+   no solution is told its solution will take them in. A search box narrows the list of project types (REQ-UI-127). *@
 <Dialog Open="Open" OpenChanged="OpenChanged">
     <DialogContent Class="max-w-2xl" data-testid="new-project-dialog" data-in-solution="@(InSolution ? "yes" : "no")" data-open-folder="@(OpenFolder ?? string.Empty)">
         <DialogHeader>
@@ -20,8 +21,14 @@
             }
             else
             {
+                @* REQ-UI-127: the list of project types is long, so a search box narrows it as the person types. *@
+                <Input Value="@objSearch" ValueChanged="OnSearchChanged" Placeholder="Search the project types" AriaLabel="Search the project types" data-testid="template-search" />
                 <div class="max-h-56 overflow-y-auto rounded-md border" data-testid="template-list">
-                    @foreach (var vTemplate in objTemplates)
+                    @if (ShownTemplates.Count == 0)
+                    {
+                        <p class="px-3 py-2 text-sm text-muted-foreground" data-testid="template-none">No project type matches “@objSearch”.</p>
+                    }
+                    @foreach (var vTemplate in ShownTemplates)
                     {
                         <Button Variant="@(IsSelected(vTemplate) ? ButtonVariant.Default : ButtonVariant.Ghost)"
                                 Class="h-auto w-full justify-start gap-3 rounded-none border-b px-3 py-1.5 text-left font-normal last:border-b-0"
@@ -97,6 +104,8 @@
                     </Field>
                 }
                 <div class="grid grid-cols-1 gap-x-3 gap-y-1 text-xs sm:grid-cols-[auto_1fr]" data-testid="new-project-paths">
+                    <span class="text-muted-foreground">Solution folder</span>
+                    <span class="min-w-0 break-all font-mono" data-testid="new-project-solution-folder">@(objPlan.SolutionFile is null ? "Shown when the solution has a name" : objPlan.Folder)</span>
                     <span class="text-muted-foreground">@(objPlan.SolutionExists ? "Solution file (already there)" : "Solution file")</span>
                     <span class="min-w-0 break-all font-mono" data-testid="new-project-solution-path">@(objPlan.SolutionFile ?? "Shown when the solution has a name")</span>
                     <span class="text-muted-foreground">Project folder</span>
@@ -105,7 +114,7 @@
                 @if (objPlan.ProjectsToAdd.Count > 0)
                 {
                     <p class="text-xs" data-testid="new-project-found">
-                        This folder has @(objPlan.ProjectsToAdd.Count == 1 ? "a project" : $"{objPlan.ProjectsToAdd.Count} projects") and no solution. Create makes the solution here and adds
+                        @objPlan.Folder has @(objPlan.ProjectsToAdd.Count == 1 ? "a project" : $"{objPlan.ProjectsToAdd.Count} projects") and no solution. Create makes the solution there and adds
                         @(objPlan.ProjectsToAdd.Count == 1 ? "it" : "them") to it: <span class="break-all font-mono">@string.Join(", ", objPlan.ProjectsToAdd)</span>
                     </p>
                 }

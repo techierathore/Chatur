@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Linq;
 using Chatur.Core.Measurements;
 using Chatur.Tests.Support;
@@ -85,8 +86,8 @@ public sealed class MeasurementActionsTests : MigratedDatabaseFixture
     /// <summary>
     /// When a run record a command needs is appended, then <c>docs/metrics</c> holds that one stream's file and no
     /// other, never an empty one (REQ-FN-040; BRD-74 as changed 23 Nov 2026), the record is signed
-    /// <c>tool: "chatur"</c> (REQ-FN-041), and a field the caller did not supply is written empty rather than guessed
-    /// (REQ-FN-042).
+    /// <c>harness: "chatur"</c> in TechieFlow's shape (REQ-FN-041), and a field the caller did not supply is written
+    /// null rather than guessed (REQ-FN-042).
     /// </summary>
     [Fact(DisplayName = "REQ-FN-040 a record a command needs makes its own stream file and no other")]
     public async Task AppendAsyncMakesOnlyItsOwnStreamAndSignsTheRecord()
@@ -100,33 +101,40 @@ public sealed class MeasurementActionsTests : MigratedDatabaseFixture
         Assert.Equal(["runs.jsonl"], new DirectoryInfo(vMetricsFolder).GetFiles().Select(f => f.Name).ToArray());
 
         var vLine = (await File.ReadAllLinesAsync(Path.Combine(vMetricsFolder, "runs.jsonl"))).Single(aLine => !string.IsNullOrWhiteSpace(aLine));
-        Assert.Contains("\"tool\":\"chatur\"", vLine);
+        Assert.Contains("\"harness\":\"chatur\"", vLine);
+        Assert.Contains("\"v\":1,", vLine);
+        Assert.Contains("\"ts\":\"", vLine);
+        Assert.DoesNotContain("\"at\":", vLine);
         Assert.Contains("\"kind\":\"run\"", vLine);
         Assert.Contains("\"cmd\":\"build-phase\"", vLine);
-        Assert.Contains("\"mode\":\"\"", vLine);
+        Assert.Contains("\"mode\":null", vLine);
     }
 
     /// <summary>
-    /// When Chatur notes something nobody asked for (a chat turn), then a project with no <c>docs/metrics</c> gets
-    /// no folder and no file and no refusal is recorded; a project that has the folder gets the record
-    /// (owner's test of 23 Nov 2026).
+    /// When a record carries typed fields, then they are written as TechieFlow types them (a count a number, a list an
+    /// array, a cost a number or null), so TfLens reads them unchanged; a count that is not a number is refused
+    /// (REQ-FN-040, REQ-FN-043; owner's test of 25 Nov 2026).
     /// </summary>
-    [Fact(DisplayName = "REQ-FN-040 a record nobody asked for is written only where docs/metrics already is")]
-    public async Task AppendWhenMeasuredWritesOnlyIntoAMeasuredProject()
+    [Fact(DisplayName = "REQ-FN-040 a record is typed the way TechieFlow types it")]
+    public async Task AppendAsyncTypesTheFields()
     {
-        Directory.CreateDirectory(objProjectPath);
-        var vProjectId = CreateProject("Opened", objProjectPath);
+        var vProjectId = CreateProject("Typed", objProjectPath);
         var vActions = new MeasurementActions(CreateFactory(), NullLogger<MeasurementActions>.Instance);
 
-        await vActions.AppendWhenMeasuredAsync(vProjectId, "sessions", new Dictionary<string, string?> { ["kind"] = "session" });
+        await vActions.AppendAsync(vProjectId, "runs", new Dictionary<string, string?>
+        {
+            ["cmd"] = "build-phase", ["duration_s"] = "12.4", ["tokens_in"] = "5", ["reqs_touched"] = "REQ-FN-001, REQ-UI-002", ["cost_usd"] = "0.25"
+        });
+        await vActions.AppendAsync(vProjectId, "runs", new Dictionary<string, string?> { ["cmd"] = "x", ["tokens_in"] = "many" });
 
-        Assert.Empty(Directory.GetFileSystemEntries(objProjectPath));
-        Assert.All(await vActions.StreamsAsync(vProjectId), s => Assert.Equal(0, s.Refused));
-
-        var vMetricsFolder = Directory.CreateDirectory(Path.Combine(objProjectPath, "docs", "metrics")).FullName;
-        await vActions.AppendWhenMeasuredAsync(vProjectId, "sessions", new Dictionary<string, string?> { ["kind"] = "session" });
-
-        Assert.Equal(["sessions.jsonl"], new DirectoryInfo(vMetricsFolder).GetFiles().Select(f => f.Name).ToArray());
+        var vLines = await File.ReadAllLinesAsync(Path.Combine(objProjectPath, "docs", "metrics", "runs.jsonl"));
+        var vLine = Assert.Single(vLines, l => !string.IsNullOrWhiteSpace(l));
+        using var vDoc = JsonDocument.Parse(vLine);
+        Assert.Equal(12, vDoc.RootElement.GetProperty("duration_s").GetInt64());
+        Assert.Equal(5, vDoc.RootElement.GetProperty("tokens_in").GetInt64());
+        Assert.Equal(0.25, vDoc.RootElement.GetProperty("cost_usd").GetDouble());
+        Assert.Equal(["REQ-FN-001", "REQ-UI-002"], vDoc.RootElement.GetProperty("reqs_touched").EnumerateArray().Select(e => e.GetString()!).ToArray());
+        Assert.Contains(await vActions.StreamsAsync(vProjectId), s => s.Name == "runs.jsonl" && s.Refused == 1);
     }
 
     /// <summary>

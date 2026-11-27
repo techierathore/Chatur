@@ -35,11 +35,13 @@ public interface IProjectTemplateActions
     Task<string> SolutionExtensionAsync(int? aProjectId, CancellationToken aCt = default);
 
     /// <summary>
-    /// What Create would put on disk (BRD-247, BRD-276; owner's test of 23 Nov 2026), from the disk as it is now and
-    /// without changing it. One rule for every starting point: <see cref="NewProjectRequest.Location"/> is the
-    /// solution's folder. The solution file is in that folder itself and the project in one folder directly under it,
-    /// never in a folder named after the solution. A solution already in the folder is the one the project is added
-    /// to; a folder with projects and no solution gets a solution that takes those projects in.
+    /// What Create would put on disk (BRD-247, BRD-276; owner's test of 25 Nov 2026, which replaced that of 23 Nov),
+    /// from the disk as it is now and without changing it. Like Visual Studio: a new solution gets its own folder under
+    /// <see cref="NewProjectRequest.Location"/>, named after the solution, with the solution file in it and each project
+    /// in a folder of its own inside that, also when the two names are the same; nothing lands directly in the location.
+    /// A solution already in the location (or in the folder the solution's name gives) is the one the project is added
+    /// to, and so is the open solution. The one exception is the folder that is open on the Workbench holding projects
+    /// and no solution: its solution is made in that folder and takes those projects in.
     /// </summary>
     /// <param name="aRequest">The location and the names typed so far; the names may still be empty.</param>
     /// <param name="aSolutionExtension">The extension from <see cref="SolutionExtensionAsync"/>.</param>
@@ -47,7 +49,7 @@ public interface IProjectTemplateActions
 
     /// <summary>
     /// Makes what <see cref="Plan"/> showed: the solution with <c>dotnet new sln</c> when the folder has none, the
-    /// project with <c>dotnet new</c> in a folder named after it directly under the solution's folder, and
+    /// project with <c>dotnet new</c> in a folder named after it inside the solution's folder, and
     /// <c>dotnet sln add</c> for it and for the projects the folder already held outside any solution. Then the
     /// solution is opened and its stored run targets forgotten, so Run has the new project at once (BRD-248). A
     /// folder project open on exactly that folder is taken off the list, since the solution now stands for it.
@@ -67,10 +69,11 @@ public interface IProjectTemplateActions
 /// <param name="ProjectName">The project's name; empty takes the new solution's name.</param>
 /// <param name="ShortName">The template's short name, e.g. <c>console</c>.</param>
 /// <param name="Framework">The framework, or <see langword="null"/> for the template's own.</param>
-public sealed record NewProjectRequest(string Location, string? SolutionFile, string SolutionName, string ProjectName, string ShortName, string? Framework);
+/// <param name="InOpenFolder">Whether <paramref name="Location"/> is the folder open on the Workbench: projects it holds with no solution are then taken into the new solution, which is made in that folder (BRD-276).</param>
+public sealed record NewProjectRequest(string Location, string? SolutionFile, string SolutionName, string ProjectName, string ShortName, string? Framework, bool InOpenFolder = false);
 
 /// <summary>What Create would put on disk, shown in the dialog before anything is made.</summary>
-/// <param name="Folder">The solution's folder; empty until a location is known.</param>
+/// <param name="Folder">The solution's folder (the one made for a new solution); the location itself until the solution has a name; empty until a location is known.</param>
 /// <param name="SolutionFile">The solution file's full path, existing or to be made; <see langword="null"/> until it can be named.</param>
 /// <param name="SolutionExists">Whether <paramref name="SolutionFile"/> is already on disk, so the project is added to it.</param>
 /// <param name="ProjectFolder">The project folder's full path; <see langword="null"/> until the project has a name.</param>

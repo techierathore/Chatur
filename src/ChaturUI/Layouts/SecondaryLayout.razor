@@ -24,15 +24,19 @@
                     <SheetTitle>Chatur</SheetTitle>
                 </SheetHeader>
                 <nav class="flex flex-col gap-1 py-2" data-testid="subnav-mobile">
-                    @foreach (var vItem in SecondaryNavigation.Items)
+                    @foreach (var (vHeading, vItems) in SecondaryNavigation.Groups)
                     {
-                        <a href="@vItem.Route"
-                           class="@ItemClass(vItem)"
-                           data-testid="@($"{vItem.TestId}-mobile")"
-                           @onclick="() => objMobileNavOpen = false">
-                            <LucideIcon Name="@vItem.Icon" Size="14" Class="flex-none" />
-                            @vItem.Label
-                        </a>
+                        <div class="px-3 pb-1 pt-2 text-xs uppercase tracking-wider text-muted-foreground" data-testid="@($"subnav-group-{GroupSlug(vHeading)}-mobile")">@vHeading</div>
+                        @foreach (var vItem in vItems)
+                        {
+                            <a href="@vItem.Route"
+                               class="@ItemClass(vItem)"
+                               data-testid="@($"{vItem.TestId}-mobile")"
+                               @onclick="() => objMobileNavOpen = false">
+                                <LucideIcon Name="@vItem.Icon" Size="14" Class="flex-none" />
+                                @vItem.Label
+                            </a>
+                        }
                     }
                 </nav>
             </SheetContent>
@@ -75,14 +79,19 @@
         <div class="flex flex-1 overflow-hidden">
             @* [fix 2026-09-23] hidden below 640px; the Sheet above stands in for it there. *@
             <nav class="hidden w-56 flex-none flex-col gap-1 overflow-auto border-r bg-card p-2 sm:flex" data-testid="subnav">
-                @foreach (var vItem in SecondaryNavigation.Items)
+                @* [REQ-FN-313 mockup parity] The mockups' group headings: This project, Chatur, Your account. *@
+                @foreach (var (vHeading, vItems) in SecondaryNavigation.Groups)
                 {
-                    <a href="@vItem.Route"
-                       class="@DesktopItemClass(vItem)"
-                       data-testid="@vItem.TestId">
-                        <LucideIcon Name="@vItem.Icon" Size="14" Class="flex-none" />
-                        @vItem.Label
-                    </a>
+                    <div class="px-3 pb-1 pt-2 text-xs uppercase tracking-wider text-muted-foreground" data-testid="@($"subnav-group-{GroupSlug(vHeading)}")">@vHeading</div>
+                    @foreach (var vItem in vItems)
+                    {
+                        <a href="@vItem.Route"
+                           class="@DesktopItemClass(vItem)"
+                           data-testid="@vItem.TestId">
+                            <LucideIcon Name="@vItem.Icon" Size="14" Class="flex-none" />
+                            @vItem.Label
+                        </a>
+                    }
                 }
             </nav>
             <div class="flex-1 overflow-auto p-6" data-testid="page">

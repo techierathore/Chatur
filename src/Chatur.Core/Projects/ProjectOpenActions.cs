@@ -62,6 +62,28 @@ public sealed class ProjectOpenActions : IProjectOpenActions
     }
 
     /// <inheritdoc />
+    public Task<FolderCheck> CheckFolderAsync(string aPath, CancellationToken aCt = default)
+    {
+        var vPath = CleanPath(aPath);
+        if (!Directory.Exists(vPath))
+        {
+            throw new InvalidOperationException("That folder does not exist.");
+        }
+
+        try
+        {
+            return Task.FromResult(SolutionsIn(vPath).Any()
+                ? new FolderCheck(true, [])
+                : new FolderCheck(false, ProjectTemplateActions.ProjectsIn(vPath)));
+        }
+        catch (Exception aException) when (aException is UnauthorizedAccessException or IOException)
+        {
+            // A folder that cannot be listed is not asked about: opening it says what is wrong.
+            return Task.FromResult(new FolderCheck(true, []));
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<ProjectSummary> OpenFolderAsync(string aPath, CancellationToken aCt = default)
     {
         var vPath = CleanPath(aPath);

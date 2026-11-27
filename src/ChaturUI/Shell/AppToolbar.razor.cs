@@ -18,7 +18,7 @@ public partial class AppToolbar : IDisposable
     // Since Run shows the build (REQ-UI-107), dotnet's own "Build succeeded." and "Build FAILED." lines appear in the
     // output too, so only the lines Chatur writes itself, with their time or code, end a build or run.
     private static readonly System.Text.RegularExpressions.Regex TerminalLine = new(
-        @"^(Build succeeded in \d|Build FAILED in \d|Build stopped\.|Process exited with code |Run stopped\.|Failed to run:|A solution builds but does not run)",
+        @"^(Build succeeded in \d|Build FAILED in \d|All \d+ projects ended\.|Build stopped\.|Process exited with code |Run stopped\.|Failed to run:|A solution builds but does not run)",
         System.Text.RegularExpressions.RegexOptions.Compiled);
 
     private string? objLoadedForProjectKey;
@@ -30,6 +30,9 @@ public partial class AppToolbar : IDisposable
 
     /// <summary>Whether a build or run is in progress for the selected project — Build, Run and Stop share this one flag since they share one output slot per project.</summary>
     private bool IsBusy => Workbench.IsBuildRunBusy;
+
+    /// <summary>Whether the Multiple startup projects dialog is open (REQ-FN-324).</summary>
+    private bool objStartupOpen;
 
     private IReadOnlyList<RunTarget> objTargets => Workbench.RunTargets;
     private RunTarget? objSelectedTarget => Workbench.SelectedRunTarget;
@@ -43,6 +46,15 @@ public partial class AppToolbar : IDisposable
     [Inject]
     private WorkbenchState Workbench { get; set; } = default!;
 
+    /// <summary>What the picker shows: the project chosen to run, or how many start together (REQ-FN-324).</summary>
+    private string TargetLabel => Workbench.HasMultipleStartup
+        ? $"{Workbench.StartupTargets.Count} startup projects"
+        : objSelectedTarget?.Name ?? (ProjectId is null ? "No project open" : "No target found");
+
+    /// <summary>Whether a target is ticked in the picker: the single project chosen, or one of the startup projects.</summary>
+    private bool IsChosen(RunTarget aTarget) =>
+        Workbench.HasMultipleStartup ? Workbench.StartupTargets.Any(t => t.RunTargetId == aTarget.RunTargetId) : aTarget == objSelectedTarget;
+
     private int? ProjectId => AppStateService.SelectedProject?.ProjectId;
 
     /// <inheritdoc />
@@ -51,6 +63,7 @@ public partial class AppToolbar : IDisposable
         AppStateService.Changed += OnAppStateChanged;
         Workbench.Changed += OnWorkbenchChanged;
         Workbench.BranchChanged += OnBranchChanged;
+        Workbench.StartupDialogRequested += OnStartupDialogRequested;
         await EnsureTargetsLoadedAsync();
         EnsureWatching();
     }
@@ -66,6 +79,7 @@ public partial class AppToolbar : IDisposable
         }
 
         Workbench.SetRunTargets(await BuildRun.TargetsAsync(vProjectId));
+        Workbench.SetStartupTargets(await BuildRun.StartupAsync(vProjectId));
         objLoadedForProjectKey = vKey;
         if (Workbench.RunTargets.Count == 0)
         {
@@ -151,6 +165,9 @@ public partial class AppToolbar : IDisposable
         Workbench.SelectRunTarget(aTarget);
         await BuildRun.SetRunTargetAsync(vProjectId, aTarget.RunTargetId);
     }
+
+    /// <summary>The target picker's last item: Multiple startup projects opens the dialog that chooses which projects Run starts together (REQ-FN-324).</summary>
+    private void OpenStartupProjects() => Workbench.RequestStartupDialog();
 
     /// <summary>Builds the project on the chosen target (REQ-UI-012).</summary>
     private async Task BuildAsync()
@@ -277,6 +294,12 @@ public partial class AppToolbar : IDisposable
 
     private void OnWorkbenchChanged() => InvokeAsync(StateHasChanged);
 
+    private void OnStartupDialogRequested() => InvokeAsync(() =>
+    {
+        objStartupOpen = true;
+        StateHasChanged();
+    });
+
     /// <summary>A branch switch can move or remove projects, so the targets are read again (BRD-227).</summary>
     private async void OnBranchChanged()
     {
@@ -302,6 +325,7 @@ public partial class AppToolbar : IDisposable
         AppStateService.Changed -= OnAppStateChanged;
         Workbench.Changed -= OnWorkbenchChanged;
         Workbench.BranchChanged -= OnBranchChanged;
+        Workbench.StartupDialogRequested -= OnStartupDialogRequested;
         objWatchCts?.Cancel();
         objLookCts?.Cancel();
     }

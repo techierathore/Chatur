@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Developer Guide</h1>
-    <div class="subtitle">Rendered 2026-11-23 &middot; source <code>Chatur-DevGuide.md</code></div>
+    <div class="subtitle">Rendered 2026-11-26 &middot; source <code>Chatur-DevGuide.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -288,24 +288,24 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <p>This is the Workbench. <code>Pages/Workbench.razor</code> holds only <code>FilesPanel</code>, <code>EditorArea</code> and <code>ConversationPanel</code>. <code>Layouts/MainLayout.razor</code> adds <code>MenuBar</code> (line 85), <code>AppToolbar</code> (86), the sign-in check (87) and <code>OutputStrip</code> (95). The parts do not call each other. They share <code>WorkbenchState</code> (<code>Shell/WorkbenchState.cs</code>), which holds open tabs, the active tab, which parts are visible, the run targets and the busy flag, and raises <code>Changed</code>.</p>
 <p>What each part does:</p>
 <ul>
-<li><code>MenuBar</code>: menus, the project switcher (a <code>Popover</code>: "Project:" and the name, every project with its path, a filter from eight on, rows drawn as they scroll in), account menu, Ctrl+, shortcut.
+<li><code>MenuBar</code>: menus, the project switcher (a <code>Popover</code> listing every project with its path), account menu, Ctrl+, shortcut.
 </li>
-<li><code>NewProjectDialog</code>: New project in every state. In a solution <code>CreateProjectAsync</code> adds; otherwise <code>ProjectTemplateActions.CreateSolutionAsync</code> (<code>:124</code>) makes the solution and first project. <code>AppToolbar.StartLookingForTargets</code> (<code>:81</code>) re-reads empty targets.
+<li><code>NewProjectDialog</code>: New project in every state, with a search box over the project types (<code>ShownTemplates</code>). <code>ProjectTemplateActions.CreateAsync</code> adds to a solution or makes one in its own folder.
 </li>
 <li>Commands: <code>AgentActions.SendAsync</code> (<code>:259</code>) hands a <code>*command</code> to <code>AgentCommandRunner.TryRunAsync</code> (<code>:78</code>) first. Replies: <code>MarkdownHtml.Reply</code> in <code>Prose</code>.
 </li>
-<li><code>AppToolbar</code>: branch name and switch, run target, Build, Run, Stop.
+<li><code>AppToolbar</code>: run target, Build, Run, Stop. "Multiple startup projects…" opens <code>StartupProjectsDialog</code>, which saves <code>IBuildRunActions.SetStartupAsync</code>; Run then goes through <code>BuildRunActions.RunStartupAsync</code> (each line named <code>[project]</code>).
 </li>
-<li><code>FilesPanel</code>: file tree from <code>FileActions.TreeAsync</code>; a click reads the file and opens a tab.
+<li><code>FilesPanel</code>: file tree from <code>FileActions.TreeAsync</code>, rooted in the solution (<code>FileTreeNode.IsSolution</code>, projects <code>IsProject</code>); a click opens a tab.
 </li>
-<li><code>EditorArea</code>: tabs and the editor; save writes through <code>FileActions.SaveAsync</code>.
+<li><code>EditorArea</code>: tabs and the editor; save writes through <code>FileActions.SaveAsync</code>; the view's × asks like a tab does when a file is unsaved (<code>RequestCloseFileView</code>).
 </li>
 <li><code>ConversationPanel</code>: sessions, messages, agent and model pick, proposed changes.
 </li>
-<li><code>OutputStrip</code>: build and run lines, with a list of compiler errors that open the file.
+<li><code>OutputStrip</code>: build and run lines and compiler errors.
 </li>
 </ul>
-<p><code>Workbench.razor.cs:45</code> listens to <code>AppState.Changed</code> and calls <code>WorkbenchTabs.Reset()</code> when the project id changes, so tabs from the old project close. The agent loop and the output stream are described under Cross-cutting flows.</p>
+<p><code>Workbench.razor.cs:45</code> listens to <code>AppState.Changed</code> and calls <code>WorkbenchTabs.Reset()</code> when the project id changes, so its tabs close. The agent loop and the output stream are described under Cross-cutting flows.</p>
 <table>
 <thead><tr><th>File and line</th><th>Function</th><th>Watch</th><th>Expected value</th></tr></thead>
 <tbody>
@@ -319,7 +319,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <tr><td><code>src/ChaturUI/Shell/OutputStrip.razor.cs:147</code></td><td><code>UpdateStatus</code></td><td><code>objStatusText</code></td><td>"building", "running", "testing", "build passed", "build failed", "ended, exit code 0", "failed, exit code N" or "stopped"</td></tr>
 </tbody>
 </table>
-<p><strong>Calculations on this screen:</strong> <code>OutputStrip.ParseError</code> (<code>OutputStrip.razor.cs:184</code>) turns a compiler error line into file, line number and message. <code>ConversationPanel.LoadTotalTokensAsync</code> (<code>:494</code>) sums the tokens of every recorded event in the session. <code>MenuBar.LoadRecentAsync</code> (<code>MenuBar.razor.cs:196</code>) picks the five most recently opened projects.</p>
+<p><strong>Calculations on this screen:</strong> <code>OutputStrip.ParseError</code> (<code>OutputStrip.razor.cs:184</code>) turns a compiler error line into file, line and message. <code>ConversationPanel.LoadTotalTokensAsync</code> (<code>:494</code>) sums the session's tokens. <code>MenuBar.LoadRecentAsync</code> (<code>MenuBar.razor.cs:196</code>) picks the five latest projects.</p>
 <h3 id="prerequisites-prerequisites">Prerequisites (<code>/prerequisites</code>)<a class="anchor-link" href="#prerequisites-prerequisites">#</a></h3>
 <p><img src="screenshots/Chatur/prerequisites.png" alt="Prerequisites" style="max-width:100%"></p>
 <p><strong>Call chain:</strong> <code>Prerequisites.razor.cs:LoadAsync</code> → <code>PrerequisiteActions.ProbeAsync</code> → <code>ProcessCommandRunner.RunAsync</code> (one version command per tool); table <code>Project</code> gives the folder</p>

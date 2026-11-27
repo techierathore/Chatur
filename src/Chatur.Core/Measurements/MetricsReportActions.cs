@@ -163,7 +163,8 @@ public sealed class MetricsReportActions : IMetricsReportActions
         var vRuns = await ReadOrNullAsync(Path.Combine(aMetricsFolder, "runs.jsonl"), aCt).ConfigureAwait(false);
         var vGates = await ReadOrNullAsync(Path.Combine(aMetricsFolder, "gates.jsonl"), aCt).ConfigureAwait(false);
         var vMisses = await ReadOrNullAsync(Path.Combine(aMetricsFolder, "misses.jsonl"), aCt).ConfigureAwait(false);
-        return MetricsCalculator.Compute(vRuns, vGates, vMisses, aPeriod, objClock.UtcNow, objZone);
+        var vSessions = await ReadOrNullAsync(Path.Combine(aMetricsFolder, "sessions.jsonl"), aCt).ConfigureAwait(false);
+        return MetricsCalculator.Compute(vRuns, vGates, vMisses, aPeriod, objClock.UtcNow, objZone, vSessions);
     }
 
     private static async Task<string?> ReadOrNullAsync(string aPath, CancellationToken aCt)

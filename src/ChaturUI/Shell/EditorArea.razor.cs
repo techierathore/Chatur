@@ -10,10 +10,11 @@ namespace ChaturUI.Shell;
 /// it (REQ-UI-040), and a tab with unsaved changes is marked and asks before it is closed
 /// (REQ-UI-041).
 /// </summary>
-/// <remarks>Owning cluster: H (REQ-UI-040, REQ-UI-041); G (REQ-FN-044 through REQ-FN-046).</remarks>
+/// <remarks>Owning cluster: H (REQ-UI-040, REQ-UI-041); G (REQ-FN-044).</remarks>
 public partial class EditorArea : IDisposable
 {
     private string? objPendingCloseId;
+    private bool objPendingCloseView;
 
     [Inject]
     private WorkbenchState Workbench { get; set; } = default!;
@@ -116,20 +117,47 @@ public partial class EditorArea : IDisposable
         }
     }
 
+    /// <summary>
+    /// The file view's own close button (REQ-UI-041, owner's test of 25 Nov 2026): a view with no unsaved file closes at
+    /// once; with one, it asks the question a single tab asks, and stays open when the person keeps editing.
+    /// </summary>
+    private void RequestCloseFileView()
+    {
+        if (Workbench.OpenFiles.Any(f => f.IsDirty))
+        {
+            objPendingCloseView = true;
+            StateHasChanged();
+            return;
+        }
+
+        Workbench.CloseFileView();
+    }
+
     private void ConfirmDiscardAndClose()
     {
-        if (objPendingCloseId is { } vId)
+        if (objPendingCloseView)
+        {
+            foreach (var vDirty in Workbench.OpenFiles.Where(f => f.IsDirty).Select(f => f.Id).ToList())
+            {
+                Workbench.Close(vDirty);
+            }
+
+            Workbench.CloseFileView();
+        }
+        else if (objPendingCloseId is { } vId)
         {
             Workbench.Close(vId);
         }
 
         objPendingCloseId = null;
+        objPendingCloseView = false;
         StateHasChanged();
     }
 
     private void CancelClose()
     {
         objPendingCloseId = null;
+        objPendingCloseView = false;
         StateHasChanged();
     }
 
@@ -146,28 +174,6 @@ public partial class EditorArea : IDisposable
         {
             CancelClose();
         }
-    }
-
-    /// <summary>Opens the active tab's file in the owner's chosen editor (REQ-FN-045).</summary>
-    private async Task OpenInEditorAsync()
-    {
-        if (Workbench.ActiveFile is not { } vFile || AppStateService.SelectedProject is not { } vProject)
-        {
-            return;
-        }
-
-        await Files.OpenInEditorAsync(vProject.ProjectId, vFile.RelativePath);
-    }
-
-    /// <summary>Opens the active tab's file with the machine's own default application (REQ-FN-046).</summary>
-    private async Task OpenWithDefaultAppAsync()
-    {
-        if (Workbench.ActiveFile is not { } vFile || AppStateService.SelectedProject is not { } vProject)
-        {
-            return;
-        }
-
-        await Files.OpenWithDefaultAppAsync(vProject.ProjectId, vFile.RelativePath);
     }
 
     private void OnWorkbenchChanged() => InvokeAsync(StateHasChanged);

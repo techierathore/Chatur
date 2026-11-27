@@ -16,8 +16,8 @@
     else if (vNode.IsFolder)
     {
         <TreeItem Label="@vNode.Name" LabelContent="@(vTarget is null ? null : RunLabel(vNode, vTarget))" Value="@vPath" HasChildren="true" OnExpand="@(() => Panel!.LoadChildrenAsync(vPath))" Loading="@(Panel?.IsLoading(vPath) ?? false)"
-                  Expanded="@objOpen.Contains(vPath)" ExpandedChanged="@(vOpen => SetOpen(vPath, vOpen))" data-testid="@($"tree-{vPath}")">
-            <Icon><LucideIcon Name="@(objOpen.Contains(vPath) ? "folder-open" : "folder")" Size="16" /></Icon>
+                  Expanded="@objOpen.Contains(vPath)" ExpandedChanged="@(vOpen => SetOpen(vPath, vOpen))" data-testid="@($"tree-{vPath}")" data-kind="@(vNode.IsSolution ? "solution" : vNode.IsProject ? "project" : null)">
+            <Icon><LucideIcon Name="@FolderIcon(vNode, objOpen.Contains(vPath))" Size="16" /></Icon>
             <ChildContent>
                 <FileTreeBranch Nodes="@(Panel?.ChildrenOf(vPath) ?? [])" />
             </ChildContent>

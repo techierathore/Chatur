@@ -3,23 +3,20 @@
 | | |
 |---|---|
 | App | Chatur |
-| Count | 896 logged: 95 open, 801 fixed, 0 will not fix |
+| Count | 908 logged: 91 open, 817 fixed, 0 will not fix |
 | Source | `docs/metrics/misses.jsonl`, one row per miss record. Rewritten by `tf-misses-md.sh` on every new record. Never edit it: a wrong row is corrected by a new record. |
-| Updated | 2026-11-23 |
+| Updated | 2026-11-26 |
 
 **Whose gap** answers the four questions of the miss protocol: **the app's spec** did not say it, so the checklist line is fixed; **the framework never said it**, so one requirement line and a check are added; **the check was too weak** (a review, or a script that did not fire), so the check is fixed; **said and ignored**, so the rule becomes a hook or is deleted. **not sorted** means the record predates the sort or nobody has answered yet; `bash .tfcore/utils/tf-emit.sh --amend <miss> sort <spec|unsaid|weak-check|ignored>` completes it.
 
-## Open (95)
+## Open (91)
 
 | Miss | Found | Whose gap | What went wrong |
 |---|---|---|---|
-| MISS-Chatur-20261123-22 (REQ-NFR-019) | 2026-11-23 by owner | the app's spec | Your guide tells me to make my test folders beside my projects (C:\1MyCode\OwnerTest, EmptyOne, BrainTest); nothing that belongs to testing Chatur is made beside my projects or on the root of a drive |
+| MISS-Chatur-20261126-08 (REQ-FN-046) | 2026-11-26 by owner | the check was too weak | Same: the open-with-default-application button beside Save is not wanted; Chatur is the editor |
+| MISS-Chatur-20261126-07 (REQ-FN-045) | 2026-11-26 by owner | the check was too weak | Two extra buttons beside Save (open in your own editor, open with the default application) were not asked for and defeat the purpose of Chatur as the editor: remove them wherever they appear, with their rows and tests |
 | MISS-Chatur-20261123-21 (REQ-NFR-013) | 2026-11-23 by owner | the check was too weak | Your owner's test 6 says 'Solution folder already reads EmptyOne' and passed, and I still got this |
-| MISS-Chatur-20261123-20 (REQ-UI-124) | 2026-11-23 by owner | the app's spec | In the same folder my first project, OwnerTest, has a project file and no solution |
-| MISS-Chatur-20261123-19 (REQ-UI-125) | 2026-11-23 by owner | the app's spec | After Create, FILES showed a solution folder I did not expect; the folder I opened must stay the root of FILES |
 | MISS-Chatur-20261123-18 (REQ-UI-112) | 2026-11-23 by owner | the app's spec | The dialog's folder fields are confusing: with a folder open the folder was a field to type, and nothing showed the paths that would exist |
-| MISS-Chatur-20261123-17 (REQ-FN-040) | 2026-11-23 by owner | the app's spec | Chatur wrote docs/metrics with five files into my folder, and I had asked for nothing |
-| MISS-Chatur-20261123-16 (REQ-FN-310) | 2026-11-23 by owner | the app's spec | I opened the empty folder ChaturOwnerTest, chose New project, name Checking-Chatur, and Chatur made ChaturOwnerTest/Checking-Chatur/Checking-Chatur.slnx and the project in ChaturOwnerTest/Checking-Chatur/Checking-Chatur: a folder inside a folder I never asked for |
 | MISS-Chatur-20261123-01 (REQ-FN-313) | 2026-11-23 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 | MISS-Chatur-20261120-41 (REQ-UI-095) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-40 (REQ-UI-090) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
@@ -45,7 +42,6 @@
 | MISS-Chatur-20261120-20 (REQ-UI-057) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-19 (REQ-UI-056) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-18 (REQ-UI-055) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
-| MISS-Chatur-20261120-17 (REQ-UI-041) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-16 (REQ-UI-040) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-14 (REQ-UI-033) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-13 (REQ-UI-032) | 2026-11-20 by gate | not sorted | no sentence recorded (regression, src) |
@@ -109,10 +105,25 @@
 | MISS-Chatur-20261002-02 | 2026-10-02 by agent-review | not sorted | The Start mockup draws four active Get started buttons, but the app keeps them disabled and no row says which is right. |
 | MISS-Chatur-20260930-36 (REQ-FN-012) | 2026-09-30 by gate | not sorted | no sentence recorded (partial-implementation, src) |
 
-## Fixed (801)
+## Fixed (817)
 
 | Miss | Found | Closed | Whose gap | What went wrong |
 |---|---|---|---|---|
+| MISS-Chatur-20261126-12 (REQ-FN-040) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the check was too weak | The measurements and all the session details are not recorded in the project's docs/metrics in a format TfLens can use, although the requirement said they are, as TechieFlow does |
+| MISS-Chatur-20261126-11 (REQ-UI-115) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the check was too weak | Even though tokens were consumed in earlier steps, Measurements shows nothing (no docs/metrics folder, 0 runs, tokens not measured) |
+| MISS-Chatur-20261126-10 (REQ-UI-128) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the app's spec | The chat moves to the newest message after a long reply or a command such as *yolo |
+| MISS-Chatur-20261126-09 (REQ-FN-325) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the app's spec | A folder with projects and no solution is said so and asked about before it opens |
+| MISS-Chatur-20261126-06 (REQ-FN-324) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the app's spec | Several projects start together, a saved choice per solution |
+| MISS-Chatur-20261126-05 (REQ-UI-106) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the check was too weak | A project made by New project is not the project to run, and in the gathered solution the loose project is still chosen (Step-7) |
+| MISS-Chatur-20261126-04 (REQ-FN-309) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the check was too weak | The project was added but not set as the default project to run; the default is still the first project. A project just added should be the one that runs |
+| MISS-Chatur-20261126-03 (REQ-UI-127) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the app's spec | Search the project types in New project |
+| MISS-Chatur-20261126-02 (REQ-UI-126) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the check was too weak | The dialog showed the solution file and project folder straight in the chosen location (bin); Visual Studio makes the solution folder first |
+| MISS-Chatur-20261126-01 (REQ-FN-310) | 2026-11-26 by owner | 2026-11-26 by triage-and-fix | the check was too weak | Since the location was bin, no folder was made: the solution went directly into bin and the project beside it. If the solution's folder is not there it should be made first, then the solution in it, then each project in its own folder inside, also when the names are the same. Nothing lands directly |
+| MISS-Chatur-20261123-22 (REQ-NFR-019) | 2026-11-23 by owner | 2026-11-26 by triage-and-fix | the app's spec | Your guide tells me to make my test folders beside my projects (C:\1MyCode\OwnerTest, EmptyOne, BrainTest); nothing that belongs to testing Chatur is made beside my projects or on the root of a drive |
+| MISS-Chatur-20261123-20 (REQ-UI-124) | 2026-11-23 by owner | 2026-11-26 by triage-and-fix | the app's spec | In the same folder my first project, OwnerTest, has a project file and no solution |
+| MISS-Chatur-20261123-19 (REQ-UI-125) | 2026-11-23 by owner | 2026-11-26 by triage-and-fix | the app's spec | After Create, FILES showed a solution folder I did not expect; the folder I opened must stay the root of FILES |
+| MISS-Chatur-20261123-17 (REQ-FN-040) | 2026-11-23 by owner | 2026-11-26 by triage-and-fix | the app's spec | Chatur wrote docs/metrics with five files into my folder, and I had asked for nothing |
+| MISS-Chatur-20261123-16 (REQ-FN-310) | 2026-11-23 by owner | 2026-11-26 by triage-and-fix | the app's spec | I opened the empty folder ChaturOwnerTest, chose New project, name Checking-Chatur, and Chatur made ChaturOwnerTest/Checking-Chatur/Checking-Chatur.slnx and the project in ChaturOwnerTest/Checking-Chatur/Checking-Chatur: a folder inside a folder I never asked for |
 | MISS-Chatur-20261123-15 (REQ-NFR-017) | 2026-11-23 by self-smoke | 2026-11-23 by build-phase | not sorted | Owner's test 10 typed *yolo to the Verifier, which has no *yolo, and parts 7 and 10 could not run on their own start. |
 | MISS-Chatur-20261123-14 (REQ-UI-107) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | The chosen run target, model and conversation showed only a tick icon, not aria-checked or aria-selected; a click on the chosen one read as a dead item and the chat pickers after it failed the screen check. |
 | MISS-Chatur-20261123-13 (REQ-UI-109) | 2026-11-23 by gate | 2026-11-23 by build-phase | not sorted | File > Recent projects listed the open project as a live item that did nothing when clicked. |
@@ -152,6 +163,7 @@
 | MISS-Chatur-20261120-44 (REQ-UI-102) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-43 (REQ-UI-101) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-42 (REQ-UI-096) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
+| MISS-Chatur-20261120-17 (REQ-UI-041) | 2026-11-20 by gate | 2026-11-26 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-15 (REQ-UI-039) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-06 (REQ-UI-015) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
 | MISS-Chatur-20261120-05 (REQ-UI-014) | 2026-11-20 by gate | 2026-11-21 by triage-and-fix | not sorted | no sentence recorded (regression, src) |
