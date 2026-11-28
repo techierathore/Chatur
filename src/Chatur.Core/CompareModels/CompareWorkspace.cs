@@ -84,7 +84,7 @@ public sealed class CompareWorkspace
 
         var vFull = Path.GetFullPath(Path.Combine(objRoot, vPath.Replace('/', Path.DirectorySeparatorChar)));
         var vRootWithSeparator = objRoot.EndsWith(Path.DirectorySeparatorChar) ? objRoot : objRoot + Path.DirectorySeparatorChar;
-        var vComparison = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        var vComparison = Chatur.Core.Platform.HostPlatform.HasCaseInsensitiveNames ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
         return string.Equals(vFull, objRoot, vComparison) || vFull.StartsWith(vRootWithSeparator, vComparison) ? vFull : null;
     }
 

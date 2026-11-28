@@ -106,7 +106,7 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
 <div class="layout no-toc">
   <main>
     <h1>Chatur — Usage Guide</h1>
-    <div class="subtitle">Rendered 2026-11-27 &middot; source <code>Chatur-UsageGuide.md</code></div>
+    <div class="subtitle">Rendered 2026-11-28 &middot; source <code>Chatur-UsageGuide.md</code></div>
 
     <div class="toc-inline">
       <div>Contents</div>
@@ -145,6 +145,30 @@ h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link{opacity:1}
         <li class="h3"><a href="#owner-s-test-22-one-question-to-two-models">Owner&#x27;s test 22: one question to two models</a></li>
         <li class="h3"><a href="#owner-s-test-23-one-task-that-changes-files-on-two-models">Owner&#x27;s test 23: one task that changes files, on two models</a></li>
         <li class="h3"><a href="#owner-s-test-24-one-command-to-each-agent">Owner&#x27;s test 24: one command to each agent</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-1-an-empty-folder-new-project-and-the-disk">Mac owner&#x27;s test 1: an empty folder, New project, and the disk</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-2-the-solution-is-the-root-of-files">Mac owner&#x27;s test 2: the solution is the root of FILES</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-3-from-nothing-new-project-in-a-folder-you-name">Mac owner&#x27;s test 3: from nothing, New project in a folder you name</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-4-add-projects-from-this-machine-s-templates">Mac owner&#x27;s test 4: add projects from this machine&#x27;s templates</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-5-the-project-just-added-is-the-one-that-runs">Mac owner&#x27;s test 5: the project just added is the one that runs</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-6-run-the-web-app">Mac owner&#x27;s test 6: run the web app</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-7-the-console-app-a-broken-build-and-the-exit-code">Mac owner&#x27;s test 7: the console app, a broken build and the exit code</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-8-the-test-project">Mac owner&#x27;s test 8: the test project</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-9-several-projects-start-together">Mac owner&#x27;s test 9: several projects start together</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-10-the-choice-is-kept-and-one-project-again">Mac owner&#x27;s test 10: the choice is kept, and one project again</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-11-the-file-window">Mac owner&#x27;s test 11: the file window</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-12-a-folder-with-a-project-and-no-solution">Mac owner&#x27;s test 12: a folder with a project and no solution</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-13-the-solution-takes-the-project-in-and-the-new-one-runs">Mac owner&#x27;s test 13: the solution takes the project in, and the new one runs</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-14-your-model-key-for-the-parts-that-ask-a-model">Mac owner&#x27;s test 14: your model key, for the parts that ask a model</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-15-in-an-empty-folder-the-analyst-s-own-commands">Mac owner&#x27;s test 15: in an empty folder, the Analyst&#x27;s own commands</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-16-the-chat-follows-its-newest-message">Mac owner&#x27;s test 16: the chat follows its newest message</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-17-the-analyst-brainstorms-with-you-then-writes-the-brief">Mac owner&#x27;s test 17: the Analyst brainstorms with you, then writes the brief</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-18-the-sessions-are-written-under-the-project">Mac owner&#x27;s test 18: the sessions are written under the project</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-19-the-measurements-screens">Mac owner&#x27;s test 19: the measurements screens</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-20-across-projects">Mac owner&#x27;s test 20: across projects</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-21-what-is-left-on-each-key">Mac owner&#x27;s test 21: what is left on each key</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-22-one-question-to-two-models">Mac owner&#x27;s test 22: one question to two models</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-23-one-task-that-changes-files-on-two-models">Mac owner&#x27;s test 23: one task that changes files, on two models</a></li>
+        <li class="h3"><a href="#mac-owner-s-test-24-one-command-to-each-agent">Mac owner&#x27;s test 24: one command to each agent</a></li>
         <li class="h3"><a href="#if-the-key-is-refused">If the key is refused</a></li>
         <li class="h3"><a href="#sign-in-and-register">Sign in and Register</a></li>
         <li class="h3"><a href="#start-window">Start window</a></li>
@@ -189,6 +213,10 @@ dotnet restore Chatur.sln
 dotnet build Chatur.sln
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-windows.ps1
 dotnet run --project src/Chatur.WebHarness --urls http://localhost:5280</code></pre>
+<p>On the Mac, in Terminal:</p>
+<pre><code>cd /Volumes/MacD/MyCode/Chatur
+bash scripts/install-mac.sh</code></pre>
+<p>It builds the Mac app (Release, signed with the free Mac Catalyst profile of your Apple ID, made by Xcode's tools when missing) and replaces <code>/Applications/Chatur.app</code>; open it with Cmd+Space, <code>Chatur</code>, Return. Without a key for the GitHub Packages feed on the Mac it uses TrBlazeUI 2.2.5 from nuget.org and TechieRag packed from <code>../TechieRag</code>, and says so. The Mac owner's test is the "Mac owner's test" parts below; on the Mac, Chatur's own menus are in the bar under the window's title, and the Mac menu bar at the top holds Quit (Cmd+Q).</p>
 <p>The fourth line installs the Windows app to <code>%LOCALAPPDATA%\Programs\Chatur</code> with a Start menu entry "Chatur" (run it again to replace it in place); start Chatur from the Start menu and sign in as user 1. The fifth serves the same screens at http://localhost:5280 for the browser tests.</p>
 <h3 id="the-agents-and-their-commands">The agents and their commands<a class="anchor-link" href="#the-agents-and-their-commands">#</a></h3>
 <p>Type a command with its star in the agent's conversation. In the examples <code>MyApp</code> stands for your project's name, and <code>{App}</code> in a file name is replaced by it.</p>
@@ -593,6 +621,270 @@ dotnet run --project src/Chatur.WebHarness --urls http://localhost:5280</code></
 <li><strong>Covers:</strong> REQ-FN-317, REQ-FN-322, REQ-FN-320, REQ-NFR-017
 </li>
 </ul>
+<h3 id="mac-owner-s-test-1-an-empty-folder-new-project-and-the-disk"><a id="mac-owners-test-1-an-empty-folder-new-project-and-the-disk"></a>Mac owner's test 1: an empty folder, New project, and the disk<a class="anchor-link" href="#mac-owner-s-test-1-an-empty-folder-new-project-and-the-disk">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Cmd+Space, type <code>Chatur</code>, Return: "Nothing is open yet". 2) Open a folder; type <code>/Volumes/MacD/MyCode/Chatur/bin/OwnerTest</code> (empty); Open. 3) In Chatur's own menu bar, under the title bar: File ▸ New project. 4) Search <code>blazor</code>; click "Blazor Web App"; Solution name <code>Checking-Chatur</code>. 5) Create.
+</li>
+<li><strong>Expected:</strong> As Windows part 1, with <code>/</code> paths: Solution folder <code>…/OwnerTest/Checking-Chatur</code>, Solution file <code>…/Checking-Chatur/Checking-Chatur.slnx</code>, Project folder <code>…/Checking-Chatur/Checking-Chatur</code>; nothing directly in OwnerTest.
+</li>
+<li><strong>Covers:</strong> REQ-FN-310, REQ-UI-126, REQ-UI-127, REQ-NFR-019, REQ-NFR-013, REQ-UI-008
+</li>
+</ul>
+<h3 id="mac-owner-s-test-2-the-solution-is-the-root-of-files"><a id="mac-owners-test-2-the-solution-is-the-root-of-files"></a>Mac owner's test 2: the solution is the root of FILES<a class="anchor-link" href="#mac-owner-s-test-2-the-solution-is-the-root-of-files">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) After test 1 look at FILES. 2) In Terminal: <code>dotnet new console -n Early -o /Volumes/MacD/MyCode/Chatur/bin/LateSln/Early</code>. File ▸ Close; open <code>/Volumes/MacD/MyCode/Chatur/bin/LateSln</code> as a folder (Open as it is). 3) In Terminal: <code>cd /Volumes/MacD/MyCode/Chatur/bin/LateSln</code>, <code>dotnet new sln --name Late</code>, <code>dotnet sln add Early/Early.csproj</code>; press the refresh button in FILES.
+</li>
+<li><strong>Expected:</strong> 1) One root, "Checking-Chatur", solution mark; its project has the project and play marks. 2) FILES lists <code>Early</code>. 3) The root becomes "Late" with Early below it.
+</li>
+<li><strong>Covers:</strong> REQ-UI-125
+</li>
+</ul>
+<h3 id="mac-owner-s-test-3-from-nothing-new-project-in-a-folder-you-name"><a id="mac-owners-test-3-from-nothing-new-project-in-a-folder-you-name"></a>Mac owner's test 3: from nothing, New project in a folder you name<a class="anchor-link" href="#mac-owner-s-test-3-from-nothing-new-project-in-a-folder-you-name">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) File ▸ Close. 2) Press "New project". 3) Click "Console App". 4) Solution name <code>FromNothing</code>, Project name <code>TryConsole</code>, Location <code>/Volumes/MacD/MyCode/Chatur/bin</code>. 5) Create.
+</li>
+<li><strong>Expected:</strong> Solution folder <code>/Volumes/MacD/MyCode/Chatur/bin/FromNothing</code>, Solution file <code>…/FromNothing/FromNothing.slnx</code>, Project folder <code>…/FromNothing/TryConsole</code>. Create makes <code>FromNothing</code>; inside are <code>FromNothing.slnx</code> and <code>TryConsole/TryConsole.csproj</code> with <code>Program.cs</code>. The main window is on FromNothing; the target picker reads TryConsole.
+</li>
+<li><strong>Covers:</strong> REQ-FN-310, REQ-FN-309, REQ-NFR-013
+</li>
+</ul>
+<h3 id="mac-owner-s-test-4-add-projects-from-this-machine-s-templates"><a id="mac-owners-test-4-add-projects-from-this-machines-templates"></a>Mac owner's test 4: add projects from this machine's templates<a class="anchor-link" href="#mac-owner-s-test-4-add-projects-from-this-machine-s-templates">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) File ▸ New project. 2) Search <code>blazor</code>, click "Blazor Web App", Name <code>TryWeb</code>, Create. 3) The same with "Class Library" <code>TryLib</code>, then "xUnit Test Project" <code>TryLib.Tests</code>.
+</li>
+<li><strong>Expected:</strong> "New project in FromNothing"; only the name is typed; "Will be created in" <code>/Volumes/MacD/MyCode/Chatur/bin/FromNothing</code>, the solution file "already there", Project folder <code>…/FromNothing/TryWeb</code>. Each project is one folder below the root in FILES.
+</li>
+<li><strong>Covers:</strong> REQ-UI-112, REQ-UI-126
+</li>
+</ul>
+<h3 id="mac-owner-s-test-5-the-project-just-added-is-the-one-that-runs"><a id="mac-owners-test-5-the-project-just-added-is-the-one-that-runs"></a>Mac owner's test 5: the project just added is the one that runs<a class="anchor-link" href="#mac-owner-s-test-5-the-project-just-added-is-the-one-that-runs">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) After TryWeb is made, look at the target picker and FILES. 2) After TryLib and TryLib.Tests, look again.
+</li>
+<li><strong>Expected:</strong> After TryWeb the picker reads TryWeb and FILES gives it the play mark. A library and a test project cannot run, so TryWeb stays chosen.
+</li>
+<li><strong>Covers:</strong> REQ-FN-309, REQ-UI-106
+</li>
+</ul>
+<h3 id="mac-owner-s-test-6-run-the-web-app"><a id="mac-owners-test-6-run-the-web-app"></a>Mac owner's test 6: run the web app<a class="anchor-link" href="#mac-owner-s-test-6-run-the-web-app">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) In FromNothing, with the picker on TryWeb, press Run. 2) Press Stop.
+</li>
+<li><strong>Expected:</strong> Output opens: <code>&gt; dotnet build …</code>, the build's lines, <code>Now listening on: http://localhost:&lt;port&gt;</code>, <code>Opening http://localhost:&lt;port&gt; in the browser</code>; your default browser (Safari or another) opens there. <code>Failed to determine the https port for redirect.</code> is not red. Stop writes <code>Run stopped.</code>.
+</li>
+<li><strong>Covers:</strong> REQ-UI-107, REQ-FN-306
+</li>
+</ul>
+<h3 id="mac-owner-s-test-7-the-console-app-a-broken-build-and-the-exit-code"><a id="mac-owners-test-7-the-console-app-a-broken-build-and-the-exit-code"></a>Mac owner's test 7: the console app, a broken build and the exit code<a class="anchor-link" href="#mac-owner-s-test-7-the-console-app-a-broken-build-and-the-exit-code">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Target picker ▸ TryConsole; Run. 2) FILES ▸ TryConsole ▸ Program.cs; delete the <code>;</code> at the end of its line; press Save (beside the tabs); Run. 3) Put the <code>;</code> back; press Save.
+</li>
+<li><strong>Expected:</strong> 1) <code>Hello, World!</code>, then <code>Process exited with code 0.</code>. 2) <code>The program was not started.</code>; the label reads "build failed".
+</li>
+<li><strong>Covers:</strong> REQ-UI-107, REQ-UI-108
+</li>
+</ul>
+<h3 id="mac-owner-s-test-8-the-test-project"><a id="mac-owners-test-8-the-test-project"></a>Mac owner's test 8: the test project<a class="anchor-link" href="#mac-owner-s-test-8-the-test-project">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Target picker ▸ TryLib.Tests; press Run.
+</li>
+<li><strong>Expected:</strong> <code>&gt; dotnet test …</code>, a passed summary with 0 failed, and <code>Process exited with code 0.</code>.
+</li>
+<li><strong>Covers:</strong> REQ-UI-107
+</li>
+</ul>
+<h3 id="mac-owner-s-test-9-several-projects-start-together"><a id="mac-owners-test-9-several-projects-start-together"></a>Mac owner's test 9: several projects start together<a class="anchor-link" href="#mac-owner-s-test-9-several-projects-start-together">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Target picker ▸ "Multiple startup projects…". 2) Tick TryConsole and TryWeb; Save. 3) Run. 4) Stop.
+</li>
+<li><strong>Expected:</strong> 1) Only TryConsole and TryWeb are listed. 2) The picker reads "2 startup projects". 3) Both build, then start; lines read <code>[TryConsole] Hello, World!</code> and <code>[TryWeb] Now listening on: …</code>. 4) <code>All 2 projects ended.</code>.
+</li>
+<li><strong>Covers:</strong> REQ-FN-324
+</li>
+</ul>
+<h3 id="mac-owner-s-test-10-the-choice-is-kept-and-one-project-again"><a id="mac-owners-test-10-the-choice-is-kept-and-one-project-again"></a>Mac owner's test 10: the choice is kept, and one project again<a class="anchor-link" href="#mac-owner-s-test-10-the-choice-is-kept-and-one-project-again">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) File ▸ Close; reopen FromNothing from the project switcher. 2) Target picker ▸ TryWeb. 3) Run, then Stop.
+</li>
+<li><strong>Expected:</strong> 1) The picker still reads "2 startup projects". 2) It reads TryWeb. 3) Only TryWeb runs; its lines carry no project name.
+</li>
+<li><strong>Covers:</strong> REQ-FN-324
+</li>
+</ul>
+<h3 id="mac-owner-s-test-11-the-file-window"><a id="mac-owners-test-11-the-file-window"></a>Mac owner's test 11: the file window<a class="anchor-link" href="#mac-owner-s-test-11-the-file-window">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) FILES ▸ TryConsole ▸ Program.cs. 2) Look beside Save. 3) Type a line in the editor. 4) Press the × at the right end of the tab bar, then "Keep editing". 5) Press that × again, then "Close without saving".
+</li>
+<li><strong>Expected:</strong> 2) Save and no other button. 4) "Close without saving?" asks; Keep editing changes nothing. 5) The file view closes, the chat takes the window, and the file on disk is unchanged.
+</li>
+<li><strong>Covers:</strong> REQ-UI-041, REQ-FN-045, REQ-FN-046
+</li>
+</ul>
+<h3 id="mac-owner-s-test-12-a-folder-with-a-project-and-no-solution"><a id="mac-owners-test-12-a-folder-with-a-project-and-no-solution"></a>Mac owner's test 12: a folder with a project and no solution<a class="anchor-link" href="#mac-owner-s-test-12-a-folder-with-a-project-and-no-solution">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) In Terminal: <code>dotnet new console -n Loose -o /Volumes/MacD/MyCode/Chatur/bin/LooseOne/Loose</code>. 2) File ▸ Close; Open a folder; <code>/Volumes/MacD/MyCode/Chatur/bin/LooseOne</code>; Open. 3) Press "Go back", Open again, then "Open as it is".
+</li>
+<li><strong>Expected:</strong> 2) "This folder has no solution" names <code>Loose/Loose.csproj</code> and asks first. 3) Go back opens nothing and keeps the path; Open as it is opens the folder.
+</li>
+<li><strong>Covers:</strong> REQ-FN-325
+</li>
+</ul>
+<h3 id="mac-owner-s-test-13-the-solution-takes-the-project-in-and-the-new-one-runs"><a id="mac-owners-test-13-the-solution-takes-the-project-in-and-the-new-one-runs"></a>Mac owner's test 13: the solution takes the project in, and the new one runs<a class="anchor-link" href="#mac-owner-s-test-13-the-solution-takes-the-project-in-and-the-new-one-runs">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) With LooseOne open: File ▸ New project; "Console App"; Solution name <code>Gathered</code>, Project name <code>Second</code>. 2) Create.
+</li>
+<li><strong>Expected:</strong> 1) "…/LooseOne has a project and no solution. Create makes the solution there and adds it to it: Loose/Loose.csproj". 2) LooseOne holds <code>Gathered.slnx</code>, <code>Loose</code> and <code>Second</code>; FILES has one root, "Gathered", with Loose and Second; Second is the one that runs.
+</li>
+<li><strong>Covers:</strong> REQ-UI-124, REQ-FN-309, REQ-UI-125
+</li>
+</ul>
+<h3 id="mac-owner-s-test-14-your-model-key-for-the-parts-that-ask-a-model"><a id="mac-owners-test-14-your-model-key-for-the-parts-that-ask-a-model"></a>Mac owner's test 14: your model key, for the parts that ask a model<a class="anchor-link" href="#mac-owner-s-test-14-your-model-key-for-the-parts-that-ask-a-model">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Tools ▸ Settings (Cmd+,): Model providers opens in the second window. 2) If Anthropic is listed as connected, close the window (red button, top left). 3) Else "Add a provider"; Name <code>Anthropic</code>; Connector Anthropic; paste your key; Test, then Add; close the window.
+</li>
+<li><strong>Expected:</strong> The table shows Anthropic, connected, with claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5. The key goes to the Mac's Keychain.
+</li>
+<li><strong>Covers:</strong> REQ-FN-014, REQ-FN-017, REQ-UI-019
+</li>
+</ul>
+<h3 id="mac-owner-s-test-15-in-an-empty-folder-the-analyst-s-own-commands"><a id="mac-owners-test-15-in-an-empty-folder-the-analysts-own-commands"></a>Mac owner's test 15: in an empty folder, the Analyst's own commands<a class="anchor-link" href="#mac-owner-s-test-15-in-an-empty-folder-the-analyst-s-own-commands">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account (the key of part 14 connected)
+</li>
+<li><strong>Steps:</strong> 1) Make and open the empty folder <code>/Volumes/MacD/MyCode/Chatur/bin/BrainTest</code>, as in test 1. 2) Model picker ▸ <code>claude-sonnet-5-5</code>; agent picker ▸ Analyst. 3) Type <code>Don't you have brain-storm command ?</code>; Send. 4) <code>*help</code>; Send. 5) <code>*yolo</code>; Send. 6) Look at BrainTest in Finder.
+</li>
+<li><strong>Expected:</strong> The greeting lists 12 commands. 3) "Yes." with <code>*brainstorm {topic}</code>, "Chatur (no model)". 4) The 12 commands, numbered, as code, no <code>**</code>. 5) "YOLO is on" with <strong>Go ahead</strong> in bold. 6) BrainTest is still empty.
+</li>
+<li><strong>Covers:</strong> REQ-FN-308, REQ-FN-311, REQ-UI-114, REQ-FN-040
+</li>
+</ul>
+<h3 id="mac-owner-s-test-16-the-chat-follows-its-newest-message"><a id="mac-owners-test-16-the-chat-follows-its-newest-message"></a>Mac owner's test 16: the chat follows its newest message<a class="anchor-link" href="#mac-owner-s-test-16-the-chat-follows-its-newest-message">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) In test 15, after <code>*help</code> and again after <code>*yolo</code>, look at the conversation without scrolling.
+</li>
+<li><strong>Expected:</strong> The newest message is in view each time.
+</li>
+<li><strong>Covers:</strong> REQ-UI-128
+</li>
+</ul>
+<h3 id="mac-owner-s-test-17-the-analyst-brainstorms-with-you-then-writes-the-brief"><a id="mac-owners-test-17-the-analyst-brainstorms-with-you-then-writes-the-brief"></a>Mac owner's test 17: the Analyst brainstorms with you, then writes the brief<a class="anchor-link" href="#mac-owner-s-test-17-the-analyst-brainstorms-with-you-then-writes-the-brief">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) In BrainTest, with <code>claude-sonnet-5-5</code> and Analyst: <code>*brainstorm a small to-do app for one person</code>; Send. 2) Answer: one person, desktop, small, focused, yes save it; ideas: due dates, a today view, quick add. 3) <code>That is enough ideas, save the session</code>. 4) <code>*create-project-brief BrainTest</code>; Send; if it asks, <code>take the sensible reading and write the brief now</code>.
+</li>
+<li><strong>Expected:</strong> 3) <code>docs/brainstorming-session-results.md</code> appears in FILES. 4) The reply ends "Chatur: *create-project-brief is done — docs/BrainTest-Brief.md is written".
+</li>
+<li><strong>Covers:</strong> REQ-FN-312, REQ-UI-128
+</li>
+</ul>
+<h3 id="mac-owner-s-test-18-the-sessions-are-written-under-the-project"><a id="mac-owners-test-18-the-sessions-are-written-under-the-project"></a>Mac owner's test 18: the sessions are written under the project<a class="anchor-link" href="#mac-owner-s-test-18-the-sessions-are-written-under-the-project">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Open <code>docs/metrics/sessions.jsonl</code> in BrainTest from FILES.
+</li>
+<li><strong>Expected:</strong> Lines with <code>"harness":"chatur"</code>, the session's id, the model, and <code>input_tokens</code> and <code>output_tokens</code> as numbers. No other file in <code>docs/metrics</code>.
+</li>
+<li><strong>Covers:</strong> REQ-FN-040
+</li>
+</ul>
+<h3 id="mac-owner-s-test-19-the-measurements-screens"><a id="mac-owners-test-19-the-measurements-screens"></a>Mac owner's test 19: the measurements screens<a class="anchor-link" href="#mac-owner-s-test-19-the-measurements-screens">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Project switcher ▸ <code>BrainTest</code>. 2) Project ▸ Measurements. 3) Period ▸ Last 7 days, then All history. 4) Click the first line; Esc. 5) Save as zip ▸ Save ▸ Close.
+</li>
+<li><strong>Expected:</strong> 2) Seven tiles; the chat's sessions and tokens; a split by model; Misses with first-pass rate; "not measured" and "no price" where nothing is known. 4) A chat line: command <code>chat</code>, model, tokens, time. 5) A .zip in BrainTest.
+</li>
+<li><strong>Covers:</strong> REQ-UI-115 to REQ-UI-120, REQ-FN-314, REQ-NFR-014, REQ-NFR-020, REQ-FN-040
+</li>
+</ul>
+<h3 id="mac-owner-s-test-20-across-projects"><a id="mac-owners-test-20-across-projects"></a>Mac owner's test 20: across projects<a class="anchor-link" href="#mac-owner-s-test-20-across-projects">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Click "Measurements across projects". 2) Click "Measurements" under Corrections, then its link.
+</li>
+<li><strong>Expected:</strong> 1) One line per project, BrainTest among them. 2) Back on Project measurements.
+</li>
+<li><strong>Covers:</strong> REQ-FN-313, REQ-UI-121
+</li>
+</ul>
+<h3 id="mac-owner-s-test-21-what-is-left-on-each-key"><a id="mac-owners-test-21-what-is-left-on-each-key"></a>Mac owner's test 21: what is left on each key<a class="anchor-link" href="#mac-owner-s-test-21-what-is-left-on-each-key">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) BrainTest, Project ▸ Measurements, "What is left on each key". 2) On Anthropic: "Type a limit"; Limit <code>5.00</code>; Save. 3) "Measurements across projects". 4) Back: "Change limit", then "Remove the limit".
+</li>
+<li><strong>Expected:</strong> 1) Anthropic reads "not known". 2) "Chatur's own count": Limit $5.00, Used a few cents, Left the rest. 3) The same line. 4) "not known" again.
+</li>
+<li><strong>Covers:</strong> REQ-UI-129, REQ-UI-131, REQ-FN-326, REQ-NFR-022
+</li>
+</ul>
+<h3 id="mac-owner-s-test-22-one-question-to-two-models"><a id="mac-owners-test-22-one-question-to-two-models"></a>Mac owner's test 22: one question to two models<a class="anchor-link" href="#mac-owner-s-test-22-one-question-to-two-models">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Second window ▸ "Compare models". 2) Tick only <code>claude-haiku-5-5</code>; Run. 3) Also tick <code>claude-sonnet-5-5</code>; Kind ▸ "Question, changes nothing". 4) Task: <code>Which files are in the docs folder of this project? Answer in one sentence.</code> 5) Run. 6) Right if a card names the files in FILES ▸ docs, else Wrong. 7) Reopen Compare models; click the first Past comparison.
+</li>
+<li><strong>Expected:</strong> 2) "One model is not a comparison — pick at least two." 5) Two cards: time, tokens, cost, answer. 7) Answers and marks again; <code>docs/metrics/runs.jsonl</code> has two <code>compare-models</code> lines.
+</li>
+<li><strong>Covers:</strong> REQ-FN-327, REQ-FN-328, REQ-UI-132, REQ-UI-133, REQ-FN-330, REQ-NFR-021, REQ-NFR-022
+</li>
+</ul>
+<h3 id="mac-owner-s-test-23-one-task-that-changes-files-on-two-models"><a id="mac-owners-test-23-one-task-that-changes-files-on-two-models"></a>Mac owner's test 23: one task that changes files, on two models<a class="anchor-link" href="#mac-owner-s-test-23-one-task-that-changes-files-on-two-models">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account
+</li>
+<li><strong>Steps:</strong> 1) Compare models, <code>claude-haiku-5-5</code> and <code>claude-sonnet-5-5</code> ticked, Kind ▸ "Task that changes files". 2) Task: <code>Add a file docs/notes.md with the one line: Made in Compare models.</code> 3) Run; wait for both cards. 4) Look at FILES ▸ docs, and in Finder at <code>/Volumes/MacD/MyCode/Chatur/bin/BrainTest/bin</code>.
+</li>
+<li><strong>Expected:</strong> 3) Each card lists <code>docs/notes.md</code> added. 4) BrainTest has no <code>docs/notes.md</code>, and no <code>chatur-compare</code> folder is left in its bin.
+</li>
+<li><strong>Covers:</strong> REQ-FN-329, REQ-UI-132, REQ-NFR-022
+</li>
+</ul>
+<h3 id="mac-owner-s-test-24-one-command-to-each-agent"><a id="mac-owners-test-24-one-command-to-each-agent"></a>Mac owner's test 24: one command to each agent<a class="anchor-link" href="#mac-owner-s-test-24-one-command-to-each-agent">#</a></h3>
+<ul>
+<li><strong>Sign in as:</strong> your own account (the key of part 14 connected)
+</li>
+<li><strong>Steps:</strong> 1) In BrainTest, before each agent: agent picker ▸ the agent; new chat; model <code>claude-sonnet-5-5</code>; <code>*yolo</code> (not the Verifier). 2) Analyst: <code>*research-prompt note-taking apps for one person that work offline</code>. 3) Architect: <code>*research which local database suits a desktop to-do app for one person</code>. 4) Flow master: <code>*develop-status BrainTest</code>. 5) Verifier: <code>*report all BrainTest</code>.
+</li>
+<li><strong>Expected:</strong> 2) <code>docs/BrainTest-Research-Prompt.md</code> appears. 3) The same file is written again. 4) "No end-to-end run", or its step, rows and tokens. 5) "This project has no checklist yet, so there is nothing to report."
+</li>
+<li><strong>Covers:</strong> REQ-FN-317, REQ-FN-322, REQ-FN-320, REQ-NFR-017
+</li>
+</ul>
 <h3 id="if-the-key-is-refused">If the key is refused<a class="anchor-link" href="#if-the-key-is-refused">#</a></h3>
 <ul>
 <li><strong>Sign in as:</strong> your own account, or user 1
@@ -737,6 +1029,10 @@ npx playwright test</code></pre>
 </li>
 <li>REQ-FN-012 needs the Mac. REQ-NFR-006 needs a published nightly build.
 </li>
+<li>The Mac app runs on the .NET interpreter, not precompiled: precompiled, its screens never appeared (TR-030 in <code>docs/Chatur-TrBlazeUI-Feedback.md</code>). It starts a little slower.
+</li>
+<li>A Mac built without the GitHub Packages key uses TrBlazeUI 2.2.5 and TechieRag 1.3.0 instead of 2.2.3 and 1.2.1; add the key to the Mac's NuGet settings to build the pinned versions.
+</li>
 <li>The default agent, Analyst, explains a code change and does not make it; Flow master makes it.
 </li>
 <li>TF-052 (<code>docs/Chatur-TechieFlow-Feedback.md</code>): late in a long verify the screen check reads three chat menus as "opens nothing"; they open by hand. Open with the framework's team; it does not block using the app.
@@ -751,7 +1047,7 @@ npx playwright test</code></pre>
 </li>
 </ul>
 <h2 id="platform-notes">Platform notes<a class="anchor-link" href="#platform-notes">#</a></h2>
-<p>Windows and Mac Catalyst are equal targets. The Windows app builds only on Windows, the Mac app only on a Mac. Tokens and keys live in Credential Manager on Windows and the Keychain on the Mac; the database and the log live in the user's application-data folder. A copy started by a test keeps its data under <code>tests/.artifacts/app-data</code> and never opens the owner's.</p>
+<p>Windows and Mac Catalyst are equal targets. The Mac app is not sandboxed (it runs dotnet, a shell and your programs), and when started from Finder or Spotlight it adds <code>/etc/paths</code>, <code>/etc/paths.d</code>, Homebrew and <code>/usr/local/share/dotnet</code> to its PATH, so <code>dotnet</code>, <code>git</code> and <code>node</code> are found. The Windows app builds only on Windows, the Mac app only on a Mac. Tokens and keys live in Credential Manager on Windows and the Keychain on the Mac; the database and the log live in the user's application-data folder. A copy started by a test keeps its data under <code>tests/.artifacts/app-data</code> and never opens the owner's.</p>
   </main>
 </div>
 

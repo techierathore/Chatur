@@ -18,7 +18,7 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.*" />
     <PackageReference Include="Dapper" Version="2.*" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.*" />
-    <PackageReference Include="TechieRag" Version="1.2.1" />
+    <PackageReference Include="TechieRag" Version="$(ChaturTechieRagVersion)" />
     <!-- Markdown to HTML for a reply, *generate-html and *render-workflow-docs (Architecture §6, 2026-11-22). The
          version TrBlazeUI 2.2.3 already brings, so nothing new is downloaded. -->
     <PackageReference Include="Markdig" Version="0.45.0" />

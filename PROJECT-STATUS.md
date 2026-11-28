@@ -25,29 +25,29 @@
 
 ---
 project: Chatur
-last_updated: 2026-11-27
-current_phase: Phase 3 of 4 (End to end and unattended) · UAT — handoff done, 94 of 94 verified
-last_verified_build: PASS
-last_verified_date: 2026-11-27
+last_updated: 2026-11-28
+current_phase: Phase 1 of 4 (Workbench) · Verify — 10 to verify across phases 1, 3, 4, 8 to verify, 88 of 96 verified, 2 not applicable
+last_verified_build: not-run
+last_verified_date: never
 ---
 
 # Chatur — Status
 
 ## Where I am
 
-Phase 3 of 4 (End to end and unattended), with phase 4 work added on 27 Nov: what is left on each key on both Measurements screens, and Compare models (one task to two to four models). Both are Verified, along with the six fixes left from 26 Nov. Chatur now uses TechieRag 1.2.1, which prices Claude 5.x calls. The Owner's test is one order of 24 parts and passes in full on the installed app. Chatur has been reinstalled.
+Phase 1 of 4 (Workbench) has Mac rows open again. On 27 Nov Chatur was built and installed on the Mac for the first time (`scripts/install-mac.sh`, signed, `/Applications/Chatur.app`). It starts to Sign in. Mac-only faults are fixed: PATH, the Mac test, a Release crash, rendering, the menu shortcut and the Xcode check. 720 unit tests pass on the Mac. The Mac owner's test is in the UsageGuide. A verify on the Mac is next.
 
 ## Next command to run
 
 Claude Code:
 ```
-(owner) set current_phase to Released after UAT — no agent command
+/TechieFlow:agents:verifier *verify all Chatur --phase all
 ```
 OpenCode:
 ```
-(owner) set current_phase to Released after UAT — no agent command
+/flow-verifier *verify all Chatur --phase all
 ```
-Why: every row in this phase's scope is terminal and handoff has run; waiting on the owner; working docs/Chatur-P3-Checklist.md.
+Why: 2 rows of other phases are built and not verified — phase 3: 1 (REQ-UI-073); phase 4: 1 (REQ-UI-130); and in this phase: 8 rows are built and not verified: REQ-FN-001, REQ-FN-002, REQ-FN-011, REQ-FN-012, REQ-FN-022, REQ-FN-030 …; working docs/Chatur-Checklist.md.
 
 ## Open requirements
 
@@ -55,22 +55,29 @@ Why: every row in this phase's scope is terminal and handoff has run; waiting on
 |---|---|
 | Not Started | 0 |
 | In Progress | 0 |
-| Implemented | 0 |
-| Needs re-verify | 0 |
+| Implemented | 1 |
+| Needs re-verify | 7 |
 | Blocked | 0 |
 
-- None in phase 3. Phase 4: REQ-UI-130 Implemented (asking a provider's balance address; no OpenRouter or DeepSeek key exists to test it live).
+- [ ] REQ-FN-011 — Every tool, with the version found (Implemented)
+- [ ] REQ-FN-001 — The password never leaves the machine as text (Needs re-verify)
+- [ ] REQ-FN-002 — The installation names its device (Needs re-verify)
+- [ ] REQ-FN-012 — Homebrew tools are found on a Mac (Needs re-verify)
+- [ ] REQ-FN-022 — Repeated failed fixes climb a tier (Needs re-verify)
+- [ ] REQ-FN-030 — Only the verifier marks work verified (Needs re-verify)
+- [ ] REQ-FN-048 — An automatic check-in goes to its own branch (Needs re-verify)
+- [ ] REQ-NFR-006 — The nightly workflow builds the Mac and Windows apps (Needs re-verify)
 
 ## Known blockers
 
-- REQ-UI-130 needs a real OpenRouter or DeepSeek key (`balanceProvider` in the test settings) for its browser test; unit tests with a fake address pass.
-- Phase 1, hand steps once per release: REQ-FN-001, REQ-FN-002, REQ-FN-022, REQ-FN-030, REQ-FN-048; REQ-FN-012 needs the Mac; REQ-NFR-006 a published nightly.
-- REQ-FN-078 is proven against a stand-in for App Manager only: it keeps no roles or rules yet (AM-002).
-- REQ-FN-083 and REQ-UI-069: a real window check needs the Mac or Windows verifier, a real signature the certificates.
-- TF-052: the menu walk reads late chat-panel menus as "opens nothing"; a second walk passes.
-- TF-054: TfLens has no gate value for a person's own mark; Chatur writes `owner-mark`.
-- TR-RAG-010: a cut-off tool call is dropped silently; Chatur asks again with more room.
-- Owner, before the next commit: remove the `[verify-seed]` check-ins of 15 Nov in Chatur's own history (TF-037).
+- This Mac has no `tests/verify/test-settings.json`, so no agent can sign in to the installed app; the 24 Mac owner's test parts wait for the owner.
+- This Mac has no key for the GitHub Packages feed: the Mac build uses TrBlazeUI 2.2.5 and TechieRag 1.3.0 (from `../TechieRag`) instead of 2.2.3 and 1.2.1.
+- TR-030: precompiled, a Mac Release build never renders; the Mac build runs on the interpreter.
+- REQ-UI-130 needs a real OpenRouter or DeepSeek key for its browser test.
+- Phase 1 hand steps once per release: REQ-FN-001, REQ-FN-002, REQ-FN-022, REQ-FN-030, REQ-FN-048; REQ-NFR-006 a published nightly.
+- REQ-FN-078 is proven against a stand-in for App Manager only (AM-002).
+- TF-052, TF-054, TR-RAG-010 stay open; they block nothing.
+- Owner, before the next commit: remove the `[verify-seed]` check-ins of 15 Nov (TF-037).
 
 ## Verification log
 
@@ -78,18 +85,18 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 | Date | Phase | Result | Status table |
 |---|---|---|---|
-| 2026-11-22 | triage-and-fix | 94/94 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
 | 2026-11-23 | build-phase | 94/94 Verified | docs/Chatur-P3-Checklist.md#requirements-status |
 | 2026-11-26 | triage-and-fix | 20 rows Verified across phases 1, 3, 4 | docs/Chatur-P4-Checklist.md#requirements-status |
 | 2026-11-26 | handoff-phase | 94/94 Verified; ready for the owner's test | docs/Chatur-P3-Checklist.md#requirements-status |
 | 2026-11-27 | build-phase | 94/94 Verified; 18 of 19 new and reopened rows Verified across phases 1, 2, 4 | docs/Chatur-P3-Checklist.md#requirements-status |
+| 2026-11-28 | build-phase | 88/96 Verified, 2 N/A | docs/Chatur-Checklist.md#requirements-status |
 
 ## Library feedback summary
 
 - AppManager: 1 open · 1 closed — docs/Chatur-AppManager-Feedback.md
 - TechieFlow: 3 open · 18 fixed upstream, not yet re-checked (TF-008, TF-010, TF-013 …) · 28 closed — docs/Chatur-TechieFlow-Feedback.md
 - TechieRag: 1 open · 3 fixed upstream, not yet re-checked (TR-RAG-008, TR-RAG-009, TR-RAG-006) · 7 closed — docs/Chatur-TechieRag-Feedback.md
-- TrBlazeUI: 5 open · 24 closed — docs/Chatur-TrBlazeUI-Feedback.md
+- TrBlazeUI: 6 open · 24 closed — docs/Chatur-TrBlazeUI-Feedback.md
 
 ## Standards compliance
 
@@ -97,8 +104,8 @@ Last five passes; older passes live in `docs/metrics/gates.jsonl`.
 
 ## Deferred / future
 
+- Eleven faults the Mac screen walk found that are not Mac-only (harness sample project under `src/`, Settings ▸ Account placeholder, ⌘B/⌘R labels with no key behind them, light Amber contrast and others): `tests/.artifacts/mac-walk/results.json`; for `*triage-issues`.
 - No BRD row: Settings ▸ Account content, hiding output, merging or creating a branch.
-- Worktrees: the mockup's "Give the next run its own copy" box and its size line are not built; nothing stands behind them yet.
-- Chat sessions carry no cost in `sessions.jsonl`, so Measurements reads "no price" for them; the key panel counts their price.
+- Worktrees: the "Give the next run its own copy" box is not built.
+- Chat sessions carry no cost in `sessions.jsonl`.
 - The run queue moves only while its tab is open.
-- Data kept before 17 Nov stays in the install's own chatur.db, shown to no account.

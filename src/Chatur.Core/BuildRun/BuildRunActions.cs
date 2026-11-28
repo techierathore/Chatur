@@ -845,8 +845,8 @@ public sealed class BuildRunActions : IBuildRunActions
     private static bool IsAvailableOnThisMachine(string aPlatform) => aPlatform switch
     {
         "Windows" => RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
-        "MacCatalyst" => RuntimeInformation.IsOSPlatform(OSPlatform.OSX),
-        "iOS" => RuntimeInformation.IsOSPlatform(OSPlatform.OSX),
+        "MacCatalyst" => Chatur.Core.Platform.HostPlatform.IsMac,
+        "iOS" => Chatur.Core.Platform.HostPlatform.IsMac,
         _ => true
     };
 

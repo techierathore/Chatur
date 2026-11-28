@@ -29,6 +29,12 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         ConfigureLogging();
+#if MACCATALYST
+        // A Mac app started from Finder, the Dock or `open` gets only /usr/bin:/bin:/usr/sbin:/sbin, so dotnet, git and
+        // node are not found. It takes the PATH a login shell would have before anything starts a process.
+        Environment.SetEnvironmentVariable("PATH", Chatur.Core.Prerequisites.HomebrewPath.ForThisMacApp(Environment.GetEnvironmentVariable("PATH")));
+        Log.Information("PATH set for the Mac app: {Path}", Environment.GetEnvironmentVariable("PATH"));
+#endif
 
         try
         {

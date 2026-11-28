@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <!-- The entitlements of a signed build (scripts/install-mac.sh): Entitlements.plist plus the Keychain access group
+         MAUI SecureStorage needs on Mac Catalyst (Apple TN3137), where Chatur keeps its sign-in and model keys. The
+         free Mac Catalyst team profile for com.techierathore.chatur allows it; $(AppIdentifierPrefix) becomes the team
+         id at build time. An unsigned build cannot carry this group, so it is only used with a profile. -->
+    <dict>
+        <key>keychain-access-groups</key>
+        <array>
+            <string>$(AppIdentifierPrefix)com.techierathore.chatur</string>
+        </array>
+    </dict>
+</plist>

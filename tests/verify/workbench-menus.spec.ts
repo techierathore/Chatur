@@ -445,7 +445,7 @@ test('REQ-UI-073 View ▸ Prerequisites, Repository and Appearance reach their p
 
 test('REQ-UI-073 Ctrl+, opens Settings, as Tools ▸ Settings shows, even while typing in a file', async () => {
   await openMenu(page, 'tools');
-  await expect(page.getByTestId('menu-tools-settings')).toContainText('Ctrl+,');
+  await expect(page.getByTestId('menu-tools-settings')).toContainText(process.platform === 'darwin' ? '⌘,' : 'Ctrl+,');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Control+Comma');
   await expect(page).toHaveURL(/\/settings\/providers/, { timeout: 20_000 });

@@ -14,8 +14,11 @@ public sealed class WindowService : IWindowService
     private Window? objSecondaryWindow;
     private SecondaryWindowPage? objSecondaryPage;
 
-    /// <summary>Whether the secondary window's page has been taken down and the window may now close.</summary>
+#if WINDOWS
+    /// <summary>Whether the secondary window's page has been taken down and the window may now close. Only the Windows
+    /// close button asks it; on a Mac the window's own close button ends the scene directly.</summary>
     private bool objSecondaryReadyToClose;
+#endif
 
     /// <inheritdoc />
     public Window CreateStartWindow()
@@ -50,7 +53,9 @@ public sealed class WindowService : IWindowService
         if (objSecondaryWindow is null || objSecondaryPage is null)
         {
             var vPage = new SecondaryWindowPage(aRoute);
+#if WINDOWS
             objSecondaryReadyToClose = false;
+#endif
             objSecondaryPage = vPage;
             objSecondaryWindow = new Window(vPage) { Title = "Chatur" };
             var vWindow = objSecondaryWindow;
@@ -103,7 +108,9 @@ public sealed class WindowService : IWindowService
     private async Task CloseSecondaryAsync(Window aWindow, SecondaryWindowPage aPage)
     {
         await aPage.PrepareToCloseAsync();
+#if WINDOWS
         objSecondaryReadyToClose = true;
+#endif
         Application.Current?.CloseWindow(aWindow);
     }
 }

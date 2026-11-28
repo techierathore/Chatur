@@ -282,7 +282,7 @@ public sealed class AccountActions : IAccountActions
 
     private static string CurrentPlatformName() =>
         OperatingSystem.IsWindows() ? "Windows" :
-        OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst() ? "macOS" :
+        Chatur.Core.Platform.HostPlatform.IsMac ? "macOS" :
         "Other";
 
     private static string CurrentAppVersion() =>

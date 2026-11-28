@@ -339,7 +339,7 @@ Added 2026-11-20: five checklist rows (REQ-UI-079 to REQ-UI-082, REQ-NFR-010) we
 
 Written by the status gate after every build, verify and handoff; not by hand.
 
-**Snapshot as of 2026-11-27.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
+**Snapshot as of 2026-11-28.** Live per-requirement status: `PROJECT-STATUS.md` and the Requirements Status table in `docs/Chatur-P3-Checklist.md`.
 
 | Screen | Requirements | Verified | Open | Status |
 |---|---|---|---|---|
@@ -348,7 +348,7 @@ Written by the status gate after every build, verify and handoff; not by hand.
 | Run report | 7 | 7 | 0 | Done |
 | Settings | 8 | 8 | 0 | Done |
 | Process run | 22 | 22 | 0 | Done |
-| Workbench | 19 | 19 | 0 | Done |
+| Workbench | 19 | 18 | 1 | Partial |
 | Start | 11 | 11 | 0 | Done |
 | Processes | 9 | 9 | 0 | Done |
 

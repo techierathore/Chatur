@@ -168,6 +168,12 @@ public partial class MenuBar : IAsyncDisposable
         await BuildRun.StopAsync(vProjectId);
     }
 
+    /// <summary>
+    /// The Settings shortcut as this machine writes it: ⌘, on a Mac, Ctrl+, elsewhere. The key accepts both; the menu
+    /// read "Ctrl+," on the Mac too (27 Nov 2026, the first Mac install).
+    /// </summary>
+    private static string SettingsShortcut => OperatingSystem.IsMacCatalyst() || OperatingSystem.IsMacOS() ? "⌘," : "Ctrl+,";
+
     /// <summary>Ctrl+, (⌘, on a Mac) does what Tools ▸ Settings does, the shortcut that item shows (REQ-UI-073).</summary>
     [JSInvokable]
     public void OnSettingsShortcut() => OpenSecondary("/settings/providers");

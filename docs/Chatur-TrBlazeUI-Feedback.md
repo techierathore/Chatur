@@ -8,7 +8,7 @@
 
 ## Summary
 
-29 entries, none blocking. 5 open: TR-025, TR-026, TR-027 (the stylesheet lacks `place-items-center`), TR-028 (`SelectSeparator` is listed but does not compile) and TR-029 (no read-only markdown view). 24 closed; TR-023 and TR-024 re-checked and closed 2026-11-10 on 2.2.3, which every Chatur project now uses.
+30 entries, none blocking. 6 open: TR-025, TR-026, TR-027 (the stylesheet lacks `place-items-center`), TR-028 (`SelectSeparator` is listed but does not compile), TR-029 (no read-only markdown view), TR-030 (Mac AOT stops at `LucideIcon`). 24 closed; TR-023 and TR-024 re-checked and closed 2026-11-10 on 2.2.3, which every Chatur project now uses.
 
 All ten were answered on 2026-09-22 and all ten have now been re-checked in Chatur against
 2.0.9. Six were fixed in code; four needed no code, because the control already existed. Each
@@ -403,6 +403,18 @@ entry below carries the control that now does the job and the Chatur requirement
 - **Encountered in:** REQ-UI-114, Workbench conversation, 2026-11-22 (the owner's test of 22 Nov).
 - **Workaround:** `Chatur.Core.Documents.MarkdownHtml.Reply` and `<Prose>@((MarkupString)html)</Prose>`.
 - **Suggested fix:** expose the `MarkdownEditor` preview pipeline and sanitizer as a read-only component.
+
+### TR-030 — In a precompiled Mac app, rendering stops at the first `LucideIcon` and the window stays on its loading text
+
+- **Status:** open. Filed 2026-11-27.
+- **Severity:** major
+- **Blocks:** no. Chatur's Mac Release build runs on the interpreter (`UseInterpreter=true`, as Debug does), and then every screen renders.
+- **Repro:** TrBlazeUI 2.2.5 (nuget.org) on macOS 27.2, Xcode 27.2, .NET 10 SDK 10.0.301, Mac Catalyst workload 26.5, Apple silicon. A MAUI Blazor Hybrid app built `-c Release -p:RuntimeIdentifier=maccatalyst-arm64` (Mono AOT, the Release default), with trimming off (`MtouchLink=None`). Its first screen holds a `Button` with a `LucideIcon` inside.
+- **Expected:** the screen renders, as it does in Debug and with the interpreter.
+- **Actual:** with `Microsoft.AspNetCore.Components` logged at Debug, the renderer initialises and renders components 1 to 25 and the last line is `Rendering component 25 of type TrBlazeUI.Icons.Lucide.Components.LucideIcon`. Nothing follows: no exception is logged, no thread is blocked (a `sample` of the process shows the main thread idle in its run loop), and the web view keeps the host page's "Loading Chatur" text. The same build with `-p:UseInterpreter=true` opens the screen at once.
+- **Encountered in:** the first Mac install of Chatur (`scripts/install-mac.sh`), 2026-11-27.
+- **Workaround:** `<UseInterpreter>true</UseInterpreter>` for Mac Catalyst Release in `src/Chatur/Chatur.csproj`. The app is larger and a little slower to start.
+- **Suggested fix:** build a Mac Catalyst Release sample with a `LucideIcon` and AOT; the icon table is likely a very large method or static initialiser that the AOT compiler leaves out or that fails without an exception. A smaller lookup (for example one generated method per icon, or a resource read once) would avoid it.
 
 ## Replies from TrBlazeUI
 

@@ -49,7 +49,7 @@ public sealed class PrerequisiteActions : IPrerequisiteActions
             : await ResolveProjectCatalogAsync(aProjectId.Value, aCt).ConfigureAwait(false);
 
         var vChecks = new List<ToolCheck>();
-        var vFixCommand = OperatingSystem.IsMacOS();
+        var vFixCommand = Chatur.Core.Platform.HostPlatform.IsMac;
 
         foreach (var vTool in vCatalog)
         {
@@ -207,7 +207,7 @@ public sealed class PrerequisiteActions : IPrerequisiteActions
         }
 
         var vOwn = await OwnVersionAsync(aCt).ConfigureAwait(false);
-        return NightlyRelease.EvaluateOffer(vRelease, vOwn, OperatingSystem.IsMacOS());
+        return NightlyRelease.EvaluateOffer(vRelease, vOwn, Chatur.Core.Platform.HostPlatform.IsMac);
     }
 
     /// <summary>

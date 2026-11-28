@@ -97,7 +97,7 @@ public sealed class RoleRightsGuard : IToolGuard
             var vDocs = ResolveLinks(Path.Combine(vRoot, "docs"));
             var vTarget = ResolveLinks(Path.GetFullPath(Path.Combine(vRoot, aRelativePath)));
             var vPrefix = vDocs.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-            var vComparison = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            var vComparison = Chatur.Core.Platform.HostPlatform.HasCaseInsensitiveNames ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
             return vTarget.StartsWith(vPrefix, vComparison);
         }
         catch (Exception vException) when (vException is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException)

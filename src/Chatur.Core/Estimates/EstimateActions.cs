@@ -296,7 +296,7 @@ public sealed class EstimateActions : IEstimateActions
         string.Equals(
             Path.TrimEndingDirectorySeparator(Path.GetFullPath(aLeft)),
             Path.TrimEndingDirectorySeparator(Path.GetFullPath(aRight)),
-            OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            Chatur.Core.Platform.HostPlatform.HasCaseInsensitiveNames ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
     private static void RequireRunKind(string aRunKind)
     {

@@ -73,7 +73,7 @@ public sealed class ProjectCommandRunner : IProjectCommandRunner
             UseShellExecute = false,
             CreateNoWindow = true,
         };
-        vInfo.Environment["PATH"] = HomebrewPath.Augment(Environment.GetEnvironmentVariable("PATH"), OperatingSystem.IsMacOS());
+        vInfo.Environment["PATH"] = HomebrewPath.Augment(Environment.GetEnvironmentVariable("PATH"), Chatur.Core.Platform.HostPlatform.IsMac);
         // A run started from inside another test run must not inherit its test host's connection.
         foreach (var vKey in vInfo.Environment.Keys.Where(aKey => aKey.StartsWith("VSTEST_", StringComparison.OrdinalIgnoreCase) || aKey.StartsWith("TESTINGPLATFORM_", StringComparison.OrdinalIgnoreCase)).ToList())
         {

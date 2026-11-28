@@ -31,6 +31,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-windows.ps1
 dotnet run --project src/Chatur.WebHarness --urls http://localhost:5280
 ```
 
+On the Mac, in Terminal:
+
+```
+cd /Volumes/MacD/MyCode/Chatur
+bash scripts/install-mac.sh
+```
+
+It builds the Mac app (Release, signed with the free Mac Catalyst profile of your Apple ID, made by Xcode's tools when missing) and replaces `/Applications/Chatur.app`; open it with Cmd+Space, `Chatur`, Return. Without a key for the GitHub Packages feed on the Mac it uses TrBlazeUI 2.2.5 from nuget.org and TechieRag packed from `../TechieRag`, and says so. The Mac owner's test is the "Mac owner's test" parts below; on the Mac, Chatur's own menus are in the bar under the window's title, and the Mac menu bar at the top holds Quit (Cmd+Q).
+
 The fourth line installs the Windows app to `%LOCALAPPDATA%\Programs\Chatur` with a Start menu entry "Chatur" (run it again to replace it in place); start Chatur from the Start menu and sign in as user 1. The fifth serves the same screens at http://localhost:5280 for the browser tests.
 
 ### The agents and their commands
@@ -315,6 +324,174 @@ Type a command with its star in the agent's conversation. In the examples `MyApp
 - **Expected:** 2) `docs\BrainTest-Research-Prompt.md` appears in FILES. 3) The same file is written again. 4) "No end-to-end run", or its step, rows and tokens. 5) "This project has no checklist yet, so there is nothing to report." (BrainTest has no checklist).
 - **Covers:** REQ-FN-317, REQ-FN-322, REQ-FN-320, REQ-NFR-017
 
+### Mac owner's test 1: an empty folder, New project, and the disk
+
+- **Sign in as:** your own account
+- **Steps:** 1) Cmd+Space, type `Chatur`, Return: "Nothing is open yet". 2) Open a folder; type `/Volumes/MacD/MyCode/Chatur/bin/OwnerTest` (empty); Open. 3) In Chatur's own menu bar, under the title bar: File ▸ New project. 4) Search `blazor`; click "Blazor Web App"; Solution name `Checking-Chatur`. 5) Create.
+- **Expected:** As Windows part 1, with `/` paths: Solution folder `…/OwnerTest/Checking-Chatur`, Solution file `…/Checking-Chatur/Checking-Chatur.slnx`, Project folder `…/Checking-Chatur/Checking-Chatur`; nothing directly in OwnerTest.
+- **Covers:** REQ-FN-310, REQ-UI-126, REQ-UI-127, REQ-NFR-019, REQ-NFR-013, REQ-UI-008
+
+### Mac owner's test 2: the solution is the root of FILES
+
+- **Sign in as:** your own account
+- **Steps:** 1) After test 1 look at FILES. 2) In Terminal: `dotnet new console -n Early -o /Volumes/MacD/MyCode/Chatur/bin/LateSln/Early`. File ▸ Close; open `/Volumes/MacD/MyCode/Chatur/bin/LateSln` as a folder (Open as it is). 3) In Terminal: `cd /Volumes/MacD/MyCode/Chatur/bin/LateSln`, `dotnet new sln --name Late`, `dotnet sln add Early/Early.csproj`; press the refresh button in FILES.
+- **Expected:** 1) One root, "Checking-Chatur", solution mark; its project has the project and play marks. 2) FILES lists `Early`. 3) The root becomes "Late" with Early below it.
+- **Covers:** REQ-UI-125
+
+### Mac owner's test 3: from nothing, New project in a folder you name
+
+- **Sign in as:** your own account
+- **Steps:** 1) File ▸ Close. 2) Press "New project". 3) Click "Console App". 4) Solution name `FromNothing`, Project name `TryConsole`, Location `/Volumes/MacD/MyCode/Chatur/bin`. 5) Create.
+- **Expected:** Solution folder `/Volumes/MacD/MyCode/Chatur/bin/FromNothing`, Solution file `…/FromNothing/FromNothing.slnx`, Project folder `…/FromNothing/TryConsole`. Create makes `FromNothing`; inside are `FromNothing.slnx` and `TryConsole/TryConsole.csproj` with `Program.cs`. The main window is on FromNothing; the target picker reads TryConsole.
+- **Covers:** REQ-FN-310, REQ-FN-309, REQ-NFR-013
+
+### Mac owner's test 4: add projects from this machine's templates
+
+- **Sign in as:** your own account
+- **Steps:** 1) File ▸ New project. 2) Search `blazor`, click "Blazor Web App", Name `TryWeb`, Create. 3) The same with "Class Library" `TryLib`, then "xUnit Test Project" `TryLib.Tests`.
+- **Expected:** "New project in FromNothing"; only the name is typed; "Will be created in" `/Volumes/MacD/MyCode/Chatur/bin/FromNothing`, the solution file "already there", Project folder `…/FromNothing/TryWeb`. Each project is one folder below the root in FILES.
+- **Covers:** REQ-UI-112, REQ-UI-126
+
+### Mac owner's test 5: the project just added is the one that runs
+
+- **Sign in as:** your own account
+- **Steps:** 1) After TryWeb is made, look at the target picker and FILES. 2) After TryLib and TryLib.Tests, look again.
+- **Expected:** After TryWeb the picker reads TryWeb and FILES gives it the play mark. A library and a test project cannot run, so TryWeb stays chosen.
+- **Covers:** REQ-FN-309, REQ-UI-106
+
+### Mac owner's test 6: run the web app
+
+- **Sign in as:** your own account
+- **Steps:** 1) In FromNothing, with the picker on TryWeb, press Run. 2) Press Stop.
+- **Expected:** Output opens: `> dotnet build …`, the build's lines, `Now listening on: http://localhost:<port>`, `Opening http://localhost:<port> in the browser`; your default browser (Safari or another) opens there. `Failed to determine the https port for redirect.` is not red. Stop writes `Run stopped.`.
+- **Covers:** REQ-UI-107, REQ-FN-306
+
+### Mac owner's test 7: the console app, a broken build and the exit code
+
+- **Sign in as:** your own account
+- **Steps:** 1) Target picker ▸ TryConsole; Run. 2) FILES ▸ TryConsole ▸ Program.cs; delete the `;` at the end of its line; press Save (beside the tabs); Run. 3) Put the `;` back; press Save.
+- **Expected:** 1) `Hello, World!`, then `Process exited with code 0.`. 2) `The program was not started.`; the label reads "build failed".
+- **Covers:** REQ-UI-107, REQ-UI-108
+
+### Mac owner's test 8: the test project
+
+- **Sign in as:** your own account
+- **Steps:** 1) Target picker ▸ TryLib.Tests; press Run.
+- **Expected:** `> dotnet test …`, a passed summary with 0 failed, and `Process exited with code 0.`.
+- **Covers:** REQ-UI-107
+
+### Mac owner's test 9: several projects start together
+
+- **Sign in as:** your own account
+- **Steps:** 1) Target picker ▸ "Multiple startup projects…". 2) Tick TryConsole and TryWeb; Save. 3) Run. 4) Stop.
+- **Expected:** 1) Only TryConsole and TryWeb are listed. 2) The picker reads "2 startup projects". 3) Both build, then start; lines read `[TryConsole] Hello, World!` and `[TryWeb] Now listening on: …`. 4) `All 2 projects ended.`.
+- **Covers:** REQ-FN-324
+
+### Mac owner's test 10: the choice is kept, and one project again
+
+- **Sign in as:** your own account
+- **Steps:** 1) File ▸ Close; reopen FromNothing from the project switcher. 2) Target picker ▸ TryWeb. 3) Run, then Stop.
+- **Expected:** 1) The picker still reads "2 startup projects". 2) It reads TryWeb. 3) Only TryWeb runs; its lines carry no project name.
+- **Covers:** REQ-FN-324
+
+### Mac owner's test 11: the file window
+
+- **Sign in as:** your own account
+- **Steps:** 1) FILES ▸ TryConsole ▸ Program.cs. 2) Look beside Save. 3) Type a line in the editor. 4) Press the × at the right end of the tab bar, then "Keep editing". 5) Press that × again, then "Close without saving".
+- **Expected:** 2) Save and no other button. 4) "Close without saving?" asks; Keep editing changes nothing. 5) The file view closes, the chat takes the window, and the file on disk is unchanged.
+- **Covers:** REQ-UI-041, REQ-FN-045, REQ-FN-046
+
+### Mac owner's test 12: a folder with a project and no solution
+
+- **Sign in as:** your own account
+- **Steps:** 1) In Terminal: `dotnet new console -n Loose -o /Volumes/MacD/MyCode/Chatur/bin/LooseOne/Loose`. 2) File ▸ Close; Open a folder; `/Volumes/MacD/MyCode/Chatur/bin/LooseOne`; Open. 3) Press "Go back", Open again, then "Open as it is".
+- **Expected:** 2) "This folder has no solution" names `Loose/Loose.csproj` and asks first. 3) Go back opens nothing and keeps the path; Open as it is opens the folder.
+- **Covers:** REQ-FN-325
+
+### Mac owner's test 13: the solution takes the project in, and the new one runs
+
+- **Sign in as:** your own account
+- **Steps:** 1) With LooseOne open: File ▸ New project; "Console App"; Solution name `Gathered`, Project name `Second`. 2) Create.
+- **Expected:** 1) "…/LooseOne has a project and no solution. Create makes the solution there and adds it to it: Loose/Loose.csproj". 2) LooseOne holds `Gathered.slnx`, `Loose` and `Second`; FILES has one root, "Gathered", with Loose and Second; Second is the one that runs.
+- **Covers:** REQ-UI-124, REQ-FN-309, REQ-UI-125
+
+### Mac owner's test 14: your model key, for the parts that ask a model
+
+- **Sign in as:** your own account
+- **Steps:** 1) Tools ▸ Settings (Cmd+,): Model providers opens in the second window. 2) If Anthropic is listed as connected, close the window (red button, top left). 3) Else "Add a provider"; Name `Anthropic`; Connector Anthropic; paste your key; Test, then Add; close the window.
+- **Expected:** The table shows Anthropic, connected, with claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5. The key goes to the Mac's Keychain.
+- **Covers:** REQ-FN-014, REQ-FN-017, REQ-UI-019
+
+### Mac owner's test 15: in an empty folder, the Analyst's own commands
+
+- **Sign in as:** your own account (the key of part 14 connected)
+- **Steps:** 1) Make and open the empty folder `/Volumes/MacD/MyCode/Chatur/bin/BrainTest`, as in test 1. 2) Model picker ▸ `claude-sonnet-5-5`; agent picker ▸ Analyst. 3) Type `Don't you have brain-storm command ?`; Send. 4) `*help`; Send. 5) `*yolo`; Send. 6) Look at BrainTest in Finder.
+- **Expected:** The greeting lists 12 commands. 3) "Yes." with `*brainstorm {topic}`, "Chatur (no model)". 4) The 12 commands, numbered, as code, no `**`. 5) "YOLO is on" with **Go ahead** in bold. 6) BrainTest is still empty.
+- **Covers:** REQ-FN-308, REQ-FN-311, REQ-UI-114, REQ-FN-040
+
+### Mac owner's test 16: the chat follows its newest message
+
+- **Sign in as:** your own account
+- **Steps:** 1) In test 15, after `*help` and again after `*yolo`, look at the conversation without scrolling.
+- **Expected:** The newest message is in view each time.
+- **Covers:** REQ-UI-128
+
+### Mac owner's test 17: the Analyst brainstorms with you, then writes the brief
+
+- **Sign in as:** your own account
+- **Steps:** 1) In BrainTest, with `claude-sonnet-5-5` and Analyst: `*brainstorm a small to-do app for one person`; Send. 2) Answer: one person, desktop, small, focused, yes save it; ideas: due dates, a today view, quick add. 3) `That is enough ideas, save the session`. 4) `*create-project-brief BrainTest`; Send; if it asks, `take the sensible reading and write the brief now`.
+- **Expected:** 3) `docs/brainstorming-session-results.md` appears in FILES. 4) The reply ends "Chatur: *create-project-brief is done — docs/BrainTest-Brief.md is written".
+- **Covers:** REQ-FN-312, REQ-UI-128
+
+### Mac owner's test 18: the sessions are written under the project
+
+- **Sign in as:** your own account
+- **Steps:** 1) Open `docs/metrics/sessions.jsonl` in BrainTest from FILES.
+- **Expected:** Lines with `"harness":"chatur"`, the session's id, the model, and `input_tokens` and `output_tokens` as numbers. No other file in `docs/metrics`.
+- **Covers:** REQ-FN-040
+
+### Mac owner's test 19: the measurements screens
+
+- **Sign in as:** your own account
+- **Steps:** 1) Project switcher ▸ `BrainTest`. 2) Project ▸ Measurements. 3) Period ▸ Last 7 days, then All history. 4) Click the first line; Esc. 5) Save as zip ▸ Save ▸ Close.
+- **Expected:** 2) Seven tiles; the chat's sessions and tokens; a split by model; Misses with first-pass rate; "not measured" and "no price" where nothing is known. 4) A chat line: command `chat`, model, tokens, time. 5) A .zip in BrainTest.
+- **Covers:** REQ-UI-115 to REQ-UI-120, REQ-FN-314, REQ-NFR-014, REQ-NFR-020, REQ-FN-040
+
+### Mac owner's test 20: across projects
+
+- **Sign in as:** your own account
+- **Steps:** 1) Click "Measurements across projects". 2) Click "Measurements" under Corrections, then its link.
+- **Expected:** 1) One line per project, BrainTest among them. 2) Back on Project measurements.
+- **Covers:** REQ-FN-313, REQ-UI-121
+
+### Mac owner's test 21: what is left on each key
+
+- **Sign in as:** your own account
+- **Steps:** 1) BrainTest, Project ▸ Measurements, "What is left on each key". 2) On Anthropic: "Type a limit"; Limit `5.00`; Save. 3) "Measurements across projects". 4) Back: "Change limit", then "Remove the limit".
+- **Expected:** 1) Anthropic reads "not known". 2) "Chatur's own count": Limit $5.00, Used a few cents, Left the rest. 3) The same line. 4) "not known" again.
+- **Covers:** REQ-UI-129, REQ-UI-131, REQ-FN-326, REQ-NFR-022
+
+### Mac owner's test 22: one question to two models
+
+- **Sign in as:** your own account
+- **Steps:** 1) Second window ▸ "Compare models". 2) Tick only `claude-haiku-5-5`; Run. 3) Also tick `claude-sonnet-5-5`; Kind ▸ "Question, changes nothing". 4) Task: `Which files are in the docs folder of this project? Answer in one sentence.` 5) Run. 6) Right if a card names the files in FILES ▸ docs, else Wrong. 7) Reopen Compare models; click the first Past comparison.
+- **Expected:** 2) "One model is not a comparison — pick at least two." 5) Two cards: time, tokens, cost, answer. 7) Answers and marks again; `docs/metrics/runs.jsonl` has two `compare-models` lines.
+- **Covers:** REQ-FN-327, REQ-FN-328, REQ-UI-132, REQ-UI-133, REQ-FN-330, REQ-NFR-021, REQ-NFR-022
+
+### Mac owner's test 23: one task that changes files, on two models
+
+- **Sign in as:** your own account
+- **Steps:** 1) Compare models, `claude-haiku-5-5` and `claude-sonnet-5-5` ticked, Kind ▸ "Task that changes files". 2) Task: `Add a file docs/notes.md with the one line: Made in Compare models.` 3) Run; wait for both cards. 4) Look at FILES ▸ docs, and in Finder at `/Volumes/MacD/MyCode/Chatur/bin/BrainTest/bin`.
+- **Expected:** 3) Each card lists `docs/notes.md` added. 4) BrainTest has no `docs/notes.md`, and no `chatur-compare` folder is left in its bin.
+- **Covers:** REQ-FN-329, REQ-UI-132, REQ-NFR-022
+
+### Mac owner's test 24: one command to each agent
+
+- **Sign in as:** your own account (the key of part 14 connected)
+- **Steps:** 1) In BrainTest, before each agent: agent picker ▸ the agent; new chat; model `claude-sonnet-5-5`; `*yolo` (not the Verifier). 2) Analyst: `*research-prompt note-taking apps for one person that work offline`. 3) Architect: `*research which local database suits a desktop to-do app for one person`. 4) Flow master: `*develop-status BrainTest`. 5) Verifier: `*report all BrainTest`.
+- **Expected:** 2) `docs/BrainTest-Research-Prompt.md` appears. 3) The same file is written again. 4) "No end-to-end run", or its step, rows and tokens. 5) "This project has no checklist yet, so there is nothing to report."
+- **Covers:** REQ-FN-317, REQ-FN-322, REQ-FN-320, REQ-NFR-017
+
 ### If the key is refused
 
 - **Sign in as:** your own account, or user 1
@@ -413,6 +590,8 @@ The unit tests cover `Chatur.Core`: the guards, routing and its fallback, the me
 - REQ-FN-024: after the agent is changed in one conversation, earlier replies take the new agent's name. Choose the agent before the first message.
 - REQ-FN-022, REQ-FN-001, REQ-FN-002, REQ-FN-004, REQ-FN-030, REQ-FN-048: checked by hand once per release; steps are in `docs/Chatur-Checklist.md`.
 - REQ-FN-012 needs the Mac. REQ-NFR-006 needs a published nightly build.
+- The Mac app runs on the .NET interpreter, not precompiled: precompiled, its screens never appeared (TR-030 in `docs/Chatur-TrBlazeUI-Feedback.md`). It starts a little slower.
+- A Mac built without the GitHub Packages key uses TrBlazeUI 2.2.5 and TechieRag 1.3.0 instead of 2.2.3 and 1.2.1; add the key to the Mac's NuGet settings to build the pinned versions.
 - The default agent, Analyst, explains a code change and does not make it; Flow master makes it.
 - TF-052 (`docs/Chatur-TechieFlow-Feedback.md`): late in a long verify the screen check reads three chat menus as "opens nothing"; they open by hand. Open with the framework's team; it does not block using the app.
 - TR-025, TR-026 (`docs/Chatur-TrBlazeUI-Feedback.md`): a submenu's edge distance at 390 px; a picker's list cannot be wider than its button. TR-029: no read-only markdown view in TrBlazeUI; Chatur draws replies with Markdig.
@@ -422,4 +601,4 @@ The unit tests cover `Chatur.Core`: the guards, routing and its fallback, the me
 
 ## Platform notes
 
-Windows and Mac Catalyst are equal targets. The Windows app builds only on Windows, the Mac app only on a Mac. Tokens and keys live in Credential Manager on Windows and the Keychain on the Mac; the database and the log live in the user's application-data folder. A copy started by a test keeps its data under `tests/.artifacts/app-data` and never opens the owner's.
+Windows and Mac Catalyst are equal targets. The Mac app is not sandboxed (it runs dotnet, a shell and your programs), and when started from Finder or Spotlight it adds `/etc/paths`, `/etc/paths.d`, Homebrew and `/usr/local/share/dotnet` to its PATH, so `dotnet`, `git` and `node` are found. The Windows app builds only on Windows, the Mac app only on a Mac. Tokens and keys live in Credential Manager on Windows and the Keychain on the Mac; the database and the log live in the user's application-data folder. A copy started by a test keeps its data under `tests/.artifacts/app-data` and never opens the owner's.

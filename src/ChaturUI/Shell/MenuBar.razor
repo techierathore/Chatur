@@ -218,7 +218,7 @@
             <MenubarContent data-testid="menu-tools-items">
                 <MenubarItem OnClick="@(() => OpenSecondary("/settings/providers"))" data-testid="menu-tools-settings">
                     Settings
-                    <MenubarShortcut>Ctrl+,</MenubarShortcut>
+                    <MenubarShortcut>@SettingsShortcut</MenubarShortcut>
                 </MenubarItem>
                 <MenubarSeparator />
                 <MenubarLabel>Go straight to</MenubarLabel>

@@ -15,6 +15,14 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <!-- The library versions every project uses, in one place (TrBlazeUI 2.2.3 and TechieRag 1.2.1 from the owner's
+       GitHub Packages feed). scripts/install-mac.sh overrides them on a Mac that has no key for that feed: TrBlazeUI
+       from nuget.org and TechieRag packed from its own source, into this repository's bin folder (27 Nov 2026). -->
+  <PropertyGroup>
+    <ChaturTechieRagVersion Condition="'$(ChaturTechieRagVersion)' == ''">1.2.1</ChaturTechieRagVersion>
+    <ChaturTrBlazeUIVersion Condition="'$(ChaturTrBlazeUIVersion)' == ''">2.2.3</ChaturTrBlazeUIVersion>
+  </PropertyGroup>
+
   <!-- Version and commit stamping (Architecture §6, 2026-09-21 decision "Version and commit are
        stamped into the build"; REQ-UI-018, cluster J). Every build gets the same $(Version) and the
        same commit, read straight out of .git by a managed MSBuild task below — never git.exe, so

@@ -64,6 +64,18 @@ public static class ToolProbeCatalog
         "brew install --cask dotnet-sdk && dotnet workload install maui",
         "winget install Microsoft.DotNet.SDK.10 && dotnet workload install maui");
 
+    /// <summary>
+    /// Xcode — on a Mac a MAUI project builds its Mac Catalyst and iOS heads with Xcode, so the MAUI workload alone
+    /// is not enough. Added on a Mac only (27 Nov 2026, the first Mac walk: Prerequisites said a MAUI project was
+    /// ready on a Mac that had never been asked about Xcode). Without Xcode, <c>xcodebuild</c> is Apple's stub that
+    /// prints nothing on standard output, so the row reads not found and offers Xcode's App Store page.
+    /// </summary>
+    public static readonly ToolProbeDefinition Xcode = new(
+        "Xcode", "xcodebuild", "-version", null,
+        aOutput => Match(aOutput, @"Xcode (\S+)"),
+        "open \"macappstore://apps.apple.com/app/id497799835\"",
+        "open \"macappstore://apps.apple.com/app/id497799835\"");
+
     /// <summary>Docker — needed only when a <c>Dockerfile</c> or <c>docker-compose.y[a]ml</c> exists (REQ-FN-011).</summary>
     public static readonly ToolProbeDefinition Docker = new(
         "Docker", "docker", "--version", null,
@@ -80,7 +92,16 @@ public static class ToolProbeCatalog
     /// <see cref="PrerequisiteActions"/> is the one place that reads the disk to build the signals.
     /// </summary>
     /// <param name="aSignals">What <see cref="PrerequisiteActions"/> found on disk for the selected project.</param>
-    public static IReadOnlyList<ToolProbeDefinition> ForProject(ProjectToolSignals aSignals)
+    public static IReadOnlyList<ToolProbeDefinition> ForProject(ProjectToolSignals aSignals) =>
+        ForProject(aSignals, Platform.HostPlatform.IsMac);
+
+    /// <summary>
+    /// <see cref="ForProject(ProjectToolSignals)"/> for a named platform, so the Mac-only Xcode row is unit testable
+    /// on any machine (27 Nov 2026). Off a Mac the list is exactly what it was before.
+    /// </summary>
+    /// <param name="aSignals">What <see cref="PrerequisiteActions"/> found on disk for the selected project.</param>
+    /// <param name="aIsMac">Whether Chatur runs on a Mac; a MAUI project then needs Xcode too.</param>
+    public static IReadOnlyList<ToolProbeDefinition> ForProject(ProjectToolSignals aSignals, bool aIsMac)
     {
         var vTools = new List<ToolProbeDefinition> { Git };
 
@@ -90,6 +111,10 @@ public static class ToolProbeCatalog
             if (aSignals.UsesMaui)
             {
                 vTools.Add(MauiWorkload);
+                if (aIsMac)
+                {
+                    vTools.Add(Xcode);
+                }
             }
         }
 

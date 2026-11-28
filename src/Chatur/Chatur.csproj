@@ -24,6 +24,15 @@
     <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <!-- This Mac has Xcode 27.2 while the installed Mac Catalyst workload (26.5) names Xcode 26.6; the build is correct
+         with the newer Xcode, as TrStudio's is. Remove once the workload is updated (owner, 27 Nov 2026). -->
+    <ValidateXcodeVersion Condition="'$(ValidateXcodeVersion)' == '' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">false</ValidateXcodeVersion>
+    <!-- The Mac Release build runs on the interpreter, as Debug does, and is not trimmed (27 Nov 2026, the first Mac
+         install). Precompiled (AOT), the installed app stayed on "Loading Chatur": rendering stopped without an error
+         at the first TrBlazeUI LucideIcon (docs/Chatur-TrBlazeUI-Feedback.md). With the interpreter the same build opens
+         Sign in. Trimming is off as well, since Blazor finds components and services by reflection. -->
+    <UseInterpreter Condition="'$(Configuration)' == 'Release' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</UseInterpreter>
+    <MtouchLink Condition="'$(Configuration)' == 'Release' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">None</MtouchLink>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 

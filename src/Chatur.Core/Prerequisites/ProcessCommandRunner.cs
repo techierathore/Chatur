@@ -31,7 +31,7 @@ public sealed class ProcessCommandRunner : IExternalCommandRunner
             CreateNoWindow = true,
         };
         vStartInfo.Environment["PATH"] = HomebrewPath.Augment(
-            Environment.GetEnvironmentVariable("PATH"), OperatingSystem.IsMacOS());
+            Environment.GetEnvironmentVariable("PATH"), Chatur.Core.Platform.HostPlatform.IsMac);
 
         try
         {
